@@ -4,6 +4,17 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
+import { useRef } from "react";
 
 export default function VetPage() {
   const { slug } = useParams();
@@ -11,6 +22,7 @@ export default function VetPage() {
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [allPrices, setAllPrices] = useState([]);
   const [formData, setFormData] = useState({
     vet_name: "",
     service_name: "",
@@ -19,6 +31,8 @@ export default function VetPage() {
     submitter_note: "",
   });
   const [formStatus, setFormStatus] = useState(null);
+  const [chartVisible, setChartVisible] = useState(false);
+  const chartRef = useRef(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -31,12 +45,22 @@ export default function VetPage() {
         .from("vet_prices")
         .select("*, services(name)")
         .eq("vet_id", vetData?.id);
+      const { data: allPricesData } = await supabase
+        .from("vet_prices")
+        .select("*, services(name)");
       setVet(vetData);
       setPrices(priceData || []);
+      setAllPrices(allPricesData || []);
       setLoading(false);
     }
     fetchData();
   }, [slug]);
+
+  useEffect(() => {
+    if (!loading) {
+      setTimeout(() => setChartVisible(true), 500);
+    }
+  }, [loading]);
 
   const handleSubmit = async () => {
     if (!formData.vet_name || !formData.service_name || !formData.price_paid) {
@@ -350,6 +374,211 @@ export default function VetPage() {
             style={{ display: "block", border: "none" }}
             src={`https://maps.google.com/maps?q=${vet.latitude},${vet.longitude}&z=15&output=embed`}
           />
+        </div>
+      )}
+
+      {/* Price Comparison Chart */}
+      {prices.length > 0 && allPrices.length > 0 && (
+        <div
+          ref={chartRef}
+          style={{
+            background: "#fff",
+            borderRadius: "12px",
+            padding: "24px",
+            marginBottom: "24px",
+            border: "1px solid #e0e0e0",
+          }}
+        >
+          <h3
+            style={{
+              margin: "0 0 4px 0",
+              fontSize: "18px",
+              color: "#111",
+              fontWeight: "700",
+            }}
+          >
+            Price Comparison
+          </h3>
+          <p style={{ margin: "0 0 20px 0", fontSize: "13px", color: "#888" }}>
+            How this vet compares to the East Bay average
+          </p>
+
+          {prices.map((price) => {
+            const serviceName = price.services?.name;
+            const vetPrice = price.price_low || price.price_paid;
+            const allForService = allPrices.filter(
+              (p) => p.services?.name === serviceName && p.price_low
+            );
+            const avg =
+              allForService.length > 0
+                ? Math.round(
+                    allForService.reduce((sum, p) => sum + p.price_low, 0) /
+                      allForService.length
+                  )
+                : null;
+
+            if (!vetPrice || !avg) return null;
+
+            const isCheaper = vetPrice <= avg;
+            const max = Math.max(vetPrice, avg) * 1.2;
+            const vetWidth = Math.round((vetPrice / max) * 100);
+            const avgWidth = Math.round((avg / max) * 100);
+
+            return (
+              <div key={price.id} style={{ marginBottom: "20px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "8px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      color: "#333",
+                    }}
+                  >
+                    {serviceName}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "600",
+                      padding: "2px 8px",
+                      borderRadius: "20px",
+                      background: isCheaper ? "#e8f5e9" : "#fdecea",
+                      color: isCheaper ? "#2d6a4f" : "#c0392b",
+                    }}
+                  >
+                    {isCheaper ? "✓ Below average" : "↑ Above average"}
+                  </span>
+                </div>
+
+                {/* This vet bar */}
+                <div style={{ marginBottom: "6px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        color: "#666",
+                        width: "80px",
+                        flexShrink: 0,
+                      }}
+                    >
+                      This vet
+                    </span>
+                    <div
+                      style={{
+                        flex: 1,
+                        background: "#f0f0f0",
+                        borderRadius: "4px",
+                        height: "20px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: chartVisible ? `${vetWidth}%` : "0%",
+                          height: "100%",
+                          background: isCheaper ? "#2d6a4f" : "#e05c5c",
+                          borderRadius: "4px",
+                          transition: "width 0.8s ease",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "flex-end",
+                          paddingRight: "6px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "#fff",
+                            fontWeight: "600",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          ${vetPrice.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* East Bay avg bar */}
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        color: "#666",
+                        width: "80px",
+                        flexShrink: 0,
+                      }}
+                    >
+                      East Bay avg
+                    </span>
+                    <div
+                      style={{
+                        flex: 1,
+                        background: "#f0f0f0",
+                        borderRadius: "4px",
+                        height: "20px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: chartVisible ? `${avgWidth}%` : "0%",
+                          height: "100%",
+                          background: "#bbb",
+                          borderRadius: "4px",
+                          transition: "width 0.8s ease",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "flex-end",
+                          paddingRight: "6px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "#fff",
+                            fontWeight: "600",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          ${avg.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    height: "1px",
+                    background: "#f0f0f0",
+                    marginTop: "16px",
+                  }}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
 
