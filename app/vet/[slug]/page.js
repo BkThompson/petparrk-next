@@ -330,6 +330,8 @@ export default function VetPage() {
         </button>
       </div>
 
+      {console.log("lat/lng:", vet?.latitude, vet?.longitude)}
+
       {/* Map */}
       {vet.latitude && vet.longitude && (
         <div
