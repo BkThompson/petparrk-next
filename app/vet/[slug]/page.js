@@ -330,6 +330,26 @@ export default function VetPage() {
         </button>
       </div>
 
+      {/* Map */}
+      {vet.latitude && vet.longitude && (
+        <div
+          style={{
+            borderRadius: "12px",
+            overflow: "hidden",
+            marginBottom: "24px",
+            border: "1px solid #e0e0e0",
+          }}
+        >
+          <iframe
+            title="Vet location map"
+            width="100%"
+            height="300"
+            style={{ display: "block", border: "none" }}
+            src={`https://maps.google.com/maps?q=${vet.latitude},${vet.longitude}&z=15&output=embed`}
+          />
+        </div>
+      )}
+
       {/* Pricing */}
       <div
         style={{
