@@ -5,6 +5,41 @@
 }
 
 body {
-  background: #f9f9f9;
+  background: #f5f0e8;
   font-family: system-ui, sans-serif;
+}
+
+.ownership-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.ownership-label {
+  font-weight: bold;
+  color: #333;
+  white-space: nowrap;
+}
+
+.ownership-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .ownership-filter {
+    flex-wrap: wrap;
+  }
+  .ownership-label {
+    width: 100%;
+  }
+  .ownership-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
 }

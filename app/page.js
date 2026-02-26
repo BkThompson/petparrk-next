@@ -138,7 +138,6 @@ export default function Home() {
           Vet pricing transparency for the East Bay
         </p>
       </div>
-
       {/* Neighborhood Filter */}
       <div style={{ marginBottom: "20px" }}>
         <label
@@ -164,7 +163,6 @@ export default function Home() {
           {filtered.length} vets
         </span>
       </div>
-
       {/* Ownership Filter */}
       <div style={{ marginBottom: "20px" }}>
         <label
@@ -172,24 +170,32 @@ export default function Home() {
         >
           Ownership:
         </label>
-        {["All", "Independent", "Corporate"].map((o) => (
-          <button
-            key={o}
-            onClick={() => setOwnership(o)}
-            style={{
-              marginRight: "8px",
-              padding: "6px 14px",
-              borderRadius: "20px",
-              border: "1px solid #ccc",
-              background: ownership === o ? "#2d6a4f" : "#fff",
-              color: ownership === o ? "#fff" : "#333",
-              cursor: "pointer",
-              fontSize: "13px",
-            }}
-          >
-            {o}
-          </button>
-        ))}
+        <div
+          style={{
+            display: "inline-flex",
+            flexWrap: "wrap",
+            gap: "8px",
+            marginTop: "4px",
+          }}
+        >
+          {["All", "Independent", "Corporate"].map((o) => (
+            <button
+              key={o}
+              onClick={() => setOwnership(o)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "20px",
+                border: "1px solid #ccc",
+                background: ownership === o ? "#2d6a4f" : "#fff",
+                color: ownership === o ? "#fff" : "#333",
+                cursor: "pointer",
+                fontSize: "13px",
+              }}
+            >
+              {o}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Sort */}
@@ -208,7 +214,7 @@ export default function Home() {
             onClick={() => setSortBy(val)}
             style={{
               marginRight: "8px",
-              padding: "6px 14px",
+              padding: "6px 12px",
               borderRadius: "20px",
               border: "1px solid #ccc",
               background: sortBy === val ? "#2d6a4f" : "#fff",
@@ -221,7 +227,6 @@ export default function Home() {
           </button>
         ))}
       </div>
-
       {/* Search */}
       <div style={{ marginBottom: "20px" }}>
         <input
@@ -240,9 +245,7 @@ export default function Home() {
           }}
         />
       </div>
-
       {loading && <p>Loading vets...</p>}
-
       {/* Vet Cards */}
       {filtered.map((vet) => {
         const vetPrices = prices[vet.id] || [];
@@ -488,7 +491,6 @@ export default function Home() {
           </div>
         );
       })}
-
       {/* Submit a Price */}
       <div style={{ marginTop: "40px", textAlign: "center" }}>
         <button
@@ -602,7 +604,6 @@ export default function Home() {
           </div>
         )}
       </div>
-
       {/* Footer */}
       <footer
         style={{
