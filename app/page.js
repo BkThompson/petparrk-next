@@ -146,45 +146,49 @@ export default function Home() {
         }}
       >
         {/* Auth button — top right */}
-        <div style={{ position: "absolute", top: 0, right: 0 }}>
-          {session ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "13px", color: "#888" }}>
-                {session.user.email}
-              </span>
+        {session !== undefined && (
+          <div style={{ position: "absolute", top: 0, right: 0 }}>
+            {session ? (
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <span style={{ fontSize: "13px", color: "#888" }}>
+                  {session.user.email}
+                </span>
+                <button
+                  onClick={handleSignOut}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "20px",
+                    border: "1px solid #ddd",
+                    background: "#fff",
+                    color: "#555",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={handleSignOut}
+                onClick={() => router.push("/auth")}
                 style={{
                   padding: "6px 14px",
                   borderRadius: "20px",
-                  border: "1px solid #ddd",
+                  border: "1px solid #2d6a4f",
                   background: "#fff",
-                  color: "#555",
+                  color: "#2d6a4f",
                   fontSize: "13px",
+                  fontWeight: "600",
                   cursor: "pointer",
                 }}
               >
-                Sign Out
+                Sign In
               </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => router.push("/auth")}
-              style={{
-                padding: "6px 14px",
-                borderRadius: "20px",
-                border: "1px solid #2d6a4f",
-                background: "#fff",
-                color: "#2d6a4f",
-                fontSize: "13px",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-            >
-              Sign In
-            </button>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         <h1 style={{ color: "#2d6a4f", fontSize: "2rem", margin: "0" }}>
           🐾 PetParrk
