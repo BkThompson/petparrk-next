@@ -6,7 +6,7 @@ import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
 
 export default function VetPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const [vet, setVet] = useState(null);
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,18 +25,18 @@ export default function VetPage() {
       const { data: vetData } = await supabase
         .from("vets")
         .select("*")
-        .eq("id", id)
+        .eq("slug", slug)
         .single();
       const { data: priceData } = await supabase
         .from("vet_prices")
         .select("*, services(name)")
-        .eq("vet_id", id);
+        .eq("vet_id", vetData?.id);
       setVet(vetData);
       setPrices(priceData || []);
       setLoading(false);
     }
     fetchData();
-  }, [id]);
+  }, [slug]);
 
   const handleSubmit = async () => {
     if (!formData.vet_name || !formData.service_name || !formData.price_paid) {

@@ -284,7 +284,7 @@ export default function Home() {
               <div>
                 <h2 style={{ margin: "0 0 4px 0", fontSize: "1.1rem" }}>
                   <Link
-                    href={`/vet/${vet.id}`}
+                    href={`/vet/${vet.slug}`}
                     style={{ color: "#111", textDecoration: "none" }}
                     onMouseEnter={(e) => {
                       e.target.style.color = "#2d6a4f";
