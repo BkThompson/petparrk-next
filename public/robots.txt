@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://petparrk.vercel.app/sitemap.xml
