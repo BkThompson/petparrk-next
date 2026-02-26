@@ -114,7 +114,7 @@ export default function VetPage() {
         margin: "0 auto",
         padding: "20px",
         fontFamily: "system-ui, sans-serif",
-        background: "#f9f9f9",
+        //background: "#f9f9f9",
         minHeight: "100vh",
         boxSizing: "border-box",
       }}
