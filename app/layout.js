@@ -6,8 +6,11 @@ export const metadata = {
     title: "PetParrk — East Bay Vet Pricing",
     description:
       "Real vet prices for Oakland, Berkeley, and the East Bay. Compare costs before you go.",
-    url: "https://petparrk.vercel.app",
+    url: "https://petparrk-next.vercel.app",
     type: "website",
+  },
+  verification: {
+    google: "7s6yV00GY-q643NY-Vlq7Hh3zC6GCxh91Wiwlz8JebA",
   },
 };
 
