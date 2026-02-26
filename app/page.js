@@ -259,12 +259,11 @@ export default function Home() {
         const neuter = vetPrices.find(
           (p) => p.services?.name === "Neuter (~40lb dog)"
         );
-        const lastUpdated =
-          vetPrices.length > 0
-            ? new Date(
-                Math.max(...vetPrices.map((p) => new Date(p.created_at)))
-              )
-            : null;
+        const lastUpdated = vet.last_verified
+          ? new Date(vet.last_verified + "T12:00:00")
+          : vetPrices.length > 0
+          ? new Date(Math.max(...vetPrices.map((p) => new Date(p.created_at))))
+          : null;
 
         return (
           <div
@@ -481,7 +480,7 @@ export default function Home() {
                   paddingTop: "8px",
                 }}
               >
-                Updated{" "}
+                Verified{" "}
                 {lastUpdated.toLocaleDateString("en-US", {
                   month: "short",
                   year: "numeric",

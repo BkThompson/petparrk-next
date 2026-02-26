@@ -56,6 +56,7 @@ export default function VetPage() {
       setFormStatus("error");
       return;
     }
+
     setFormStatus("success");
     setFormData({
       vet_name: "",
