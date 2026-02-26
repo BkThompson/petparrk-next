@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
 
@@ -11,6 +12,8 @@ function formatPrice(low, high) {
 }
 
 export default function Home() {
+  const router = useRouter();
+  const [session, setSession] = useState(undefined);
   const [vets, setVets] = useState([]);
   const [prices, setPrices] = useState({});
   const [loading, setLoading] = useState(true);
@@ -27,6 +30,17 @@ export default function Home() {
     submitter_note: "",
   });
   const [formStatus, setFormStatus] = useState(null);
+
+  // Auth session listener
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -49,6 +63,11 @@ export default function Home() {
     }
     fetchData();
   }, []);
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push("/auth");
+  }
 
   const neighborhoods = [
     "All",
@@ -115,12 +134,58 @@ export default function Home() {
         margin: "0 auto",
         padding: "20px",
         fontFamily: "system-ui, sans-serif",
-        //background: "#f9f9f9",
         minHeight: "100vh",
       }}
     >
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "24px" }}>
+      <div
+        style={{
+          position: "relative",
+          textAlign: "center",
+          marginBottom: "24px",
+        }}
+      >
+        {/* Auth button — top right */}
+        <div style={{ position: "absolute", top: 0, right: 0 }}>
+          {session ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "13px", color: "#888" }}>
+                {session.user.email}
+              </span>
+              <button
+                onClick={handleSignOut}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "20px",
+                  border: "1px solid #ddd",
+                  background: "#fff",
+                  color: "#555",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => router.push("/auth")}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "20px",
+                border: "1px solid #2d6a4f",
+                background: "#fff",
+                color: "#2d6a4f",
+                fontSize: "13px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              Sign In
+            </button>
+          )}
+        </div>
+
         <h1 style={{ color: "#2d6a4f", fontSize: "2rem", margin: "0" }}>
           🐾 PetParrk
         </h1>
@@ -138,6 +203,7 @@ export default function Home() {
           Vet pricing transparency for the East Bay
         </p>
       </div>
+
       {/* Neighborhood Filter */}
       <div style={{ marginBottom: "20px" }}>
         <label
@@ -163,6 +229,7 @@ export default function Home() {
           {filtered.length} vets
         </span>
       </div>
+
       {/* Ownership Filter */}
       <div style={{ marginBottom: "20px" }}>
         <label
@@ -227,6 +294,7 @@ export default function Home() {
           </button>
         ))}
       </div>
+
       {/* Search */}
       <div style={{ marginBottom: "20px" }}>
         <input
@@ -245,7 +313,9 @@ export default function Home() {
           }}
         />
       </div>
+
       {loading && <p>Loading vets...</p>}
+
       {/* Vet Cards */}
       {filtered.map((vet) => {
         const vetPrices = prices[vet.id] || [];
@@ -490,6 +560,7 @@ export default function Home() {
           </div>
         );
       })}
+
       {/* Submit a Price */}
       <div style={{ marginTop: "40px", textAlign: "center" }}>
         <button
@@ -603,6 +674,7 @@ export default function Home() {
           </div>
         )}
       </div>
+
       {/* Footer */}
       <footer
         style={{

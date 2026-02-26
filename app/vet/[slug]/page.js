@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
 import {
@@ -14,10 +14,11 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { useRef } from "react";
 
 export default function VetPage() {
   const { slug } = useParams();
+  const router = useRouter();
+  const [session, setSession] = useState(null);
   const [vet, setVet] = useState(null);
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +34,17 @@ export default function VetPage() {
   const [formStatus, setFormStatus] = useState(null);
   const [chartVisible, setChartVisible] = useState(false);
   const chartRef = useRef(null);
+
+  // Auth session listener
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -62,6 +74,11 @@ export default function VetPage() {
     }
   }, [loading]);
 
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push("/auth");
+  }
+
   const handleSubmit = async () => {
     if (!formData.vet_name || !formData.service_name || !formData.price_paid) {
       setFormStatus("error");
@@ -80,7 +97,6 @@ export default function VetPage() {
       setFormStatus("error");
       return;
     }
-
     setFormStatus("success");
     setFormData({
       vet_name: "",
@@ -139,23 +155,68 @@ export default function VetPage() {
         margin: "0 auto",
         padding: "20px",
         fontFamily: "system-ui, sans-serif",
-        //background: "#f9f9f9",
         minHeight: "100vh",
         boxSizing: "border-box",
       }}
     >
-      <Link
-        href="/"
+      {/* Top nav — Back link + Auth button */}
+      <div
         style={{
-          color: "#2d6a4f",
-          fontSize: "14px",
-          textDecoration: "none",
-          display: "inline-block",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           marginBottom: "20px",
         }}
       >
-        ← Back to all vets
-      </Link>
+        <Link
+          href="/"
+          style={{
+            color: "#2d6a4f",
+            fontSize: "14px",
+            textDecoration: "none",
+          }}
+        >
+          ← Back to all vets
+        </Link>
+
+        {session ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "13px", color: "#888" }}>
+              {session.user.email}
+            </span>
+            <button
+              onClick={handleSignOut}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "20px",
+                border: "1px solid #ddd",
+                background: "#fff",
+                color: "#555",
+                fontSize: "13px",
+                cursor: "pointer",
+              }}
+            >
+              Sign Out
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => router.push("/auth")}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "20px",
+              border: "1px solid #2d6a4f",
+              background: "#fff",
+              color: "#2d6a4f",
+              fontSize: "13px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            Sign In
+          </button>
+        )}
+      </div>
 
       {/* Vet Info Card */}
       <div
@@ -355,8 +416,6 @@ export default function VetPage() {
         </button>
       </div>
 
-      {console.log("lat/lng:", vet?.latitude, vet?.longitude)}
-
       {/* Map */}
       {vet.latitude && vet.longitude && (
         <div
@@ -457,7 +516,6 @@ export default function VetPage() {
                   </span>
                 </div>
 
-                {/* This vet bar */}
                 <div style={{ marginBottom: "6px" }}>
                   <div
                     style={{
@@ -513,7 +571,6 @@ export default function VetPage() {
                   </div>
                 </div>
 
-                {/* East Bay avg bar */}
                 <div>
                   <div
                     style={{
