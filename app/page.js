@@ -39,7 +39,12 @@ export default function Home() {
   const [formStatus, setFormStatus] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      // Clean up the # left behind by Supabase OAuth redirect
+      if (window.location.hash)
+        window.history.replaceState(null, "", window.location.pathname);
+    });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_e, session) => setSession(session));
