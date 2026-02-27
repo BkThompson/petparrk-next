@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
@@ -14,6 +14,10 @@ function formatPrice(low, high) {
 export default function Home() {
   const router = useRouter();
   const [session, setSession] = useState(undefined);
+  const [savedVetIds, setSavedVetIds] = useState(new Set());
+  const [animatingId, setAnimatingId] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
   const [vets, setVets] = useState([]);
   const [prices, setPrices] = useState({});
   const [loading, setLoading] = useState(true);
@@ -31,14 +35,11 @@ export default function Home() {
   });
   const [formStatus, setFormStatus] = useState(null);
 
-  // Auth session listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_e, session) => {
-      setSession(session);
-    });
+    } = supabase.auth.onAuthStateChange((_e, session) => setSession(session));
     return () => subscription.unsubscribe();
   }, []);
 
@@ -64,11 +65,64 @@ export default function Home() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (!session) return;
+    async function fetchSaved() {
+      const { data } = await supabase
+        .from("saved_vets")
+        .select("vet_id")
+        .eq("user_id", session.user.id);
+      setSavedVetIds(new Set(data?.map((s) => s.vet_id) || []));
+    }
+    fetchSaved();
+  }, [session]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   async function handleSignOut() {
+    setShowDropdown(false);
     await supabase.auth.signOut();
     router.push("/auth");
   }
 
+  async function toggleSave(e, vetId) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!session) {
+      router.push("/auth");
+      return;
+    }
+    setAnimatingId(vetId);
+    setTimeout(() => setAnimatingId(null), 400);
+    if (savedVetIds.has(vetId)) {
+      await supabase
+        .from("saved_vets")
+        .delete()
+        .eq("user_id", session.user.id)
+        .eq("vet_id", vetId);
+      setSavedVetIds((prev) => {
+        const next = new Set(prev);
+        next.delete(vetId);
+        return next;
+      });
+    } else {
+      await supabase
+        .from("saved_vets")
+        .insert({ user_id: session.user.id, vet_id: vetId });
+      setSavedVetIds((prev) => new Set([...prev, vetId]));
+    }
+  }
+
+  const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
   const neighborhoods = [
     "All",
     ...new Set(
@@ -78,7 +132,6 @@ export default function Home() {
         .sort()
     ),
   ];
-
   const filtered = vets
     .filter((v) => neighborhood === "All" || v.neighborhood === neighborhood)
     .filter((v) => ownership === "All" || v.ownership === ownership)
@@ -104,15 +157,17 @@ export default function Home() {
       setFormStatus("error");
       return;
     }
-    const { error } = await supabase.from("price_submissions").insert([
-      {
-        vet_name: formData.vet_name,
-        service_name: formData.service_name,
-        price_paid: parseFloat(formData.price_paid),
-        visit_date: formData.visit_date || null,
-        submitter_note: formData.submitter_note || null,
-      },
-    ]);
+    const { error } = await supabase
+      .from("price_submissions")
+      .insert([
+        {
+          vet_name: formData.vet_name,
+          service_name: formData.service_name,
+          price_paid: parseFloat(formData.price_paid),
+          visit_date: formData.visit_date || null,
+          submitter_note: formData.submitter_note || null,
+        },
+      ]);
     if (error) {
       setFormStatus("error");
       return;
@@ -128,596 +183,732 @@ export default function Home() {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "860px",
-        margin: "0 auto",
-        padding: "20px",
-        fontFamily: "system-ui, sans-serif",
-        minHeight: "100vh",
-      }}
-    >
-      {/* Header */}
+    <>
+      <style>{`
+        @keyframes heartPop {
+          0%   { transform: scale(1); }
+          40%  { transform: scale(1.5); }
+          70%  { transform: scale(0.85); }
+          100% { transform: scale(1); }
+        }
+        .heart-btn { transition: transform 0.1s; border: none; background: none; cursor: pointer; padding: 0; font-size: 20px; line-height: 1; }
+        .heart-btn:hover { transform: scale(1.15); }
+        .heart-animating { animation: heartPop 0.4s ease forwards; }
+        .avatar-dropdown-item {
+          display: block;
+          width: 100%;
+          padding: 10px 16px;
+          text-align: left;
+          background: none;
+          border: none;
+          font-size: 13px;
+          cursor: pointer;
+          color: #333;
+          white-space: nowrap;
+          box-sizing: border-box;
+        }
+        .avatar-dropdown-item:hover { background: #f5f5f5; }
+        .avatar-dropdown-item.danger { color: #555; }
+        .avatar-dropdown-item.danger:hover { background: #f5f5f5; }
+      `}</style>
+
       <div
         style={{
-          position: "relative",
-          textAlign: "center",
-          marginBottom: "24px",
+          maxWidth: "860px",
+          margin: "0 auto",
+          padding: "20px",
+          fontFamily: "system-ui, sans-serif",
+          minHeight: "100vh",
         }}
       >
-        {/* Auth button — top right */}
-        {session !== undefined && (
-          <div style={{ position: "absolute", top: 0, right: 0 }}>
-            {session ? (
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}
-              >
-                <span style={{ fontSize: "13px", color: "#888" }}>
-                  {session.user.email}
-                </span>
+        {/* Header */}
+        <div
+          style={{
+            position: "relative",
+            textAlign: "center",
+            marginBottom: "24px",
+          }}
+        >
+          {session !== undefined && (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              {session ? (
+                <>
+                  {/* Avatar with dropdown */}
+                  <div ref={dropdownRef} style={{ position: "relative" }}>
+                    <div
+                      onClick={() => setShowDropdown(!showDropdown)}
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "50%",
+                        background: "#2d6a4f",
+                        color: "#fff",
+                        fontSize: "13px",
+                        fontWeight: "700",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        userSelect: "none",
+                      }}
+                    >
+                      {avatarLetter}
+                    </div>
+
+                    {showDropdown && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "40px",
+                          right: 0,
+                          background: "#fff",
+                          border: "1px solid #e0e0e0",
+                          borderRadius: "10px",
+                          boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+                          minWidth: "180px",
+                          zIndex: 100,
+                          overflow: "hidden",
+                          textAlign: "left",
+                        }}
+                      >
+                        {/* Email header */}
+                        <div
+                          style={{
+                            padding: "10px 16px",
+                            borderBottom: "1px solid #f0f0f0",
+                          }}
+                        >
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: "11px",
+                              color: "#888",
+                            }}
+                          >
+                            Signed in as
+                          </p>
+                          <p
+                            style={{
+                              margin: "2px 0 0 0",
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              color: "#333",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              maxWidth: "160px",
+                            }}
+                          >
+                            {session.user.email}
+                          </p>
+                        </div>
+                        {/* Menu items — add more here later */}
+                        <Link
+                          href="/saved"
+                          onClick={() => setShowDropdown(false)}
+                          style={{
+                            display: "block",
+                            padding: "10px 16px",
+                            fontSize: "13px",
+                            color: "#333",
+                            textDecoration: "none",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background = "#f5f5f5")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background = "none")
+                          }
+                        >
+                          ❤️ Saved Vets
+                        </Link>
+                        <div style={{ borderTop: "1px solid #f0f0f0" }}>
+                          <button
+                            onClick={handleSignOut}
+                            className="avatar-dropdown-item danger"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
                 <button
-                  onClick={handleSignOut}
+                  onClick={() => router.push("/auth")}
                   style={{
                     padding: "6px 14px",
                     borderRadius: "20px",
-                    border: "1px solid #ddd",
+                    border: "1px solid #2d6a4f",
                     background: "#fff",
-                    color: "#555",
+                    color: "#2d6a4f",
                     fontSize: "13px",
+                    fontWeight: "600",
                     cursor: "pointer",
                   }}
                 >
-                  Sign Out
+                  Sign In
                 </button>
-              </div>
-            ) : (
+              )}
+            </div>
+          )}
+
+          <h1 style={{ color: "#2d6a4f", fontSize: "2rem", margin: "0" }}>
+            🐾 PetParrk
+          </h1>
+          <p
+            style={{
+              color: "#333",
+              margin: "4px 0 2px 0",
+              fontSize: "15px",
+              fontWeight: "500",
+            }}
+          >
+            Know what you'll pay before you go.
+          </p>
+          <p style={{ color: "#888", margin: "0", fontSize: "13px" }}>
+            Vet pricing transparency for the East Bay
+          </p>
+        </div>
+
+        {/* Neighborhood Filter */}
+        <div style={{ marginBottom: "20px" }}>
+          <label
+            style={{ fontWeight: "bold", marginRight: "8px", color: "#333" }}
+          >
+            Neighborhood:
+          </label>
+          <select
+            value={neighborhood}
+            onChange={(e) => setNeighborhood(e.target.value)}
+            style={{
+              padding: "6px 12px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+            }}
+          >
+            {neighborhoods.map((n) => (
+              <option key={n}>{n}</option>
+            ))}
+          </select>
+          <span style={{ marginLeft: "12px", color: "#888", fontSize: "14px" }}>
+            {filtered.length} vets
+          </span>
+        </div>
+
+        {/* Ownership Filter */}
+        <div style={{ marginBottom: "20px" }}>
+          <label
+            style={{ fontWeight: "bold", marginRight: "8px", color: "#333" }}
+          >
+            Ownership:
+          </label>
+          <div
+            style={{
+              display: "inline-flex",
+              flexWrap: "wrap",
+              gap: "8px",
+              marginTop: "4px",
+            }}
+          >
+            {["All", "Independent", "Corporate"].map((o) => (
               <button
-                onClick={() => router.push("/auth")}
+                key={o}
+                onClick={() => setOwnership(o)}
                 style={{
-                  padding: "6px 14px",
+                  padding: "6px 12px",
                   borderRadius: "20px",
-                  border: "1px solid #2d6a4f",
-                  background: "#fff",
-                  color: "#2d6a4f",
-                  fontSize: "13px",
-                  fontWeight: "600",
+                  border: "1px solid #ccc",
+                  background: ownership === o ? "#2d6a4f" : "#fff",
+                  color: ownership === o ? "#fff" : "#333",
                   cursor: "pointer",
+                  fontSize: "13px",
                 }}
               >
-                Sign In
+                {o}
               </button>
-            )}
+            ))}
           </div>
-        )}
+        </div>
 
-        <h1 style={{ color: "#2d6a4f", fontSize: "2rem", margin: "0" }}>
-          🐾 PetParrk
-        </h1>
-        <p
-          style={{
-            color: "#333",
-            margin: "4px 0 2px 0",
-            fontSize: "15px",
-            fontWeight: "500",
-          }}
-        >
-          Know what you'll pay before you go.
-        </p>
-        <p style={{ color: "#888", margin: "0", fontSize: "13px" }}>
-          Vet pricing transparency for the East Bay
-        </p>
-      </div>
-
-      {/* Neighborhood Filter */}
-      <div style={{ marginBottom: "20px" }}>
-        <label
-          style={{ fontWeight: "bold", marginRight: "8px", color: "#333" }}
-        >
-          Neighborhood:
-        </label>
-        <select
-          value={neighborhood}
-          onChange={(e) => setNeighborhood(e.target.value)}
-          style={{
-            padding: "6px 12px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-            fontSize: "14px",
-          }}
-        >
-          {neighborhoods.map((n) => (
-            <option key={n}>{n}</option>
-          ))}
-        </select>
-        <span style={{ marginLeft: "12px", color: "#888", fontSize: "14px" }}>
-          {filtered.length} vets
-        </span>
-      </div>
-
-      {/* Ownership Filter */}
-      <div style={{ marginBottom: "20px" }}>
-        <label
-          style={{ fontWeight: "bold", marginRight: "8px", color: "#333" }}
-        >
-          Ownership:
-        </label>
-        <div
-          style={{
-            display: "inline-flex",
-            flexWrap: "wrap",
-            gap: "8px",
-            marginTop: "4px",
-          }}
-        >
-          {["All", "Independent", "Corporate"].map((o) => (
+        {/* Sort */}
+        <div style={{ marginBottom: "20px" }}>
+          <label
+            style={{ fontWeight: "bold", marginRight: "8px", color: "#333" }}
+          >
+            Sort:
+          </label>
+          {[
+            ["price", "💰 Cheapest First"],
+            ["az", "A–Z"],
+          ].map(([val, label]) => (
             <button
-              key={o}
-              onClick={() => setOwnership(o)}
+              key={val}
+              onClick={() => setSortBy(val)}
               style={{
+                marginRight: "8px",
                 padding: "6px 12px",
                 borderRadius: "20px",
                 border: "1px solid #ccc",
-                background: ownership === o ? "#2d6a4f" : "#fff",
-                color: ownership === o ? "#fff" : "#333",
+                background: sortBy === val ? "#2d6a4f" : "#fff",
+                color: sortBy === val ? "#fff" : "#333",
                 cursor: "pointer",
                 fontSize: "13px",
               }}
             >
-              {o}
+              {label}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Sort */}
-      <div style={{ marginBottom: "20px" }}>
-        <label
-          style={{ fontWeight: "bold", marginRight: "8px", color: "#333" }}
-        >
-          Sort:
-        </label>
-        {[
-          ["price", "💰 Cheapest First"],
-          ["az", "A–Z"],
-        ].map(([val, label]) => (
-          <button
-            key={val}
-            onClick={() => setSortBy(val)}
+        {/* Search */}
+        <div style={{ marginBottom: "20px" }}>
+          <input
+            type="text"
+            placeholder="Search vets..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             style={{
-              marginRight: "8px",
-              padding: "6px 12px",
-              borderRadius: "20px",
+              width: "100%",
+              padding: "10px 14px",
+              borderRadius: "8px",
               border: "1px solid #ccc",
-              background: sortBy === val ? "#2d6a4f" : "#fff",
-              color: sortBy === val ? "#fff" : "#333",
-              cursor: "pointer",
-              fontSize: "13px",
+              fontSize: "15px",
+              outline: "none",
+              boxSizing: "border-box",
             }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+          />
+        </div>
 
-      {/* Search */}
-      <div style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          placeholder="Search vets..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px 14px",
-            borderRadius: "8px",
-            border: "1px solid #ccc",
-            fontSize: "15px",
-            outline: "none",
-            boxSizing: "border-box",
-          }}
-        />
-      </div>
+        {loading && <p>Loading vets...</p>}
 
-      {loading && <p>Loading vets...</p>}
+        {/* Vet Cards */}
+        {filtered.map((vet) => {
+          const vetPrices = prices[vet.id] || [];
+          const exam = vetPrices.find(
+            (p) => p.services?.name === "Doctor Exam"
+          );
+          const dental = vetPrices.find(
+            (p) => p.services?.name === "Dental Cleaning"
+          );
+          const spay = vetPrices.find(
+            (p) => p.services?.name === "Spay (~40lb dog)"
+          );
+          const neuter = vetPrices.find(
+            (p) => p.services?.name === "Neuter (~40lb dog)"
+          );
+          const lastUpdated = vet.last_verified
+            ? new Date(vet.last_verified + "T12:00:00")
+            : vetPrices.length > 0
+            ? new Date(
+                Math.max(...vetPrices.map((p) => new Date(p.created_at)))
+              )
+            : null;
+          const isSaved = savedVetIds.has(vet.id);
+          const isAnimating = animatingId === vet.id;
 
-      {/* Vet Cards */}
-      {filtered.map((vet) => {
-        const vetPrices = prices[vet.id] || [];
-        const exam = vetPrices.find((p) => p.services?.name === "Doctor Exam");
-        const dental = vetPrices.find(
-          (p) => p.services?.name === "Dental Cleaning"
-        );
-        const spay = vetPrices.find(
-          (p) => p.services?.name === "Spay (~40lb dog)"
-        );
-        const neuter = vetPrices.find(
-          (p) => p.services?.name === "Neuter (~40lb dog)"
-        );
-        const lastUpdated = vet.last_verified
-          ? new Date(vet.last_verified + "T12:00:00")
-          : vetPrices.length > 0
-          ? new Date(Math.max(...vetPrices.map((p) => new Date(p.created_at))))
-          : null;
-
-        return (
-          <div
-            key={vet.id}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: "10px",
-              padding: "16px",
-              marginBottom: "12px",
-              background: "#ffffff",
-            }}
-          >
+          return (
             <div
+              key={vet.id}
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
+                border: "1px solid #ddd",
+                borderRadius: "10px",
+                padding: "16px",
+                marginBottom: "12px",
+                background: "#ffffff",
               }}
             >
-              <div>
-                <h2 style={{ margin: "0 0 4px 0", fontSize: "1.1rem" }}>
-                  <Link
-                    href={`/vet/${vet.slug}`}
-                    style={{ color: "#111", textDecoration: "none" }}
-                    onMouseEnter={(e) => {
-                      e.target.style.color = "#2d6a4f";
-                      e.target.style.textDecoration = "underline";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.color = "#111";
-                      e.target.style.textDecoration = "none";
-                    }}
-                  >
-                    {vet.name}
-                  </Link>
-                </h2>
-                <p
-                  style={{
-                    margin: "0 0 2px 0",
-                    color: "#666",
-                    fontSize: "13px",
-                  }}
-                >
-                  {vet.neighborhood}
-                </p>
-                <p style={{ margin: "0 0 2px 0", fontSize: "13px" }}>
-                  <a
-                    href={`tel:${vet.phone}`}
-                    style={{ color: "#666", textDecoration: "none" }}
-                  >
-                    {vet.phone}
-                  </a>
-                </p>
-                {vet.website && (
-                  <p style={{ margin: "0", fontSize: "13px" }}>
-                    <a
-                      href={`https://${vet.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "#2d6a4f", textDecoration: "none" }}
-                      onMouseEnter={(e) =>
-                        (e.target.style.textDecoration = "underline")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.target.style.textDecoration = "none")
-                      }
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <h2 style={{ margin: "0 0 4px 0", fontSize: "1.1rem" }}>
+                    <Link
+                      href={`/vet/${vet.slug}`}
+                      style={{ color: "#111", textDecoration: "none" }}
+                      onMouseEnter={(e) => {
+                        e.target.style.color = "#2d6a4f";
+                        e.target.style.textDecoration = "underline";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.color = "#111";
+                        e.target.style.textDecoration = "none";
+                      }}
                     >
-                      Website ↗
+                      {vet.name}
+                    </Link>
+                  </h2>
+                  <p
+                    style={{
+                      margin: "0 0 2px 0",
+                      color: "#666",
+                      fontSize: "13px",
+                    }}
+                  >
+                    {vet.neighborhood}
+                  </p>
+                  <p style={{ margin: "0 0 2px 0", fontSize: "13px" }}>
+                    <a
+                      href={`tel:${vet.phone}`}
+                      style={{ color: "#666", textDecoration: "none" }}
+                    >
+                      {vet.phone}
                     </a>
                   </p>
-                )}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                  gap: "4px",
-                }}
-              >
-                <span
+                  {vet.website && (
+                    <p style={{ margin: "0", fontSize: "13px" }}>
+                      <a
+                        href={`https://${vet.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "#2d6a4f", textDecoration: "none" }}
+                        onMouseEnter={(e) =>
+                          (e.target.style.textDecoration = "underline")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.target.style.textDecoration = "none")
+                        }
+                      >
+                        Website ↗
+                      </a>
+                    </p>
+                  )}
+                </div>
+                <div
                   style={{
-                    fontSize: "11px",
-                    background: "#e8f5e9",
-                    color: "#2d6a4f",
-                    padding: "2px 8px",
-                    borderRadius: "12px",
-                    whiteSpace: "nowrap",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: "4px",
                   }}
                 >
-                  {vet.vet_type}
-                </span>
-                {vet.accepting_new_patients === true && (
                   <span
                     style={{
                       fontSize: "11px",
-                      background: "#e8f0fe",
-                      color: "#3949ab",
+                      background: "#e8f5e9",
+                      color: "#2d6a4f",
                       padding: "2px 8px",
                       borderRadius: "12px",
                       whiteSpace: "nowrap",
                     }}
                   >
-                    ✅ Accepting patients
+                    {vet.vet_type}
                   </span>
-                )}
-                {vet.accepting_new_patients === false && (
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      background: "#fce8e8",
-                      color: "#c62828",
-                      padding: "2px 8px",
-                      borderRadius: "12px",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    ❌ Not accepting
-                  </span>
-                )}
+                  {vet.accepting_new_patients === true && (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        background: "#e8f0fe",
+                        color: "#3949ab",
+                        padding: "2px 8px",
+                        borderRadius: "12px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      ✅ Accepting patients
+                    </span>
+                  )}
+                  {vet.accepting_new_patients === false && (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        background: "#fce8e8",
+                        color: "#c62828",
+                        padding: "2px 8px",
+                        borderRadius: "12px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      ❌ Not accepting
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {!exam && !dental && !spay && !neuter ? (
-              <p
-                style={{
-                  margin: "12px 0 0 0",
-                  fontSize: "13px",
-                  color: "#999",
-                  fontStyle: "italic",
-                }}
-              >
-                No pricing available
-              </p>
-            ) : (
+              {!exam && !dental && !spay && !neuter ? (
+                <p
+                  style={{
+                    margin: "12px 0 0 0",
+                    fontSize: "13px",
+                    color: "#999",
+                    fontStyle: "italic",
+                  }}
+                >
+                  No pricing available
+                </p>
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    marginTop: "12px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {exam && (
+                    <div
+                      style={{
+                        background: "#f0f0f0",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontSize: "13px",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>Exam </span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>
+                        {formatPrice(exam.price_low, exam.price_high)}
+                      </span>
+                    </div>
+                  )}
+                  {dental && (
+                    <div
+                      style={{
+                        background: "#f0f0f0",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontSize: "13px",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>Dental </span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>
+                        {formatPrice(dental.price_low, dental.price_high)}
+                      </span>
+                    </div>
+                  )}
+                  {spay && (
+                    <div
+                      style={{
+                        background: "#f0f0f0",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontSize: "13px",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>Spay </span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>
+                        {formatPrice(spay.price_low, spay.price_high)}
+                      </span>
+                    </div>
+                  )}
+                  {neuter && (
+                    <div
+                      style={{
+                        background: "#f0f0f0",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontSize: "13px",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>Neuter </span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>
+                        {formatPrice(neuter.price_low, neuter.price_high)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Bottom row — verified + heart */}
               <div
                 style={{
                   display: "flex",
-                  gap: "8px",
-                  marginTop: "12px",
-                  flexWrap: "wrap",
-                }}
-              >
-                {exam && (
-                  <div
-                    style={{
-                      background: "#f0f0f0",
-                      borderRadius: "6px",
-                      padding: "6px 10px",
-                      fontSize: "13px",
-                    }}
-                  >
-                    <span style={{ color: "#666" }}>Exam </span>
-                    <span style={{ fontWeight: "bold", color: "#111" }}>
-                      {formatPrice(exam.price_low, exam.price_high)}
-                    </span>
-                  </div>
-                )}
-                {dental && (
-                  <div
-                    style={{
-                      background: "#f0f0f0",
-                      borderRadius: "6px",
-                      padding: "6px 10px",
-                      fontSize: "13px",
-                    }}
-                  >
-                    <span style={{ color: "#666" }}>Dental </span>
-                    <span style={{ fontWeight: "bold", color: "#111" }}>
-                      {formatPrice(dental.price_low, dental.price_high)}
-                    </span>
-                  </div>
-                )}
-                {spay && (
-                  <div
-                    style={{
-                      background: "#f0f0f0",
-                      borderRadius: "6px",
-                      padding: "6px 10px",
-                      fontSize: "13px",
-                    }}
-                  >
-                    <span style={{ color: "#666" }}>Spay </span>
-                    <span style={{ fontWeight: "bold", color: "#111" }}>
-                      {formatPrice(spay.price_low, spay.price_high)}
-                    </span>
-                  </div>
-                )}
-                {neuter && (
-                  <div
-                    style={{
-                      background: "#f0f0f0",
-                      borderRadius: "6px",
-                      padding: "6px 10px",
-                      fontSize: "13px",
-                    }}
-                  >
-                    <span style={{ color: "#666" }}>Neuter </span>
-                    <span style={{ fontWeight: "bold", color: "#111" }}>
-                      {formatPrice(neuter.price_low, neuter.price_high)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {lastUpdated && (
-              <p
-                style={{
-                  margin: "10px 0 0 0",
-                  color: "#aaa",
-                  fontSize: "11px",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: "10px",
                   borderTop: "1px solid #f0f0f0",
                   paddingTop: "8px",
                 }}
               >
-                Verified{" "}
-                {lastUpdated.toLocaleDateString("en-US", {
-                  month: "short",
-                  year: "numeric",
-                })}
-              </p>
-            )}
-          </div>
-        );
-      })}
+                <p style={{ margin: 0, color: "#aaa", fontSize: "11px" }}>
+                  {lastUpdated
+                    ? `Verified ${lastUpdated.toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "numeric",
+                      })}`
+                    : ""}
+                </p>
+                <button
+                  onClick={(e) => toggleSave(e, vet.id)}
+                  title={isSaved ? "Remove from saved" : "Save this vet"}
+                  className={`heart-btn${
+                    isAnimating ? " heart-animating" : ""
+                  }`}
+                >
+                  {isSaved ? "❤️" : "🤍"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
 
-      {/* Submit a Price */}
-      <div style={{ marginTop: "40px", textAlign: "center" }}>
-        <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setFormStatus(null);
-          }}
-          style={{
-            padding: "10px 24px",
-            backgroundColor: "#2d6a4f",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "14px",
-            cursor: "pointer",
-          }}
-        >
-          {showForm ? "Cancel" : "💰 Submit a Price"}
-        </button>
-
-        {showForm && (
-          <div
+        {/* Submit a Price */}
+        <div style={{ marginTop: "40px", textAlign: "center" }}>
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setFormStatus(null);
+            }}
             style={{
-              marginTop: "20px",
-              background: "#fff",
-              border: "1px solid #ddd",
-              borderRadius: "12px",
-              padding: "24px",
-              textAlign: "left",
-              maxWidth: "500px",
-              margin: "20px auto 0",
+              padding: "10px 24px",
+              backgroundColor: "#2d6a4f",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "14px",
+              cursor: "pointer",
             }}
           >
-            <h3 style={{ margin: "0 0 16px 0", color: "#111" }}>
-              Submit a Vet Price
-            </h3>
-            {[
-              "vet_name",
-              "service_name",
-              "price_paid",
-              "visit_date",
-              "submitter_note",
-            ].map((field) => (
-              <div key={field} style={{ marginBottom: "12px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "13px",
-                    color: "#555",
-                    marginBottom: "4px",
-                  }}
-                >
-                  {field === "vet_name"
-                    ? "Vet Name *"
-                    : field === "service_name"
-                    ? "Service (e.g. Exam, Dental) *"
-                    : field === "price_paid"
-                    ? "Price Paid ($) *"
-                    : field === "visit_date"
-                    ? "Date of Visit (optional)"
-                    : "Notes (optional)"}
-                </label>
-                <input
-                  type={
-                    field === "price_paid"
-                      ? "number"
-                      : field === "visit_date"
-                      ? "date"
-                      : "text"
-                  }
-                  value={formData[field]}
-                  onChange={(e) =>
-                    setFormData({ ...formData, [field]: e.target.value })
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
-                    fontSize: "14px",
-                    boxSizing: "border-box",
-                  }}
-                />
-              </div>
-            ))}
-            {formStatus === "error" && (
-              <p style={{ color: "red", fontSize: "13px" }}>
-                Please fill in all required fields.
-              </p>
-            )}
-            {formStatus === "success" && (
-              <p style={{ color: "green", fontSize: "13px" }}>
-                Thanks! Your submission is under review.
-              </p>
-            )}
-            <button
-              onClick={handleSubmit}
+            {showForm ? "Cancel" : "💰 Submit a Price"}
+          </button>
+          {showForm && (
+            <div
               style={{
-                padding: "10px 24px",
-                backgroundColor: "#2d6a4f",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "14px",
-                cursor: "pointer",
-                marginTop: "4px",
+                marginTop: "20px",
+                background: "#fff",
+                border: "1px solid #ddd",
+                borderRadius: "12px",
+                padding: "24px",
+                textAlign: "left",
+                maxWidth: "500px",
+                margin: "20px auto 0",
               }}
             >
-              Submit
-            </button>
-          </div>
-        )}
-      </div>
+              <h3 style={{ margin: "0 0 16px 0", color: "#111" }}>
+                Submit a Vet Price
+              </h3>
+              {[
+                "vet_name",
+                "service_name",
+                "price_paid",
+                "visit_date",
+                "submitter_note",
+              ].map((field) => (
+                <div key={field} style={{ marginBottom: "12px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      color: "#555",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    {field === "vet_name"
+                      ? "Vet Name *"
+                      : field === "service_name"
+                      ? "Service (e.g. Exam, Dental) *"
+                      : field === "price_paid"
+                      ? "Price Paid ($) *"
+                      : field === "visit_date"
+                      ? "Date of Visit (optional)"
+                      : "Notes (optional)"}
+                  </label>
+                  <input
+                    type={
+                      field === "price_paid"
+                        ? "number"
+                        : field === "visit_date"
+                        ? "date"
+                        : "text"
+                    }
+                    value={formData[field]}
+                    onChange={(e) =>
+                      setFormData({ ...formData, [field]: e.target.value })
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #ccc",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              ))}
+              {formStatus === "error" && (
+                <p style={{ color: "red", fontSize: "13px" }}>
+                  Please fill in all required fields.
+                </p>
+              )}
+              {formStatus === "success" && (
+                <p style={{ color: "green", fontSize: "13px" }}>
+                  Thanks! Your submission is under review.
+                </p>
+              )}
+              <button
+                onClick={handleSubmit}
+                style={{
+                  padding: "10px 24px",
+                  backgroundColor: "#2d6a4f",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  marginTop: "4px",
+                }}
+              >
+                Submit
+              </button>
+            </div>
+          )}
+        </div>
 
-      {/* Footer */}
-      <footer
-        style={{
-          marginTop: "60px",
-          borderTop: "1px solid #ddd",
-          paddingTop: "24px",
-          paddingBottom: "40px",
-          textAlign: "center",
-          color: "#888",
-          fontSize: "13px",
-        }}
-      >
-        <p
+        {/* Footer */}
+        <footer
           style={{
-            margin: "0 0 8px 0",
-            fontWeight: "bold",
-            color: "#2d6a4f",
-            fontSize: "15px",
+            marginTop: "60px",
+            borderTop: "1px solid #ddd",
+            paddingTop: "24px",
+            paddingBottom: "40px",
+            textAlign: "center",
+            color: "#888",
+            fontSize: "13px",
           }}
         >
-          🐾 PetParrk
-        </p>
-        <p style={{ margin: "0 0 8px 0" }}>
-          Real prices. Real vets. No surprises.
-        </p>
-        <p style={{ margin: "0 0 8px 0" }}>
-          Pricing data is self-reported and verified by our team. Always call to
-          confirm before your visit.
-        </p>
-        <p style={{ margin: "0" }}>
-          Questions or feedback?{" "}
-          <a
-            href="mailto:bkalthompson@gmail.com"
-            style={{ color: "#2d6a4f", textDecoration: "none" }}
+          <p
+            style={{
+              margin: "0 0 8px 0",
+              fontWeight: "bold",
+              color: "#2d6a4f",
+              fontSize: "15px",
+            }}
           >
-            bkalthompson@gmail.com
-          </a>
-        </p>
-      </footer>
-    </div>
+            🐾 PetParrk
+          </p>
+          <p style={{ margin: "0 0 8px 0" }}>
+            Real prices. Real vets. No surprises.
+          </p>
+          <p style={{ margin: "0 0 8px 0" }}>
+            Pricing data is self-reported and verified by our team. Always call
+            to confirm before your visit.
+          </p>
+          <p style={{ margin: "0" }}>
+            Questions or feedback?{" "}
+            <a
+              href="mailto:bkalthompson@gmail.com"
+              style={{ color: "#2d6a4f", textDecoration: "none" }}
+            >
+              bkalthompson@gmail.com
+            </a>
+          </p>
+        </footer>
+      </div>
+    </>
   );
 }
