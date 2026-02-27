@@ -444,6 +444,7 @@ export default function ProfilePage() {
     : pendingPetPhoto?.previewUrl;
 
   if (session === undefined || loading) return null;
+  if (!session) return null;
 
   return (
     <>
@@ -573,7 +574,7 @@ export default function ProfilePage() {
                         maxWidth: "160px",
                       }}
                     >
-                      {session.user.email}
+                      {session?.user?.email}
                     </p>
                   </div>
                   {[
@@ -728,10 +729,10 @@ export default function ProfilePage() {
                     color: "#111",
                   }}
                 >
-                  {profile?.full_name || session.user.email}
+                  {profile?.full_name || session?.user?.email}
                 </h1>
                 <p style={{ margin: 0, fontSize: "13px", color: "#888" }}>
-                  {session.user.email}
+                  {session?.user?.email}
                 </p>
                 {profile?.bio && (
                   <p
