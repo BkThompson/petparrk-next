@@ -14,6 +14,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import Navbar from "../../../components/Navbar";
 
 export default function VetPage() {
   const { slug } = useParams();
@@ -21,8 +22,6 @@ export default function VetPage() {
   const [session, setSession] = useState(undefined);
   const [isSaved, setIsSaved] = useState(false);
   const [saveAnimating, setSaveAnimating] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef(null);
   const [vet, setVet] = useState(null);
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,16 +45,6 @@ export default function VetPage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_e, session) => setSession(session));
     return () => subscription.unsubscribe();
-  }, []);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
-        setShowDropdown(false);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Fetch vet data
@@ -100,12 +89,6 @@ export default function VetPage() {
     if (!loading) setTimeout(() => setChartVisible(true), 500);
   }, [loading]);
 
-  async function handleSignOut() {
-    setShowDropdown(false);
-    await supabase.auth.signOut();
-    router.push("/auth");
-  }
-
   async function toggleSave() {
     if (!session) {
       router.push("/auth");
@@ -133,15 +116,17 @@ export default function VetPage() {
       setFormStatus("error");
       return;
     }
-    const { error } = await supabase.from("price_submissions").insert([
-      {
-        vet_name: formData.vet_name,
-        service_name: formData.service_name,
-        price_paid: parseFloat(formData.price_paid),
-        visit_date: formData.visit_date || null,
-        submitter_note: formData.submitter_note || null,
-      },
-    ]);
+    const { error } = await supabase
+      .from("price_submissions")
+      .insert([
+        {
+          vet_name: formData.vet_name,
+          service_name: formData.service_name,
+          price_paid: parseFloat(formData.price_paid),
+          visit_date: formData.visit_date || null,
+          submitter_note: formData.submitter_note || null,
+        },
+      ]);
     if (error) {
       setFormStatus("error");
       return;
@@ -190,8 +175,6 @@ export default function VetPage() {
       alert("Link copied to clipboard!");
     }
   }
-
-  const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
 
   if (loading) return <p style={{ padding: "20px" }}>Loading...</p>;
   if (!vet) return <p style={{ padding: "20px" }}>Vet not found.</p>;
@@ -245,127 +228,26 @@ export default function VetPage() {
           >
             ← Back to all vets
           </Link>
-
-          {session !== undefined && (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {session ? (
-                <>
-                  <div ref={dropdownRef} style={{ position: "relative" }}>
-                    <div
-                      onClick={() => setShowDropdown(!showDropdown)}
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "50%",
-                        background: "#2d6a4f",
-                        color: "#fff",
-                        fontSize: "13px",
-                        fontWeight: "700",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        userSelect: "none",
-                      }}
-                    >
-                      {avatarLetter}
-                    </div>
-                    {showDropdown && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          textAlign: "left",
-                          top: "40px",
-                          right: 0,
-                          background: "#fff",
-                          border: "1px solid #e0e0e0",
-                          borderRadius: "10px",
-                          boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-                          minWidth: "180px",
-                          zIndex: 100,
-                          overflow: "hidden",
-                        }}
-                      >
-                        <div
-                          style={{
-                            padding: "10px 16px",
-                            borderBottom: "1px solid #f0f0f0",
-                          }}
-                        >
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: "11px",
-                              color: "#888",
-                            }}
-                          >
-                            Signed in as
-                          </p>
-                          <p
-                            style={{
-                              margin: "2px 0 0 0",
-                              fontSize: "13px",
-                              fontWeight: "600",
-                              color: "#333",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              maxWidth: "160px",
-                            }}
-                          >
-                            {session.user.email}
-                          </p>
-                        </div>
-                        <Link
-                          href="/saved"
-                          onClick={() => setShowDropdown(false)}
-                          style={{
-                            display: "block",
-                            padding: "10px 16px",
-                            fontSize: "13px",
-                            color: "#333",
-                            textDecoration: "none",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = "#f5f5f5")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = "none")
-                          }
-                        >
-                          ❤️ Saved Vets
-                        </Link>
-                        <div style={{ borderTop: "1px solid #f0f0f0" }}>
-                          <button
-                            onClick={handleSignOut}
-                            className="avatar-dropdown-item danger"
-                          >
-                            Sign Out
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <button
-                  onClick={() => router.push("/auth")}
-                  style={{
-                    padding: "6px 14px",
-                    borderRadius: "20px",
-                    border: "1px solid #2d6a4f",
-                    background: "#fff",
-                    color: "#2d6a4f",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                  }}
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
-          )}
+          {session !== undefined &&
+            (session ? (
+              <Navbar />
+            ) : (
+              <button
+                onClick={() => router.push("/auth")}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "20px",
+                  border: "1px solid #2d6a4f",
+                  background: "#fff",
+                  color: "#2d6a4f",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                Sign In
+              </button>
+            ))}
         </div>
 
         {/* Vet Info Card */}
@@ -585,26 +467,6 @@ export default function VetPage() {
             <span style={{ textDecoration: "underline" }}>Share this vet</span>
           </button>
         </div>
-
-        {/* Map */}
-        {vet.latitude && vet.longitude && (
-          <div
-            style={{
-              borderRadius: "12px",
-              overflow: "hidden",
-              marginBottom: "24px",
-              border: "1px solid #e0e0e0",
-            }}
-          >
-            <iframe
-              title="Vet location map"
-              width="100%"
-              height="300"
-              style={{ display: "block", border: "none" }}
-              src={`https://maps.google.com/maps?q=${vet.latitude},${vet.longitude}&z=15&output=embed`}
-            />
-          </div>
-        )}
 
         {/* Price Comparison Chart */}
         {prices.length > 0 && allPrices.length > 0 && (

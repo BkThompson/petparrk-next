@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
+import Navbar from "../components/Navbar";
 
 function formatPrice(low, high) {
   if (!low) return null;
@@ -17,6 +18,8 @@ export default function Home() {
   const [savedVetIds, setSavedVetIds] = useState(new Set());
   const [animatingId, setAnimatingId] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState(null);
+  const [avatarError, setAvatarError] = useState(false);
   const dropdownRef = useRef(null);
   const [vets, setVets] = useState([]);
   const [prices, setPrices] = useState({});
@@ -77,6 +80,18 @@ export default function Home() {
     fetchSaved();
   }, [session]);
 
+  useEffect(() => {
+    if (!session) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", session.user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.avatar_url) setProfileAvatarUrl(data.avatar_url);
+      });
+  }, [session]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e) {
@@ -123,6 +138,10 @@ export default function Home() {
   }
 
   const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
+  const avatarUrl =
+    (!avatarError &&
+      (profileAvatarUrl || session?.user?.user_metadata?.avatar_url)) ||
+    null;
   const neighborhoods = [
     "All",
     ...new Set(
@@ -241,108 +260,7 @@ export default function Home() {
               }}
             >
               {session ? (
-                <>
-                  {/* Avatar with dropdown */}
-                  <div ref={dropdownRef} style={{ position: "relative" }}>
-                    <div
-                      onClick={() => setShowDropdown(!showDropdown)}
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "50%",
-                        background: "#2d6a4f",
-                        color: "#fff",
-                        fontSize: "13px",
-                        fontWeight: "700",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        userSelect: "none",
-                      }}
-                    >
-                      {avatarLetter}
-                    </div>
-
-                    {showDropdown && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "40px",
-                          right: 0,
-                          background: "#fff",
-                          border: "1px solid #e0e0e0",
-                          borderRadius: "10px",
-                          boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-                          minWidth: "180px",
-                          zIndex: 100,
-                          overflow: "hidden",
-                          textAlign: "left",
-                        }}
-                      >
-                        {/* Email header */}
-                        <div
-                          style={{
-                            padding: "10px 16px",
-                            borderBottom: "1px solid #f0f0f0",
-                          }}
-                        >
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: "11px",
-                              color: "#888",
-                            }}
-                          >
-                            Signed in as
-                          </p>
-                          <p
-                            style={{
-                              margin: "2px 0 0 0",
-                              fontSize: "13px",
-                              fontWeight: "600",
-                              color: "#333",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              maxWidth: "160px",
-                            }}
-                          >
-                            {session.user.email}
-                          </p>
-                        </div>
-                        {/* Menu items — add more here later */}
-                        <Link
-                          href="/saved"
-                          onClick={() => setShowDropdown(false)}
-                          style={{
-                            display: "block",
-                            padding: "10px 16px",
-                            fontSize: "13px",
-                            color: "#333",
-                            textDecoration: "none",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = "#f5f5f5")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = "none")
-                          }
-                        >
-                          ❤️ Saved Vets
-                        </Link>
-                        <div style={{ borderTop: "1px solid #f0f0f0" }}>
-                          <button
-                            onClick={handleSignOut}
-                            className="avatar-dropdown-item danger"
-                          >
-                            Sign Out
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
+                <Navbar />
               ) : (
                 <button
                   onClick={() => router.push("/auth")}
