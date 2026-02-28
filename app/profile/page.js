@@ -1538,11 +1538,37 @@ export default function ProfilePage() {
                     cursor: "pointer",
                     padding: 0,
                     fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
                   }}
                 >
-                  🚨 Emergency Contacts {showContactsFor === pet.id ? "▲" : "▼"}
+                  🚨 Emergency Contacts
+                  <span
+                    style={{
+                      display: "inline-block",
+                      transition: "transform 0.3s ease",
+                      transform:
+                        showContactsFor === pet.id
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                      fontSize: "10px",
+                    }}
+                  >
+                    ▼
+                  </span>
                 </button>
-                {showContactsFor === pet.id && (
+                <div
+                  style={{
+                    overflow: "hidden",
+                    maxHeight: showContactsFor === pet.id ? "400px" : "0px",
+                    opacity: showContactsFor === pet.id ? 1 : 0,
+                    transition:
+                      showContactsFor === pet.id
+                        ? "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease"
+                        : "max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease",
+                  }}
+                >
                   <div style={{ marginTop: "10px" }}>
                     {(contacts[pet.id] || []).map((c) => (
                       <div
@@ -1673,7 +1699,7 @@ export default function ProfilePage() {
                       </button>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           ))}
