@@ -48,7 +48,7 @@ export default function AuthPage() {
     setError("");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) setError(error.message);
   }
@@ -92,14 +92,10 @@ export default function AuthPage() {
     if (error) {
       setError(error.message);
     } else {
-      switchMode("signin");
-      setTimeout(
-        () =>
-          setSuccessMsg(
-            "✅ Account created! Check your email to confirm, then sign in."
-          ),
-        50
+      setSuccessMsg(
+        "✅ Account created! Check your email to confirm, then sign in."
       );
+      switchMode("signin");
     }
   }
 

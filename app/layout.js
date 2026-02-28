@@ -1,5 +1,4 @@
 import "./globals.css";
-import HashCleaner from "../components/HashCleaner";
 
 export const metadata = {
   title: "PetParrk – Vet Pricing Transparency for the East Bay",
@@ -26,10 +25,7 @@ export default function RootLayout({ children }) {
           content="7s6yV00GY-q643NY-Vlq7Hh3zC6GCxh91Wiwlz8JebA"
         />
       </head>
-      <body>
-        <HashCleaner />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
