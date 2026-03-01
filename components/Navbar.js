@@ -128,6 +128,7 @@ export default function Navbar() {
           </div>
           {[
             { href: "/", label: "🏠 Home" },
+            { href: "/symptom-checker", label: "🩺 Symptom Checker" },
             { href: "/profile", label: "👤 My Profile" },
             { href: "/saved", label: "❤️ Saved Vets" },
             { href: "/account", label: "⚙️ Account" },
