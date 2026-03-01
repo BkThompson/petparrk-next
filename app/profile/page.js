@@ -456,8 +456,9 @@ export default function ProfilePage() {
         .input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; font-family: system-ui, sans-serif; outline: none; background: #fff; height: 40px; color: #111; -webkit-appearance: none; appearance: none; display: block; }
         .input:focus { border-color: #2d6a4f; }
         select.input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
-        input[type="date"].input { text-align: left; padding-right: 12px; }
-        input[type="date"].input::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; margin-left: auto; }
+        input[type="date"].input { text-align: left; padding-right: 12px; direction: ltr; justify-content: flex-start; }
+        input[type="date"].input::-webkit-date-and-time-value { text-align: left; margin: 0; }
+        input[type="date"].input::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; position: absolute; right: 12px; }
         input[type="number"].input { -moz-appearance: textfield; }
         input[type="number"].input::-webkit-outer-spin-button, input[type="number"].input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .btn-primary { padding: 8px 20px; background: #2d6a4f; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; }
@@ -1051,6 +1052,7 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setPetForm({ ...petForm, birthday: e.target.value })
                     }
+                    style={{ position: "relative", textAlign: "left" }}
                   />
                 </div>
                 <div className="field">
