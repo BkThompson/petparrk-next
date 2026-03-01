@@ -15,6 +15,7 @@ export default function SymptomCheckerPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [triageResult, setTriageResult] = useState(null);
+  const [triageCardExpanded, setTriageCardExpanded] = useState(true);
   const [nearbyVets, setNearbyVets] = useState([]);
   const [sessionStarted, setSessionStarted] = useState(false);
   const [guestMode, setGuestMode] = useState(false);
@@ -90,9 +91,12 @@ export default function SymptomCheckerPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Focus input when chat starts
+  // Only auto-focus on desktop — on mobile this triggers the keyboard
+  // which scrolls past all the chat messages before the user can read them
   useEffect(() => {
-    if (sessionStarted) inputRef.current?.focus();
+    if (!sessionStarted) return;
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) inputRef.current?.focus();
   }, [sessionStarted]);
 
   // Fetch nearby vets when triage result arrives
@@ -115,6 +119,7 @@ export default function SymptomCheckerPage() {
     setSessionStarted(true);
     setMessages([]);
     setTriageResult(null);
+    setTriageCardExpanded(true);
     setFreeCheckUsed(false);
 
     const greeting = pet
@@ -175,7 +180,10 @@ export default function SymptomCheckerPage() {
         newTriageResult = "MONITOR";
         if (guestMode) setFreeCheckUsed(true);
       }
-      if (newTriageResult !== triageResult) setTriageResult(newTriageResult);
+      if (newTriageResult !== triageResult) {
+        setTriageResult(newTriageResult);
+        setTriageCardExpanded(true);
+      }
 
       const cleanContent = content
         .replace(/\[TRIAGE_RESULT: EMERGENCY\]/g, "")
@@ -312,6 +320,44 @@ export default function SymptomCheckerPage() {
       },
     }[triageResult];
 
+    // Collapsed pill — always visible, tap to expand
+    if (!triageCardExpanded) {
+      return (
+        <button
+          onClick={() => setTriageCardExpanded(true)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            width: "100%",
+            padding: "10px 14px",
+            background: config.bg,
+            border: `2px solid ${config.border}`,
+            borderRadius: "10px",
+            marginBottom: "10px",
+            cursor: "pointer",
+            textAlign: "left",
+          }}
+        >
+          <span style={{ fontSize: "16px" }}>{config.emoji}</span>
+          <span
+            style={{
+              fontWeight: "700",
+              fontSize: "14px",
+              color: config.color,
+              flex: 1,
+            }}
+          >
+            {config.label}
+          </span>
+          <span style={{ fontSize: "12px", color: config.color, opacity: 0.7 }}>
+            Tap to expand ↓
+          </span>
+        </button>
+      );
+    }
+
+    // Expanded — full card
     return (
       <div
         style={{
@@ -326,16 +372,38 @@ export default function SymptomCheckerPage() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "8px",
+            justifyContent: "space-between",
             marginBottom: "6px",
           }}
         >
-          <span style={{ fontSize: "20px" }}>{config.emoji}</span>
-          <span
-            style={{ fontWeight: "700", fontSize: "16px", color: config.color }}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "20px" }}>{config.emoji}</span>
+            <span
+              style={{
+                fontWeight: "700",
+                fontSize: "16px",
+                color: config.color,
+              }}
+            >
+              {config.label}
+            </span>
+          </div>
+          <button
+            onClick={() => setTriageCardExpanded(false)}
+            title="Collapse"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "13px",
+              color: config.color,
+              opacity: 0.7,
+              padding: "2px 4px",
+              fontWeight: "600",
+            }}
           >
-            {config.label}
-          </span>
+            Collapse ↑
+          </button>
         </div>
         <p
           style={{
