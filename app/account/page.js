@@ -16,6 +16,9 @@ export default function AccountPage() {
   const [newEmail, setNewEmail] = useState("");
   const [emailMsg, setEmailMsg] = useState(null);
   const [savingEmail, setSavingEmail] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteMsg, setDeleteMsg] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -80,6 +83,52 @@ export default function AccountPage() {
     router.push("/auth");
   }
 
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    setDeleteMsg(null);
+    try {
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession();
+      if (!currentSession) {
+        setDeleteMsg({
+          type: "error",
+          text: "Session expired. Please sign in again.",
+        });
+        setDeleting(false);
+        return;
+      }
+
+      const res = await fetch("/api/delete-account", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${currentSession.access_token}`,
+        },
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setDeleteMsg({
+          type: "error",
+          text: result.error || "Something went wrong. Please try again.",
+        });
+        setDeleting(false);
+        return;
+      }
+
+      // Sign out locally and redirect
+      await supabase.auth.signOut();
+      router.push("/?deleted=true");
+    } catch (err) {
+      setDeleteMsg({
+        type: "error",
+        text: "Something went wrong. Please try again.",
+      });
+      setDeleting(false);
+    }
+  }
+
   const isGoogleUser =
     session?.user?.app_metadata?.provider === "google" ||
     session?.user?.identities?.some((i) => i.provider === "google");
@@ -96,12 +145,94 @@ export default function AccountPage() {
         .btn-primary:hover { background: #245a42; }
         .btn-secondary { padding: 8px 20px; background: #fff; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: system-ui, sans-serif; }
         .btn-secondary:hover { background: #f5f5f5; }
+        .btn-danger { padding: 8px 20px; background: #fff; color: #c62828; border: 1px solid #c62828; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; font-family: system-ui, sans-serif; }
+        .btn-danger:hover { background: #fce8e8; }
+        .btn-danger-solid { padding: 10px 24px; background: #c62828; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; font-family: system-ui, sans-serif; }
+        .btn-danger-solid:hover { background: #b71c1c; }
+        .btn-danger-solid:disabled { opacity: 0.6; cursor: not-allowed; }
         .section { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .section-danger { background: #fff; border: 1px solid #f5c6c6; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
         .label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
         .field { margin-bottom: 14px; }
         .msg-success { background: #e8f5e9; color: #2d6a4f; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
         .msg-error { background: #fce8e8; color: #c62828; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal { background: #fff; border-radius: 16px; padding: 28px; max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
       `}</style>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => !deleting && setShowDeleteModal(false)}
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2
+              style={{
+                margin: "0 0 12px 0",
+                fontSize: "1.2rem",
+                color: "#111",
+              }}
+            >
+              Delete your account?
+            </h2>
+            <p
+              style={{
+                margin: "0 0 8px 0",
+                fontSize: "14px",
+                color: "#555",
+                lineHeight: "1.5",
+              }}
+            >
+              This will permanently delete your account, your profile, and all
+              your pet records. This cannot be undone.
+            </p>
+            <p
+              style={{
+                margin: "0 0 20px 0",
+                fontSize: "14px",
+                color: "#c62828",
+                fontWeight: "600",
+              }}
+            >
+              Are you absolutely sure?
+            </p>
+
+            {deleteMsg && (
+              <div
+                className={
+                  deleteMsg.type === "success" ? "msg-success" : "msg-error"
+                }
+              >
+                {deleteMsg.text}
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="btn-secondary"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="btn-danger-solid"
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Yes, delete my account"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div
         style={{
@@ -272,6 +403,25 @@ export default function AccountPage() {
           </p>
           <button onClick={handleSignOut} className="btn-secondary">
             Sign Out
+          </button>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="section-danger">
+          <h2
+            style={{ margin: "0 0 8px 0", fontSize: "1rem", color: "#c62828" }}
+          >
+            ⚠️ Danger Zone
+          </h2>
+          <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#555" }}>
+            Permanently delete your account, your profile, and all your pet
+            records. This action cannot be undone.
+          </p>
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="btn-danger"
+          >
+            Delete my account
           </button>
         </div>
 
