@@ -472,6 +472,9 @@ export default function ProfilePage() {
         .pet-photo-wrap:hover .pet-photo-overlay { opacity: 1; }
         .section-divider { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin: 20px 0 12px 0; padding-top: 16px; border-top: 1px solid #f0f0f0; }
         .pet-hi-card { text-align: center; padding: 16px 0 20px 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
+        @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } .contact-grid { grid-template-columns: 1fr; } }
       `}</style>
 
       <div
@@ -750,7 +753,7 @@ export default function ProfilePage() {
             <button
               onClick={() => setEditingProfile(!editingProfile)}
               className="btn-secondary"
-              style={{ flexShrink: 0 }}
+              style={{ flexShrink: 0, fontSize: "12px", padding: "5px 10px" }}
             >
               {editingProfile ? "Cancel" : "Edit Profile"}
             </button>
@@ -995,13 +998,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Pet fields */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
-                }}
-              >
+              <div className="form-grid">
                 <div className="field">
                   <label className="label">Name *</label>
                   <input
@@ -1184,13 +1181,7 @@ export default function ProfilePage() {
                 Shown on the medical card so vets and finders know who to
                 contact.
               </p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
-                }}
-              >
+              <div className="form-grid">
                 <div className="field">
                   <label className="label">Owner Name</label>
                   <input
@@ -1288,21 +1279,22 @@ export default function ProfilePage() {
               key={pet.id}
               style={{
                 border: "1px solid #eee",
-                borderRadius: "10px",
+                borderRadius: "12px",
                 padding: "14px",
-                marginBottom: "10px",
+                marginBottom: "12px",
                 background: "#fafafa",
               }}
             >
+              {/* Row 1: Photo + Name + Action buttons */}
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
+                  alignItems: "center",
                   gap: "12px",
+                  marginBottom: "10px",
                 }}
               >
-                {/* Pet photo */}
+                {/* Photo */}
                 <div
                   className="pet-photo-wrap"
                   style={{
@@ -1363,55 +1355,105 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <div style={{ flex: 1 }}>
+                {/* Name — vertically centered next to photo */}
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <h3
                     style={{
-                      margin: "0 0 2px 0",
+                      margin: 0,
                       fontSize: "1rem",
                       color: "#111",
+                      fontWeight: "700",
                     }}
                   >
                     Hi, I'm {pet.name}! {speciesEmoji(pet.species)}
                   </h3>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "4px",
-                      marginBottom: "6px",
-                    }}
+                </div>
+
+                {/* Edit + Share buttons top right */}
+                <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                  <button
+                    onClick={() => startEditPet(pet)}
+                    className="btn-secondary"
+                    style={{ fontSize: "12px", padding: "5px 10px" }}
                   >
-                    {pet.breed && <span className="tag">{pet.breed}</span>}
-                    {pet.birthday && (
-                      <span className="tag">{calcAge(pet.birthday)}</span>
-                    )}
-                    {pet.weight_lbs && (
-                      <span className="tag">{pet.weight_lbs} lbs</span>
-                    )}
-                  </div>
-                  {pet.notes && (
-                    <p
-                      style={{
-                        margin: "4px 0 10px 0",
-                        fontSize: "13px",
-                        color: "#666",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      {pet.notes}
-                    </p>
-                  )}
-                  {(pet.allergies ||
-                    pet.medications ||
-                    pet.microchip_number ||
-                    pet.owner_name) && (
-                    <div
-                      style={{
-                        borderTop: "1px solid #eee",
-                        marginBottom: "8px",
-                      }}
-                    />
-                  )}
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      const url = `${window.location.origin}/pet/${pet.id}`;
+                      if (navigator.share) {
+                        navigator
+                          .share({
+                            title: `${pet.name}'s Medical Card`,
+                            text: `View ${pet.name}'s pet medical card on PetParrk`,
+                            url,
+                          })
+                          .catch((e) => {
+                            if (e.name !== "AbortError") console.error(e);
+                          });
+                      } else if (
+                        navigator.clipboard &&
+                        window.isSecureContext
+                      ) {
+                        navigator.clipboard
+                          .writeText(url)
+                          .then(() => showSuccess("Medical card link copied!"));
+                      } else {
+                        window.prompt("Copy this link:", url);
+                      }
+                    }}
+                    className="btn-secondary"
+                    style={{ fontSize: "12px", padding: "5px 10px" }}
+                  >
+                    🔗 Share
+                  </button>
+                </div>
+              </div>
+
+              {/* Row 2: Badges under the photo (full width) */}
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "4px",
+                  marginBottom: "6px",
+                }}
+              >
+                {pet.breed && <span className="tag">{pet.breed}</span>}
+                {pet.birthday && (
+                  <span className="tag">{calcAge(pet.birthday)}</span>
+                )}
+                {pet.weight_lbs && (
+                  <span className="tag">{pet.weight_lbs} lbs</span>
+                )}
+              </div>
+
+              {/* Row 3: Notes under badges */}
+              {pet.notes && (
+                <p
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "13px",
+                    color: "#666",
+                    fontStyle: "italic",
+                  }}
+                >
+                  {pet.notes}
+                </p>
+              )}
+
+              {/* Row 4: Medical facts left-aligned */}
+              {(pet.allergies ||
+                pet.medications ||
+                pet.microchip_number ||
+                pet.owner_name) && (
+                <div
+                  style={{
+                    borderTop: "1px solid #eee",
+                    paddingTop: "8px",
+                    marginBottom: "4px",
+                  }}
+                >
                   {pet.allergies && (
                     <p
                       style={{
@@ -1479,41 +1521,31 @@ export default function ProfilePage() {
                     </p>
                   )}
                 </div>
+              )}
 
-                <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-                  <button
-                    onClick={() => startEditPet(pet)}
-                    className="btn-secondary"
-                    style={{ fontSize: "12px", padding: "4px 10px" }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => {
-                      const url = `${window.location.origin}/pet/${pet.id}`;
-                      if (navigator.clipboard && window.isSecureContext) {
-                        navigator.clipboard
-                          .writeText(url)
-                          .then(() => showSuccess("Medical card link copied!"));
-                      } else {
-                        window.prompt(
-                          "Copy this link to share Rocky's medical card:",
-                          url
-                        );
-                      }
-                    }}
-                    className="btn-secondary"
-                    style={{ fontSize: "12px", padding: "4px 10px" }}
-                  >
-                    🔗 Share
-                  </button>
-                  <button
-                    onClick={() => handleDeletePet(pet.id)}
-                    className="btn-danger"
-                  >
-                    Remove
-                  </button>
-                </div>
+              {/* Bottom actions: Delete (subtle, separated from main actions) */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: "8px",
+                  marginBottom: "2px",
+                }}
+              >
+                <button
+                  onClick={() => handleDeletePet(pet.id)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#c62828",
+                    fontSize: "12px",
+                    cursor: "pointer",
+                    padding: "2px 0",
+                    fontFamily: "system-ui, sans-serif",
+                  }}
+                >
+                  🗑️ Delete pet
+                </button>
               </div>
 
               {/* Emergency contacts */}
@@ -1639,15 +1671,7 @@ export default function ProfilePage() {
                         No emergency contacts yet.
                       </p>
                     )}
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr 1fr auto",
-                        gap: "8px",
-                        marginTop: "10px",
-                        alignItems: "end",
-                      }}
-                    >
+                    <div className="contact-grid" style={{ marginTop: "10px" }}>
                       <div>
                         <label className="label">Name</label>
                         <input
