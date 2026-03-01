@@ -127,6 +127,7 @@ export default function Navbar() {
             </p>
           </div>
           {[
+            { href: "/", label: "🏠 Home" },
             { href: "/profile", label: "👤 My Profile" },
             { href: "/saved", label: "❤️ Saved Vets" },
             { href: "/account", label: "⚙️ Account" },

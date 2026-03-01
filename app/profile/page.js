@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
+import Navbar from "../../components/Navbar";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -11,7 +12,6 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showDropdown, setShowDropdown] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [showAddPet, setShowAddPet] = useState(false);
   const [editingPetId, setEditingPetId] = useState(null);
@@ -36,7 +36,7 @@ export default function ProfilePage() {
   };
   const [petForm, setPetForm] = useState(emptyPetForm);
   const [microchipError, setMicrochipError] = useState("");
-  const [pendingPetPhoto, setPendingPetPhoto] = useState(null); // for new pets before save
+  const [pendingPetPhoto, setPendingPetPhoto] = useState(null);
   const [contacts, setContacts] = useState({});
   const [showContactsFor, setShowContactsFor] = useState(null);
   const [newContact, setNewContact] = useState({
@@ -49,8 +49,6 @@ export default function ProfilePage() {
   const [uploadingPetPhoto, setUploadingPetPhoto] = useState(null);
   const [convertingPhoto, setConvertingPhoto] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-  const [avatarError, setAvatarError] = useState(false);
-  const dropdownRef = useRef(null);
   const fileInputRef = useRef(null);
   const petPhotoRefs = useRef({});
   const newPetPhotoRef = useRef(null);
@@ -67,15 +65,6 @@ export default function ProfilePage() {
       if (!session) router.push("/auth");
     });
     return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
-        setShowDropdown(false);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -116,7 +105,6 @@ export default function ProfilePage() {
     fetchData();
   }, [session]);
 
-  // Returns a File ready to upload — converts HEIC to JPEG automatically
   async function prepareImageFile(file, setConverting) {
     if (!file) return null;
     const isHeic =
@@ -181,15 +169,12 @@ export default function ProfilePage() {
       data: { publicUrl },
     } = supabase.storage.from("avatars").getPublicUrl(filePath);
     const urlWithCache = `${publicUrl}?t=${Date.now()}`;
-    await supabase
-      .from("profiles")
-      .upsert({
-        id: session.user.id,
-        avatar_url: urlWithCache,
-        updated_at: new Date().toISOString(),
-      });
+    await supabase.from("profiles").upsert({
+      id: session.user.id,
+      avatar_url: urlWithCache,
+      updated_at: new Date().toISOString(),
+    });
     setProfile((prev) => ({ ...prev, avatar_url: urlWithCache }));
-    setAvatarError(false);
     showSuccess("Profile photo updated!");
     setUploadingPhoto(false);
   }
@@ -225,7 +210,6 @@ export default function ProfilePage() {
     setUploadingPetPhoto(null);
   }
 
-  // For new pet form — preview before save (also converts HEIC)
   async function handleNewPetPhotoPreview(e) {
     const raw = e.target.files?.[0];
     if (!raw) return;
@@ -246,15 +230,13 @@ export default function ProfilePage() {
 
   async function handleSaveProfile() {
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({
-        id: session.user.id,
-        full_name: profileForm.full_name,
-        bio: profileForm.bio,
-        is_public: profileForm.is_public,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabase.from("profiles").upsert({
+      id: session.user.id,
+      full_name: profileForm.full_name,
+      bio: profileForm.bio,
+      is_public: profileForm.is_public,
+      updated_at: new Date().toISOString(),
+    });
     if (!error) {
       setProfile((prev) => ({ ...prev, ...profileForm }));
       setEditingProfile(false);
@@ -294,7 +276,6 @@ export default function ProfilePage() {
         .single();
       if (!error) {
         let finalPet = data;
-        // Upload pending photo if any
         if (pendingPetPhoto) {
           const ext = pendingPetPhoto.file.name.split(".").pop();
           const filePath = `${session.user.id}/${data.id}.${ext}`;
@@ -376,17 +357,6 @@ export default function ProfilePage() {
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(""), 3000);
   }
-  async function handleSignOut() {
-    setShowDropdown(false);
-    await supabase.auth.signOut();
-    router.push("/auth");
-  }
-
-  const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
-  const avatarUrl =
-    (!avatarError &&
-      (profile?.avatar_url || session?.user?.user_metadata?.avatar_url)) ||
-    null;
 
   const calcAge = (birthday) => {
     if (!birthday) return null;
@@ -422,7 +392,6 @@ export default function ProfilePage() {
   }
 
   function handlePhoneInput(raw) {
-    // Strip non-digits, then apply mask as user types
     const d = raw.replace(/\D/g, "").slice(0, 10);
     if (d.length === 0) return "";
     if (d.length <= 3) return `(${d}`;
@@ -430,7 +399,6 @@ export default function ProfilePage() {
     return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
   }
 
-  // Live preview name for the form
   const previewName = petForm.name.trim() || "...";
   const previewSubtitle = [
     petForm.breed,
@@ -443,6 +411,10 @@ export default function ProfilePage() {
     ? pets.find((p) => p.id === editingPetId)?.photo_url
     : pendingPetPhoto?.previewUrl;
 
+  const avatarUrl =
+    profile?.avatar_url || session?.user?.user_metadata?.avatar_url || null;
+  const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
+
   if (session === undefined || loading) return null;
   if (!session) return null;
 
@@ -451,8 +423,6 @@ export default function ProfilePage() {
       <style>{`
         .avatar-dropdown-item { display: block; width: 100%; padding: 10px 16px; text-align: left; background: none; border: none; font-size: 13px; cursor: pointer; color: #333; white-space: nowrap; box-sizing: border-box; }
         .avatar-dropdown-item:hover { background: #f5f5f5; }
-        .avatar-dropdown-item.danger { color: #555; }
-        .avatar-dropdown-item.danger:hover { background: #f5f5f5; }
         .input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; font-family: system-ui, sans-serif; outline: none; background: #fff; height: 40px; color: #111; -webkit-appearance: none; appearance: none; display: block; }
         .input:focus { border-color: #2d6a4f; }
         select.input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
@@ -511,119 +481,7 @@ export default function ProfilePage() {
           >
             ← Back to all vets
           </Link>
-          {session && (
-            <div ref={dropdownRef} style={{ position: "relative" }}>
-              <div
-                onClick={() => setShowDropdown(!showDropdown)}
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  background: avatarUrl ? "transparent" : "#2d6a4f",
-                  color: "#fff",
-                  fontSize: "13px",
-                  fontWeight: "700",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  overflow: "hidden",
-                  border: avatarUrl ? "2px solid #ddd" : "none",
-                }}
-              >
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="avatar"
-                    onError={() => setAvatarError(true)}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  avatarLetter
-                )}
-              </div>
-              {showDropdown && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "40px",
-                    right: 0,
-                    background: "#fff",
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "10px",
-                    boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-                    minWidth: "180px",
-                    zIndex: 100,
-                    overflow: "hidden",
-                    textAlign: "left",
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: "10px 16px",
-                      borderBottom: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <p style={{ margin: 0, fontSize: "11px", color: "#888" }}>
-                      Signed in as
-                    </p>
-                    <p
-                      style={{
-                        margin: "2px 0 0 0",
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        color: "#333",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        maxWidth: "160px",
-                      }}
-                    >
-                      {session?.user?.email}
-                    </p>
-                  </div>
-                  {[
-                    ["profile", "👤 My Profile"],
-                    ["saved", "❤️ Saved Vets"],
-                    ["account", "⚙️ Account"],
-                  ].map(([path, label]) => (
-                    <Link
-                      key={path}
-                      href={`/${path}`}
-                      onClick={() => setShowDropdown(false)}
-                      style={{
-                        display: "block",
-                        padding: "10px 16px",
-                        fontSize: "13px",
-                        color: "#333",
-                        textDecoration: "none",
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = "#f5f5f5")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "none")
-                      }
-                    >
-                      {label}
-                    </Link>
-                  ))}
-                  <div style={{ borderTop: "1px solid #f0f0f0" }}>
-                    <button
-                      onClick={handleSignOut}
-                      className="avatar-dropdown-item danger"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          <Navbar />
         </div>
 
         {successMsg && (
@@ -682,7 +540,6 @@ export default function ProfilePage() {
                     <img
                       src={avatarUrl}
                       alt="avatar"
-                      onError={() => setAvatarError(true)}
                       style={{
                         width: "100%",
                         height: "100%",
@@ -698,11 +555,9 @@ export default function ProfilePage() {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {convertingPhoto ? (
-                    <>
-                      <span style={{ fontSize: "11px", color: "#fff" }}>
-                        Converting...
-                      </span>
-                    </>
+                    <span style={{ fontSize: "11px", color: "#fff" }}>
+                      Converting...
+                    </span>
                   ) : uploadingPhoto ? (
                     <span style={{ fontSize: "11px", color: "#fff" }}>
                       Uploading...
@@ -828,7 +683,7 @@ export default function ProfilePage() {
                   }
                   placeholder="A little about you and your pets..."
                   rows={3}
-                  style={{ resize: "vertical" }}
+                  style={{ resize: "vertical", height: "auto" }}
                 />
               </div>
               <div
@@ -898,7 +753,6 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {/* Add / Edit Pet Form */}
           {(showAddPet || editingPetId) && (
             <div
               style={{
@@ -908,7 +762,6 @@ export default function ProfilePage() {
                 marginBottom: "16px",
               }}
             >
-              {/* "Hi I'm [name]" header with photo */}
               <div className="pet-hi-card">
                 <div
                   className="pet-photo-wrap"
@@ -966,7 +819,6 @@ export default function ProfilePage() {
                       Add photo
                     </span>
                   </div>
-                  {/* Hidden file inputs */}
                   <input
                     ref={newPetPhotoRef}
                     type="file"
@@ -1003,7 +855,6 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Pet fields */}
               <div className="form-grid">
                 <div className="field">
                   <label className="label">Name *</label>
@@ -1141,6 +992,7 @@ export default function ProfilePage() {
                   )}
                 </div>
               </div>
+
               <div className="field">
                 <label className="label">Allergies</label>
                 <input
@@ -1173,7 +1025,7 @@ export default function ProfilePage() {
                   }
                   placeholder="Any other important info..."
                   rows={2}
-                  style={{ resize: "vertical" }}
+                  style={{ resize: "vertical", height: "auto" }}
                 />
               </div>
 
@@ -1280,7 +1132,6 @@ export default function ProfilePage() {
             </p>
           )}
 
-          {/* Pet cards */}
           {pets.map((pet) => (
             <div
               key={pet.id}
@@ -1292,7 +1143,6 @@ export default function ProfilePage() {
                 background: "#fafafa",
               }}
             >
-              {/* Row 1: Photo + Name + Action buttons */}
               <div
                 style={{
                   display: "flex",
@@ -1301,7 +1151,6 @@ export default function ProfilePage() {
                   marginBottom: "10px",
                 }}
               >
-                {/* Photo */}
                 <div
                   className="pet-photo-wrap"
                   style={{
@@ -1362,7 +1211,6 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                {/* Name — vertically centered next to photo */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3
                     style={{
@@ -1376,7 +1224,6 @@ export default function ProfilePage() {
                   </h3>
                 </div>
 
-                {/* Edit + Share buttons top right */}
                 <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
                   <button
                     onClick={() => startEditPet(pet)}
@@ -1417,7 +1264,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Row 2: Badges under the photo (full width) */}
               <div
                 style={{
                   display: "flex",
@@ -1435,7 +1281,6 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Row 3: Notes under badges */}
               {pet.notes && (
                 <p
                   style={{
@@ -1449,7 +1294,6 @@ export default function ProfilePage() {
                 </p>
               )}
 
-              {/* Row 4: Medical facts left-aligned */}
               {(pet.allergies ||
                 pet.medications ||
                 pet.microchip_number ||
@@ -1530,7 +1374,6 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* Bottom actions: Delete (subtle, separated from main actions) */}
               <div
                 style={{
                   display: "flex",
@@ -1555,7 +1398,6 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-              {/* Emergency contacts */}
               <div
                 style={{
                   marginTop: "10px",
