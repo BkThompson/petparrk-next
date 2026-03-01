@@ -1,4 +1,5 @@
 import "./globals.css";
+import ToastProvider from "../components/ToastProvider";
 
 export const metadata = {
   title: "PetParrk – Vet Pricing Transparency for the East Bay",
@@ -25,7 +26,9 @@ export default function RootLayout({ children }) {
           content="7s6yV00GY-q643NY-Vlq7Hh3zC6GCxh91Wiwlz8JebA"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <ToastProvider>{children}</ToastProvider>
+      </body>
     </html>
   );
 }

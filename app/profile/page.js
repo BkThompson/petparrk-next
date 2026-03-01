@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import Navbar from "../../components/Navbar";
+import { useToast } from "../../components/ToastProvider";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const showToast = useToast();
   const [session, setSession] = useState(undefined);
   const [profile, setProfile] = useState(null);
   const [pets, setPets] = useState([]);
@@ -49,7 +51,6 @@ export default function ProfilePage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingPetPhoto, setUploadingPetPhoto] = useState(null);
   const [convertingPhoto, setConvertingPhoto] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
   const fileInputRef = useRef(null);
   const petPhotoRefs = useRef({});
   const newPetPhotoRef = useRef(null);
@@ -177,7 +178,7 @@ export default function ProfilePage() {
       updated_at: new Date().toISOString(),
     });
     setProfile((prev) => ({ ...prev, avatar_url: urlWithCache }));
-    showSuccess("Profile photo updated!");
+    showToast("Profile photo updated!");
     setUploadingPhoto(false);
   }
 
@@ -208,7 +209,7 @@ export default function ProfilePage() {
     setPets((prev) =>
       prev.map((p) => (p.id === petId ? { ...p, photo_url: urlWithCache } : p))
     );
-    showSuccess("Pet photo updated!");
+    showToast("Pet photo updated!");
     setUploadingPetPhoto(null);
   }
 
@@ -243,7 +244,9 @@ export default function ProfilePage() {
     if (!error) {
       setProfile((prev) => ({ ...prev, ...profileForm }));
       setEditingProfile(false);
-      showSuccess("Profile saved!");
+      showToast("Profile saved!");
+    } else {
+      showToast("Failed to save profile.", "error");
     }
     setSaving(false);
   }
@@ -264,7 +267,9 @@ export default function ProfilePage() {
           prev.map((p) => (p.id === editingPetId ? { ...p, ...petForm } : p))
         );
         setEditingPetId(null);
-        showSuccess("Pet updated!");
+        showToast("Pet updated!");
+      } else {
+        showToast("Failed to update pet.", "error");
       }
     } else {
       const { data, error } = await supabase
@@ -300,7 +305,9 @@ export default function ProfilePage() {
         setPets((prev) => [...prev, finalPet]);
         setShowAddPet(false);
         setPendingPetPhoto(null);
-        showSuccess("Pet added!");
+        showToast("Pet added!");
+      } else {
+        showToast("Failed to add pet.", "error");
       }
     }
     setPetForm(emptyPetForm);
@@ -312,6 +319,7 @@ export default function ProfilePage() {
     if (!confirm("Remove this pet?")) return;
     await supabase.from("pets").delete().eq("id", petId);
     setPets((prev) => prev.filter((p) => p.id !== petId));
+    showToast("Pet removed.");
   }
 
   async function handleAddContact(petId) {
@@ -326,6 +334,7 @@ export default function ProfilePage() {
       [petId]: [...(prev[petId] || []), data],
     }));
     setNewContact({ name: "", phone: "", relationship: "" });
+    showToast("Contact added!");
   }
 
   async function handleDeleteContact(petId, contactId) {
@@ -334,6 +343,7 @@ export default function ProfilePage() {
       ...prev,
       [petId]: prev[petId].filter((c) => c.id !== contactId),
     }));
+    showToast("Contact removed.");
   }
 
   function startEditPet(pet) {
@@ -354,11 +364,6 @@ export default function ProfilePage() {
     });
     setShowAddPet(false);
     setPendingPetPhoto(null);
-  }
-
-  function showSuccess(msg) {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3000);
   }
 
   const calcAge = (birthday) => {
@@ -481,22 +486,6 @@ export default function ProfilePage() {
           </Link>
           <Navbar />
         </div>
-
-        {successMsg && (
-          <div
-            style={{
-              background: "#e8f5e9",
-              color: "#2d6a4f",
-              padding: "10px 16px",
-              borderRadius: "8px",
-              marginBottom: "16px",
-              fontSize: "14px",
-              fontWeight: "600",
-            }}
-          >
-            ✅ {successMsg}
-          </div>
-        )}
 
         {/* Profile Header */}
         <div className="section">
@@ -1222,7 +1211,7 @@ export default function ProfilePage() {
                       ) {
                         navigator.clipboard
                           .writeText(url)
-                          .then(() => showSuccess("Medical card link copied!"));
+                          .then(() => showToast("Medical card link copied!"));
                       } else {
                         window.prompt("Copy this link:", url);
                       }
