@@ -18,6 +18,7 @@ export default function ProfilePage() {
   const [profileForm, setProfileForm] = useState({
     full_name: "",
     bio: "",
+    zip_code: "",
     is_public: false,
   });
   const emptyPetForm = {
@@ -80,6 +81,7 @@ export default function ProfilePage() {
         setProfileForm({
           full_name: profileData.full_name || "",
           bio: profileData.bio || "",
+          zip_code: profileData.zip_code || "",
           is_public: profileData.is_public || false,
         });
       } else {
@@ -234,6 +236,7 @@ export default function ProfilePage() {
       id: session.user.id,
       full_name: profileForm.full_name,
       bio: profileForm.bio,
+      zip_code: profileForm.zip_code,
       is_public: profileForm.is_public,
       updated_at: new Date().toISOString(),
     });
@@ -418,8 +421,6 @@ export default function ProfilePage() {
   return (
     <>
       <style>{`
-        .avatar-dropdown-item { display: block; width: 100%; padding: 10px 16px; text-align: left; background: none; border: none; font-size: 13px; cursor: pointer; color: #333; white-space: nowrap; box-sizing: border-box; }
-        .avatar-dropdown-item:hover { background: #f5f5f5; }
         .input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; font-family: system-ui, sans-serif; outline: none; background: #fff; height: 40px; color: #111; -webkit-appearance: none; appearance: none; display: block; }
         .input:focus { border-color: #2d6a4f; }
         select.input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
@@ -606,6 +607,17 @@ export default function ProfilePage() {
                     {profile.bio}
                   </p>
                 )}
+                {profile?.zip_code && (
+                  <p
+                    style={{
+                      margin: "4px 0 0 0",
+                      fontSize: "13px",
+                      color: "#888",
+                    }}
+                  >
+                    📍 {profile.zip_code}
+                  </p>
+                )}
               </div>
             </div>
             <button
@@ -683,6 +695,21 @@ export default function ProfilePage() {
                   style={{ resize: "vertical", height: "auto" }}
                 />
               </div>
+              <div className="field">
+                <label className="label">Zip Code</label>
+                <input
+                  className="input"
+                  value={profileForm.zip_code}
+                  onChange={(e) =>
+                    setProfileForm({
+                      ...profileForm,
+                      zip_code: e.target.value.replace(/\D/g, "").slice(0, 5),
+                    })
+                  }
+                  placeholder="e.g. 94610"
+                  style={{ maxWidth: "140px" }}
+                />
+              </div>
               <div
                 className="field"
                 style={{ display: "flex", alignItems: "center", gap: "8px" }}
@@ -750,7 +777,7 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {/* Add Pet Form — only shown when adding new */}
+          {/* Add Pet Form */}
           {showAddPet && (
             <div
               style={{
@@ -1085,7 +1112,6 @@ export default function ProfilePage() {
                 background: "#fafafa",
               }}
             >
-              {/* Row 1: Photo + Name + Buttons */}
               <div
                 style={{
                   display: "flex",
@@ -1209,7 +1235,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Inline Edit Form — opens inside the card */}
+              {/* Inline Edit Form */}
               {editingPetId === pet.id && (
                 <div
                   style={{
@@ -1423,7 +1449,6 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* Badges */}
               <div
                 style={{
                   display: "flex",
@@ -1558,7 +1583,6 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-              {/* Emergency Contacts */}
               <div
                 style={{
                   marginTop: "10px",
