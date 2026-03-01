@@ -41,7 +41,6 @@ export default function Home() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      // Clean up the # left behind by Supabase OAuth redirect
       if (window.location.hash)
         window.history.replaceState(null, "", window.location.pathname);
     });
@@ -97,7 +96,6 @@ export default function Home() {
       });
   }, [session]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -181,17 +179,15 @@ export default function Home() {
       setFormStatus("error");
       return;
     }
-    const { error } = await supabase
-      .from("price_submissions")
-      .insert([
-        {
-          vet_name: formData.vet_name,
-          service_name: formData.service_name,
-          price_paid: parseFloat(formData.price_paid),
-          visit_date: formData.visit_date || null,
-          submitter_note: formData.submitter_note || null,
-        },
-      ]);
+    const { error } = await supabase.from("price_submissions").insert([
+      {
+        vet_name: formData.vet_name,
+        service_name: formData.service_name,
+        price_paid: parseFloat(formData.price_paid),
+        visit_date: formData.visit_date || null,
+        submitter_note: formData.submitter_note || null,
+      },
+    ]);
     if (error) {
       setFormStatus("error");
       return;
@@ -238,7 +234,7 @@ export default function Home() {
 
       <div
         style={{
-          maxWidth: "860px",
+          maxWidth: "800px",
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",

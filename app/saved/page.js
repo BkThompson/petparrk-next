@@ -81,10 +81,7 @@ export default function SavedPage() {
   }, [session]);
 
   async function handleUnsave(vetId) {
-    // Start remove animation
     setRemovingIds((prev) => new Set([...prev, vetId]));
-
-    // Wait for animation to finish, then remove from DB and state
     setTimeout(async () => {
       await supabase
         .from("saved_vets")
@@ -167,7 +164,7 @@ export default function SavedPage() {
 
       <div
         style={{
-          maxWidth: "860px",
+          maxWidth: "800px",
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",
@@ -268,6 +265,13 @@ export default function SavedPage() {
           const neuter = vetPrices.find(
             (p) => p.services?.name === "Neuter (~40lb dog)"
           );
+          const lastUpdated = vet.last_verified
+            ? new Date(vet.last_verified + "T12:00:00")
+            : vetPrices.length > 0
+            ? new Date(
+                Math.max(...vetPrices.map((p) => new Date(p.created_at)))
+              )
+            : null;
           const isRemoving = removingIds.has(vet.id);
 
           return (
@@ -394,16 +398,24 @@ export default function SavedPage() {
                 </div>
               )}
 
-              {/* Bottom row — heart */}
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "flex-end",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   marginTop: "10px",
                   borderTop: "1px solid #f0f0f0",
                   paddingTop: "8px",
                 }}
               >
+                <p style={{ margin: 0, color: "#aaa", fontSize: "11px" }}>
+                  {lastUpdated
+                    ? `Verified ${lastUpdated.toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "numeric",
+                      })}`
+                    : ""}
+                </p>
                 <button
                   onClick={() => handleUnsave(vet.id)}
                   title="Remove from saved"

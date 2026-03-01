@@ -498,7 +498,7 @@ export default function ProfilePage() {
 
       <div
         style={{
-          maxWidth: "700px",
+          maxWidth: "800px",
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",

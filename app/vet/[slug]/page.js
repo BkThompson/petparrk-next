@@ -38,7 +38,6 @@ export default function VetPage() {
   const [chartVisible, setChartVisible] = useState(false);
   const chartRef = useRef(null);
 
-  // Auth
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const {
@@ -47,7 +46,6 @@ export default function VetPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch vet data
   useEffect(() => {
     async function fetchData() {
       const { data: vetData } = await supabase
@@ -70,7 +68,6 @@ export default function VetPage() {
     fetchData();
   }, [slug]);
 
-  // Check if this vet is saved
   useEffect(() => {
     if (!session || !vet) return;
     async function checkSaved() {
@@ -116,17 +113,15 @@ export default function VetPage() {
       setFormStatus("error");
       return;
     }
-    const { error } = await supabase
-      .from("price_submissions")
-      .insert([
-        {
-          vet_name: formData.vet_name,
-          service_name: formData.service_name,
-          price_paid: parseFloat(formData.price_paid),
-          visit_date: formData.visit_date || null,
-          submitter_note: formData.submitter_note || null,
-        },
-      ]);
+    const { error } = await supabase.from("price_submissions").insert([
+      {
+        vet_name: formData.vet_name,
+        service_name: formData.service_name,
+        price_paid: parseFloat(formData.price_paid),
+        visit_date: formData.visit_date || null,
+        submitter_note: formData.submitter_note || null,
+      },
+    ]);
     if (error) {
       setFormStatus("error");
       return;
@@ -201,7 +196,7 @@ export default function VetPage() {
 
       <div
         style={{
-          maxWidth: "700px",
+          maxWidth: "800px",
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",
@@ -260,7 +255,6 @@ export default function VetPage() {
             marginBottom: "16px",
           }}
         >
-          {/* Name row + heart */}
           <div
             style={{
               display: "flex",

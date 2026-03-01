@@ -98,16 +98,11 @@ export default function AccountPage() {
         setDeleting(false);
         return;
       }
-
       const res = await fetch("/api/delete-account", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${currentSession.access_token}`,
-        },
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
-
       const result = await res.json();
-
       if (!res.ok) {
         setDeleteMsg({
           type: "error",
@@ -116,8 +111,6 @@ export default function AccountPage() {
         setDeleting(false);
         return;
       }
-
-      // Sign out locally and redirect
       await supabase.auth.signOut();
       router.push("/?deleted=true");
     } catch (err) {
@@ -197,7 +190,6 @@ export default function AccountPage() {
             >
               Are you absolutely sure?
             </p>
-
             {deleteMsg && (
               <div
                 className={
@@ -207,7 +199,6 @@ export default function AccountPage() {
                 {deleteMsg.text}
               </div>
             )}
-
             <div
               style={{
                 display: "flex",
@@ -236,7 +227,7 @@ export default function AccountPage() {
 
       <div
         style={{
-          maxWidth: "700px",
+          maxWidth: "800px",
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",
@@ -406,7 +397,6 @@ export default function AccountPage() {
           </button>
         </div>
 
-        {/* Danger Zone */}
         <div className="section-danger">
           <h2
             style={{ margin: "0 0 8px 0", fontSize: "1rem", color: "#c62828" }}
