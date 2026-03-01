@@ -407,10 +407,7 @@ export default function ProfilePage() {
   ]
     .filter(Boolean)
     .join(" · ");
-  const formPhotoUrl = editingPetId
-    ? pets.find((p) => p.id === editingPetId)?.photo_url
-    : pendingPetPhoto?.previewUrl;
-
+  const formPhotoUrl = pendingPetPhoto?.previewUrl || null;
   const avatarUrl =
     profile?.avatar_url || session?.user?.user_metadata?.avatar_url || null;
   const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
@@ -426,9 +423,9 @@ export default function ProfilePage() {
         .input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; font-family: system-ui, sans-serif; outline: none; background: #fff; height: 40px; color: #111; -webkit-appearance: none; appearance: none; display: block; }
         .input:focus { border-color: #2d6a4f; }
         select.input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
-        input[type="date"].input { text-align: left; padding-right: 12px; direction: ltr; justify-content: flex-start; }
+        input[type="date"].input { text-align: left; padding-right: 12px; direction: ltr; }
         input[type="date"].input::-webkit-date-and-time-value { text-align: left; margin: 0; }
-        input[type="date"].input::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; position: absolute; right: 12px; }
+        input[type="date"].input::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
         input[type="number"].input { -moz-appearance: textfield; }
         input[type="number"].input::-webkit-outer-spin-button, input[type="number"].input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .btn-primary { padding: 8px 20px; background: #2d6a4f; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; }
@@ -753,7 +750,8 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {(showAddPet || editingPetId) && (
+          {/* Add Pet Form — only shown when adding new */}
+          {showAddPet && (
             <div
               style={{
                 background: "#f9f9f9",
@@ -802,11 +800,7 @@ export default function ProfilePage() {
                   </div>
                   <div
                     className="pet-photo-overlay"
-                    onClick={() =>
-                      editingPetId
-                        ? petPhotoRefs.current[editingPetId]?.click()
-                        : newPetPhotoRef.current?.click()
-                    }
+                    onClick={() => newPetPhotoRef.current?.click()}
                   >
                     <span style={{ fontSize: "18px" }}>📷</span>
                     <span
@@ -826,17 +820,6 @@ export default function ProfilePage() {
                     onChange={handleNewPetPhotoPreview}
                     style={{ display: "none" }}
                   />
-                  {editingPetId && (
-                    <input
-                      ref={(el) => {
-                        petPhotoRefs.current[editingPetId] = el;
-                      }}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
-                      onChange={(e) => handlePetPhotoUpload(e, editingPetId)}
-                      style={{ display: "none" }}
-                    />
-                  )}
                 </div>
                 <p
                   style={{
@@ -903,7 +886,6 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setPetForm({ ...petForm, birthday: e.target.value })
                     }
-                    style={{ position: "relative", textAlign: "left" }}
                   />
                 </div>
                 <div className="field">
@@ -955,44 +937,8 @@ export default function ProfilePage() {
                       ⚠️ {microchipError}
                     </p>
                   )}
-                  {petForm.microchip_number.length === 15 &&
-                    !microchipError && (
-                      <p
-                        style={{
-                          margin: "4px 0 0 0",
-                          fontSize: "12px",
-                          color: "#2d6a4f",
-                        }}
-                      >
-                        ✅ Valid 15-digit ISO microchip
-                      </p>
-                    )}
-                  {petForm.microchip_number.length === 10 &&
-                    !microchipError && (
-                      <p
-                        style={{
-                          margin: "4px 0 0 0",
-                          fontSize: "12px",
-                          color: "#2d6a4f",
-                        }}
-                      >
-                        ✅ Valid 10-digit microchip
-                      </p>
-                    )}
-                  {petForm.microchip_number.length === 9 && !microchipError && (
-                    <p
-                      style={{
-                        margin: "4px 0 0 0",
-                        fontSize: "12px",
-                        color: "#2d6a4f",
-                      }}
-                    >
-                      ✅ Valid 9-digit microchip
-                    </p>
-                  )}
                 </div>
               </div>
-
               <div className="field">
                 <label className="label">Allergies</label>
                 <input
@@ -1028,7 +974,6 @@ export default function ProfilePage() {
                   style={{ resize: "vertical", height: "auto" }}
                 />
               </div>
-
               <p className="section-divider">Owner Contact Info</p>
               <p
                 style={{
@@ -1079,7 +1024,6 @@ export default function ProfilePage() {
                   placeholder="e.g. you@email.com"
                 />
               </div>
-
               <div
                 style={{
                   display: "flex",
@@ -1097,8 +1041,6 @@ export default function ProfilePage() {
                     ? "Saving..."
                     : convertingPhoto
                     ? "Converting photo..."
-                    : editingPetId
-                    ? "Save Changes"
                     : "Add Pet"}
                 </button>
                 <button
@@ -1114,7 +1056,6 @@ export default function ProfilePage() {
                 <button
                   onClick={() => {
                     setShowAddPet(false);
-                    setEditingPetId(null);
                     setPendingPetPhoto(null);
                     setMicrochipError("");
                   }}
@@ -1132,6 +1073,7 @@ export default function ProfilePage() {
             </p>
           )}
 
+          {/* Pet Cards */}
           {pets.map((pet) => (
             <div
               key={pet.id}
@@ -1143,6 +1085,7 @@ export default function ProfilePage() {
                 background: "#fafafa",
               }}
             >
+              {/* Row 1: Photo + Name + Buttons */}
               <div
                 style={{
                   display: "flex",
@@ -1210,7 +1153,6 @@ export default function ProfilePage() {
                     style={{ display: "none" }}
                   />
                 </div>
-
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3
                     style={{
@@ -1223,14 +1165,17 @@ export default function ProfilePage() {
                     Hi, I'm {pet.name}! {speciesEmoji(pet.species)}
                   </h3>
                 </div>
-
                 <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
                   <button
-                    onClick={() => startEditPet(pet)}
+                    onClick={() =>
+                      editingPetId === pet.id
+                        ? setEditingPetId(null)
+                        : startEditPet(pet)
+                    }
                     className="btn-secondary"
                     style={{ fontSize: "12px", padding: "5px 10px" }}
                   >
-                    Edit
+                    {editingPetId === pet.id ? "Cancel" : "Edit"}
                   </button>
                   <button
                     onClick={() => {
@@ -1264,6 +1209,221 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* Inline Edit Form — opens inside the card */}
+              {editingPetId === pet.id && (
+                <div
+                  style={{
+                    background: "#f9f9f9",
+                    borderRadius: "10px",
+                    padding: "16px",
+                    margin: "12px 0",
+                  }}
+                >
+                  <div className="form-grid">
+                    <div className="field">
+                      <label className="label">Name *</label>
+                      <input
+                        className="input"
+                        value={petForm.name}
+                        onChange={(e) =>
+                          setPetForm({ ...petForm, name: e.target.value })
+                        }
+                        placeholder="e.g. Buddy"
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="label">Species</label>
+                      <select
+                        className="input"
+                        value={petForm.species}
+                        onChange={(e) =>
+                          setPetForm({ ...petForm, species: e.target.value })
+                        }
+                      >
+                        <option>Dog</option>
+                        <option>Cat</option>
+                        <option>Bird</option>
+                        <option>Rabbit</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label className="label">Breed</label>
+                      <input
+                        className="input"
+                        value={petForm.breed}
+                        onChange={(e) =>
+                          setPetForm({ ...petForm, breed: e.target.value })
+                        }
+                        placeholder="e.g. Golden Retriever"
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="label">Birthday</label>
+                      <input
+                        className="input"
+                        type="date"
+                        value={petForm.birthday}
+                        onChange={(e) =>
+                          setPetForm({ ...petForm, birthday: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="label">Weight (lbs)</label>
+                      <input
+                        className="input"
+                        type="number"
+                        value={petForm.weight_lbs}
+                        onChange={(e) =>
+                          setPetForm({ ...petForm, weight_lbs: e.target.value })
+                        }
+                        placeholder="e.g. 45"
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="label">Microchip #</label>
+                      <input
+                        className="input"
+                        value={petForm.microchip_number}
+                        onChange={(e) => {
+                          const val = e.target.value
+                            .replace(/\D/g, "")
+                            .slice(0, 15);
+                          setPetForm({ ...petForm, microchip_number: val });
+                          if (
+                            val.length > 0 &&
+                            val.length !== 9 &&
+                            val.length !== 10 &&
+                            val.length !== 15
+                          ) {
+                            setMicrochipError("Must be 9, 10, or 15 digits");
+                          } else {
+                            setMicrochipError("");
+                          }
+                        }}
+                        placeholder="9, 10, or 15 digits"
+                        style={{
+                          borderColor: microchipError ? "#c62828" : undefined,
+                        }}
+                      />
+                      {microchipError && (
+                        <p
+                          style={{
+                            margin: "4px 0 0 0",
+                            fontSize: "12px",
+                            color: "#c62828",
+                          }}
+                        >
+                          ⚠️ {microchipError}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label className="label">Allergies</label>
+                    <input
+                      className="input"
+                      value={petForm.allergies}
+                      onChange={(e) =>
+                        setPetForm({ ...petForm, allergies: e.target.value })
+                      }
+                      placeholder="e.g. Chicken, pollen"
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="label">Medications</label>
+                    <input
+                      className="input"
+                      value={petForm.medications}
+                      onChange={(e) =>
+                        setPetForm({ ...petForm, medications: e.target.value })
+                      }
+                      placeholder="e.g. Apoquel 16mg daily"
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="label">Notes</label>
+                    <textarea
+                      className="input"
+                      value={petForm.notes}
+                      onChange={(e) =>
+                        setPetForm({ ...petForm, notes: e.target.value })
+                      }
+                      placeholder="Any other important info..."
+                      rows={2}
+                      style={{ resize: "vertical", height: "auto" }}
+                    />
+                  </div>
+                  <p className="section-divider">Owner Contact Info</p>
+                  <div className="form-grid">
+                    <div className="field">
+                      <label className="label">Owner Name</label>
+                      <input
+                        className="input"
+                        value={petForm.owner_name}
+                        onChange={(e) =>
+                          setPetForm({ ...petForm, owner_name: e.target.value })
+                        }
+                        placeholder="Your full name"
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="label">Owner Phone</label>
+                      <input
+                        className="input"
+                        value={petForm.owner_phone}
+                        onChange={(e) =>
+                          setPetForm({
+                            ...petForm,
+                            owner_phone: handlePhoneInput(e.target.value),
+                          })
+                        }
+                        placeholder="(555) 555-5555"
+                      />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label className="label">Owner Email</label>
+                    <input
+                      className="input"
+                      type="email"
+                      value={petForm.owner_email}
+                      onChange={(e) =>
+                        setPetForm({ ...petForm, owner_email: e.target.value })
+                      }
+                      placeholder="e.g. you@email.com"
+                    />
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      marginTop: "4px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <button
+                      onClick={handleSavePet}
+                      className="btn-primary"
+                      disabled={saving || !petForm.name || !!microchipError}
+                    >
+                      {saving ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingPetId(null);
+                        setMicrochipError("");
+                      }}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Badges */}
               <div
                 style={{
                   display: "flex",
@@ -1398,6 +1558,7 @@ export default function ProfilePage() {
                 </button>
               </div>
 
+              {/* Emergency Contacts */}
               <div
                 style={{
                   marginTop: "10px",
