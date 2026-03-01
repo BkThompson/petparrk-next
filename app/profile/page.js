@@ -47,6 +47,12 @@ export default function ProfilePage() {
     phone: "",
     relationship: "",
   });
+  const [editingContactId, setEditingContactId] = useState(null);
+  const [editContactForm, setEditContactForm] = useState({
+    name: "",
+    phone: "",
+    relationship: "",
+  });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingPetPhoto, setUploadingPetPhoto] = useState(null);
@@ -172,11 +178,13 @@ export default function ProfilePage() {
       data: { publicUrl },
     } = supabase.storage.from("avatars").getPublicUrl(filePath);
     const urlWithCache = `${publicUrl}?t=${Date.now()}`;
-    await supabase.from("profiles").upsert({
-      id: session.user.id,
-      avatar_url: urlWithCache,
-      updated_at: new Date().toISOString(),
-    });
+    await supabase
+      .from("profiles")
+      .upsert({
+        id: session.user.id,
+        avatar_url: urlWithCache,
+        updated_at: new Date().toISOString(),
+      });
     setProfile((prev) => ({ ...prev, avatar_url: urlWithCache }));
     showToast("Profile photo updated!");
     setUploadingPhoto(false);
@@ -337,6 +345,29 @@ export default function ProfilePage() {
     showToast("Contact added!");
   }
 
+  async function handleUpdateContact(petId, contactId) {
+    const { error } = await supabase
+      .from("pet_emergency_contacts")
+      .update({
+        name: editContactForm.name,
+        phone: editContactForm.phone,
+        relationship: editContactForm.relationship,
+      })
+      .eq("id", contactId);
+    if (!error) {
+      setContacts((prev) => ({
+        ...prev,
+        [petId]: prev[petId].map((c) =>
+          c.id === contactId ? { ...c, ...editContactForm } : c
+        ),
+      }));
+      setEditingContactId(null);
+      showToast("Contact updated!");
+    } else {
+      showToast("Failed to update contact.", "error");
+    }
+  }
+
   async function handleDeleteContact(petId, contactId) {
     await supabase.from("pet_emergency_contacts").delete().eq("id", contactId);
     setContacts((prev) => ({
@@ -344,6 +375,15 @@ export default function ProfilePage() {
       [petId]: prev[petId].filter((c) => c.id !== contactId),
     }));
     showToast("Contact removed.");
+  }
+
+  function startEditContact(c) {
+    setEditingContactId(c.id);
+    setEditContactForm({
+      name: c.name || "",
+      phone: c.phone || "",
+      relationship: c.relationship || "",
+    });
   }
 
   function startEditPet(pet) {
@@ -853,7 +893,6 @@ export default function ProfilePage() {
                   </p>
                 )}
               </div>
-
               <div className="form-grid">
                 <div className="field">
                   <label className="label">Name *</label>
@@ -1572,6 +1611,7 @@ export default function ProfilePage() {
                 </button>
               </div>
 
+              {/* Emergency Contacts */}
               <div
                 style={{
                   marginTop: "10px",
@@ -1616,7 +1656,7 @@ export default function ProfilePage() {
                 <div
                   style={{
                     overflow: "hidden",
-                    maxHeight: showContactsFor === pet.id ? "400px" : "0px",
+                    maxHeight: showContactsFor === pet.id ? "600px" : "0px",
                     opacity: showContactsFor === pet.id ? 1 : 0,
                     transition:
                       showContactsFor === pet.id
@@ -1626,60 +1666,145 @@ export default function ProfilePage() {
                 >
                   <div style={{ marginTop: "10px" }}>
                     {(contacts[pet.id] || []).map((c) => (
-                      <div
-                        key={c.id}
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          padding: "8px 0",
-                          borderBottom: "1px solid #f0f0f0",
-                        }}
-                      >
-                        <div>
-                          <span
-                            style={{
-                              fontSize: "14px",
-                              fontWeight: "600",
-                              color: "#111",
-                            }}
-                          >
-                            {c.name}
-                          </span>
-                          {c.relationship && (
+                      <div key={c.id}>
+                        {/* Contact row */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "8px 0",
+                            borderBottom:
+                              editingContactId === c.id
+                                ? "none"
+                                : "1px solid #f0f0f0",
+                          }}
+                        >
+                          <div>
                             <span
                               style={{
-                                fontSize: "12px",
-                                color: "#888",
-                                marginLeft: "8px",
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                color: "#111",
                               }}
                             >
-                              ({c.relationship})
+                              {c.name}
                             </span>
-                          )}
-                          {c.phone && (
-                            <span
-                              style={{ display: "block", fontSize: "13px" }}
-                            >
-                              <a
-                                href={`tel:${c.phone}`}
+                            {c.relationship && (
+                              <span
                                 style={{
-                                  color: "#2d6a4f",
-                                  textDecoration: "none",
+                                  fontSize: "12px",
+                                  color: "#888",
+                                  marginLeft: "8px",
                                 }}
                               >
-                                📞 {formatPhone(c.phone)}
-                              </a>
-                            </span>
-                          )}
+                                ({c.relationship})
+                              </span>
+                            )}
+                            {c.phone && (
+                              <span
+                                style={{ display: "block", fontSize: "13px" }}
+                              >
+                                <a
+                                  href={`tel:${c.phone}`}
+                                  style={{
+                                    color: "#2d6a4f",
+                                    textDecoration: "none",
+                                  }}
+                                >
+                                  📞 {formatPhone(c.phone)}
+                                </a>
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <button
+                              onClick={() =>
+                                editingContactId === c.id
+                                  ? setEditingContactId(null)
+                                  : startEditContact(c)
+                              }
+                              className="btn-secondary"
+                              style={{ fontSize: "11px", padding: "3px 10px" }}
+                            >
+                              {editingContactId === c.id ? "Cancel" : "Edit"}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteContact(pet.id, c.id)}
+                              className="btn-danger"
+                              style={{ fontSize: "11px", padding: "3px 8px" }}
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </div>
-                        <button
-                          onClick={() => handleDeleteContact(pet.id, c.id)}
-                          className="btn-danger"
-                          style={{ fontSize: "11px", padding: "3px 8px" }}
-                        >
-                          Remove
-                        </button>
+
+                        {/* Inline edit form for this contact */}
+                        {editingContactId === c.id && (
+                          <div
+                            style={{
+                              background: "#f9f9f9",
+                              borderRadius: "8px",
+                              padding: "12px",
+                              marginBottom: "8px",
+                              borderBottom: "1px solid #f0f0f0",
+                            }}
+                          >
+                            <div className="contact-grid">
+                              <div>
+                                <label className="label">Name</label>
+                                <input
+                                  className="input"
+                                  value={editContactForm.name}
+                                  onChange={(e) =>
+                                    setEditContactForm({
+                                      ...editContactForm,
+                                      name: e.target.value,
+                                    })
+                                  }
+                                  placeholder="Contact name"
+                                />
+                              </div>
+                              <div>
+                                <label className="label">Phone</label>
+                                <input
+                                  className="input"
+                                  value={editContactForm.phone}
+                                  onChange={(e) =>
+                                    setEditContactForm({
+                                      ...editContactForm,
+                                      phone: handlePhoneInput(e.target.value),
+                                    })
+                                  }
+                                  placeholder="(555) 555-5555"
+                                />
+                              </div>
+                              <div>
+                                <label className="label">Relationship</label>
+                                <input
+                                  className="input"
+                                  value={editContactForm.relationship}
+                                  onChange={(e) =>
+                                    setEditContactForm({
+                                      ...editContactForm,
+                                      relationship: e.target.value,
+                                    })
+                                  }
+                                  placeholder="e.g. Spouse"
+                                />
+                              </div>
+                              <button
+                                onClick={() =>
+                                  handleUpdateContact(pet.id, c.id)
+                                }
+                                className="btn-primary"
+                                style={{ padding: "8px 12px" }}
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                     {(contacts[pet.id] || []).length === 0 && (
@@ -1694,6 +1819,7 @@ export default function ProfilePage() {
                         No emergency contacts yet.
                       </p>
                     )}
+                    {/* Add new contact */}
                     <div className="contact-grid" style={{ marginTop: "10px" }}>
                       <div>
                         <label className="label">Name</label>
