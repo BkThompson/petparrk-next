@@ -9,11 +9,11 @@ body {
   font-family: system-ui, sans-serif;
 }
 
-/* Prevent iOS from auto-zooming when tapping any input field */
-input,
+/* Prevent iOS auto-zoom on input focus — 16px is the threshold */
+input:not([type="checkbox"]):not([type="radio"]),
 textarea,
 select {
-  font-size: 16px !important;
+  font-size: max(16px, 1em) !important;
 }
 
 .ownership-filter {
