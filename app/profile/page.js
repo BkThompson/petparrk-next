@@ -7,6 +7,8 @@ import Link from "next/link";
 import Navbar from "../../components/Navbar";
 import { useToast } from "../../components/ToastProvider";
 
+const SESSION_KEY = "petparrk_symptom_session";
+
 export default function ProfilePage() {
   const router = useRouter();
   const showToast = useToast();
@@ -57,6 +59,9 @@ export default function ProfilePage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingPetPhoto, setUploadingPetPhoto] = useState(null);
   const [convertingPhoto, setConvertingPhoto] = useState(false);
+  // Symptom check history per pet
+  const [symptomHistory, setSymptomHistory] = useState({});
+  const [showHistoryFor, setShowHistoryFor] = useState(null);
   const fileInputRef = useRef(null);
   const petPhotoRefs = useRef({});
   const newPetPhotoRef = useRef(null);
@@ -113,6 +118,35 @@ export default function ProfilePage() {
     }
     fetchData();
   }, [session]);
+
+  async function fetchSymptomHistory(petId) {
+    const { data } = await supabase
+      .from("symptom_checks")
+      .select("*")
+      .eq("pet_id", petId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setSymptomHistory((prev) => ({ ...prev, [petId]: data || [] }));
+    setShowHistoryFor(petId);
+  }
+
+  function handleCheckSymptoms(pet) {
+    // Pre-load this pet into the symptom checker session
+    try {
+      sessionStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({
+          selectedPet: pet,
+          messages: [],
+          triageResult: null,
+          guestMode: false,
+          freeCheckUsed: false,
+          autoStart: true,
+        })
+      );
+    } catch (e) {}
+    router.push("/symptom-checker");
+  }
 
   async function prepareImageFile(file, setConverting) {
     if (!file) return null;
@@ -253,9 +287,7 @@ export default function ProfilePage() {
       setProfile((prev) => ({ ...prev, ...profileForm }));
       setEditingProfile(false);
       showToast("Profile saved!");
-    } else {
-      showToast("Failed to save profile.", "error");
-    }
+    } else showToast("Failed to save profile.", "error");
     setSaving(false);
   }
 
@@ -276,9 +308,7 @@ export default function ProfilePage() {
         );
         setEditingPetId(null);
         showToast("Pet updated!");
-      } else {
-        showToast("Failed to update pet.", "error");
-      }
+      } else showToast("Failed to update pet.", "error");
     } else {
       const { data, error } = await supabase
         .from("pets")
@@ -314,9 +344,7 @@ export default function ProfilePage() {
         setShowAddPet(false);
         setPendingPetPhoto(null);
         showToast("Pet added!");
-      } else {
-        showToast("Failed to add pet.", "error");
-      }
+      } else showToast("Failed to add pet.", "error");
     }
     setPetForm(emptyPetForm);
     setMicrochipError("");
@@ -363,9 +391,7 @@ export default function ProfilePage() {
       }));
       setEditingContactId(null);
       showToast("Contact updated!");
-    } else {
-      showToast("Failed to update contact.", "error");
-    }
+    } else showToast("Failed to update contact.", "error");
   }
 
   async function handleDeleteContact(petId, contactId) {
@@ -447,6 +473,25 @@ export default function ProfilePage() {
     return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
   }
 
+  function triageLabel(result) {
+    if (result === "EMERGENCY")
+      return { emoji: "🔴", label: "Emergency", color: "#c62828" };
+    if (result === "SEE_VET")
+      return { emoji: "🟡", label: "See vet soon", color: "#e65100" };
+    if (result === "MONITOR")
+      return { emoji: "🟢", label: "Monitor at home", color: "#2d6a4f" };
+    return { emoji: "⚪", label: result, color: "#888" };
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "";
+    return new Date(iso).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
   const previewName = petForm.name.trim() || "...";
   const previewSubtitle = [
     petForm.breed,
@@ -493,6 +538,7 @@ export default function ProfilePage() {
         .pet-hi-card { text-align: center; padding: 16px 0 20px 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .contact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
+        .collapsible { overflow: hidden; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease; }
         @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } .contact-grid { grid-template-columns: 1fr; } }
       `}</style>
 
@@ -965,16 +1011,14 @@ export default function ProfilePage() {
                         .replace(/\D/g, "")
                         .slice(0, 15);
                       setPetForm({ ...petForm, microchip_number: val });
-                      if (
+                      setMicrochipError(
                         val.length > 0 &&
-                        val.length !== 9 &&
-                        val.length !== 10 &&
-                        val.length !== 15
-                      ) {
-                        setMicrochipError("Must be 9, 10, or 15 digits");
-                      } else {
-                        setMicrochipError("");
-                      }
+                          val.length !== 9 &&
+                          val.length !== 10 &&
+                          val.length !== 15
+                          ? "Must be 9, 10, or 15 digits"
+                          : ""
+                      );
                     }}
                     placeholder="9, 10, or 15 digits"
                     style={{
@@ -1140,6 +1184,7 @@ export default function ProfilePage() {
                 background: "#fafafa",
               }}
             >
+              {/* Pet header row */}
               <div
                 style={{
                   display: "flex",
@@ -1219,7 +1264,15 @@ export default function ProfilePage() {
                     Hi, I'm {pet.name}! {speciesEmoji(pet.species)}
                   </h3>
                 </div>
-                <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "6px",
+                    flexShrink: 0,
+                    flexWrap: "wrap",
+                    justifyContent: "flex-end",
+                  }}
+                >
                   <button
                     onClick={() =>
                       editingPetId === pet.id
@@ -1345,16 +1398,14 @@ export default function ProfilePage() {
                             .replace(/\D/g, "")
                             .slice(0, 15);
                           setPetForm({ ...petForm, microchip_number: val });
-                          if (
+                          setMicrochipError(
                             val.length > 0 &&
-                            val.length !== 9 &&
-                            val.length !== 10 &&
-                            val.length !== 15
-                          ) {
-                            setMicrochipError("Must be 9, 10, or 15 digits");
-                          } else {
-                            setMicrochipError("");
-                          }
+                              val.length !== 9 &&
+                              val.length !== 10 &&
+                              val.length !== 15
+                              ? "Must be 9, 10, or 15 digits"
+                              : ""
+                          );
                         }}
                         placeholder="9, 10, or 15 digits"
                         style={{
@@ -1477,6 +1528,7 @@ export default function ProfilePage() {
                 </div>
               )}
 
+              {/* Tags */}
               <div
                 style={{
                   display: "flex",
@@ -1611,6 +1663,186 @@ export default function ProfilePage() {
                 </button>
               </div>
 
+              {/* Check Symptoms — full width, its own row */}
+              <div
+                style={{
+                  marginTop: "12px",
+                  paddingTop: "12px",
+                  borderTop: "1px solid #eee",
+                }}
+              >
+                <button
+                  onClick={() => handleCheckSymptoms(pet)}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    background: "#2d6a4f",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                  }}
+                >
+                  🩺 Check Symptoms for {pet.name}
+                </button>
+              </div>
+
+              {/* Symptom Check History */}
+              <div
+                style={{
+                  marginTop: "10px",
+                  paddingTop: "10px",
+                  borderTop: "1px solid #eee",
+                }}
+              >
+                <button
+                  onClick={() =>
+                    showHistoryFor === pet.id
+                      ? setShowHistoryFor(null)
+                      : fetchSymptomHistory(pet.id)
+                  }
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#2d6a4f",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    padding: 0,
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  🩺 Symptom History
+                  <span
+                    style={{
+                      display: "inline-block",
+                      transition: "transform 0.3s ease",
+                      transform:
+                        showHistoryFor === pet.id
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                      fontSize: "10px",
+                    }}
+                  >
+                    ▼
+                  </span>
+                </button>
+                <div
+                  style={{
+                    overflow: "hidden",
+                    maxHeight: showHistoryFor === pet.id ? "600px" : "0px",
+                    opacity: showHistoryFor === pet.id ? 1 : 0,
+                    transition:
+                      showHistoryFor === pet.id
+                        ? "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease"
+                        : "max-height 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease",
+                  }}
+                >
+                  <div style={{ marginTop: "10px" }}>
+                    {(symptomHistory[pet.id] || []).length === 0 ? (
+                      <p
+                        style={{
+                          fontSize: "13px",
+                          color: "#999",
+                          fontStyle: "italic",
+                          margin: "4px 0 8px 0",
+                        }}
+                      >
+                        No symptom checks yet.
+                      </p>
+                    ) : (
+                      (symptomHistory[pet.id] || []).map((check) => {
+                        const t = triageLabel(check.triage_result);
+                        return (
+                          <div
+                            key={check.id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              padding: "8px 0",
+                              borderBottom: "1px solid #f0f0f0",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <span style={{ fontSize: "16px" }}>
+                                {t.emoji}
+                              </span>
+                              <div>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "13px",
+                                    fontWeight: "600",
+                                    color: t.color,
+                                  }}
+                                >
+                                  {t.label}
+                                </p>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "12px",
+                                    color: "#aaa",
+                                  }}
+                                >
+                                  {formatDate(check.created_at)}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                try {
+                                  const transcript = JSON.parse(
+                                    check.transcript || "[]"
+                                  );
+                                  sessionStorage.setItem(
+                                    SESSION_KEY,
+                                    JSON.stringify({
+                                      selectedPet: pet,
+                                      messages: transcript,
+                                      triageResult: check.triage_result,
+                                      guestMode: false,
+                                      freeCheckUsed: false,
+                                    })
+                                  );
+                                } catch (e) {}
+                                router.push("/symptom-checker");
+                              }}
+                              style={{
+                                fontSize: "11px",
+                                color: "#2d6a4f",
+                                background: "none",
+                                border: "1px solid #c8e6c9",
+                                borderRadius: "6px",
+                                padding: "3px 10px",
+                                cursor: "pointer",
+                              }}
+                            >
+                              View →
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Emergency Contacts */}
               <div
                 style={{
@@ -1660,14 +1892,13 @@ export default function ProfilePage() {
                     opacity: showContactsFor === pet.id ? 1 : 0,
                     transition:
                       showContactsFor === pet.id
-                        ? "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease"
-                        : "max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease",
+                        ? "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease"
+                        : "max-height 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease",
                   }}
                 >
                   <div style={{ marginTop: "10px" }}>
                     {(contacts[pet.id] || []).map((c) => (
                       <div key={c.id}>
-                        {/* Contact row */}
                         <div
                           style={{
                             display: "flex",
@@ -1738,8 +1969,6 @@ export default function ProfilePage() {
                             </button>
                           </div>
                         </div>
-
-                        {/* Inline edit form for this contact */}
                         {editingContactId === c.id && (
                           <div
                             style={{
@@ -1819,7 +2048,6 @@ export default function ProfilePage() {
                         No emergency contacts yet.
                       </p>
                     )}
-                    {/* Add new contact */}
                     <div className="contact-grid" style={{ marginTop: "10px" }}>
                       <div>
                         <label className="label">Name</label>

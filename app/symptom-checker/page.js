@@ -22,6 +22,7 @@ export default function SymptomCheckerPage() {
   const [guestMode, setGuestMode] = useState(false);
   const [guestPet, setGuestPet] = useState({ species: "", breed: "", age: "" });
   const [freeCheckUsed, setFreeCheckUsed] = useState(false);
+  const [autoStartPet, setAutoStartPet] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -51,7 +52,12 @@ export default function SymptomCheckerPage() {
       const saved = sessionStorage.getItem(SESSION_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.messages?.length > 0) {
+        // autoStart: came from profile page "Check Symptoms" button — store pet and let startSession run after mount
+        if (parsed.autoStart && parsed.selectedPet) {
+          sessionStorage.removeItem(SESSION_KEY);
+          setSelectedPet(parsed.selectedPet);
+          setAutoStartPet(parsed.selectedPet);
+        } else if (parsed.messages?.length > 0) {
           setSelectedPet(parsed.selectedPet || null);
           setMessages(parsed.messages || []);
           setTriageResult(parsed.triageResult || null);
@@ -62,6 +68,14 @@ export default function SymptomCheckerPage() {
       }
     } catch (e) {}
   }, []);
+
+  // Trigger startSession after mount when coming from profile "Check Symptoms"
+  useEffect(() => {
+    if (autoStartPet) {
+      startSession(autoStartPet);
+      setAutoStartPet(null);
+    }
+  }, [autoStartPet]);
 
   // Save session to sessionStorage on every change
   useEffect(() => {
