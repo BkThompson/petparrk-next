@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import Navbar from "../../components/Navbar";
+import { motion } from "framer-motion";
 
 const SESSION_KEY = "petparrk_symptom_session";
 
@@ -320,236 +321,278 @@ export default function SymptomCheckerPage() {
       },
     }[triageResult];
 
-    // Collapsed pill — always visible, tap to expand
-    if (!triageCardExpanded) {
-      return (
-        <button
-          onClick={() => setTriageCardExpanded(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            width: "100%",
-            padding: "10px 14px",
-            background: config.bg,
-            border: `2px solid ${config.border}`,
-            borderRadius: "10px",
-            marginBottom: "10px",
-            cursor: "pointer",
-            textAlign: "left",
-          }}
-        >
-          <span style={{ fontSize: "16px" }}>{config.emoji}</span>
-          <span
-            style={{
-              fontWeight: "700",
-              fontSize: "14px",
-              color: config.color,
-              flex: 1,
-            }}
-          >
-            {config.label}
-          </span>
-          <span style={{ fontSize: "12px", color: config.color, opacity: 0.7 }}>
-            Tap to expand ↓
-          </span>
-        </button>
-      );
-    }
-
-    // Expanded — full card
     return (
-      <div
+      <motion.div
+        layout
+        transition={{ duration: 0.35, ease: "easeInOut" }}
         style={{
+          marginBottom: "10px",
           background: config.bg,
           border: `2px solid ${config.border}`,
           borderRadius: "12px",
-          padding: "16px",
-          marginBottom: "16px",
+          overflow: "hidden",
+          cursor: triageCardExpanded ? "default" : "pointer",
         }}
+        onClick={
+          !triageCardExpanded ? () => setTriageCardExpanded(true) : undefined
+        }
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "6px",
+        {/* Collapsed pill row — always rendered, visibility toggled */}
+        <motion.div
+          animate={{
+            opacity: triageCardExpanded ? 0 : 1,
+            height: triageCardExpanded ? 0 : "auto",
           }}
+          transition={{
+            opacity: {
+              duration: 0.2,
+              ease: "easeInOut",
+              delay: triageCardExpanded ? 0 : 0.2,
+            },
+            height: {
+              duration: 0.3,
+              ease: "easeInOut",
+              delay: triageCardExpanded ? 0 : 0.15,
+            },
+          }}
+          style={{ overflow: "hidden" }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "20px" }}>{config.emoji}</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 14px",
+            }}
+          >
+            <span style={{ fontSize: "16px" }}>{config.emoji}</span>
             <span
               style={{
                 fontWeight: "700",
-                fontSize: "16px",
+                fontSize: "14px",
                 color: config.color,
+                flex: 1,
               }}
             >
               {config.label}
             </span>
+            <span
+              style={{ fontSize: "12px", color: config.color, opacity: 0.7 }}
+            >
+              Tap to expand ↓
+            </span>
           </div>
-          <button
-            onClick={() => setTriageCardExpanded(false)}
-            title="Collapse"
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "13px",
-              color: config.color,
-              opacity: 0.7,
-              padding: "2px 4px",
-              fontWeight: "600",
-            }}
-          >
-            Collapse ↑
-          </button>
-        </div>
-        <p
-          style={{
-            margin: "0 0 14px 0",
-            fontSize: "14px",
-            color: "#333",
-            fontWeight: "500",
-          }}
-        >
-          {config.message}
-        </p>
+        </motion.div>
 
-        {config.vetLabel && nearbyVets.length > 0 && (
-          <div>
-            <p
+        {/* Expanded full card — always rendered, visibility toggled */}
+        <motion.div
+          animate={{
+            opacity: triageCardExpanded ? 1 : 0,
+            height: triageCardExpanded ? "auto" : 0,
+          }}
+          transition={{
+            opacity: {
+              duration: 0.2,
+              ease: "easeInOut",
+              delay: triageCardExpanded ? 0.2 : 0,
+            },
+            height: {
+              duration: 0.3,
+              ease: "easeInOut",
+              delay: triageCardExpanded ? 0.15 : 0,
+            },
+          }}
+          style={{ overflow: "hidden" }}
+        >
+          <div style={{ padding: "16px" }}>
+            <div
               style={{
-                margin: "0 0 8px 0",
-                fontSize: "11px",
-                fontWeight: "700",
-                color: "#888",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "6px",
               }}
             >
-              {config.vetLabel}
-            </p>
-            {nearbyVets.map((vet) => (
               <div
-                key={vet.id}
-                style={{
-                  background: "#fff",
-                  borderRadius: "10px",
-                  padding: "12px 14px",
-                  marginBottom: "8px",
-                  border: "1px solid #eee",
-                }}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
-                <div
+                <span style={{ fontSize: "20px" }}>{config.emoji}</span>
+                <span
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    gap: "10px",
+                    fontWeight: "700",
+                    fontSize: "16px",
+                    color: config.color,
                   }}
                 >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p
-                      style={{
-                        margin: "0 0 2px 0",
-                        fontWeight: "700",
-                        fontSize: "14px",
-                        color: "#111",
-                      }}
-                    >
-                      {vet.name}
-                    </p>
-                    <p
-                      style={{
-                        margin: "0 0 10px 0",
-                        fontSize: "12px",
-                        color: "#888",
-                      }}
-                    >
-                      {vet.neighborhood}
-                    </p>
-                    {vet.phone && (
-                      <a
-                        href={`tel:${vet.phone}`}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          padding: "9px 16px",
-                          background: config.color,
-                          color: "#fff",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          fontWeight: "700",
-                          textDecoration: "none",
-                        }}
-                      >
-                        📞 {vet.phone}
-                      </a>
-                    )}
-                  </div>
-                  <a
-                    href={`/vet/${vet.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontSize: "11px",
-                      color: "#2d6a4f",
-                      textDecoration: "underline",
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                      marginTop: "2px",
-                    }}
-                  >
-                    View profile ↗
-                  </a>
-                </div>
+                  {config.label}
+                </span>
               </div>
-            ))}
-          </div>
-        )}
-
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            marginTop: "12px",
-            flexWrap: "wrap",
-          }}
-        >
-          <button
-            onClick={resetSession}
-            style={{
-              padding: "8px 16px",
-              background: "#fff",
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-              fontSize: "13px",
-              cursor: "pointer",
-              fontWeight: "600",
-            }}
-          >
-            Start New Check
-          </button>
-          {session && (
-            <Link
-              href="/profile"
+              <button
+                onClick={() => setTriageCardExpanded(false)}
+                title="Collapse"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  color: config.color,
+                  opacity: 0.7,
+                  padding: "2px 4px",
+                  fontWeight: "600",
+                }}
+              >
+                Collapse ↑
+              </button>
+            </div>
+            <p
               style={{
-                padding: "8px 16px",
-                background: config.color,
-                color: "#fff",
-                borderRadius: "8px",
-                fontSize: "13px",
-                textDecoration: "none",
-                fontWeight: "600",
+                margin: "0 0 14px 0",
+                fontSize: "14px",
+                color: "#333",
+                fontWeight: "500",
               }}
             >
-              View Pet Profile
-            </Link>
-          )}
-        </div>
-      </div>
+              {config.message}
+            </p>
+
+            {config.vetLabel && nearbyVets.length > 0 && (
+              <div>
+                <p
+                  style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    color: "#888",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  {config.vetLabel}
+                </p>
+                {nearbyVets.map((vet) => (
+                  <div
+                    key={vet.id}
+                    style={{
+                      background: "#fff",
+                      borderRadius: "10px",
+                      padding: "12px 14px",
+                      marginBottom: "8px",
+                      border: "1px solid #eee",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        gap: "10px",
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p
+                          style={{
+                            margin: "0 0 2px 0",
+                            fontWeight: "700",
+                            fontSize: "14px",
+                            color: "#111",
+                          }}
+                        >
+                          {vet.name}
+                        </p>
+                        <p
+                          style={{
+                            margin: "0 0 10px 0",
+                            fontSize: "12px",
+                            color: "#888",
+                          }}
+                        >
+                          {vet.neighborhood}
+                        </p>
+                        {vet.phone && (
+                          <a
+                            href={`tel:${vet.phone}`}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "9px 16px",
+                              background: config.color,
+                              color: "#fff",
+                              borderRadius: "8px",
+                              fontSize: "14px",
+                              fontWeight: "700",
+                              textDecoration: "none",
+                            }}
+                          >
+                            📞 {vet.phone}
+                          </a>
+                        )}
+                      </div>
+                      <a
+                        href={`/vet/${vet.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: "11px",
+                          color: "#2d6a4f",
+                          textDecoration: "underline",
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                          marginTop: "2px",
+                        }}
+                      >
+                        View profile ↗
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                marginTop: "12px",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                onClick={resetSession}
+                style={{
+                  padding: "8px 16px",
+                  background: "#fff",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                }}
+              >
+                Start New Check
+              </button>
+              {session && (
+                <Link
+                  href="/profile"
+                  style={{
+                    padding: "8px 16px",
+                    background: config.color,
+                    color: "#fff",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    textDecoration: "none",
+                    fontWeight: "600",
+                  }}
+                >
+                  View Pet Profile
+                </Link>
+              )}
+            </div>
+            {/* end buttons row */}
+          </div>
+          {/* end padding wrapper */}
+        </motion.div>
+      </motion.div>
     );
   }
 
@@ -932,6 +975,7 @@ export default function SymptomCheckerPage() {
         .send-btn { padding: 12px 20px; background: #2d6a4f; color: #fff; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; font-weight: 600; white-space: nowrap; }
         .send-btn:hover { background: #245a42; }
         .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
         @keyframes dotBounce {
           0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
           40% { transform: translateY(-5px); opacity: 1; }
