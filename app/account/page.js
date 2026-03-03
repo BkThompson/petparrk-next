@@ -153,7 +153,6 @@ export default function AccountPage() {
         .modal { background: #fff; border-radius: 16px; padding: 28px; max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
       `}</style>
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div
           className="modal-overlay"
@@ -265,7 +264,7 @@ export default function AccountPage() {
           </h2>
           <p style={{ margin: "0 0 12px 0", fontSize: "14px" }}>
             <span style={{ color: "#888" }}>Email: </span>
-            <strong>{session.user.email}</strong>
+            <span style={{ color: "#333" }}>{session.user.email}</span>
           </p>
           <Link
             href="/profile"

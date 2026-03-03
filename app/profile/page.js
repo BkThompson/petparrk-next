@@ -59,7 +59,6 @@ export default function ProfilePage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingPetPhoto, setUploadingPetPhoto] = useState(null);
   const [convertingPhoto, setConvertingPhoto] = useState(false);
-  // Symptom check history per pet
   const [symptomHistory, setSymptomHistory] = useState({});
   const [showHistoryFor, setShowHistoryFor] = useState(null);
   const fileInputRef = useRef(null);
@@ -131,7 +130,6 @@ export default function ProfilePage() {
   }
 
   function handleCheckSymptoms(pet) {
-    // Pre-load this pet into the symptom checker session
     try {
       sessionStorage.setItem(
         SESSION_KEY,
@@ -275,14 +273,16 @@ export default function ProfilePage() {
 
   async function handleSaveProfile() {
     setSaving(true);
-    const { error } = await supabase.from("profiles").upsert({
-      id: session.user.id,
-      full_name: profileForm.full_name,
-      bio: profileForm.bio,
-      zip_code: profileForm.zip_code,
-      is_public: profileForm.is_public,
-      updated_at: new Date().toISOString(),
-    });
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({
+        id: session.user.id,
+        full_name: profileForm.full_name,
+        bio: profileForm.bio,
+        zip_code: profileForm.zip_code,
+        is_public: profileForm.is_public,
+        updated_at: new Date().toISOString(),
+      });
     if (!error) {
       setProfile((prev) => ({ ...prev, ...profileForm }));
       setEditingProfile(false);
@@ -508,6 +508,183 @@ export default function ProfilePage() {
   if (session === undefined || loading) return null;
   if (!session) return null;
 
+  // ─── Shared pet form fields (used in both Add and Edit) ──────────────────
+  function renderPetFormFields() {
+    return (
+      <>
+        <div className="form-grid">
+          <div className="field">
+            <label className="label">Name *</label>
+            <input
+              className="input"
+              value={petForm.name}
+              onChange={(e) => setPetForm({ ...petForm, name: e.target.value })}
+              placeholder="e.g. Buddy"
+            />
+          </div>
+          <div className="field">
+            <label className="label">Species</label>
+            <select
+              className="input"
+              value={petForm.species}
+              onChange={(e) =>
+                setPetForm({ ...petForm, species: e.target.value })
+              }
+            >
+              <option>Dog</option>
+              <option>Cat</option>
+              <option>Bird</option>
+              <option>Rabbit</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div className="field">
+            <label className="label">Breed</label>
+            <input
+              className="input"
+              value={petForm.breed}
+              onChange={(e) =>
+                setPetForm({ ...petForm, breed: e.target.value })
+              }
+              placeholder="e.g. Golden Retriever"
+            />
+          </div>
+          <div className="field">
+            <label className="label">Birthday</label>
+            <input
+              className="input"
+              type="date"
+              value={petForm.birthday}
+              onChange={(e) =>
+                setPetForm({ ...petForm, birthday: e.target.value })
+              }
+            />
+          </div>
+          <div className="field">
+            <label className="label">Weight (lbs)</label>
+            <input
+              className="input"
+              type="number"
+              value={petForm.weight_lbs}
+              onChange={(e) =>
+                setPetForm({ ...petForm, weight_lbs: e.target.value })
+              }
+              placeholder="e.g. 45"
+            />
+          </div>
+          <div className="field">
+            <label className="label">Microchip #</label>
+            <input
+              className="input"
+              value={petForm.microchip_number}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, "").slice(0, 15);
+                setPetForm({ ...petForm, microchip_number: val });
+                setMicrochipError(
+                  val.length > 0 &&
+                    val.length !== 9 &&
+                    val.length !== 10 &&
+                    val.length !== 15
+                    ? "Must be 9, 10, or 15 digits"
+                    : ""
+                );
+              }}
+              placeholder="9, 10, or 15 digits"
+              style={{ borderColor: microchipError ? "#c62828" : undefined }}
+            />
+            {microchipError && (
+              <p
+                style={{
+                  margin: "4px 0 0 0",
+                  fontSize: "12px",
+                  color: "#c62828",
+                }}
+              >
+                ⚠️ {microchipError}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="field">
+          <label className="label">Allergies</label>
+          <input
+            className="input"
+            value={petForm.allergies}
+            onChange={(e) =>
+              setPetForm({ ...petForm, allergies: e.target.value })
+            }
+            placeholder="e.g. Chicken, pollen"
+          />
+        </div>
+        <div className="field">
+          <label className="label">Medications</label>
+          <input
+            className="input"
+            value={petForm.medications}
+            onChange={(e) =>
+              setPetForm({ ...petForm, medications: e.target.value })
+            }
+            placeholder="e.g. Apoquel 16mg daily"
+          />
+        </div>
+        <div className="field">
+          <label className="label">Notes</label>
+          <textarea
+            className="input"
+            value={petForm.notes}
+            onChange={(e) => setPetForm({ ...petForm, notes: e.target.value })}
+            placeholder="Any other important info..."
+            rows={2}
+            style={{ resize: "vertical", height: "auto" }}
+          />
+        </div>
+        <p className="section-divider">Owner Contact Info</p>
+        <p style={{ margin: "-8px 0 12px 0", fontSize: "12px", color: "#aaa" }}>
+          Shown on the medical card so vets and finders know who to contact.
+        </p>
+        <div className="form-grid">
+          <div className="field">
+            <label className="label">Owner Name</label>
+            <input
+              className="input"
+              value={petForm.owner_name}
+              onChange={(e) =>
+                setPetForm({ ...petForm, owner_name: e.target.value })
+              }
+              placeholder="Your full name"
+            />
+          </div>
+          <div className="field">
+            <label className="label">Owner Phone</label>
+            <input
+              className="input"
+              value={petForm.owner_phone}
+              onChange={(e) =>
+                setPetForm({
+                  ...petForm,
+                  owner_phone: handlePhoneInput(e.target.value),
+                })
+              }
+              placeholder="(555) 555-5555"
+            />
+          </div>
+        </div>
+        <div className="field">
+          <label className="label">Owner Email</label>
+          <input
+            className="input"
+            type="email"
+            value={petForm.owner_email}
+            onChange={(e) =>
+              setPetForm({ ...petForm, owner_email: e.target.value })
+            }
+            placeholder="e.g. you@email.com"
+          />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <style>{`
@@ -538,7 +715,11 @@ export default function ProfilePage() {
         .pet-hi-card { text-align: center; padding: 16px 0 20px 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .contact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
-        .collapsible { overflow: hidden; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease; }
+        /* Pet detail row: muted label + normal-weight value */
+        .detail-row { margin: 0 0 4px 0; font-size: 13px; }
+        .detail-label { color: #888; }
+        .detail-value { color: #333; }
+        .detail-value-alert { color: #c62828; }
         @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } .contact-grid { grid-template-columns: 1fr; } }
       `}</style>
 
@@ -939,190 +1120,7 @@ export default function ProfilePage() {
                   </p>
                 )}
               </div>
-              <div className="form-grid">
-                <div className="field">
-                  <label className="label">Name *</label>
-                  <input
-                    className="input"
-                    value={petForm.name}
-                    onChange={(e) =>
-                      setPetForm({ ...petForm, name: e.target.value })
-                    }
-                    placeholder="e.g. Buddy"
-                  />
-                </div>
-                <div className="field">
-                  <label className="label">Species</label>
-                  <select
-                    className="input"
-                    value={petForm.species}
-                    onChange={(e) =>
-                      setPetForm({ ...petForm, species: e.target.value })
-                    }
-                  >
-                    <option>Dog</option>
-                    <option>Cat</option>
-                    <option>Bird</option>
-                    <option>Rabbit</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div className="field">
-                  <label className="label">Breed</label>
-                  <input
-                    className="input"
-                    value={petForm.breed}
-                    onChange={(e) =>
-                      setPetForm({ ...petForm, breed: e.target.value })
-                    }
-                    placeholder="e.g. Golden Retriever"
-                  />
-                </div>
-                <div className="field">
-                  <label className="label">Birthday</label>
-                  <input
-                    className="input"
-                    type="date"
-                    value={petForm.birthday}
-                    onChange={(e) =>
-                      setPetForm({ ...petForm, birthday: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="field">
-                  <label className="label">Weight (lbs)</label>
-                  <input
-                    className="input"
-                    type="number"
-                    value={petForm.weight_lbs}
-                    onChange={(e) =>
-                      setPetForm({ ...petForm, weight_lbs: e.target.value })
-                    }
-                    placeholder="e.g. 45"
-                  />
-                </div>
-                <div className="field">
-                  <label className="label">Microchip #</label>
-                  <input
-                    className="input"
-                    value={petForm.microchip_number}
-                    onChange={(e) => {
-                      const val = e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 15);
-                      setPetForm({ ...petForm, microchip_number: val });
-                      setMicrochipError(
-                        val.length > 0 &&
-                          val.length !== 9 &&
-                          val.length !== 10 &&
-                          val.length !== 15
-                          ? "Must be 9, 10, or 15 digits"
-                          : ""
-                      );
-                    }}
-                    placeholder="9, 10, or 15 digits"
-                    style={{
-                      borderColor: microchipError ? "#c62828" : undefined,
-                    }}
-                  />
-                  {microchipError && (
-                    <p
-                      style={{
-                        margin: "4px 0 0 0",
-                        fontSize: "12px",
-                        color: "#c62828",
-                      }}
-                    >
-                      ⚠️ {microchipError}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="field">
-                <label className="label">Allergies</label>
-                <input
-                  className="input"
-                  value={petForm.allergies}
-                  onChange={(e) =>
-                    setPetForm({ ...petForm, allergies: e.target.value })
-                  }
-                  placeholder="e.g. Chicken, pollen"
-                />
-              </div>
-              <div className="field">
-                <label className="label">Medications</label>
-                <input
-                  className="input"
-                  value={petForm.medications}
-                  onChange={(e) =>
-                    setPetForm({ ...petForm, medications: e.target.value })
-                  }
-                  placeholder="e.g. Apoquel 16mg daily"
-                />
-              </div>
-              <div className="field">
-                <label className="label">Notes</label>
-                <textarea
-                  className="input"
-                  value={petForm.notes}
-                  onChange={(e) =>
-                    setPetForm({ ...petForm, notes: e.target.value })
-                  }
-                  placeholder="Any other important info..."
-                  rows={2}
-                  style={{ resize: "vertical", height: "auto" }}
-                />
-              </div>
-              <p className="section-divider">Owner Contact Info</p>
-              <p
-                style={{
-                  margin: "-8px 0 12px 0",
-                  fontSize: "12px",
-                  color: "#aaa",
-                }}
-              >
-                Shown on the medical card so vets and finders know who to
-                contact.
-              </p>
-              <div className="form-grid">
-                <div className="field">
-                  <label className="label">Owner Name</label>
-                  <input
-                    className="input"
-                    value={petForm.owner_name}
-                    onChange={(e) =>
-                      setPetForm({ ...petForm, owner_name: e.target.value })
-                    }
-                    placeholder="Your full name"
-                  />
-                </div>
-                <div className="field">
-                  <label className="label">Owner Phone</label>
-                  <input
-                    className="input"
-                    value={petForm.owner_phone}
-                    onChange={(e) =>
-                      setPetForm({
-                        ...petForm,
-                        owner_phone: handlePhoneInput(e.target.value),
-                      })
-                    }
-                    placeholder="(555) 555-5555"
-                  />
-                </div>
-              </div>
-              <div className="field">
-                <label className="label">Owner Email</label>
-                <input
-                  className="input"
-                  type="email"
-                  value={petForm.owner_email}
-                  onChange={(e) =>
-                    setPetForm({ ...petForm, owner_email: e.target.value })
-                  }
-                  placeholder="e.g. you@email.com"
-                />
-              </div>
+              {renderPetFormFields()}
               <div
                 style={{
                   display: "flex",
@@ -1326,180 +1324,7 @@ export default function ProfilePage() {
                     margin: "12px 0",
                   }}
                 >
-                  <div className="form-grid">
-                    <div className="field">
-                      <label className="label">Name *</label>
-                      <input
-                        className="input"
-                        value={petForm.name}
-                        onChange={(e) =>
-                          setPetForm({ ...petForm, name: e.target.value })
-                        }
-                        placeholder="e.g. Buddy"
-                      />
-                    </div>
-                    <div className="field">
-                      <label className="label">Species</label>
-                      <select
-                        className="input"
-                        value={petForm.species}
-                        onChange={(e) =>
-                          setPetForm({ ...petForm, species: e.target.value })
-                        }
-                      >
-                        <option>Dog</option>
-                        <option>Cat</option>
-                        <option>Bird</option>
-                        <option>Rabbit</option>
-                        <option>Other</option>
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label className="label">Breed</label>
-                      <input
-                        className="input"
-                        value={petForm.breed}
-                        onChange={(e) =>
-                          setPetForm({ ...petForm, breed: e.target.value })
-                        }
-                        placeholder="e.g. Golden Retriever"
-                      />
-                    </div>
-                    <div className="field">
-                      <label className="label">Birthday</label>
-                      <input
-                        className="input"
-                        type="date"
-                        value={petForm.birthday}
-                        onChange={(e) =>
-                          setPetForm({ ...petForm, birthday: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="field">
-                      <label className="label">Weight (lbs)</label>
-                      <input
-                        className="input"
-                        type="number"
-                        value={petForm.weight_lbs}
-                        onChange={(e) =>
-                          setPetForm({ ...petForm, weight_lbs: e.target.value })
-                        }
-                        placeholder="e.g. 45"
-                      />
-                    </div>
-                    <div className="field">
-                      <label className="label">Microchip #</label>
-                      <input
-                        className="input"
-                        value={petForm.microchip_number}
-                        onChange={(e) => {
-                          const val = e.target.value
-                            .replace(/\D/g, "")
-                            .slice(0, 15);
-                          setPetForm({ ...petForm, microchip_number: val });
-                          setMicrochipError(
-                            val.length > 0 &&
-                              val.length !== 9 &&
-                              val.length !== 10 &&
-                              val.length !== 15
-                              ? "Must be 9, 10, or 15 digits"
-                              : ""
-                          );
-                        }}
-                        placeholder="9, 10, or 15 digits"
-                        style={{
-                          borderColor: microchipError ? "#c62828" : undefined,
-                        }}
-                      />
-                      {microchipError && (
-                        <p
-                          style={{
-                            margin: "4px 0 0 0",
-                            fontSize: "12px",
-                            color: "#c62828",
-                          }}
-                        >
-                          ⚠️ {microchipError}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="field">
-                    <label className="label">Allergies</label>
-                    <input
-                      className="input"
-                      value={petForm.allergies}
-                      onChange={(e) =>
-                        setPetForm({ ...petForm, allergies: e.target.value })
-                      }
-                      placeholder="e.g. Chicken, pollen"
-                    />
-                  </div>
-                  <div className="field">
-                    <label className="label">Medications</label>
-                    <input
-                      className="input"
-                      value={petForm.medications}
-                      onChange={(e) =>
-                        setPetForm({ ...petForm, medications: e.target.value })
-                      }
-                      placeholder="e.g. Apoquel 16mg daily"
-                    />
-                  </div>
-                  <div className="field">
-                    <label className="label">Notes</label>
-                    <textarea
-                      className="input"
-                      value={petForm.notes}
-                      onChange={(e) =>
-                        setPetForm({ ...petForm, notes: e.target.value })
-                      }
-                      placeholder="Any other important info..."
-                      rows={2}
-                      style={{ resize: "vertical", height: "auto" }}
-                    />
-                  </div>
-                  <p className="section-divider">Owner Contact Info</p>
-                  <div className="form-grid">
-                    <div className="field">
-                      <label className="label">Owner Name</label>
-                      <input
-                        className="input"
-                        value={petForm.owner_name}
-                        onChange={(e) =>
-                          setPetForm({ ...petForm, owner_name: e.target.value })
-                        }
-                        placeholder="Your full name"
-                      />
-                    </div>
-                    <div className="field">
-                      <label className="label">Owner Phone</label>
-                      <input
-                        className="input"
-                        value={petForm.owner_phone}
-                        onChange={(e) =>
-                          setPetForm({
-                            ...petForm,
-                            owner_phone: handlePhoneInput(e.target.value),
-                          })
-                        }
-                        placeholder="(555) 555-5555"
-                      />
-                    </div>
-                  </div>
-                  <div className="field">
-                    <label className="label">Owner Email</label>
-                    <input
-                      className="input"
-                      type="email"
-                      value={petForm.owner_email}
-                      onChange={(e) =>
-                        setPetForm({ ...petForm, owner_email: e.target.value })
-                      }
-                      placeholder="e.g. you@email.com"
-                    />
-                  </div>
+                  {renderPetFormFields()}
                   <div
                     style={{
                       display: "flex",
@@ -1559,6 +1384,7 @@ export default function ProfilePage() {
                 </p>
               )}
 
+              {/* ── Medical details: muted label + normal-weight value ──────── */}
               {(pet.allergies ||
                 pet.medications ||
                 pet.microchip_number ||
@@ -1571,52 +1397,36 @@ export default function ProfilePage() {
                   }}
                 >
                   {pet.allergies && (
-                    <p
-                      style={{
-                        margin: "0 0 4px 0",
-                        fontSize: "13px",
-                        color: "#c62828",
-                      }}
-                    >
-                      ⚠️ <strong>Allergies:</strong> {pet.allergies}
+                    <p className="detail-row">
+                      <span className="detail-label">⚠️ Allergies: </span>
+                      <span className="detail-value-alert">
+                        {pet.allergies}
+                      </span>
                     </p>
                   )}
                   {pet.medications && (
-                    <p
-                      style={{
-                        margin: "0 0 4px 0",
-                        fontSize: "13px",
-                        color: "#555",
-                      }}
-                    >
-                      💊 <strong>Medications:</strong> {pet.medications}
+                    <p className="detail-row">
+                      <span className="detail-label">💊 Medications: </span>
+                      <span className="detail-value">{pet.medications}</span>
                     </p>
                   )}
                   {pet.microchip_number && (
-                    <p
-                      style={{
-                        margin: "0 0 4px 0",
-                        fontSize: "13px",
-                        color: "#888",
-                      }}
-                    >
-                      🔖 <strong>Microchip:</strong> {pet.microchip_number}
+                    <p className="detail-row">
+                      <span className="detail-label">🔖 Microchip: </span>
+                      <span className="detail-value">
+                        {pet.microchip_number}
+                      </span>
                     </p>
                   )}
                   {pet.owner_name && (
-                    <p
-                      style={{
-                        margin: "0 0 4px 0",
-                        fontSize: "13px",
-                        color: "#555",
-                      }}
-                    >
-                      👤 <strong>Owner:</strong> {pet.owner_name}
+                    <p className="detail-row">
+                      <span className="detail-label">👤 Owner: </span>
+                      <span className="detail-value">{pet.owner_name}</span>
                     </p>
                   )}
                   {pet.owner_phone && (
-                    <p style={{ margin: "0 0 4px 0", fontSize: "13px" }}>
-                      📞 <strong>Phone:</strong>{" "}
+                    <p className="detail-row">
+                      <span className="detail-label">📞 Phone: </span>
                       <a
                         href={`tel:${pet.owner_phone}`}
                         style={{ color: "#2d6a4f", textDecoration: "none" }}
@@ -1626,8 +1436,8 @@ export default function ProfilePage() {
                     </p>
                   )}
                   {pet.owner_email && (
-                    <p style={{ margin: "0 0 4px 0", fontSize: "13px" }}>
-                      ✉️ <strong>Email:</strong>{" "}
+                    <p className="detail-row">
+                      <span className="detail-label">✉️ Email: </span>
                       <a
                         href={`mailto:${pet.owner_email}`}
                         style={{ color: "#2d6a4f", textDecoration: "none" }}
@@ -1663,7 +1473,7 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-              {/* Check Symptoms — full width, its own row */}
+              {/* Check Symptoms */}
               <div
                 style={{
                   marginTop: "12px",

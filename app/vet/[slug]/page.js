@@ -4,17 +4,34 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
 import Navbar from "../../../components/Navbar";
+
+// ─── Accordion copy by service id ────────────────────────────────────────────
+// Only dental, spay, neuter, and emergency get accordions.
+// Collapsed row shows: service name + price + [+] only.
+// Expanded panel shows: vet-specific notes (if any) + generic explanation.
+const ACCORDION_COPY = {
+  4: {
+    heading: "About dental pricing",
+    body: "Dental costs vary based on your dog's age, size, and the condition of their teeth. This is a starting estimate. Pre-surgical bloodwork and extractions, if needed, are typically billed separately. Always call to confirm for your specific pet.",
+  },
+  8: {
+    heading: "About non-anesthesia dental",
+    body: "Non-anesthesia dental cleaning is a surface-level cleaning performed without sedation. It does not replace a full dental procedure under anesthesia, which allows the vet to examine below the gumline. Ask your vet whether this option is appropriate for your pet.",
+  },
+  5: {
+    heading: "About spay pricing",
+    body: "Surgery costs depend on your dog's size, age, weight, and health. A dog in heat or overweight at the time of surgery may cost more. Pre-surgical bloodwork is often billed separately. Always call to confirm pricing for your specific pet.",
+  },
+  6: {
+    heading: "About neuter pricing",
+    body: "Surgery costs depend on your dog's size, age, weight, and health. Pre-surgical bloodwork is often billed separately. Always call to confirm pricing for your specific pet.",
+  },
+  7: {
+    heading: "About emergency fees",
+    body: "This is the initial visit or urgent care fee only. It does not include treatment, diagnostics, medications, or procedures, which are billed separately based on your pet's needs.",
+  },
+};
 
 export default function VetPage() {
   const { slug } = useParams();
@@ -27,6 +44,8 @@ export default function VetPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [allPrices, setAllPrices] = useState([]);
+  const [expandedRows, setExpandedRows] = useState({});
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [formData, setFormData] = useState({
     vet_name: "",
     service_name: "",
@@ -42,7 +61,7 @@ export default function VetPage() {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_e, session) => setSession(session));
+    } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => subscription.unsubscribe();
   }, []);
 
@@ -53,13 +72,17 @@ export default function VetPage() {
         .select("*")
         .eq("slug", slug)
         .single();
+
+      // Explicitly select services(id, name) so service id is available for accordion lookup
       const { data: priceData } = await supabase
         .from("vet_prices")
-        .select("*, services(name)")
+        .select("*, services(id, name)")
         .eq("vet_id", vetData?.id);
+
       const { data: allPricesData } = await supabase
         .from("vet_prices")
-        .select("*, services(name)");
+        .select("*, services(id, name)");
+
       setVet(vetData);
       setPrices(priceData || []);
       setAllPrices(allPricesData || []);
@@ -136,10 +159,20 @@ export default function VetPage() {
     });
   };
 
-  function formatPrice(low, high) {
-    if (!low) return null;
-    if (low === high) return `$${Number(low).toLocaleString()}`;
-    return `$${Number(low).toLocaleString()}–$${Number(high).toLocaleString()}`;
+  function formatPrice(low, high, priceType) {
+    if (!low && low !== 0) return "Call for quote";
+    if (priceType === "starting") return `$${Number(low).toLocaleString()}+`;
+    if (priceType === "range" && low !== high)
+      return `$${Number(low).toLocaleString()}–$${Number(
+        high
+      ).toLocaleString()}`;
+    return `$${Number(low).toLocaleString()}`;
+  }
+
+  function formatVerifiedDate(dateStr) {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   }
 
   function parseHours(hoursStr) {
@@ -162,14 +195,33 @@ export default function VetPage() {
 
   async function handleShare() {
     const url = window.location.href;
-    const text = `Check out ${vet.name} on PetParrk`;
     if (navigator.share) {
-      await navigator.share({ title: vet.name, text, url });
+      await navigator.share({
+        title: vet.name,
+        text: `Check out ${vet.name} on PetParrk`,
+        url,
+      });
     } else {
       await navigator.clipboard.writeText(url);
       alert("Link copied to clipboard!");
     }
   }
+
+  function toggleRow(id) {
+    setExpandedRows((prev) => ({
+      // If this row is already open, close it. Otherwise close all and open this one.
+      [id]: !prev[id],
+    }));
+  }
+
+  // Most recent created_at across all price rows for this vet
+  const lastVerified =
+    prices.length > 0
+      ? prices
+          .filter((p) => p.created_at)
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+          ?.created_at
+      : null;
 
   if (loading) return <p style={{ padding: "20px" }}>Loading...</p>;
   if (!vet) return <p style={{ padding: "20px" }}>Vet not found.</p>;
@@ -185,14 +237,124 @@ export default function VetPage() {
           70%  { transform: scale(0.85); }
           100% { transform: scale(1); }
         }
-        .save-btn { transition: transform 0.1s; background: none; border: none; cursor: pointer; padding: 0; font-size: 22px; line-height: 1; }
+        .save-btn {
+          transition: transform 0.1s; background: none; border: none;
+          cursor: pointer; padding: 0; font-size: 22px; line-height: 1;
+        }
         .save-btn:hover { transform: scale(1.15); }
         .save-animating { animation: heartPop 0.4s ease forwards; }
-        .avatar-dropdown-item { display: block; width: 100%; padding: 10px 16px; text-align: left; background: none; border: none; font-size: 13px; cursor: pointer; color: #333; white-space: nowrap; box-sizing: border-box; }
-        .avatar-dropdown-item:hover { background: #f5f5f5; }
-        .avatar-dropdown-item.danger { color: #555; }
-        .avatar-dropdown-item.danger:hover { background: #f5f5f5; }
+
+        /* Expand button — circular, green outline */
+        .expand-btn {
+          width: 22px; height: 22px; border-radius: 50%;
+          border: 1.5px solid #2d6a4f; background: #fff; color: #2d6a4f;
+          font-size: 16px; font-weight: 300; line-height: 1; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+          transition: background 0.2s ease, color 0.2s ease;
+        }
+        .expand-btn:hover { background: #2d6a4f; color: #fff; }
+
+        /*
+          Accordion uses CSS grid-template-rows trick for smooth height animation.
+          max-height transitions can't animate to "auto" smoothly —
+          grid-template-rows: 0fr → 1fr works perfectly.
+          Speed: 0.38s matches Modern Animal's feel. Easing: standard material curve.
+        */
+        .accordion-wrap {
+          display: grid;
+          grid-template-rows: 0fr;
+          opacity: 0;
+          transition:
+            grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .accordion-wrap.open {
+          grid-template-rows: 1fr;
+          opacity: 1;
+        }
+        .accordion-inner { overflow: hidden; }
+
+        /* Modal */
+        .modal-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 1000; padding: 20px;
+          animation: mFadeIn 0.15s ease;
+        }
+        @keyframes mFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-box {
+          background: #fff; border-radius: 14px; padding: 24px;
+          max-width: 420px; width: 100%;
+          animation: mSlideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes mSlideUp {
+          from { transform: translateY(10px); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
       `}</style>
+
+      {/* Pricing disclaimer modal */}
+      {showPricingModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowPricingModal(false)}
+        >
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "12px",
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: "16px", color: "#111" }}>
+                About our pricing data
+              </h3>
+              <button
+                onClick={() => setShowPricingModal(false)}
+                aria-label="Close"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "0 0 0 12px",
+                  fontSize: "20px",
+                  color: "#aaa",
+                  lineHeight: 1,
+                  flexShrink: 0,
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <p
+              style={{
+                margin: "0 0 12px 0",
+                fontSize: "14px",
+                color: "#444",
+                lineHeight: "1.6",
+              }}
+            >
+              Prices shown are estimates and may have changed. PetParrk is not
+              responsible for discrepancies between listed prices and what you
+              are charged.
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "14px",
+                color: "#444",
+                lineHeight: "1.6",
+              }}
+            >
+              Always confirm pricing directly with your vet before booking your
+              appointment.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div
         style={{
@@ -244,7 +406,6 @@ export default function VetPage() {
               </button>
             ))}
         </div>
-
         {/* Vet Info Card */}
         <div
           style={{
@@ -318,11 +479,14 @@ export default function VetPage() {
             )}
           </div>
 
-          <p style={{ margin: "0 0 8px 0", fontSize: "14px", color: "#555" }}>
+          <p style={{ margin: "0 0 8px 0", fontSize: "14px" }}>
             <span style={{ color: "#888" }}>Neighborhood: </span>
-            <strong style={{ color: "#111" }}>
-              {vet.neighborhood} · {vet.city}
-            </strong>
+            <span style={{ color: "#333" }}>
+              {vet.neighborhood}
+              {vet.city && vet.neighborhood !== vet.city
+                ? ` · ${vet.city}`
+                : ""}
+            </span>
           </p>
 
           {vet.address && (
@@ -349,16 +513,12 @@ export default function VetPage() {
             {vet.phone ? (
               <a
                 href={`tel:${vet.phone}`}
-                style={{
-                  color: "#111",
-                  textDecoration: "none",
-                  fontWeight: "bold",
-                }}
+                style={{ color: "#2d6a4f", textDecoration: "none" }}
               >
                 {vet.phone}
               </a>
             ) : (
-              <strong style={{ color: "#888" }}>N/A</strong>
+              <span style={{ color: "#888" }}>N/A</span>
             )}
           </p>
 
@@ -369,11 +529,7 @@ export default function VetPage() {
                 href={`https://${vet.website}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  color: "#2d6a4f",
-                  fontWeight: "bold",
-                  textDecoration: "none",
-                }}
+                style={{ color: "#2d6a4f", textDecoration: "none" }}
               >
                 {vet.website} ↗
               </a>
@@ -413,13 +569,10 @@ export default function VetPage() {
                   </span>
                   <strong
                     style={{
-                      color:
-                        vet.accepting_new_patients === true
-                          ? "#2d6a4f"
-                          : "#c62828",
+                      color: vet.accepting_new_patients ? "#2d6a4f" : "#c62828",
                     }}
                   >
-                    {vet.accepting_new_patients === true
+                    {vet.accepting_new_patients
                       ? "✅ Accepting"
                       : "❌ Not accepting"}
                   </strong>
@@ -436,7 +589,7 @@ export default function VetPage() {
                 Hours
               </span>
               {hoursLines.map((line, i) => (
-                <div key={i} style={{ color: "#111", fontWeight: "bold" }}>
+                <div key={i} style={{ color: "#333" }}>
                   {line}
                 </div>
               ))}
@@ -461,7 +614,6 @@ export default function VetPage() {
             <span style={{ textDecoration: "underline" }}>Share this vet</span>
           </button>
         </div>
-
         {/* Price Comparison Chart */}
         {prices.length > 0 && allPrices.length > 0 && (
           <div
@@ -490,10 +642,19 @@ export default function VetPage() {
               How this vet compares to the East Bay average
             </p>
             {prices.map((price) => {
+              // Starting prices excluded — floor price vs average is misleading
+              if (price.price_type === "starting") return null;
+
               const serviceName = price.services?.name;
               const vetPrice = price.price_low || price.price_paid;
+
+              // Exclude no-anesthesia dental (id 8) and starting prices from average
               const allForService = allPrices.filter(
-                (p) => p.services?.name === serviceName && p.price_low
+                (p) =>
+                  p.services?.name === serviceName &&
+                  p.price_low &&
+                  p.services?.id !== 8 &&
+                  p.price_type !== "starting"
               );
               const avg =
                 allForService.length > 0
@@ -502,11 +663,13 @@ export default function VetPage() {
                         allForService.length
                     )
                   : null;
+
               if (!vetPrice || !avg) return null;
               const isCheaper = vetPrice <= avg;
               const max = Math.max(vetPrice, avg) * 1.2;
               const vetWidth = Math.round((vetPrice / max) * 100);
               const avgWidth = Math.round((avg / max) * 100);
+
               return (
                 <div key={price.id} style={{ marginBottom: "20px" }}>
                   <div
@@ -539,114 +702,75 @@ export default function VetPage() {
                       {isCheaper ? "✓ Below average" : "↑ Above average"}
                     </span>
                   </div>
-                  <div style={{ marginBottom: "6px" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          color: "#666",
-                          width: "80px",
-                          flexShrink: 0,
-                        }}
-                      >
-                        This vet
-                      </span>
+                  {[
+                    {
+                      label: "This vet",
+                      width: vetWidth,
+                      value: vetPrice,
+                      color: isCheaper ? "#2d6a4f" : "#e05c5c",
+                    },
+                    {
+                      label: "East Bay avg",
+                      width: avgWidth,
+                      value: avg,
+                      color: "#bbb",
+                    },
+                  ].map((bar) => (
+                    <div key={bar.label} style={{ marginBottom: "6px" }}>
                       <div
                         style={{
-                          flex: 1,
-                          background: "#f0f0f0",
-                          borderRadius: "4px",
-                          height: "20px",
-                          overflow: "hidden",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
                         }}
                       >
-                        <div
+                        <span
                           style={{
-                            width: chartVisible ? `${vetWidth}%` : "0%",
-                            height: "100%",
-                            background: isCheaper ? "#2d6a4f" : "#e05c5c",
-                            borderRadius: "4px",
-                            transition: "width 0.8s ease",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                            paddingRight: "6px",
+                            fontSize: "11px",
+                            color: "#666",
+                            width: "80px",
+                            flexShrink: 0,
                           }}
                         >
-                          <span
+                          {bar.label}
+                        </span>
+                        <div
+                          style={{
+                            flex: 1,
+                            background: "#f0f0f0",
+                            borderRadius: "4px",
+                            height: "20px",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div
                             style={{
-                              fontSize: "11px",
-                              color: "#fff",
-                              fontWeight: "600",
-                              whiteSpace: "nowrap",
+                              width: chartVisible ? `${bar.width}%` : "0%",
+                              height: "100%",
+                              background: bar.color,
+                              borderRadius: "4px",
+                              transition: "width 0.8s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "flex-end",
+                              paddingRight: "6px",
                             }}
                           >
-                            ${vetPrice.toLocaleString()}
-                          </span>
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                color: "#fff",
+                                fontWeight: "600",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              ${bar.value.toLocaleString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          color: "#666",
-                          width: "80px",
-                          flexShrink: 0,
-                        }}
-                      >
-                        East Bay avg
-                      </span>
-                      <div
-                        style={{
-                          flex: 1,
-                          background: "#f0f0f0",
-                          borderRadius: "4px",
-                          height: "20px",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: chartVisible ? `${avgWidth}%` : "0%",
-                            height: "100%",
-                            background: "#bbb",
-                            borderRadius: "4px",
-                            transition: "width 0.8s ease",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                            paddingRight: "6px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: "11px",
-                              color: "#fff",
-                              fontWeight: "600",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            ${avg.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  ))}
                   <div
                     style={{
                       height: "1px",
@@ -659,79 +783,339 @@ export default function VetPage() {
             })}
           </div>
         )}
-
-        {/* Pricing */}
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #ddd",
-            borderRadius: "12px",
-            padding: "20px",
-            marginBottom: "16px",
-          }}
-        >
-          <h2
-            style={{ margin: "0 0 16px 0", fontSize: "1.1rem", color: "#111" }}
+        {/* ── Pricing Section ───────────────────────────────────────────────── */}
+        {/*
+          Three possible states:
+          1. Not accepting new patients + no verified prices → show banner only, no pricing table
+          2. Has verified prices → show full pricing table
+          3. Accepting patients but no prices yet → show "no pricing available" message
+        */}
+        {vet.accepting_new_patients === false &&
+        !prices.some((p) => p.is_verified && p.price_low) ? (
+          <div
+            style={{
+              background: "#fff",
+              border: "1px solid #ddd",
+              borderRadius: "12px",
+              padding: "24px",
+              marginBottom: "8px",
+              textAlign: "center",
+            }}
           >
-            Pricing
-          </h2>
-          {prices.length === 0 ? (
-            <p style={{ color: "#999", fontStyle: "italic" }}>
-              No pricing available yet.
+            <div style={{ fontSize: "28px", marginBottom: "12px" }}>🚫</div>
+            <h3
+              style={{ margin: "0 0 8px 0", fontSize: "16px", color: "#111" }}
+            >
+              Not currently accepting new patients
+            </h3>
+            <p
+              style={{
+                margin: "0 0 16px 0",
+                fontSize: "14px",
+                color: "#666",
+                lineHeight: "1.6",
+                maxWidth: "320px",
+                marginLeft: "auto",
+                marginRight: "auto",
+              }}
+            >
+              This vet is not taking new clients at this time. We recommend
+              calling ahead to check on availability before visiting.
             </p>
-          ) : (
-            prices.map((p, i) => {
-              const noteLines = parseNotes(p.price_notes);
-              return (
-                <div
-                  key={p.id}
-                  style={{
-                    padding: "12px 0",
-                    borderBottom:
-                      i < prices.length - 1 ? "1px solid #f0f0f0" : "none",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "baseline",
-                    }}
-                  >
-                    <span style={{ fontSize: "14px", color: "#111" }}>
-                      {p.services?.name}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "bold",
-                        color: "#111",
-                        marginLeft: "12px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {formatPrice(p.price_low, p.price_high)}
-                    </span>
-                  </div>
-                  {noteLines.length > 0 &&
-                    noteLines.map((note, j) => (
-                      <p
-                        key={j}
+            {vet.phone && (
+              <a
+                href={`tel:${vet.phone}`}
+                style={{
+                  display: "inline-block",
+                  padding: "10px 24px",
+                  background: "#2d6a4f",
+                  color: "#fff",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  textDecoration: "none",
+                  fontWeight: "600",
+                }}
+              >
+                Call to check availability
+              </a>
+            )}
+          </div>
+        ) : (
+          <div
+            style={{
+              background: "#fff",
+              border: "1px solid #ddd",
+              borderRadius: "12px",
+              padding: "20px",
+              marginBottom: "8px",
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "2px",
+              }}
+            >
+              <h2 style={{ margin: 0, fontSize: "1.1rem", color: "#111" }}>
+                Pricing
+              </h2>
+              <button
+                onClick={() => setShowPricingModal(true)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  fontSize: "12px",
+                  color: "#2d6a4f",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+              >
+                About these prices
+              </button>
+            </div>
+
+            {/* Verified date — shown when available, same pattern as homepage card */}
+            {lastVerified && (
+              <p
+                style={{
+                  margin: "0 0 16px 0",
+                  fontSize: "11px",
+                  color: "#bbb",
+                }}
+              >
+                Last verified {formatVerifiedDate(lastVerified)}
+              </p>
+            )}
+
+            {/* Only show rows that have actual prices (filter skeleton/unverified null rows) */}
+            {prices.filter((p) => p.price_low !== null).length === 0 ? (
+              <p style={{ color: "#999", fontStyle: "italic" }}>
+                No pricing available yet.
+              </p>
+            ) : (
+              prices
+                .filter((p) => p.price_low !== null)
+                .map((p, i, arr) => {
+                  const serviceId = p.services?.id;
+                  const accordionCopy = ACCORDION_COPY[serviceId];
+                  const isExpanded = !!expandedRows[p.id];
+                  const noteLines = parseNotes(p.price_notes);
+                  const isLast = i === arr.length - 1;
+
+                  return (
+                    <div key={p.id}>
+                      {/* ── Collapsed row ───────────────────────────────────── */}
+                      <div
+                        onClick={
+                          accordionCopy ? () => toggleRow(p.id) : undefined
+                        }
                         style={{
-                          margin: "2px 0 0 0",
-                          fontSize: "12px",
-                          color: "#888",
+                          padding: "12px 0",
+                          cursor: accordionCopy ? "pointer" : "default",
                         }}
                       >
-                        {note}
-                      </p>
-                    ))}
-                </div>
-              );
-            })
-          )}
-        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <span style={{ fontSize: "14px", color: "#111" }}>
+                              {p.services?.name}
+                            </span>
 
+                            {/*
+                          ONLY show inline notes on rows WITHOUT an accordion.
+                          Accordion rows surface their notes inside the expanded panel —
+                          showing them here too would duplicate content and undermine
+                          the purpose of the expand button. (UX principle: one source of truth)
+                        */}
+                            {!accordionCopy &&
+                              noteLines.map((note, j) => (
+                                <p
+                                  key={j}
+                                  style={{
+                                    margin: "2px 0 0 0",
+                                    fontSize: "12px",
+                                    color: "#888",
+                                  }}
+                                >
+                                  {note}
+                                </p>
+                              ))}
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                              marginLeft: "12px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: "bold",
+                                color: "#111",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {formatPrice(
+                                p.price_low,
+                                p.price_high,
+                                p.price_type
+                              )}
+                            </span>
+                            {accordionCopy && (
+                              <button
+                                className="expand-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleRow(p.id);
+                                }}
+                                aria-label={
+                                  isExpanded
+                                    ? "Collapse details"
+                                    : "Expand details"
+                                }
+                              >
+                                {isExpanded ? "−" : "+"}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ── Accordion panel ─────────────────────────────────── */}
+                      {accordionCopy && (
+                        <div
+                          className={`accordion-wrap${
+                            isExpanded ? " open" : ""
+                          }`}
+                        >
+                          <div className="accordion-inner">
+                            <div
+                              style={{
+                                background: "#f9f9f7",
+                                borderRadius: "8px",
+                                padding: "16px",
+                                marginBottom: "8px",
+                                // Two columns when vet has notes, one column when they don't
+                                display: "grid",
+                                gridTemplateColumns:
+                                  noteLines.length > 0 ? "1fr 1fr" : "1fr",
+                                gap: "20px",
+                              }}
+                            >
+                              {/* Left column: vet-specific inclusions (only when notes exist) */}
+                              {noteLines.length > 0 && (
+                                <div>
+                                  <p
+                                    style={{
+                                      margin: "0 0 8px 0",
+                                      fontSize: "11px",
+                                      fontWeight: "700",
+                                      color: "#555",
+                                      textTransform: "uppercase",
+                                      letterSpacing: "0.05em",
+                                    }}
+                                  >
+                                    What's included
+                                  </p>
+                                  {noteLines.map((note, j) => (
+                                    <p
+                                      key={j}
+                                      style={{
+                                        margin: "0 0 4px 0",
+                                        fontSize: "13px",
+                                        color: "#444",
+                                        lineHeight: "1.6",
+                                      }}
+                                    >
+                                      {note}
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Right column: generic pricing explanation (always shown) */}
+                              <div>
+                                <p
+                                  style={{
+                                    margin: "0 0 8px 0",
+                                    fontSize: "11px",
+                                    fontWeight: "700",
+                                    color: "#555",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.05em",
+                                  }}
+                                >
+                                  {accordionCopy.heading}
+                                </p>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "13px",
+                                    color: "#444",
+                                    lineHeight: "1.6",
+                                  }}
+                                >
+                                  {accordionCopy.body}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {!isLast && (
+                        <div style={{ height: "1px", background: "#f0f0f0" }} />
+                      )}
+                    </div>
+                  );
+                })
+            )}
+          </div>
+        )}{" "}
+        {/* end not-accepting ternary */}
+        {/* Bottom disclaimer — only shown when pricing table is visible */}
+        {!(
+          vet.accepting_new_patients === false &&
+          !prices.some((p) => p.is_verified && p.price_low)
+        ) && (
+          <p
+            style={{
+              fontSize: "11px",
+              color: "#bbb",
+              textAlign: "center",
+              margin: "0 0 16px 0",
+              lineHeight: "1.5",
+            }}
+          >
+            Prices are estimates and may have changed.{" "}
+            <button
+              onClick={() => setShowPricingModal(true)}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                fontSize: "11px",
+                color: "#bbb",
+                textDecoration: "underline",
+                cursor: "pointer",
+              }}
+            >
+              Learn more.
+            </button>
+          </p>
+        )}
         {/* Submit a Price */}
         <div style={{ textAlign: "center", marginBottom: "16px" }}>
           <button
@@ -751,6 +1135,7 @@ export default function VetPage() {
           >
             {showForm ? "Cancel" : "💰 Submit a Price"}
           </button>
+
           {showForm && (
             <div
               style={{
@@ -841,7 +1226,6 @@ export default function VetPage() {
             </div>
           )}
         </div>
-
         {/* Footer */}
         <footer
           style={{
@@ -868,8 +1252,8 @@ export default function VetPage() {
             Real prices. Real vets. No surprises.
           </p>
           <p style={{ margin: "0 0 8px 0" }}>
-            Pricing data is self-reported and verified by our team. Always call
-            to confirm before your visit.
+            Pricing data is verified by our team. Always call to confirm before
+            your visit.
           </p>
           <p style={{ margin: "0" }}>
             Questions or feedback?{" "}

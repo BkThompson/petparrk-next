@@ -6,9 +6,12 @@ import { supabase } from "../lib/supabase";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
 
-function formatPrice(low, high) {
+function formatPrice(low, high, type) {
   if (!low) return null;
-  if (low === high) return `$${Number(low).toLocaleString()}`;
+  if (type === "starting") return `$${Number(low).toLocaleString()}+`;
+  if (type === "range")
+    return `$${Number(low).toLocaleString()}–$${Number(high).toLocaleString()}`;
+  if (!high || low === high) return `$${Number(low).toLocaleString()}`;
   return `$${Number(low).toLocaleString()}–$${Number(high).toLocaleString()}`;
 }
 
@@ -415,17 +418,19 @@ export default function Home() {
         {/* Vet Cards */}
         {filtered.map((vet) => {
           const vetPrices = prices[vet.id] || [];
+
+          // Only show prices that have actual values — filter out skeleton rows
           const exam = vetPrices.find(
-            (p) => p.services?.name === "Doctor Exam"
+            (p) => p.services?.name === "Doctor Exam" && p.price_low
           );
           const dental = vetPrices.find(
-            (p) => p.services?.name === "Dental Cleaning"
+            (p) => p.services?.name === "Dental Cleaning" && p.price_low
           );
           const spay = vetPrices.find(
-            (p) => p.services?.name === "Spay (~40lb dog)"
+            (p) => p.services?.name === "Spay (~40lb dog)" && p.price_low
           );
           const neuter = vetPrices.find(
-            (p) => p.services?.name === "Neuter (~40lb dog)"
+            (p) => p.services?.name === "Neuter (~40lb dog)" && p.price_low
           );
           const lastUpdated = vet.last_verified
             ? new Date(vet.last_verified + "T12:00:00")
@@ -590,7 +595,11 @@ export default function Home() {
                     >
                       <span style={{ color: "#666" }}>Exam </span>
                       <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(exam.price_low, exam.price_high)}
+                        {formatPrice(
+                          exam.price_low,
+                          exam.price_high,
+                          exam.price_type
+                        )}
                       </span>
                     </div>
                   )}
@@ -605,7 +614,11 @@ export default function Home() {
                     >
                       <span style={{ color: "#666" }}>Dental </span>
                       <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(dental.price_low, dental.price_high)}
+                        {formatPrice(
+                          dental.price_low,
+                          dental.price_high,
+                          dental.price_type
+                        )}
                       </span>
                     </div>
                   )}
@@ -620,7 +633,11 @@ export default function Home() {
                     >
                       <span style={{ color: "#666" }}>Spay </span>
                       <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(spay.price_low, spay.price_high)}
+                        {formatPrice(
+                          spay.price_low,
+                          spay.price_high,
+                          spay.price_type
+                        )}
                       </span>
                     </div>
                   )}
@@ -635,7 +652,11 @@ export default function Home() {
                     >
                       <span style={{ color: "#666" }}>Neuter </span>
                       <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(neuter.price_low, neuter.price_high)}
+                        {formatPrice(
+                          neuter.price_low,
+                          neuter.price_high,
+                          neuter.price_type
+                        )}
                       </span>
                     </div>
                   )}

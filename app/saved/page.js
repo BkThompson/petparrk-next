@@ -6,9 +6,12 @@ import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import Navbar from "../../components/Navbar";
 
-function formatPrice(low, high) {
+function formatPrice(low, high, type) {
   if (!low) return null;
-  if (low === high) return `$${Number(low).toLocaleString()}`;
+  if (type === "starting") return `$${Number(low).toLocaleString()}+`;
+  if (type === "range")
+    return `$${Number(low).toLocaleString()}–$${Number(high).toLocaleString()}`;
+  if (!high || low === high) return `$${Number(low).toLocaleString()}`;
   return `$${Number(low).toLocaleString()}–$${Number(high).toLocaleString()}`;
 }
 
@@ -19,9 +22,6 @@ export default function SavedPage() {
   const [prices, setPrices] = useState({});
   const [loading, setLoading] = useState(true);
   const [removingIds, setRemovingIds] = useState(new Set());
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [profileAvatarUrl, setProfileAvatarUrl] = useState(null);
-  const [avatarError, setAvatarError] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -36,15 +36,6 @@ export default function SavedPage() {
       if (!session) router.push("/auth");
     });
     return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
-        setShowDropdown(false);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -97,30 +88,6 @@ export default function SavedPage() {
     }, 400);
   }
 
-  async function handleSignOut() {
-    setShowDropdown(false);
-    await supabase.auth.signOut();
-    router.push("/auth");
-  }
-
-  const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
-  const avatarUrl =
-    (!avatarError &&
-      (profileAvatarUrl || session?.user?.user_metadata?.avatar_url)) ||
-    null;
-
-  useEffect(() => {
-    if (!session) return;
-    supabase
-      .from("profiles")
-      .select("avatar_url")
-      .eq("id", session.user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.avatar_url) setProfileAvatarUrl(data.avatar_url);
-      });
-  }, [session]);
-
   if (session === undefined) return null;
 
   return (
@@ -134,32 +101,13 @@ export default function SavedPage() {
         }
         .heart-btn { transition: transform 0.1s; border: none; background: none; cursor: pointer; padding: 0; font-size: 20px; line-height: 1; }
         .heart-btn:hover { transform: scale(1.15); }
-
         .vet-card {
-          border: 1px solid #ddd;
-          border-radius: 10px;
-          padding: 16px;
-          margin-bottom: 12px;
-          background: #ffffff;
-          overflow: hidden;
-          max-height: 400px;
-          opacity: 1;
+          border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-bottom: 12px;
+          background: #ffffff; overflow: hidden; max-height: 400px; opacity: 1;
           transform: translateY(0);
           transition: max-height 0.4s ease, opacity 0.3s ease, transform 0.4s ease, margin-bottom 0.4s ease, padding 0.4s ease;
         }
-        .vet-card.removing {
-          max-height: 0;
-          opacity: 0;
-          transform: translateY(-8px);
-          margin-bottom: 0;
-          padding-top: 0;
-          padding-bottom: 0;
-        }
-
-        .avatar-dropdown-item { display: block; width: 100%; padding: 10px 16px; text-align: left; background: none; border: none; font-size: 13px; cursor: pointer; color: #333; white-space: nowrap; box-sizing: border-box; }
-        .avatar-dropdown-item:hover { background: #f5f5f5; }
-        .avatar-dropdown-item.danger { color: #c62828; }
-        .avatar-dropdown-item.danger:hover { background: #fce8e8; }
+        .vet-card.removing { max-height: 0; opacity: 0; transform: translateY(-8px); margin-bottom: 0; padding-top: 0; padding-bottom: 0; }
       `}</style>
 
       <div
@@ -171,7 +119,6 @@ export default function SavedPage() {
           minHeight: "100vh",
         }}
       >
-        {/* Top nav */}
         <div
           style={{
             display: "flex",
@@ -193,7 +140,6 @@ export default function SavedPage() {
           {session && <Navbar />}
         </div>
 
-        {/* Header */}
         <div style={{ marginBottom: "24px" }}>
           <h1
             style={{
@@ -250,20 +196,19 @@ export default function SavedPage() {
           </div>
         )}
 
-        {/* Saved Vet Cards */}
         {savedVets.map((vet) => {
           const vetPrices = prices[vet.id] || [];
           const exam = vetPrices.find(
-            (p) => p.services?.name === "Doctor Exam"
+            (p) => p.services?.name === "Doctor Exam" && p.price_low
           );
           const dental = vetPrices.find(
-            (p) => p.services?.name === "Dental Cleaning"
+            (p) => p.services?.name === "Dental Cleaning" && p.price_low
           );
           const spay = vetPrices.find(
-            (p) => p.services?.name === "Spay (~40lb dog)"
+            (p) => p.services?.name === "Spay (~40lb dog)" && p.price_low
           );
           const neuter = vetPrices.find(
-            (p) => p.services?.name === "Neuter (~40lb dog)"
+            (p) => p.services?.name === "Neuter (~40lb dog)" && p.price_low
           );
           const lastUpdated = vet.last_verified
             ? new Date(vet.last_verified + "T12:00:00")
@@ -346,7 +291,11 @@ export default function SavedPage() {
                     >
                       <span style={{ color: "#666" }}>Exam </span>
                       <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(exam.price_low, exam.price_high)}
+                        {formatPrice(
+                          exam.price_low,
+                          exam.price_high,
+                          exam.price_type
+                        )}
                       </span>
                     </div>
                   )}
@@ -361,7 +310,11 @@ export default function SavedPage() {
                     >
                       <span style={{ color: "#666" }}>Dental </span>
                       <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(dental.price_low, dental.price_high)}
+                        {formatPrice(
+                          dental.price_low,
+                          dental.price_high,
+                          dental.price_type
+                        )}
                       </span>
                     </div>
                   )}
@@ -376,7 +329,11 @@ export default function SavedPage() {
                     >
                       <span style={{ color: "#666" }}>Spay </span>
                       <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(spay.price_low, spay.price_high)}
+                        {formatPrice(
+                          spay.price_low,
+                          spay.price_high,
+                          spay.price_type
+                        )}
                       </span>
                     </div>
                   )}
@@ -391,7 +348,11 @@ export default function SavedPage() {
                     >
                       <span style={{ color: "#666" }}>Neuter </span>
                       <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(neuter.price_low, neuter.price_high)}
+                        {formatPrice(
+                          neuter.price_low,
+                          neuter.price_high,
+                          neuter.price_type
+                        )}
                       </span>
                     </div>
                   )}
@@ -428,7 +389,6 @@ export default function SavedPage() {
           );
         })}
 
-        {/* Footer */}
         <footer
           style={{
             marginTop: "60px",
