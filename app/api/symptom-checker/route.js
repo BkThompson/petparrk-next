@@ -6,7 +6,6 @@ export async function POST(req) {
   try {
     const { messages, pet } = await req.json();
 
-    // Count how many times the assistant has already responded
     const assistantTurns = messages.filter(
       (m) => m.role === "assistant"
     ).length;
@@ -56,13 +55,21 @@ TRIAGE LEVELS — when you have enough information (or by your 3rd response), pr
 🟢 MONITOR AT HOME — Watch carefully for 24 hours (single vomit with no other symptoms, mild lethargy, minor scrape, slight change in appetite)
 
 TRIAGE RESULT FORMAT:
-When issuing a result, structure your response like this:
+When issuing a result, your response MUST include ALL of the following tags at the very top, before any other text:
 
 [TRIAGE_RESULT: EMERGENCY | SEE_VET | MONITOR]
+[DIFFERENTIALS: Condition 1, Condition 2, Condition 3]
+
+Rules for DIFFERENTIALS:
+- Always include 2-4 possible conditions, never more
+- Use plain English names a pet owner would understand (e.g. "Ear infection" not "Otitis externa")
+- Be specific where breed or age context applies (e.g. "Hip dysplasia (common in Boxers)")
+- If only one condition is likely, still list 1-2 alternatives so the owner understands the range
+- Never leave this tag out when issuing a triage result
 
 Then write your warm, specific explanation followed by:
 - For 🔴: Exact signs that mean go immediately, what to do right now
-- For 🟡: What to watch for, what to tell the vet, home comfort steps, possible conditions it could be
+- For 🟡: What to watch for, what to tell the vet, home comfort steps
 - For 🟢: Specific home care instructions (not generic), exact warning signs to watch for that would upgrade to 🟡 or 🔴, check-in reminder
 
 DISCLAIMER — always include at the end of your triage result:
@@ -79,7 +86,7 @@ PERSONALITY:
 
     const response = await client.messages.create({
       model: "claude-opus-4-6",
-      max_tokens: 1024,
+      max_tokens: 2048,
       system: systemPrompt,
       messages: messages,
     });
