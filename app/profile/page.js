@@ -213,13 +213,11 @@ export default function ProfilePage() {
       data: { publicUrl },
     } = supabase.storage.from("avatars").getPublicUrl(filePath);
     const urlWithCache = `${publicUrl}?t=${Date.now()}`;
-    await supabase
-      .from("profiles")
-      .upsert({
-        id: session.user.id,
-        avatar_url: urlWithCache,
-        updated_at: new Date().toISOString(),
-      });
+    await supabase.from("profiles").upsert({
+      id: session.user.id,
+      avatar_url: urlWithCache,
+      updated_at: new Date().toISOString(),
+    });
     setProfile((prev) => ({ ...prev, avatar_url: urlWithCache }));
     showToast("Profile photo updated!");
     setUploadingPhoto(false);
@@ -276,16 +274,14 @@ export default function ProfilePage() {
 
   async function handleSaveProfile() {
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({
-        id: session.user.id,
-        full_name: profileForm.full_name,
-        bio: profileForm.bio,
-        zip_code: profileForm.zip_code,
-        is_public: profileForm.is_public,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabase.from("profiles").upsert({
+      id: session.user.id,
+      full_name: profileForm.full_name,
+      bio: profileForm.bio,
+      zip_code: profileForm.zip_code,
+      is_public: profileForm.is_public,
+      updated_at: new Date().toISOString(),
+    });
     if (!error) {
       setProfile((prev) => ({ ...prev, ...profileForm }));
       setEditingProfile(false);
