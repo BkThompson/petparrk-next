@@ -1,0 +1,2280 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
+import Link from "next/link";
+
+const ADMIN_EMAIL = "bkalthompson@gmail.com";
+
+const TABS = ["Submissions", "Vets", "Prices"];
+
+const VET_TYPES = [
+  "General Practice",
+  "Emergency",
+  "Specialty",
+  "Holistic",
+  "Low-Cost / Non-Profit",
+];
+const OWNERSHIP_TYPES = ["Independent", "Corporate"];
+const STATUS_TYPES = ["active", "inactive", "pending"];
+const PRICE_TYPES = ["exact", "range", "starting"];
+const SERVICES_LIST = [
+  "Doctor Exam",
+  "Dental Cleaning",
+  "Spay (~40lb dog)",
+  "Neuter (~40lb dog)",
+  "Vaccines (core set)",
+  "Heartworm Test",
+  "Flea/Tick Prevention (monthly)",
+  "X-Ray",
+  "Bloodwork (basic panel)",
+  "Urinalysis",
+];
+
+export default function AdminPage() {
+  const router = useRouter();
+  const [session, setSession] = useState(undefined);
+  const [authorized, setAuthorized] = useState(false);
+  const [tab, setTab] = useState("Submissions");
+
+  // ── Submissions state ─────────────────────────────────────────────
+  const [submissions, setSubmissions] = useState([]);
+  const [subFilter, setSubFilter] = useState("pending");
+  const [subLoading, setSubLoading] = useState(true);
+
+  // ── Vets state ────────────────────────────────────────────────────
+  const [vets, setVets] = useState([]);
+  const [vetsLoading, setVetsLoading] = useState(true);
+  const [vetSearch, setVetSearch] = useState("");
+  const [editingVet, setEditingVet] = useState(null);
+  const [vetForm, setVetForm] = useState({});
+  const [vetSaving, setVetSaving] = useState(false);
+  const [showAddVet, setShowAddVet] = useState(false);
+  const [addVetForm, setAddVetForm] = useState({
+    name: "",
+    slug: "",
+    neighborhood: "",
+    city: "Oakland",
+    address: "",
+    zip_code: "",
+    phone: "",
+    website: "",
+    vet_type: ["General Practice"],
+    ownership: "Independent",
+    accepting_new_patients: null,
+    carecredit: false,
+    hours: "",
+    status: "active",
+    internal_notes: "",
+  });
+
+  // ── Prices state ──────────────────────────────────────────────────
+  const [selectedVetId, setSelectedVetId] = useState("");
+  const [vetPrices, setVetPrices] = useState([]);
+  const [services, setServices] = useState([]);
+  const [pricesLoading, setPricesLoading] = useState(false);
+  const [editingPrice, setEditingPrice] = useState(null);
+  const [priceForm, setPriceForm] = useState({});
+  const [priceSaving, setPriceSaving] = useState(false);
+  const [showAddPrice, setShowAddPrice] = useState(false);
+  const [addPriceForm, setAddPriceForm] = useState({
+    service_id: "",
+    price_low: "",
+    price_high: "",
+    price_type: "exact",
+    includes_bloodwork: false,
+    includes_xrays: false,
+    notes: "",
+  });
+
+  // ── Stats ─────────────────────────────────────────────────────────
+  const [stats, setStats] = useState({
+    activeVets: 0,
+    pendingSubs: 0,
+    totalPrices: 0,
+  });
+
+  // ── Auth ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      if (!data.session || data.session.user.email !== ADMIN_EMAIL) {
+        router.push("/");
+      } else {
+        setAuthorized(true);
+      }
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (!s || s.user.email !== ADMIN_EMAIL) router.push("/");
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ── Reset open forms when tab changes ────────────────────────────
+  useEffect(() => {
+    setEditingVet(null);
+    setShowAddVet(false);
+    setEditingPrice(null);
+    setShowAddPrice(false);
+  }, [tab]);
+
+  // ── Fetch on auth ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!authorized) return;
+    fetchSubmissions();
+    fetchVets();
+    fetchServices();
+    fetchStats();
+  }, [authorized]);
+
+  async function fetchStats() {
+    const [
+      { count: activeVets },
+      { count: pendingSubs },
+      { count: totalPrices },
+    ] = await Promise.all([
+      supabase
+        .from("vets")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active"),
+      supabase
+        .from("price_submissions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase.from("vet_prices").select("*", { count: "exact", head: true }),
+    ]);
+    setStats({
+      activeVets: activeVets || 0,
+      pendingSubs: pendingSubs || 0,
+      totalPrices: totalPrices || 0,
+    });
+  }
+
+  async function fetchSubmissions() {
+    setSubLoading(true);
+    const { data } = await supabase
+      .from("price_submissions")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setSubmissions(data || []);
+    setSubLoading(false);
+  }
+
+  async function fetchVets() {
+    setVetsLoading(true);
+    const { data } = await supabase.from("vets").select("*").order("name");
+    setVets(data || []);
+    setVetsLoading(false);
+  }
+
+  async function fetchServices() {
+    const { data } = await supabase.from("services").select("*").order("name");
+    setServices(data || []);
+  }
+
+  async function fetchPricesForVet(vetId) {
+    setPricesLoading(true);
+    const { data } = await supabase
+      .from("vet_prices")
+      .select("*, services(name)")
+      .eq("vet_id", vetId)
+      .order("created_at");
+    setVetPrices(data || []);
+    setPricesLoading(false);
+  }
+
+  // ── Submission actions ────────────────────────────────────────────
+  async function updateSubmissionStatus(id, status) {
+    await supabase.from("price_submissions").update({ status }).eq("id", id);
+    setSubmissions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, status } : s))
+    );
+    fetchStats();
+  }
+
+  // ── Vet actions ───────────────────────────────────────────────────
+  function startEditVet(vet) {
+    setEditingVet(vet.id);
+    setVetForm({ ...vet });
+  }
+
+  async function saveVet() {
+    setVetSaving(true);
+    const { error } = await supabase
+      .from("vets")
+      .update({
+        name: vetForm.name,
+        slug: vetForm.slug,
+        neighborhood: vetForm.neighborhood,
+        city: vetForm.city,
+        address: vetForm.address,
+        zip_code: vetForm.zip_code,
+        phone: vetForm.phone,
+        website: vetForm.website,
+        vet_type: Array.isArray(vetForm.vet_type)
+          ? vetForm.vet_type
+          : [vetForm.vet_type],
+        ownership: vetForm.ownership,
+        accepting_new_patients: vetForm.accepting_new_patients,
+        carecredit: vetForm.carecredit,
+        hours: vetForm.hours,
+        status: vetForm.status,
+        internal_notes: vetForm.internal_notes,
+        last_verified: vetForm.last_verified,
+      })
+      .eq("id", editingVet);
+    if (!error) {
+      setVets((prev) =>
+        prev.map((v) => (v.id === editingVet ? { ...v, ...vetForm } : v))
+      );
+      setEditingVet(null);
+    } else {
+      alert("Save failed: " + error.message);
+    }
+    setVetSaving(false);
+  }
+
+  async function addVet() {
+    const slug =
+      addVetForm.slug ||
+      addVetForm.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    const { data, error } = await supabase
+      .from("vets")
+      .insert({
+        ...addVetForm,
+        slug,
+        vet_type: Array.isArray(addVetForm.vet_type)
+          ? addVetForm.vet_type
+          : [addVetForm.vet_type],
+      })
+      .select()
+      .single();
+    if (!error) {
+      setVets((prev) =>
+        [...prev, data].sort((a, b) => a.name.localeCompare(b.name))
+      );
+      setShowAddVet(false);
+      setAddVetForm({
+        name: "",
+        slug: "",
+        neighborhood: "",
+        city: "Oakland",
+        address: "",
+        zip_code: "",
+        phone: "",
+        website: "",
+        vet_type: ["General Practice"],
+        ownership: "Independent",
+        accepting_new_patients: null,
+        carecredit: false,
+        hours: "",
+        status: "active",
+        internal_notes: "",
+      });
+      fetchStats();
+    } else {
+      alert("Error: " + error.message);
+    }
+  }
+
+  async function toggleVetStatus(vet) {
+    const newStatus = vet.status === "active" ? "inactive" : "active";
+    await supabase.from("vets").update({ status: newStatus }).eq("id", vet.id);
+    setVets((prev) =>
+      prev.map((v) => (v.id === vet.id ? { ...v, status: newStatus } : v))
+    );
+    fetchStats();
+  }
+
+  // ── Price actions ─────────────────────────────────────────────────
+  function startEditPrice(price) {
+    setEditingPrice(price.id);
+    setPriceForm({ ...price });
+  }
+
+  async function savePrice() {
+    setPriceSaving(true);
+    const { error } = await supabase
+      .from("vet_prices")
+      .update({
+        service_id: priceForm.service_id,
+        price_low: priceForm.price_low || null,
+        price_high: priceForm.price_high || null,
+        price_type: priceForm.price_type,
+        includes_bloodwork: priceForm.includes_bloodwork,
+        includes_xrays: priceForm.includes_xrays,
+        includes_anesthesia: priceForm.includes_anesthesia,
+        species:
+          priceForm.species === "other"
+            ? priceForm.species_other || "Other"
+            : priceForm.species,
+        call_for_quote: priceForm.call_for_quote,
+        notes: priceForm.notes,
+      })
+      .eq("id", editingPrice);
+    if (!error) {
+      await fetchPricesForVet(selectedVetId);
+      setEditingPrice(null);
+    } else {
+      alert("Save failed: " + error.message);
+    }
+    setPriceSaving(false);
+  }
+
+  async function deletePrice(id) {
+    if (!confirm("Delete this price row?")) return;
+    await supabase.from("vet_prices").delete().eq("id", id);
+    setVetPrices((prev) => prev.filter((p) => p.id !== id));
+    fetchStats();
+  }
+
+  async function addPrice() {
+    if (!addPriceForm.service_id || !addPriceForm.price_low) {
+      alert("Service and low price are required.");
+      return;
+    }
+    const { data, error } = await supabase
+      .from("vet_prices")
+      .insert({
+        vet_id: selectedVetId,
+        service_id: addPriceForm.service_id,
+        price_low: addPriceForm.price_low,
+        price_high: addPriceForm.price_high || null,
+        price_type: addPriceForm.price_type,
+        includes_bloodwork: addPriceForm.includes_bloodwork,
+        includes_xrays: addPriceForm.includes_xrays,
+        includes_anesthesia: addPriceForm.includes_anesthesia,
+        species:
+          addPriceForm.species === "other"
+            ? addPriceForm.species_other || "Other"
+            : addPriceForm.species,
+        call_for_quote: addPriceForm.call_for_quote,
+        notes: addPriceForm.notes,
+      })
+      .select("*, services(name)")
+      .single();
+    if (!error) {
+      setVetPrices((prev) => [...prev, data]);
+      setShowAddPrice(false);
+      setAddPriceForm({
+        service_id: "",
+        price_low: "",
+        price_high: "",
+        price_type: "exact",
+        includes_bloodwork: false,
+        includes_xrays: false,
+        includes_anesthesia: false,
+        species: "dog",
+        species_other: "",
+        call_for_quote: false,
+        notes: "",
+      });
+      fetchStats();
+    } else {
+      alert("Error: " + error.message);
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────
+  function formatDate(iso) {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
+  function formatPrice(low, high, type) {
+    if (!low) return "—";
+    if (type === "starting") return `$${Number(low).toLocaleString()}+`;
+    if (type === "range" && high)
+      return `$${Number(low).toLocaleString()}–$${Number(
+        high
+      ).toLocaleString()}`;
+    return `$${Number(low).toLocaleString()}`;
+  }
+
+  const filteredSubs = submissions.filter((s) =>
+    subFilter === "all" ? true : s.status === subFilter
+  );
+  const filteredVets = vets.filter(
+    (v) =>
+      v.name.toLowerCase().includes(vetSearch.toLowerCase()) ||
+      v.neighborhood?.toLowerCase().includes(vetSearch.toLowerCase())
+  );
+
+  if (session === undefined || !authorized) return null;
+
+  return (
+    <>
+      <style>{`
+        * { box-sizing: border-box; }
+        .adm-input { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: system-ui, sans-serif; outline: none; background: #fff; }
+        .adm-input:focus { border-color: #2d6a4f; }
+        select.adm-input { cursor: pointer; padding-right: 32px; }
+        .adm-btn { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: system-ui, sans-serif; white-space: nowrap; }
+        .adm-btn-green { background: #2d6a4f; color: #fff; }
+        .adm-btn-green:hover { background: #245a42; }
+        .adm-btn-red { background: #fce8e8; color: #c62828; border: 1px solid #f5c6c6; }
+        .adm-btn-red:hover { background: #fbd0d0; }
+        .adm-btn-gray { background: #f0f0f0; color: #444; border: 1px solid #ddd; }
+        .adm-btn-gray:hover { background: #e5e5e5; }
+        .adm-btn-outline { background: #fff; color: #2d6a4f; border: 1px solid #2d6a4f; }
+        .adm-btn-outline:hover { background: #f0f7f4; }
+        .adm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .stat-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px 18px; }
+        .tab-btn { padding: 8px 18px; border: none; background: none; font-size: 13px; font-weight: 600; cursor: pointer; color: #888; border-bottom: 2px solid transparent; font-family: system-ui, sans-serif; }
+        .tab-btn.active { color: #2d6a4f; border-bottom-color: #2d6a4f; }
+        .tab-btn:hover:not(.active) { color: #333; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-pending { background: #fff8e1; color: #e65100; }
+        .badge-approved { background: #e8f5e9; color: #2d6a4f; }
+        .badge-rejected { background: #fce8e8; color: #c62828; }
+        .badge-active { background: #e8f5e9; color: #2d6a4f; }
+        .badge-inactive { background: #f0f0f0; color: #888; }
+        .row-edit-bg { background: #f9f9f9; border-radius: 8px; padding: 14px; margin: 4px 0 12px 0; border: 1px solid #e8e8e8; }
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+        .field-label { display: block; font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+        .sub-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+        .vet-row { border-bottom: 1px solid #f0f0f0; padding: 10px 0; }
+        .vet-row:last-child { border-bottom: none; }
+        .price-row { border-bottom: 1px solid #f0f0f0; padding: 8px 0; display: flex; align-items: center; gap: 12px; }
+        .price-row:last-child { border-bottom: none; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .filter-bar { display: flex; gap: 6px; }
+        html { scrollbar-gutter: stable; }
+        @media (max-width: 600px) {
+          .stat-grid { grid-template-columns: 1fr !important; }
+          .form-grid-2, .form-grid-3, .form-grid-4 { grid-template-columns: 1fr; }
+          .section-header { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+          .tab-btn { padding: 8px 10px; font-size: 12px; }
+          .filter-bar { flex-wrap: wrap; gap: 6px; }
+          .vet-row-buttons { gap: 4px !important; }
+        }
+      `}</style>
+
+      <div
+        style={{
+          maxWidth: "800px",
+          margin: "0 auto",
+          padding: "20px",
+          fontFamily: "system-ui, sans-serif",
+          minHeight: "100vh",
+          background: "#f7f7f5",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                margin: "0 0 2px 0",
+                fontSize: "1.3rem",
+                color: "#111",
+                fontWeight: "700",
+              }}
+            >
+              🐾 PetParrk Admin
+            </h1>
+            <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
+              Signed in as {session?.user?.email}
+            </p>
+          </div>
+          <Link
+            href="/"
+            style={{
+              fontSize: "13px",
+              color: "#2d6a4f",
+              textDecoration: "none",
+              fontWeight: "600",
+            }}
+          >
+            ← Back to site
+          </Link>
+        </div>
+
+        {/* Stats bar */}
+        <div className="stat-grid">
+          <div className="stat-card">
+            <p
+              style={{
+                margin: "0 0 2px 0",
+                fontSize: "11px",
+                color: "#888",
+                fontWeight: "600",
+                textTransform: "uppercase",
+              }}
+            >
+              Active Vets
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "1.6rem",
+                fontWeight: "700",
+                color: "#2d6a4f",
+              }}
+            >
+              {stats.activeVets}
+            </p>
+          </div>
+          <div className="stat-card">
+            <p
+              style={{
+                margin: "0 0 2px 0",
+                fontSize: "11px",
+                color: "#888",
+                fontWeight: "600",
+                textTransform: "uppercase",
+              }}
+            >
+              Pending Submissions
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "1.6rem",
+                fontWeight: "700",
+                color: stats.pendingSubs > 0 ? "#e65100" : "#111",
+              }}
+            >
+              {stats.pendingSubs}
+            </p>
+          </div>
+          <div className="stat-card">
+            <p
+              style={{
+                margin: "0 0 2px 0",
+                fontSize: "11px",
+                color: "#888",
+                fontWeight: "600",
+                textTransform: "uppercase",
+              }}
+            >
+              Total Prices
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "1.6rem",
+                fontWeight: "700",
+                color: "#111",
+              }}
+            >
+              {stats.totalPrices}
+            </p>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: "12px",
+            border: "1px solid #e8e8e8",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              borderBottom: "1px solid #e8e8e8",
+              padding: "0 16px",
+            }}
+          >
+            {TABS.map((t) => (
+              <button
+                key={t}
+                className={`tab-btn${tab === t ? " active" : ""}`}
+                onClick={() => setTab(t)}
+              >
+                {t}
+                {t === "Submissions" && stats.pendingSubs > 0 && (
+                  <span
+                    style={{
+                      marginLeft: "6px",
+                      background: "#e65100",
+                      color: "#fff",
+                      borderRadius: "20px",
+                      padding: "1px 7px",
+                      fontSize: "10px",
+                    }}
+                  >
+                    {stats.pendingSubs}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ padding: "20px" }}>
+            {/* ── SUBMISSIONS TAB ─────────────────────────────────── */}
+            {tab === "Submissions" && (
+              <div>
+                <div className="section-header">
+                  <h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>
+                    Price Submissions
+                  </h2>
+                  <div className="filter-bar">
+                    {["pending", "approved", "rejected", "all"].map((f) => (
+                      <button
+                        key={f}
+                        className={`adm-btn ${
+                          subFilter === f ? "adm-btn-green" : "adm-btn-gray"
+                        }`}
+                        onClick={() => setSubFilter(f)}
+                      >
+                        {f.charAt(0).toUpperCase() + f.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {subLoading && (
+                  <p style={{ color: "#888", fontSize: "14px" }}>Loading...</p>
+                )}
+                {!subLoading && filteredSubs.length === 0 && (
+                  <p
+                    style={{
+                      color: "#888",
+                      fontSize: "14px",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    No {subFilter} submissions.
+                  </p>
+                )}
+
+                {filteredSubs.map((s) => (
+                  <div key={s.id} className="sub-card">
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        flexWrap: "wrap",
+                        gap: "8px",
+                      }}
+                    >
+                      <div>
+                        <p
+                          style={{
+                            margin: "0 0 4px 0",
+                            fontWeight: "600",
+                            fontSize: "14px",
+                            color: "#111",
+                          }}
+                        >
+                          {s.vet_name} — {s.service_name}
+                        </p>
+                        <p style={{ margin: "0 0 2px 0", fontSize: "13px" }}>
+                          <span style={{ color: "#888" }}>Price: </span>
+                          <span style={{ fontWeight: "600", color: "#2d6a4f" }}>
+                            ${Number(s.price_paid).toLocaleString()}
+                          </span>
+                          {s.visit_date && (
+                            <>
+                              <span
+                                style={{ color: "#888", marginLeft: "12px" }}
+                              >
+                                Date:{" "}
+                              </span>
+                              <span>{formatDate(s.visit_date)}</span>
+                            </>
+                          )}
+                        </p>
+                        {s.submitter_note && (
+                          <p
+                            style={{
+                              margin: "4px 0 0 0",
+                              fontSize: "12px",
+                              color: "#666",
+                              fontStyle: "italic",
+                            }}
+                          >
+                            "{s.submitter_note}"
+                          </p>
+                        )}
+                        <p
+                          style={{
+                            margin: "4px 0 0 0",
+                            fontSize: "11px",
+                            color: "#aaa",
+                          }}
+                        >
+                          Submitted {formatDate(s.created_at)}
+                        </p>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <span className={`badge badge-${s.status}`}>
+                          {s.status}
+                        </span>
+                        {s.status !== "approved" && (
+                          <button
+                            className="adm-btn adm-btn-green"
+                            onClick={() =>
+                              updateSubmissionStatus(s.id, "approved")
+                            }
+                          >
+                            ✓ Approve
+                          </button>
+                        )}
+                        {s.status !== "rejected" && (
+                          <button
+                            className="adm-btn adm-btn-red"
+                            onClick={() =>
+                              updateSubmissionStatus(s.id, "rejected")
+                            }
+                          >
+                            ✕ Reject
+                          </button>
+                        )}
+                        {s.status !== "pending" && (
+                          <button
+                            className="adm-btn adm-btn-gray"
+                            onClick={() =>
+                              updateSubmissionStatus(s.id, "pending")
+                            }
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ── VETS TAB ────────────────────────────────────────── */}
+            {tab === "Vets" && (
+              <div>
+                <div className="section-header">
+                  <h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>
+                    Vet Records
+                  </h2>
+                  <button
+                    className="adm-btn adm-btn-green"
+                    onClick={() => setShowAddVet(!showAddVet)}
+                  >
+                    {showAddVet ? "Cancel" : "+ Add Vet"}
+                  </button>
+                </div>
+
+                {/* Add Vet Form */}
+                {showAddVet && (
+                  <div className="row-edit-bg" style={{ marginBottom: "16px" }}>
+                    <p
+                      style={{
+                        margin: "0 0 12px 0",
+                        fontWeight: "600",
+                        fontSize: "13px",
+                        color: "#111",
+                      }}
+                    >
+                      New Vet
+                    </p>
+                    <div
+                      className="form-grid-3"
+                      style={{ marginBottom: "10px" }}
+                    >
+                      <div>
+                        <label className="field-label">Name *</label>
+                        <input
+                          className="adm-input"
+                          value={addVetForm.name}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              name: e.target.value,
+                            })
+                          }
+                          placeholder="Clinic name"
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">Slug *</label>
+                        <input
+                          className="adm-input"
+                          value={addVetForm.slug}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              slug: e.target.value,
+                            })
+                          }
+                          placeholder="auto-generated if blank"
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">Status</label>
+                        <select
+                          className="adm-input"
+                          value={addVetForm.status}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              status: e.target.value,
+                            })
+                          }
+                        >
+                          {STATUS_TYPES.map((s) => (
+                            <option key={s}>{s}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div
+                      className="form-grid-4"
+                      style={{ marginBottom: "10px" }}
+                    >
+                      <div>
+                        <label className="field-label">Neighborhood</label>
+                        <input
+                          className="adm-input"
+                          value={addVetForm.neighborhood}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              neighborhood: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">City</label>
+                        <input
+                          className="adm-input"
+                          value={addVetForm.city}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              city: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">Phone</label>
+                        <input
+                          className="adm-input"
+                          value={addVetForm.phone}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              phone: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">Website</label>
+                        <input
+                          className="adm-input"
+                          value={addVetForm.website}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              website: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div
+                      className="form-grid-4"
+                      style={{ marginBottom: "10px" }}
+                    >
+                      <div>
+                        <label className="field-label">Address</label>
+                        <input
+                          className="adm-input"
+                          value={addVetForm.address}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              address: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">ZIP</label>
+                        <input
+                          className="adm-input"
+                          value={addVetForm.zip_code}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              zip_code: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">Vet Type</label>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "4px",
+                            marginTop: "2px",
+                          }}
+                        >
+                          {VET_TYPES.map((t) => (
+                            <label
+                              key={t}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={(addVetForm.vet_type || []).includes(
+                                  t
+                                )}
+                                onChange={(e) => {
+                                  const current = addVetForm.vet_type || [];
+                                  setAddVetForm({
+                                    ...addVetForm,
+                                    vet_type: e.target.checked
+                                      ? [...current, t]
+                                      : current.filter((x) => x !== t),
+                                  });
+                                }}
+                              />
+                              {t}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="field-label">Ownership</label>
+                        <select
+                          className="adm-input"
+                          value={addVetForm.ownership}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              ownership: e.target.value,
+                            })
+                          }
+                        >
+                          {OWNERSHIP_TYPES.map((t) => (
+                            <option key={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div
+                      className="form-grid-3"
+                      style={{ marginBottom: "10px" }}
+                    >
+                      <div>
+                        <label className="field-label">
+                          Accepting Patients
+                        </label>
+                        <select
+                          className="adm-input"
+                          value={
+                            addVetForm.accepting_new_patients === null
+                              ? "unknown"
+                              : addVetForm.accepting_new_patients
+                              ? "yes"
+                              : "no"
+                          }
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              accepting_new_patients:
+                                e.target.value === "unknown"
+                                  ? null
+                                  : e.target.value === "yes",
+                            })
+                          }
+                        >
+                          <option value="unknown">Unknown</option>
+                          <option value="yes">Yes</option>
+                          <option value="no">No</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="field-label">CareCredit</label>
+                        <select
+                          className="adm-input"
+                          value={addVetForm.carecredit ? "yes" : "no"}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              carecredit: e.target.value === "yes",
+                            })
+                          }
+                        >
+                          <option value="no">No</option>
+                          <option value="yes">Yes</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="field-label">Last Verified</label>
+                        <input
+                          className="adm-input"
+                          type="date"
+                          value={addVetForm.last_verified || ""}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              last_verified: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: "10px" }}>
+                      <label className="field-label">Hours</label>
+                      <textarea
+                        className="adm-input"
+                        rows={2}
+                        style={{ height: "auto", resize: "vertical" }}
+                        value={addVetForm.hours || ""}
+                        onChange={(e) =>
+                          setAddVetForm({
+                            ...addVetForm,
+                            hours: e.target.value,
+                          })
+                        }
+                        placeholder="Mon-Fri: 9am-6pm&#10;Sat: 9am-2pm"
+                      />
+                    </div>
+                    <div style={{ marginBottom: "12px" }}>
+                      <label className="field-label">Internal Notes</label>
+                      <textarea
+                        className="adm-input"
+                        rows={4}
+                        style={{ height: "auto", resize: "vertical" }}
+                        value={addVetForm.internal_notes || ""}
+                        onChange={(e) =>
+                          setAddVetForm({
+                            ...addVetForm,
+                            internal_notes: e.target.value,
+                          })
+                        }
+                        placeholder="Notes visible only in admin"
+                      />
+                    </div>
+                    <button
+                      className="adm-btn adm-btn-green"
+                      onClick={addVet}
+                      disabled={!addVetForm.name}
+                    >
+                      Add Vet
+                    </button>
+                  </div>
+                )}
+
+                <input
+                  className="adm-input"
+                  value={vetSearch}
+                  onChange={(e) => setVetSearch(e.target.value)}
+                  placeholder="Search vets by name or neighborhood..."
+                  style={{ marginBottom: "14px", maxWidth: "360px" }}
+                />
+
+                {vetsLoading && (
+                  <p style={{ color: "#888", fontSize: "14px" }}>Loading...</p>
+                )}
+
+                <div
+                  style={{
+                    background: "#fff",
+                    border: "1px solid #e8e8e8",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    minHeight: "200px",
+                  }}
+                >
+                  {filteredVets.map((vet) => (
+                    <div key={vet.id}>
+                      <div className="vet-row" style={{ padding: "10px 14px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: "10px",
+                          }}
+                        >
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div
+                              style={{
+                                fontWeight: "600",
+                                fontSize: "14px",
+                                color: "#111",
+                              }}
+                            >
+                              {vet.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#888",
+                                marginTop: "2px",
+                              }}
+                            >
+                              {vet.neighborhood}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#aaa",
+                                marginTop: "1px",
+                              }}
+                            >
+                              {vet.phone}
+                            </div>
+                          </div>
+                          <div
+                            className="vet-row-buttons"
+                            style={{
+                              display: "flex",
+                              gap: "6px",
+                              alignItems: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <button
+                              className="adm-btn adm-btn-gray"
+                              onClick={() => toggleVetStatus(vet)}
+                            >
+                              {vet.status === "active"
+                                ? "Deactivate"
+                                : "Activate"}
+                            </button>
+                            <button
+                              className="adm-btn adm-btn-outline"
+                              onClick={() =>
+                                editingVet === vet.id
+                                  ? setEditingVet(null)
+                                  : startEditVet(vet)
+                              }
+                            >
+                              {editingVet === vet.id ? "Cancel" : "Edit"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Inline edit form */}
+                      {editingVet === vet.id && (
+                        <div style={{ padding: "0 14px 14px 14px" }}>
+                          <div className="row-edit-bg">
+                            <div
+                              className="form-grid-3"
+                              style={{ marginBottom: "10px" }}
+                            >
+                              <div>
+                                <label className="field-label">Name</label>
+                                <input
+                                  className="adm-input"
+                                  value={vetForm.name || ""}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      name: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label className="field-label">Slug</label>
+                                <input
+                                  className="adm-input"
+                                  value={vetForm.slug || ""}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      slug: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label className="field-label">Status</label>
+                                <select
+                                  className="adm-input"
+                                  value={vetForm.status || "active"}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      status: e.target.value,
+                                    })
+                                  }
+                                >
+                                  {STATUS_TYPES.map((s) => (
+                                    <option key={s}>{s}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <div
+                              className="form-grid-4"
+                              style={{ marginBottom: "10px" }}
+                            >
+                              <div>
+                                <label className="field-label">
+                                  Neighborhood
+                                </label>
+                                <input
+                                  className="adm-input"
+                                  value={vetForm.neighborhood || ""}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      neighborhood: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label className="field-label">City</label>
+                                <input
+                                  className="adm-input"
+                                  value={vetForm.city || ""}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      city: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label className="field-label">Phone</label>
+                                <input
+                                  className="adm-input"
+                                  value={vetForm.phone || ""}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      phone: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label className="field-label">Website</label>
+                                <input
+                                  className="adm-input"
+                                  value={vetForm.website || ""}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      website: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                            </div>
+                            <div
+                              className="form-grid-4"
+                              style={{ marginBottom: "10px" }}
+                            >
+                              <div>
+                                <label className="field-label">Address</label>
+                                <input
+                                  className="adm-input"
+                                  value={vetForm.address || ""}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      address: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label className="field-label">ZIP</label>
+                                <input
+                                  className="adm-input"
+                                  value={vetForm.zip_code || ""}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      zip_code: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label className="field-label">Vet Type</label>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "4px",
+                                    marginTop: "2px",
+                                  }}
+                                >
+                                  {VET_TYPES.map((t) => (
+                                    <label
+                                      key={t}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        fontSize: "13px",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={(Array.isArray(
+                                          vetForm.vet_type
+                                        )
+                                          ? vetForm.vet_type
+                                          : [vetForm.vet_type]
+                                        ).includes(t)}
+                                        onChange={(e) => {
+                                          const current = Array.isArray(
+                                            vetForm.vet_type
+                                          )
+                                            ? vetForm.vet_type
+                                            : [vetForm.vet_type];
+                                          setVetForm({
+                                            ...vetForm,
+                                            vet_type: e.target.checked
+                                              ? [...current, t]
+                                              : current.filter((x) => x !== t),
+                                          });
+                                        }}
+                                      />
+                                      {t}
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <label className="field-label">Ownership</label>
+                                <select
+                                  className="adm-input"
+                                  value={vetForm.ownership || ""}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      ownership: e.target.value,
+                                    })
+                                  }
+                                >
+                                  {OWNERSHIP_TYPES.map((t) => (
+                                    <option key={t}>{t}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <div
+                              className="form-grid-3"
+                              style={{ marginBottom: "10px" }}
+                            >
+                              <div>
+                                <label className="field-label">
+                                  Accepting Patients
+                                </label>
+                                <select
+                                  className="adm-input"
+                                  value={
+                                    vetForm.accepting_new_patients === null ||
+                                    vetForm.accepting_new_patients === undefined
+                                      ? "unknown"
+                                      : vetForm.accepting_new_patients
+                                      ? "yes"
+                                      : "no"
+                                  }
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      accepting_new_patients:
+                                        e.target.value === "unknown"
+                                          ? null
+                                          : e.target.value === "yes",
+                                    })
+                                  }
+                                >
+                                  <option value="unknown">Unknown</option>
+                                  <option value="yes">Yes</option>
+                                  <option value="no">No</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="field-label">
+                                  CareCredit
+                                </label>
+                                <select
+                                  className="adm-input"
+                                  value={vetForm.carecredit ? "yes" : "no"}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      carecredit: e.target.value === "yes",
+                                    })
+                                  }
+                                >
+                                  <option value="no">No</option>
+                                  <option value="yes">Yes</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="field-label">
+                                  Last Verified
+                                </label>
+                                <input
+                                  className="adm-input"
+                                  type="date"
+                                  value={
+                                    vetForm.last_verified
+                                      ? vetForm.last_verified.slice(0, 10)
+                                      : ""
+                                  }
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      last_verified: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                            </div>
+                            <div style={{ marginBottom: "10px" }}>
+                              <label className="field-label">Hours</label>
+                              <textarea
+                                className="adm-input"
+                                rows={2}
+                                style={{ height: "auto", resize: "vertical" }}
+                                value={vetForm.hours || ""}
+                                onChange={(e) =>
+                                  setVetForm({
+                                    ...vetForm,
+                                    hours: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                            <div style={{ marginBottom: "12px" }}>
+                              <label className="field-label">
+                                Internal Notes
+                              </label>
+                              <textarea
+                                className="adm-input"
+                                rows={4}
+                                style={{ height: "auto", resize: "vertical" }}
+                                value={vetForm.internal_notes || ""}
+                                onChange={(e) =>
+                                  setVetForm({
+                                    ...vetForm,
+                                    internal_notes: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                              <button
+                                className="adm-btn adm-btn-green"
+                                onClick={saveVet}
+                                disabled={vetSaving}
+                              >
+                                {vetSaving ? "Saving..." : "Save Changes"}
+                              </button>
+                              <button
+                                className="adm-btn adm-btn-gray"
+                                onClick={() => setEditingVet(null)}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── PRICES TAB ──────────────────────────────────────── */}
+            {tab === "Prices" && (
+              <div>
+                <div className="section-header">
+                  <h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>
+                    Prices
+                  </h2>
+                </div>
+
+                {/* Vet selector */}
+                <div style={{ marginBottom: "16px", maxWidth: "400px" }}>
+                  <label className="field-label">Select Vet</label>
+                  <select
+                    className="adm-input"
+                    value={selectedVetId}
+                    onChange={(e) => {
+                      setSelectedVetId(e.target.value);
+                      setEditingPrice(null);
+                      setShowAddPrice(false);
+                      if (e.target.value) fetchPricesForVet(e.target.value);
+                      else setVetPrices([]);
+                    }}
+                  >
+                    <option value="">— Choose a vet —</option>
+                    {vets.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedVetId && (
+                  <>
+                    <div className="section-header">
+                      <p style={{ margin: 0, fontSize: "13px", color: "#888" }}>
+                        {vetPrices.length} price
+                        {vetPrices.length !== 1 ? "s" : ""} on file
+                      </p>
+                      <button
+                        className="adm-btn adm-btn-green"
+                        onClick={() => setShowAddPrice(!showAddPrice)}
+                      >
+                        {showAddPrice ? "Cancel" : "+ Add Price"}
+                      </button>
+                    </div>
+
+                    {/* Add price form */}
+                    {showAddPrice && (
+                      <div
+                        className="row-edit-bg"
+                        style={{ marginBottom: "14px" }}
+                      >
+                        <p
+                          style={{
+                            margin: "0 0 10px 0",
+                            fontWeight: "600",
+                            fontSize: "13px",
+                          }}
+                        >
+                          New Price Row
+                        </p>
+                        <div
+                          className="form-grid-4"
+                          style={{ marginBottom: "10px" }}
+                        >
+                          <div>
+                            <label className="field-label">Service *</label>
+                            <select
+                              className="adm-input"
+                              value={addPriceForm.service_id}
+                              onChange={(e) =>
+                                setAddPriceForm({
+                                  ...addPriceForm,
+                                  service_id: e.target.value,
+                                })
+                              }
+                            >
+                              <option value="">— Select —</option>
+                              {services.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="field-label">Price Type</label>
+                            <select
+                              className="adm-input"
+                              value={addPriceForm.price_type}
+                              onChange={(e) =>
+                                setAddPriceForm({
+                                  ...addPriceForm,
+                                  price_type: e.target.value,
+                                })
+                              }
+                            >
+                              {PRICE_TYPES.map((t) => (
+                                <option key={t}>{t}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="field-label">Price Low *</label>
+                            <input
+                              className="adm-input"
+                              type="number"
+                              value={addPriceForm.price_low}
+                              onChange={(e) =>
+                                setAddPriceForm({
+                                  ...addPriceForm,
+                                  price_low: e.target.value,
+                                })
+                              }
+                              placeholder="e.g. 65"
+                            />
+                          </div>
+                          <div>
+                            <label className="field-label">Price High</label>
+                            <input
+                              className="adm-input"
+                              type="number"
+                              value={addPriceForm.price_high}
+                              onChange={(e) =>
+                                setAddPriceForm({
+                                  ...addPriceForm,
+                                  price_high: e.target.value,
+                                })
+                              }
+                              placeholder="for range only"
+                            />
+                          </div>
+                        </div>
+                        <div
+                          className="form-grid-3"
+                          style={{ marginBottom: "10px" }}
+                        >
+                          <div>
+                            <label className="field-label">Species</label>
+                            <select
+                              className="adm-input"
+                              value={addPriceForm.species}
+                              onChange={(e) =>
+                                setAddPriceForm({
+                                  ...addPriceForm,
+                                  species: e.target.value,
+                                  species_other: "",
+                                })
+                              }
+                            >
+                              <option value="dog">Dog</option>
+                              <option value="cat">Cat</option>
+                              <option value="rabbit">Rabbit</option>
+                              <option value="bird">Bird</option>
+                              <option value="other">Other</option>
+                            </select>
+                            {addPriceForm.species === "other" && (
+                              <input
+                                className="adm-input"
+                                style={{ marginTop: "6px" }}
+                                value={addPriceForm.species_other}
+                                onChange={(e) =>
+                                  setAddPriceForm({
+                                    ...addPriceForm,
+                                    species_other: e.target.value,
+                                  })
+                                }
+                                placeholder="e.g. Guinea Pig, Ferret..."
+                              />
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "6px",
+                              paddingTop: "18px",
+                            }}
+                          >
+                            <label
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={addPriceForm.includes_bloodwork}
+                                onChange={(e) =>
+                                  setAddPriceForm({
+                                    ...addPriceForm,
+                                    includes_bloodwork: e.target.checked,
+                                  })
+                                }
+                              />
+                              Includes bloodwork
+                            </label>
+                            <label
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={addPriceForm.includes_xrays}
+                                onChange={(e) =>
+                                  setAddPriceForm({
+                                    ...addPriceForm,
+                                    includes_xrays: e.target.checked,
+                                  })
+                                }
+                              />
+                              Includes x-rays
+                            </label>
+                            <label
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={addPriceForm.includes_anesthesia}
+                                onChange={(e) =>
+                                  setAddPriceForm({
+                                    ...addPriceForm,
+                                    includes_anesthesia: e.target.checked,
+                                  })
+                                }
+                              />
+                              Includes anesthesia
+                            </label>
+                            <label
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={addPriceForm.call_for_quote}
+                                onChange={(e) =>
+                                  setAddPriceForm({
+                                    ...addPriceForm,
+                                    call_for_quote: e.target.checked,
+                                  })
+                                }
+                              />
+                              Call for quote
+                            </label>
+                          </div>
+                          <div>
+                            <label className="field-label">Notes</label>
+                            <input
+                              className="adm-input"
+                              value={addPriceForm.notes}
+                              onChange={(e) =>
+                                setAddPriceForm({
+                                  ...addPriceForm,
+                                  notes: e.target.value,
+                                })
+                              }
+                              placeholder="Optional"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          className="adm-btn adm-btn-green"
+                          onClick={addPrice}
+                        >
+                          Add Price
+                        </button>
+                      </div>
+                    )}
+
+                    {pricesLoading && (
+                      <p style={{ color: "#888", fontSize: "14px" }}>
+                        Loading prices...
+                      </p>
+                    )}
+
+                    {!pricesLoading && vetPrices.length === 0 && (
+                      <p
+                        style={{
+                          color: "#888",
+                          fontSize: "14px",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        No prices on file for this vet.
+                      </p>
+                    )}
+
+                    <div
+                      style={{
+                        background: "#fff",
+                        border: "1px solid #e8e8e8",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {vetPrices.map((p) => (
+                        <div key={p.id}>
+                          <div
+                            className="price-row"
+                            style={{ padding: "10px 14px" }}
+                          >
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div
+                                style={{
+                                  fontWeight: "600",
+                                  fontSize: "13px",
+                                  color: "#111",
+                                  marginBottom: "3px",
+                                }}
+                              >
+                                {p.services?.name || "—"}
+                              </div>
+                              <div style={{ marginTop: "2px" }}>
+                                <span
+                                  style={{
+                                    fontSize: "13px",
+                                    color: "#2d6a4f",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  {formatPrice(
+                                    p.price_low,
+                                    p.price_high,
+                                    p.price_type
+                                  )}
+                                </span>
+                                <span
+                                  style={{
+                                    marginLeft: "6px",
+                                    fontSize: "11px",
+                                    color: "#888",
+                                  }}
+                                >
+                                  ({p.price_type})
+                                </span>
+                              </div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  marginTop: "4px",
+                                }}
+                              >
+                                {p.species && (
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      background: "#f0f0f0",
+                                      color: "#555",
+                                      padding: "1px 6px",
+                                      borderRadius: "4px",
+                                      textTransform: "capitalize",
+                                    }}
+                                  >
+                                    {p.species}
+                                  </span>
+                                )}
+                                {p.includes_bloodwork && (
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      background: "#e8f5e9",
+                                      color: "#2d6a4f",
+                                      padding: "1px 6px",
+                                      borderRadius: "4px",
+                                    }}
+                                  >
+                                    + bloodwork
+                                  </span>
+                                )}
+                                {p.includes_xrays && (
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      background: "#e8f5e9",
+                                      color: "#2d6a4f",
+                                      padding: "1px 6px",
+                                      borderRadius: "4px",
+                                    }}
+                                  >
+                                    + x-rays
+                                  </span>
+                                )}
+                                {p.includes_anesthesia && (
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      background: "#e8f5e9",
+                                      color: "#2d6a4f",
+                                      padding: "1px 6px",
+                                      borderRadius: "4px",
+                                    }}
+                                  >
+                                    + anesthesia
+                                  </span>
+                                )}
+                                {p.call_for_quote && (
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      background: "#fff8e1",
+                                      color: "#e65100",
+                                      padding: "1px 6px",
+                                      borderRadius: "4px",
+                                    }}
+                                  >
+                                    call for quote
+                                  </span>
+                                )}
+                                {p.notes && (
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      color: "#888",
+                                      fontStyle: "italic",
+                                    }}
+                                  >
+                                    {p.notes}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "6px",
+                                flexShrink: 0,
+                                alignSelf: "flex-start",
+                              }}
+                            >
+                              <button
+                                className="adm-btn adm-btn-outline"
+                                onClick={() =>
+                                  editingPrice === p.id
+                                    ? setEditingPrice(null)
+                                    : startEditPrice(p)
+                                }
+                              >
+                                {editingPrice === p.id ? "Cancel" : "Edit"}
+                              </button>
+                              <button
+                                className="adm-btn adm-btn-red"
+                                onClick={() => deletePrice(p.id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+
+                          {editingPrice === p.id && (
+                            <div style={{ padding: "0 14px 14px 14px" }}>
+                              <div className="row-edit-bg">
+                                <div
+                                  className="form-grid-4"
+                                  style={{ marginBottom: "10px" }}
+                                >
+                                  <div>
+                                    <label className="field-label">
+                                      Service
+                                    </label>
+                                    <select
+                                      className="adm-input"
+                                      value={priceForm.service_id || ""}
+                                      onChange={(e) =>
+                                        setPriceForm({
+                                          ...priceForm,
+                                          service_id: e.target.value,
+                                        })
+                                      }
+                                    >
+                                      {services.map((s) => (
+                                        <option key={s.id} value={s.id}>
+                                          {s.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="field-label">
+                                      Price Type
+                                    </label>
+                                    <select
+                                      className="adm-input"
+                                      value={priceForm.price_type || "exact"}
+                                      onChange={(e) =>
+                                        setPriceForm({
+                                          ...priceForm,
+                                          price_type: e.target.value,
+                                        })
+                                      }
+                                    >
+                                      {PRICE_TYPES.map((t) => (
+                                        <option key={t}>{t}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="field-label">
+                                      Price Low
+                                    </label>
+                                    <input
+                                      className="adm-input"
+                                      type="number"
+                                      value={priceForm.price_low || ""}
+                                      onChange={(e) =>
+                                        setPriceForm({
+                                          ...priceForm,
+                                          price_low: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="field-label">
+                                      Price High
+                                    </label>
+                                    <input
+                                      className="adm-input"
+                                      type="number"
+                                      value={priceForm.price_high || ""}
+                                      onChange={(e) =>
+                                        setPriceForm({
+                                          ...priceForm,
+                                          price_high: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                                <div
+                                  className="form-grid-3"
+                                  style={{ marginBottom: "10px" }}
+                                >
+                                  <div>
+                                    <label className="field-label">
+                                      Species
+                                    </label>
+                                    <select
+                                      className="adm-input"
+                                      value={priceForm.species || "dog"}
+                                      onChange={(e) =>
+                                        setPriceForm({
+                                          ...priceForm,
+                                          species: e.target.value,
+                                          species_other: "",
+                                        })
+                                      }
+                                    >
+                                      <option value="dog">Dog</option>
+                                      <option value="cat">Cat</option>
+                                      <option value="rabbit">Rabbit</option>
+                                      <option value="bird">Bird</option>
+                                      <option value="other">Other</option>
+                                    </select>
+                                    {(priceForm.species === "other" ||
+                                      (![
+                                        "dog",
+                                        "cat",
+                                        "rabbit",
+                                        "bird",
+                                        "other",
+                                      ].includes(priceForm.species) &&
+                                        priceForm.species)) && (
+                                      <input
+                                        className="adm-input"
+                                        style={{ marginTop: "6px" }}
+                                        value={
+                                          priceForm.species_other ||
+                                          ([
+                                            "dog",
+                                            "cat",
+                                            "rabbit",
+                                            "bird",
+                                            "other",
+                                          ].includes(priceForm.species)
+                                            ? ""
+                                            : priceForm.species)
+                                        }
+                                        onChange={(e) =>
+                                          setPriceForm({
+                                            ...priceForm,
+                                            species_other: e.target.value,
+                                          })
+                                        }
+                                        placeholder="e.g. Guinea Pig, Ferret..."
+                                      />
+                                    )}
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "6px",
+                                      paddingTop: "18px",
+                                    }}
+                                  >
+                                    <label
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        fontSize: "13px",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={!!priceForm.includes_bloodwork}
+                                        onChange={(e) =>
+                                          setPriceForm({
+                                            ...priceForm,
+                                            includes_bloodwork:
+                                              e.target.checked,
+                                          })
+                                        }
+                                      />
+                                      Includes bloodwork
+                                    </label>
+                                    <label
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        fontSize: "13px",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={!!priceForm.includes_xrays}
+                                        onChange={(e) =>
+                                          setPriceForm({
+                                            ...priceForm,
+                                            includes_xrays: e.target.checked,
+                                          })
+                                        }
+                                      />
+                                      Includes x-rays
+                                    </label>
+                                    <label
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        fontSize: "13px",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={
+                                          !!priceForm.includes_anesthesia
+                                        }
+                                        onChange={(e) =>
+                                          setPriceForm({
+                                            ...priceForm,
+                                            includes_anesthesia:
+                                              e.target.checked,
+                                          })
+                                        }
+                                      />
+                                      Includes anesthesia
+                                    </label>
+                                    <label
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        fontSize: "13px",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={!!priceForm.call_for_quote}
+                                        onChange={(e) =>
+                                          setPriceForm({
+                                            ...priceForm,
+                                            call_for_quote: e.target.checked,
+                                          })
+                                        }
+                                      />
+                                      Call for quote
+                                    </label>
+                                  </div>
+                                  <div>
+                                    <label className="field-label">Notes</label>
+                                    <input
+                                      className="adm-input"
+                                      value={priceForm.notes || ""}
+                                      onChange={(e) =>
+                                        setPriceForm({
+                                          ...priceForm,
+                                          notes: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                                <div style={{ display: "flex", gap: "8px" }}>
+                                  <button
+                                    className="adm-btn adm-btn-green"
+                                    onClick={savePrice}
+                                    disabled={priceSaving}
+                                  >
+                                    {priceSaving ? "Saving..." : "Save Changes"}
+                                  </button>
+                                  <button
+                                    className="adm-btn adm-btn-gray"
+                                    onClick={() => setEditingPrice(null)}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
