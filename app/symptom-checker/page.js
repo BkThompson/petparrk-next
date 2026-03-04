@@ -4,9 +4,106 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import Navbar from "../../components/Navbar";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SESSION_KEY = "petparrk_symptom_session";
+
+const SYMPTOM_AREAS = [
+  {
+    id: "stomach",
+    label: "Stomach / Digestion",
+    emoji: "🤢",
+    desc: "Vomiting, diarrhea, not eating",
+  },
+  {
+    id: "eyes_ears",
+    label: "Eyes / Ears",
+    emoji: "👁️",
+    desc: "Discharge, scratching, redness",
+  },
+  {
+    id: "skin",
+    label: "Skin / Coat",
+    emoji: "🐾",
+    desc: "Itching, rash, hair loss, lumps",
+  },
+  {
+    id: "breathing",
+    label: "Breathing / Cough",
+    emoji: "💨",
+    desc: "Coughing, wheezing, labored breath",
+  },
+  {
+    id: "behavior",
+    label: "Behavior / Energy",
+    emoji: "😴",
+    desc: "Lethargy, hiding, confusion",
+  },
+  {
+    id: "movement",
+    label: "Limping / Movement",
+    emoji: "🦴",
+    desc: "Limping, stiffness, won't stand",
+  },
+  {
+    id: "other",
+    label: "Something else",
+    emoji: "🔍",
+    desc: "Doesn't fit the categories above",
+  },
+];
+
+const DURATIONS = [
+  {
+    id: "just_now",
+    label: "Just started",
+    emoji: "⚡",
+    desc: "Less than an hour ago",
+  },
+  { id: "today", label: "Today", emoji: "📅", desc: "Started sometime today" },
+  {
+    id: "few_days",
+    label: "2–3 days",
+    emoji: "📆",
+    desc: "Been going on a couple days",
+  },
+  {
+    id: "week_plus",
+    label: "A week or more",
+    emoji: "📋",
+    desc: "Ongoing for a while",
+  },
+];
+
+const SEVERITIES = [
+  {
+    id: "mild",
+    label: "Mild",
+    emoji: "😐",
+    desc: "Barely noticeable. Eating, drinking, acting mostly normal.",
+    color: "#2d6a4f",
+    bg: "#e8f5e9",
+    border: "#c8e6c9",
+  },
+  {
+    id: "moderate",
+    label: "Moderate",
+    emoji: "😟",
+    desc: "Clearly not themselves. Something is off but they're responsive.",
+    color: "#e65100",
+    bg: "#fff3e0",
+    border: "#ffe0b2",
+  },
+  {
+    id: "severe",
+    label: "Severe",
+    emoji: "😰",
+    desc: "Visibly distressed, in pain, or not responding normally.",
+    color: "#c62828",
+    bg: "#fce8e8",
+    border: "#f5c6c6",
+  },
+];
 
 export default function SymptomCheckerPage() {
   const [session, setSession] = useState(undefined);
@@ -24,10 +121,19 @@ export default function SymptomCheckerPage() {
   const [freeCheckUsed, setFreeCheckUsed] = useState(false);
   const [autoStartPet, setAutoStartPet] = useState(null);
   const [triageMounted, setTriageMounted] = useState(false);
+
+  // Guided flow state
+  const [guidedStep, setGuidedStep] = useState(1); // 1, 2, 3, or "chat"
+  const [guidedAnswers, setGuidedAnswers] = useState({
+    area: null,
+    duration: null,
+    severity: null,
+  });
+  const [stepDirection, setStepDirection] = useState(1); // 1 = forward, -1 = back
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auth
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const {
@@ -36,7 +142,6 @@ export default function SymptomCheckerPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load pets
   useEffect(() => {
     if (!session) return;
     supabase
@@ -47,7 +152,6 @@ export default function SymptomCheckerPage() {
       .then(({ data }) => setPets(data || []));
   }, [session]);
 
-  // Restore session from sessionStorage on every mount
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(SESSION_KEY);
@@ -64,12 +168,12 @@ export default function SymptomCheckerPage() {
           setSessionStarted(true);
           setGuestMode(parsed.guestMode || false);
           setFreeCheckUsed(parsed.freeCheckUsed || false);
+          setGuidedStep("chat");
         }
       }
     } catch (e) {}
   }, []);
 
-  // Trigger startSession after mount when coming from profile "Check Symptoms"
   useEffect(() => {
     if (autoStartPet) {
       startSession(autoStartPet);
@@ -77,7 +181,6 @@ export default function SymptomCheckerPage() {
     }
   }, [autoStartPet]);
 
-  // Save session to sessionStorage on every change
   useEffect(() => {
     if (!sessionStarted || messages.length === 0) return;
     try {
@@ -101,22 +204,18 @@ export default function SymptomCheckerPage() {
     freeCheckUsed,
   ]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Only auto-focus on desktop
   useEffect(() => {
-    if (!sessionStarted) return;
+    if (!sessionStarted || guidedStep !== "chat") return;
     const isMobile = window.innerWidth < 768;
     if (!isMobile) inputRef.current?.focus();
-  }, [sessionStarted]);
+  }, [sessionStarted, guidedStep]);
 
-  // Fetch nearby vets when triage result arrives
   useEffect(() => {
     if (!triageResult) return;
-    // Delay mounting the triage card by one frame to prevent animation on mount
     setTriageMounted(false);
     requestAnimationFrame(() => setTriageMounted(true));
     supabase
@@ -138,12 +237,8 @@ export default function SymptomCheckerPage() {
     setTriageMounted(false);
     setTriageCardExpanded(true);
     setFreeCheckUsed(false);
-
-    const greeting = pet
-      ? `Hi! I'm here to help check on **${pet.name}**. 🐾\n\nBefore we start, please know that I provide triage guidance only — I'm not a veterinarian or medical professional, and this is not a substitute for professional veterinary care.\n\nNow, tell me — what's going on with ${pet.name} today? Describe what you're seeing and I'll ask a few follow-up questions.`
-      : `Hi! I'm PetParrk's symptom checker. 🐾\n\nBefore we start, please know that I provide triage guidance only — I'm not a veterinarian or medical professional, and this is not a substitute for professional veterinary care.\n\nTo get started, could you tell me your pet's species (dog, cat, etc.), breed, and age?`;
-
-    setMessages([{ role: "assistant", content: greeting }]);
+    setGuidedStep(1);
+    setGuidedAnswers({ area: null, duration: null, severity: null });
   }
 
   function resetSession() {
@@ -157,6 +252,128 @@ export default function SymptomCheckerPage() {
     setSessionStarted(false);
     setInput("");
     setFreeCheckUsed(false);
+    setGuidedStep(1);
+    setGuidedAnswers({ area: null, duration: null, severity: null });
+  }
+
+  function selectArea(area) {
+    setGuidedAnswers((a) => ({ ...a, area }));
+    setStepDirection(1);
+    setGuidedStep(2);
+  }
+
+  function selectDuration(duration) {
+    setGuidedAnswers((a) => ({ ...a, duration }));
+    setStepDirection(1);
+    setGuidedStep(3);
+  }
+
+  async function selectSeverity(severity) {
+    const answers = { ...guidedAnswers, severity };
+    setGuidedAnswers(answers);
+    setStepDirection(1);
+    setGuidedStep("chat");
+
+    const areaLabel =
+      SYMPTOM_AREAS.find((a) => a.id === answers.area)?.label || answers.area;
+    const durationLabel =
+      DURATIONS.find((d) => d.id === answers.duration)?.label ||
+      answers.duration;
+    const severityLabel = answers.severity;
+    const petName = selectedPet?.name;
+    const petDesc = selectedPet
+      ? `${selectedPet.name} (${[
+          selectedPet.species,
+          selectedPet.breed,
+          selectedPet.age ? selectedPet.age + " old" : "",
+        ]
+          .filter(Boolean)
+          .join(", ")})`
+      : guestPet.species
+      ? `my ${[guestPet.breed, guestPet.species].filter(Boolean).join(" ")}${
+          guestPet.age ? ", " + guestPet.age + " old" : ""
+        }`
+      : "my pet";
+
+    const firstMessage = `I'm checking on ${petDesc}. The issue is related to their **${areaLabel}**. It started **${durationLabel.toLowerCase()}** and seems **${severityLabel.toLowerCase()}** in severity. What should I know?`;
+
+    const greeting = `Hi! I'm here to help check on ${
+      petName || "your pet"
+    }. 🐾\n\nBefore we start, please know that I provide triage guidance only — I'm not a veterinarian or medical professional, and this is not a substitute for professional veterinary care.\n\nNow, tell me — what's going on with ${
+      petName || "your pet"
+    } today? Describe what you're seeing and I'll ask a few follow-up questions.`;
+
+    const initialMessages = [
+      { role: "assistant", content: greeting },
+      { role: "user", content: firstMessage },
+    ];
+    setMessages(initialMessages);
+    await sendGuidedMessage(initialMessages, answers);
+  }
+
+  async function sendGuidedMessage(initialMessages, answers) {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/symptom-checker", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: initialMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          pet: selectedPet || (guestMode ? guestPet : null),
+        }),
+      });
+      const data = await res.json();
+      const content =
+        data.content || "Sorry, something went wrong. Please try again.";
+
+      let newTriageResult = null;
+      if (content.includes("[TRIAGE_RESULT: EMERGENCY]"))
+        newTriageResult = "EMERGENCY";
+      else if (content.includes("[TRIAGE_RESULT: SEE_VET]"))
+        newTriageResult = "SEE_VET";
+      else if (content.includes("[TRIAGE_RESULT: MONITOR]"))
+        newTriageResult = "MONITOR";
+
+      if (newTriageResult) {
+        setTriageResult(newTriageResult);
+        setTriageCardExpanded(true);
+        if (guestMode) setFreeCheckUsed(true);
+      }
+
+      const cleanContent = content
+        .replace(/\[TRIAGE_RESULT: EMERGENCY\]/g, "")
+        .replace(/\[TRIAGE_RESULT: SEE_VET\]/g, "")
+        .replace(/\[TRIAGE_RESULT: MONITOR\]/g, "")
+        .trim();
+
+      const finalMessages = [
+        ...initialMessages,
+        { role: "assistant", content: cleanContent },
+      ];
+      setMessages(finalMessages);
+
+      if (session && selectedPet && newTriageResult) {
+        await supabase.from("symptom_checks").insert({
+          pet_id: selectedPet.id,
+          owner_id: session.user.id,
+          triage_result: newTriageResult,
+          transcript: JSON.stringify(finalMessages),
+          created_at: new Date().toISOString(),
+        });
+      }
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Something went wrong. Please try again.",
+        },
+      ]);
+    }
+    setLoading(false);
   }
 
   async function sendMessage() {
@@ -181,7 +398,6 @@ export default function SymptomCheckerPage() {
           pet: selectedPet || (guestMode ? guestPet : null),
         }),
       });
-
       const data = await res.json();
       const content =
         data.content || "Sorry, something went wrong. Please try again.";
@@ -197,6 +413,7 @@ export default function SymptomCheckerPage() {
         newTriageResult = "MONITOR";
         if (guestMode) setFreeCheckUsed(true);
       }
+
       if (newTriageResult !== triageResult) {
         setTriageResult(newTriageResult);
         setTriageCardExpanded(true);
@@ -224,15 +441,14 @@ export default function SymptomCheckerPage() {
         });
       }
     } catch (err) {
-      setMessages([
-        ...updatedMessages,
+      setMessages((prev) => [
+        ...prev,
         {
           role: "assistant",
           content: "Something went wrong. Please try again.",
         },
       ]);
     }
-
     setLoading(false);
   }
 
@@ -306,7 +522,6 @@ export default function SymptomCheckerPage() {
 
   function renderTriageCard() {
     if (!triageResult || !triageMounted) return null;
-
     const config = {
       EMERGENCY: {
         emoji: "🔴",
@@ -338,7 +553,6 @@ export default function SymptomCheckerPage() {
     }[triageResult];
 
     return (
-      // Plain div — no framer-motion on the outer wrapper, kills the mount animation entirely
       <div
         style={{
           marginBottom: "10px",
@@ -352,7 +566,6 @@ export default function SymptomCheckerPage() {
           !triageCardExpanded ? () => setTriageCardExpanded(true) : undefined
         }
       >
-        {/* Collapsed pill row */}
         <motion.div
           initial={false}
           animate={{
@@ -360,16 +573,8 @@ export default function SymptomCheckerPage() {
             height: triageCardExpanded ? 0 : "auto",
           }}
           transition={{
-            opacity: {
-              duration: 0.2,
-              ease: "easeInOut",
-              delay: triageCardExpanded ? 0 : 0.2,
-            },
-            height: {
-              duration: 0.3,
-              ease: "easeInOut",
-              delay: triageCardExpanded ? 0 : 0.15,
-            },
+            opacity: { duration: 0.2, delay: triageCardExpanded ? 0 : 0.2 },
+            height: { duration: 0.3, delay: triageCardExpanded ? 0 : 0.15 },
           }}
           style={{ overflow: "hidden" }}
         >
@@ -399,8 +604,6 @@ export default function SymptomCheckerPage() {
             </span>
           </div>
         </motion.div>
-
-        {/* Expanded full card */}
         <motion.div
           initial={false}
           animate={{
@@ -408,16 +611,8 @@ export default function SymptomCheckerPage() {
             height: triageCardExpanded ? "auto" : 0,
           }}
           transition={{
-            opacity: {
-              duration: 0.2,
-              ease: "easeInOut",
-              delay: triageCardExpanded ? 0.2 : 0,
-            },
-            height: {
-              duration: 0.3,
-              ease: "easeInOut",
-              delay: triageCardExpanded ? 0.15 : 0,
-            },
+            opacity: { duration: 0.2, delay: triageCardExpanded ? 0.2 : 0 },
+            height: { duration: 0.3, delay: triageCardExpanded ? 0.15 : 0 },
           }}
           style={{ overflow: "hidden" }}
         >
@@ -446,7 +641,6 @@ export default function SymptomCheckerPage() {
               </div>
               <button
                 onClick={() => setTriageCardExpanded(false)}
-                title="Collapse"
                 style={{
                   background: "none",
                   border: "none",
@@ -471,7 +665,6 @@ export default function SymptomCheckerPage() {
             >
               {config.message}
             </p>
-
             {config.vetLabel && nearbyVets.length > 0 && (
               <div>
                 <p
@@ -565,7 +758,6 @@ export default function SymptomCheckerPage() {
                 ))}
               </div>
             )}
-
             <div
               style={{
                 display: "flex",
@@ -607,6 +799,429 @@ export default function SymptomCheckerPage() {
             </div>
           </div>
         </motion.div>
+      </div>
+    );
+  }
+
+  // ── Guided step screens ───────────────────────────────────────────
+  function renderGuidedFlow() {
+    const petName = selectedPet?.name || "your pet";
+    const stepVariants = {
+      enter: (dir) => ({ x: dir > 0 ? 60 : -60, opacity: 0 }),
+      center: { x: 0, opacity: 1 },
+      exit: (dir) => ({ x: dir > 0 ? -60 : 60, opacity: 0 }),
+    };
+
+    const stepNum = guidedStep === 1 ? 1 : guidedStep === 2 ? 2 : 3;
+
+    return (
+      <div
+        style={{
+          maxWidth: "800px",
+          margin: "0 auto",
+          padding: "20px",
+          fontFamily: "system-ui, sans-serif",
+          minHeight: "100vh",
+        }}
+      >
+        <style>{`
+          .guided-area-card { border: 2px solid #e8e8e8; border-radius: 14px; padding: 14px 16px; cursor: pointer; background: #fff; display: flex; align-items: center; gap: 14px; transition: all 0.15s ease; margin-bottom: 10px; }
+          .guided-area-card:hover { border-color: #2d6a4f; background: #f0f7f4; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,106,79,0.1); }
+          .guided-area-card.selected { border-color: #2d6a4f; background: #e8f5e9; }
+          .guided-pill { border: 2px solid #e8e8e8; border-radius: 50px; padding: 12px 20px; cursor: pointer; background: #fff; display: flex; align-items: center; gap: 10px; transition: all 0.15s ease; flex: 1; min-width: 0; }
+          .guided-pill:hover { border-color: #2d6a4f; background: #f0f7f4; }
+          .guided-pill.selected { border-color: #2d6a4f; background: #e8f5e9; }
+          .guided-severity-card { border: 2px solid #e8e8e8; border-radius: 16px; padding: 18px 20px; cursor: pointer; background: #fff; transition: all 0.15s ease; margin-bottom: 12px; }
+          .guided-severity-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+        `}</style>
+
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "24px",
+          }}
+        >
+          <button
+            onClick={() => {
+              if (guidedStep === 1) {
+                setSessionStarted(false);
+              } else {
+                setStepDirection(-1);
+                setGuidedStep((s) => s - 1);
+              }
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#2d6a4f",
+              fontSize: "14px",
+              cursor: "pointer",
+              padding: 0,
+              fontFamily: "system-ui, sans-serif",
+            }}
+          >
+            ← Back
+          </button>
+          {session && <Navbar />}
+        </div>
+
+        {/* Pet context pill */}
+        {selectedPet && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "20px",
+              padding: "10px 14px",
+              background: "#f9f9f9",
+              borderRadius: "10px",
+              border: "1px solid #eee",
+            }}
+          >
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                background: "#e8f5e9",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                fontSize: "16px",
+                border: "2px solid #ddd",
+                flexShrink: 0,
+              }}
+            >
+              {selectedPet.photo_url ? (
+                <img
+                  src={selectedPet.photo_url}
+                  alt={selectedPet.name}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : selectedPet.species === "Dog" ? (
+                "🐶"
+              ) : selectedPet.species === "Cat" ? (
+                "🐱"
+              ) : (
+                "🐾"
+              )}
+            </div>
+            <span
+              style={{ fontWeight: "600", fontSize: "13px", color: "#111" }}
+            >
+              Checking on {selectedPet.name}
+            </span>
+            <span
+              style={{
+                marginLeft: "auto",
+                fontSize: "11px",
+                background: "#e8f5e9",
+                padding: "2px 8px",
+                borderRadius: "20px",
+                color: "#2d6a4f",
+              }}
+            >
+              🩺 Symptom Check
+            </span>
+          </div>
+        )}
+
+        {/* Progress bar */}
+        <div style={{ marginBottom: "28px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: "700",
+                color: "#2d6a4f",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Step {stepNum} of 3
+            </span>
+            <span style={{ fontSize: "12px", color: "#aaa" }}>
+              {stepNum === 1 ? "Area" : stepNum === 2 ? "Duration" : "Severity"}
+            </span>
+          </div>
+          <div
+            style={{
+              height: "4px",
+              background: "#eee",
+              borderRadius: "4px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                width: `${(stepNum / 3) * 100}%`,
+                background: "#2d6a4f",
+                borderRadius: "4px",
+                transition: "width 0.4s ease",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Step content with slide animation */}
+        <AnimatePresence mode="wait" custom={stepDirection}>
+          {guidedStep === 1 && (
+            <motion.div
+              key="step1"
+              custom={stepDirection}
+              variants={stepVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+            >
+              <h2
+                style={{
+                  margin: "0 0 6px 0",
+                  fontSize: "1.3rem",
+                  fontWeight: "700",
+                  color: "#111",
+                }}
+              >
+                What area is the problem?
+              </h2>
+              <p
+                style={{
+                  margin: "0 0 20px 0",
+                  fontSize: "14px",
+                  color: "#888",
+                }}
+              >
+                Tap the one that best describes what's going on with {petName}.
+              </p>
+              {SYMPTOM_AREAS.map((area) => (
+                <div
+                  key={area.id}
+                  className="guided-area-card"
+                  onClick={() => selectArea(area.id)}
+                >
+                  <span
+                    style={{
+                      fontSize: "28px",
+                      flexShrink: 0,
+                      width: "40px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {area.emoji}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p
+                      style={{
+                        margin: "0 0 2px 0",
+                        fontWeight: "700",
+                        fontSize: "15px",
+                        color: "#111",
+                      }}
+                    >
+                      {area.label}
+                    </p>
+                    <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
+                      {area.desc}
+                    </p>
+                  </div>
+                  <span
+                    style={{ color: "#ccc", fontSize: "18px", flexShrink: 0 }}
+                  >
+                    →
+                  </span>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
+          {guidedStep === 2 && (
+            <motion.div
+              key="step2"
+              custom={stepDirection}
+              variants={stepVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+            >
+              <h2
+                style={{
+                  margin: "0 0 6px 0",
+                  fontSize: "1.3rem",
+                  fontWeight: "700",
+                  color: "#111",
+                }}
+              >
+                How long has this been going on?
+              </h2>
+              <p
+                style={{
+                  margin: "0 0 20px 0",
+                  fontSize: "14px",
+                  color: "#888",
+                }}
+              >
+                Give your best estimate — it helps with the assessment.
+              </p>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "12px",
+                }}
+              >
+                {DURATIONS.map((d) => (
+                  <div
+                    key={d.id}
+                    className="guided-pill"
+                    onClick={() => selectDuration(d.id)}
+                    style={{
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      padding: "18px",
+                      borderRadius: "14px",
+                    }}
+                  >
+                    <span style={{ fontSize: "28px", marginBottom: "8px" }}>
+                      {d.emoji}
+                    </span>
+                    <p
+                      style={{
+                        margin: "0 0 4px 0",
+                        fontWeight: "700",
+                        fontSize: "15px",
+                        color: "#111",
+                      }}
+                    >
+                      {d.label}
+                    </p>
+                    <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
+                      {d.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {guidedStep === 3 && (
+            <motion.div
+              key="step3"
+              custom={stepDirection}
+              variants={stepVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+            >
+              <h2
+                style={{
+                  margin: "0 0 6px 0",
+                  fontSize: "1.3rem",
+                  fontWeight: "700",
+                  color: "#111",
+                }}
+              >
+                How severe does it seem?
+              </h2>
+              <p
+                style={{
+                  margin: "0 0 20px 0",
+                  fontSize: "14px",
+                  color: "#888",
+                }}
+              >
+                Use your best judgment — you know {petName} best.
+              </p>
+              {SEVERITIES.map((s) => (
+                <div
+                  key={s.id}
+                  className="guided-severity-card"
+                  style={{ borderColor: "#e8e8e8" }}
+                  onClick={() => selectSeverity(s.id)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = s.color;
+                    e.currentTarget.style.background = s.bg;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "#e8e8e8";
+                    e.currentTarget.style.background = "#fff";
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "14px",
+                    }}
+                  >
+                    <span style={{ fontSize: "32px", flexShrink: 0 }}>
+                      {s.emoji}
+                    </span>
+                    <div>
+                      <p
+                        style={{
+                          margin: "0 0 4px 0",
+                          fontWeight: "700",
+                          fontSize: "16px",
+                          color: s.color,
+                        }}
+                      >
+                        {s.label}
+                      </p>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "13px",
+                          color: "#555",
+                          lineHeight: "1.5",
+                        }}
+                      >
+                        {s.desc}
+                      </p>
+                    </div>
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        color: "#ccc",
+                        fontSize: "18px",
+                        flexShrink: 0,
+                      }}
+                    >
+                      →
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <p
+          style={{
+            margin: "24px 0 0 0",
+            fontSize: "11px",
+            color: "#bbb",
+            textAlign: "center",
+          }}
+        >
+          ⚕️ PetParrk is not a veterinary service. Always consult a licensed
+          veterinarian.
+        </p>
       </div>
     );
   }
@@ -659,7 +1274,7 @@ export default function SymptomCheckerPage() {
               Symptom Checker
             </h1>
             <p style={{ margin: "0 0 8px 0", fontSize: "15px", color: "#555" }}>
-              Describe what's going on and get an instant triage recommendation.
+              Answer 3 quick questions and get an instant triage recommendation.
             </p>
             <p
               style={{
@@ -716,7 +1331,10 @@ export default function SymptomCheckerPage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => setSessionStarted(true)}
+                    onClick={() => {
+                      setSessionStarted(true);
+                      setGuidedStep("chat");
+                    }}
                     style={{
                       padding: "8px 16px",
                       background: "#2d6a4f",
@@ -980,6 +1598,11 @@ export default function SymptomCheckerPage() {
     );
   }
 
+  // Guided flow (steps 1-3)
+  if (guidedStep !== "chat") {
+    return renderGuidedFlow();
+  }
+
   // Chat screen
   return (
     <>
@@ -989,15 +1612,11 @@ export default function SymptomCheckerPage() {
         .send-btn { padding: 12px 20px; background: #2d6a4f; color: #fff; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; font-weight: 600; white-space: nowrap; }
         .send-btn:hover { background: #245a42; }
         .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
         @keyframes dotBounce {
           0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
           40% { transform: translateY(-5px); opacity: 1; }
         }
-        .thinking-dot {
-          width: 7px; height: 7px; border-radius: 50%; background: #999;
-          display: inline-block; animation: dotBounce 1.2s infinite ease-in-out;
-        }
+        .thinking-dot { width: 7px; height: 7px; border-radius: 50%; background: #999; display: inline-block; animation: dotBounce 1.2s infinite ease-in-out; }
         .thinking-dot:nth-child(1) { animation-delay: 0s; }
         .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
         .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
@@ -1134,7 +1753,6 @@ export default function SymptomCheckerPage() {
           }}
         >
           {messages.map((msg, i) => renderMessage(msg, i))}
-
           {loading && (
             <div
               style={{
@@ -1225,7 +1843,7 @@ export default function SymptomCheckerPage() {
               placeholder={
                 triageResult
                   ? "Ask a follow-up question..."
-                  : "Describe what you're seeing..."
+                  : "Add more detail or ask a follow-up..."
               }
               rows={2}
               style={{ flex: 1 }}
