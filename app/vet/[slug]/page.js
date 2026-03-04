@@ -453,17 +453,22 @@ export default function VetPage() {
               marginBottom: "16px",
             }}
           >
-            <span
-              style={{
-                fontSize: "11px",
-                background: "#e8f5e9",
-                color: "#2d6a4f",
-                padding: "4px 10px",
-                borderRadius: "12px",
-              }}
-            >
-              {vet.vet_type}
-            </span>
+            {(Array.isArray(vet.vet_type) ? vet.vet_type : [vet.vet_type])
+              .filter(Boolean)
+              .map((t) => (
+                <span
+                  key={t}
+                  style={{
+                    fontSize: "11px",
+                    background: "#e8f5e9",
+                    color: "#2d6a4f",
+                    padding: "4px 10px",
+                    borderRadius: "12px",
+                  }}
+                >
+                  {t}
+                </span>
+              ))}
             {vet.ownership && (
               <span
                 style={{

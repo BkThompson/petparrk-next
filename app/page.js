@@ -195,6 +195,18 @@ export default function Home() {
       setFormStatus("error");
       return;
     }
+    // Fire email notification (non-blocking)
+    fetch("/api/notify-submission", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        vet_name: formData.vet_name,
+        service_name: formData.service_name,
+        price_paid: parseFloat(formData.price_paid),
+        visit_date: formData.visit_date || null,
+        submitter_note: formData.submitter_note || null,
+      }),
+    }).catch(() => {});
     setFormStatus("success");
     setFormData({
       vet_name: "",
@@ -521,18 +533,23 @@ export default function Home() {
                     gap: "4px",
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      background: "#e8f5e9",
-                      color: "#2d6a4f",
-                      padding: "2px 8px",
-                      borderRadius: "12px",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {vet.vet_type}
-                  </span>
+                  {(Array.isArray(vet.vet_type) ? vet.vet_type : [vet.vet_type])
+                    .filter(Boolean)
+                    .map((t) => (
+                      <span
+                        key={t}
+                        style={{
+                          fontSize: "11px",
+                          background: "#e8f5e9",
+                          color: "#2d6a4f",
+                          padding: "2px 8px",
+                          borderRadius: "12px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {t}
+                      </span>
+                    ))}
                   {vet.accepting_new_patients === true && (
                     <span
                       style={{
