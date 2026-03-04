@@ -28,6 +28,7 @@ export default function ProfilePage() {
   const emptyPetForm = {
     name: "",
     species: "Dog",
+    species_other: "",
     breed: "",
     birthday: "",
     weight_lbs: "",
@@ -61,9 +62,11 @@ export default function ProfilePage() {
   const [convertingPhoto, setConvertingPhoto] = useState(false);
   const [symptomHistory, setSymptomHistory] = useState({});
   const [showHistoryFor, setShowHistoryFor] = useState(null);
+  const [cityState, setCityState] = useState("");
   const fileInputRef = useRef(null);
   const petPhotoRefs = useRef({});
   const newPetPhotoRef = useRef(null);
+  const petCardRefs = useRef({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -294,10 +297,16 @@ export default function ProfilePage() {
   async function handleSavePet() {
     setSaving(true);
     if (editingPetId) {
+      const { species_other: _so1, ...petFormClean1 } = petForm;
+      const resolvedSpecies1 =
+        petForm.species === "Other"
+          ? petForm.species_other || "Other"
+          : petForm.species;
       const { error } = await supabase
         .from("pets")
         .update({
-          ...petForm,
+          ...petFormClean1,
+          species: resolvedSpecies1,
           weight_lbs: petForm.weight_lbs || null,
           birthday: petForm.birthday || null,
         })
@@ -310,11 +319,17 @@ export default function ProfilePage() {
         showToast("Pet updated!");
       } else showToast("Failed to update pet.", "error");
     } else {
+      const { species_other: _so2, ...petFormClean2 } = petForm;
+      const resolvedSpecies2 =
+        petForm.species === "Other"
+          ? petForm.species_other || "Other"
+          : petForm.species;
       const { data, error } = await supabase
         .from("pets")
         .insert({
           owner_id: session.user.id,
-          ...petForm,
+          ...petFormClean2,
+          species: resolvedSpecies2,
           weight_lbs: petForm.weight_lbs || null,
           birthday: petForm.birthday || null,
         })
@@ -413,10 +428,19 @@ export default function ProfilePage() {
   }
 
   function startEditPet(pet) {
+    setEditingProfile(false); // close profile edit if open
     setEditingPetId(pet.id);
+    setTimeout(() => {
+      const el = petCardRefs.current[pet.id];
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
+      if (!inView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
     setPetForm({
       name: pet.name || "",
       species: pet.species || "Dog",
+      species_other: "",
       breed: pet.breed || "",
       birthday: pet.birthday || "",
       weight_lbs: pet.weight_lbs || "",
@@ -444,16 +468,40 @@ export default function ProfilePage() {
       : `${years} years old`;
   };
 
-  const speciesEmoji = (s) =>
-    s === "Dog"
-      ? "🐶"
-      : s === "Cat"
-      ? "🐱"
-      : s === "Bird"
-      ? "🐦"
-      : s === "Rabbit"
-      ? "🐰"
-      : "🐾";
+  const speciesEmoji = (s) => (s === "Dog" ? "🐶" : "🐾");
+
+  // ── Zip → City, State lookup ──────────────────────────────────
+  useEffect(() => {
+    const zip = profile?.zip_code;
+    if (!zip || zip.length !== 5) {
+      setCityState("");
+      return;
+    }
+    fetch(`https://api.zippopotam.us/us/${zip}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.places?.[0]) {
+          setCityState(
+            `${d.places[0]["place name"]}, ${d.places[0]["state abbreviation"]}`
+          );
+        } else setCityState("");
+      })
+      .catch(() => setCityState(""));
+  }, [profile?.zip_code]);
+
+  // ── Auto-close edit forms on page visibility change ───────────
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        setEditingProfile(false);
+        setEditingPetId(null);
+        setShowAddPet(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
 
   function formatPhone(phone) {
     if (!phone) return null;
@@ -528,15 +576,27 @@ export default function ProfilePage() {
               className="input"
               value={petForm.species}
               onChange={(e) =>
-                setPetForm({ ...petForm, species: e.target.value })
+                setPetForm({
+                  ...petForm,
+                  species: e.target.value,
+                  species_other: "",
+                })
               }
             >
               <option>Dog</option>
-              <option>Cat</option>
-              <option>Bird</option>
-              <option>Rabbit</option>
               <option>Other</option>
             </select>
+            {petForm.species === "Other" && (
+              <input
+                className="input"
+                style={{ marginTop: "6px" }}
+                value={petForm.species_other || ""}
+                onChange={(e) =>
+                  setPetForm({ ...petForm, species_other: e.target.value })
+                }
+                placeholder="e.g. Guinea Pig, Ferret, Rabbit..."
+              />
+            )}
           </div>
           <div className="field">
             <label className="label">Breed</label>
@@ -690,7 +750,7 @@ export default function ProfilePage() {
       <style>{`
         .input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; font-family: system-ui, sans-serif; outline: none; background: #fff; height: 40px; color: #111; -webkit-appearance: none; appearance: none; display: block; }
         .input:focus { border-color: #2d6a4f; }
-        select.input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+        select.input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 42px; cursor: pointer; }
         input[type="date"].input { text-align: left; padding-right: 12px; direction: ltr; }
         input[type="date"].input::-webkit-date-and-time-value { text-align: left; margin: 0; }
         input[type="date"].input::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
@@ -712,11 +772,14 @@ export default function ProfilePage() {
         .pet-photo-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; }
         .pet-photo-wrap:hover .pet-photo-overlay { opacity: 1; }
         .section-divider { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin: 20px 0 12px 0; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+        .pet-header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .pet-name-block { flex: 1; min-width: 0; }
+
         .pet-hi-card { text-align: center; padding: 16px 0 20px 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .contact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
         /* Pet detail row: muted label + normal-weight value */
-        .detail-row { margin: 0 0 4px 0; font-size: 13px; }
+        .detail-row { margin: 0 0 10px 0; font-size: 13px; line-height: 1.4; }
         .detail-label { color: #888; }
         .detail-value { color: #333; }
         .detail-value-alert { color: #c62828; }
@@ -756,165 +819,162 @@ export default function ProfilePage() {
 
         {/* Profile Header */}
         <div className="section">
+          {/* Row 1: Photo + Name/Email/Location */}
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
               alignItems: "flex-start",
-              marginBottom: "16px",
+              gap: "16px",
+              marginBottom: "14px",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div
+              className="avatar-wrap"
+              style={{
+                position: "relative",
+                width: "72px",
+                height: "72px",
+                flexShrink: 0,
+              }}
+            >
               <div
-                className="avatar-wrap"
                 style={{
-                  position: "relative",
                   width: "72px",
                   height: "72px",
-                  flexShrink: 0,
+                  borderRadius: "50%",
+                  background: avatarUrl ? "transparent" : "#2d6a4f",
+                  color: "#fff",
+                  fontSize: "26px",
+                  fontWeight: "700",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  border: "2px solid #e0e0e0",
                 }}
               >
-                <div
-                  style={{
-                    width: "72px",
-                    height: "72px",
-                    borderRadius: "50%",
-                    background: avatarUrl ? "transparent" : "#2d6a4f",
-                    color: "#fff",
-                    fontSize: "26px",
-                    fontWeight: "700",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    overflow: "hidden",
-                    border: "2px solid #e0e0e0",
-                  }}
-                >
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt="avatar"
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="avatar"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  avatarLetter
+                )}
+              </div>
+              <div
+                className="photo-overlay"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {convertingPhoto ? (
+                  <span style={{ fontSize: "11px", color: "#fff" }}>
+                    Converting...
+                  </span>
+                ) : uploadingPhoto ? (
+                  <span style={{ fontSize: "11px", color: "#fff" }}>
+                    Uploading...
+                  </span>
+                ) : (
+                  <>
+                    <span style={{ fontSize: "18px" }}>📷</span>
+                    <span
                       style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
+                        fontSize: "10px",
+                        color: "#fff",
+                        marginTop: "2px",
                       }}
-                    />
-                  ) : (
-                    avatarLetter
-                  )}
-                </div>
-                <div
-                  className="photo-overlay"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {convertingPhoto ? (
-                    <span style={{ fontSize: "11px", color: "#fff" }}>
-                      Converting...
+                    >
+                      Change
                     </span>
-                  ) : uploadingPhoto ? (
-                    <span style={{ fontSize: "11px", color: "#fff" }}>
-                      Uploading...
-                    </span>
-                  ) : (
-                    <>
-                      <span style={{ fontSize: "18px" }}>📷</span>
-                      <span
-                        style={{
-                          fontSize: "10px",
-                          color: "#fff",
-                          marginTop: "2px",
-                        }}
-                      >
-                        Change
-                      </span>
-                    </>
-                  )}
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
-                  onChange={handlePhotoUpload}
-                  style={{ display: "none" }}
-                />
-              </div>
-              <div>
-                <h1
-                  style={{
-                    margin: "0 0 4px 0",
-                    fontSize: "1.3rem",
-                    color: "#111",
-                  }}
-                >
-                  {profile?.full_name || session?.user?.email}
-                </h1>
-                <p style={{ margin: 0, fontSize: "13px", color: "#888" }}>
-                  {session?.user?.email}
-                </p>
-                {profile?.bio && (
-                  <p
-                    style={{
-                      margin: "6px 0 0 0",
-                      fontSize: "14px",
-                      color: "#555",
-                    }}
-                  >
-                    {profile.bio}
-                  </p>
-                )}
-                {profile?.zip_code && (
-                  <p
-                    style={{
-                      margin: "4px 0 0 0",
-                      fontSize: "13px",
-                      color: "#888",
-                    }}
-                  >
-                    📍 {profile.zip_code}
-                  </p>
+                  </>
                 )}
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
+                onChange={handlePhotoUpload}
+                style={{ display: "none" }}
+              />
             </div>
-            <button
-              onClick={() => setEditingProfile(!editingProfile)}
-              className="btn-secondary"
-              style={{ flexShrink: 0, fontSize: "12px", padding: "5px 10px" }}
-            >
-              {editingProfile ? "Cancel" : "Edit Profile"}
-            </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h1
+                style={{
+                  margin: "0 0 4px 0",
+                  fontSize: "1.3rem",
+                  color: "#111",
+                }}
+              >
+                {profile?.full_name || session?.user?.email}
+              </h1>
+              <p
+                style={{ margin: "0 0 2px 0", fontSize: "13px", color: "#888" }}
+              >
+                {session?.user?.email}
+              </p>
+              {profile?.zip_code && (
+                <p style={{ margin: 0, fontSize: "13px", color: "#888" }}>
+                  {cityState
+                    ? `${cityState} ${profile.zip_code}`
+                    : profile.zip_code}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <span
+          {/* Row 2: Bio — full width */}
+          {profile?.bio && (
+            <p
               style={{
-                fontSize: "12px",
-                padding: "2px 10px",
-                borderRadius: "20px",
-                background: profile?.is_public ? "#e8f5e9" : "#f0f0f0",
-                color: profile?.is_public ? "#2d6a4f" : "#888",
+                margin: "0 0 14px 0",
+                fontSize: "14px",
+                color: "#555",
+                lineHeight: "1.6",
               }}
             >
-              {profile?.is_public ? "🌐 Public profile" : "🔒 Private profile"}
-            </span>
-            <Link
-              href="/saved"
+              {profile.bio}
+            </p>
+          )}
+
+          {/* Row 3: Saved vets link left, Edit Profile right — hidden when editing */}
+          {!editingProfile && (
+            <div
               style={{
-                fontSize: "12px",
-                color: "#2d6a4f",
-                textDecoration: "none",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingTop: "12px",
+                borderTop: "1px solid #f0f0f0",
               }}
             >
-              ❤️ View saved vets →
-            </Link>
-          </div>
+              <Link
+                href="/saved"
+                style={{
+                  fontSize: "12px",
+                  color: "#2d6a4f",
+                  textDecoration: "none",
+                }}
+              >
+                ❤️ View saved vets →
+              </Link>
+              <button
+                onClick={() => {
+                  setEditingProfile(true);
+                  setEditingPetId(null);
+                  setShowAddPet(false);
+                }}
+                className="btn-secondary"
+                style={{ fontSize: "12px", padding: "5px 14px" }}
+              >
+                Edit Profile
+              </button>
+            </div>
+          )}
 
           {editingProfile && (
             <div
@@ -1035,14 +1095,7 @@ export default function ProfilePage() {
 
           {/* Add Pet Form */}
           {showAddPet && (
-            <div
-              style={{
-                background: "#f9f9f9",
-                borderRadius: "10px",
-                padding: "16px",
-                marginBottom: "16px",
-              }}
-            >
+            <div style={{ marginBottom: "16px" }}>
               <div className="pet-hi-card">
                 <div
                   className="pet-photo-wrap"
@@ -1174,6 +1227,9 @@ export default function ProfilePage() {
           {pets.map((pet) => (
             <div
               key={pet.id}
+              ref={(el) => {
+                petCardRefs.current[pet.id] = el;
+              }}
               style={{
                 border: "1px solid #eee",
                 borderRadius: "12px",
@@ -1182,7 +1238,7 @@ export default function ProfilePage() {
                 background: "#fafafa",
               }}
             >
-              {/* Pet header row */}
+              {/* Pet header: photo + name vertically centered */}
               <div
                 style={{
                   display: "flex",
@@ -1250,107 +1306,23 @@ export default function ProfilePage() {
                     style={{ display: "none" }}
                   />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: "1rem",
-                      color: "#111",
-                      fontWeight: "700",
-                    }}
-                  >
-                    Hi, I'm {pet.name}! {speciesEmoji(pet.species)}
-                  </h3>
-                </div>
-                <div
+                <h3
                   style={{
-                    display: "flex",
-                    gap: "6px",
-                    flexShrink: 0,
-                    flexWrap: "wrap",
-                    justifyContent: "flex-end",
+                    margin: 0,
+                    fontSize: "1rem",
+                    color: "#111",
+                    fontWeight: "700",
+                    flex: 1,
+                    minWidth: 0,
                   }}
                 >
-                  <button
-                    onClick={() =>
-                      editingPetId === pet.id
-                        ? setEditingPetId(null)
-                        : startEditPet(pet)
-                    }
-                    className="btn-secondary"
-                    style={{ fontSize: "12px", padding: "5px 10px" }}
-                  >
-                    {editingPetId === pet.id ? "Cancel" : "Edit"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      const url = `${window.location.origin}/pet/${pet.id}`;
-                      if (navigator.share) {
-                        navigator
-                          .share({
-                            title: `${pet.name}'s Medical Card`,
-                            text: `View ${pet.name}'s pet medical card on PetParrk`,
-                            url,
-                          })
-                          .catch((e) => {
-                            if (e.name !== "AbortError") console.error(e);
-                          });
-                      } else if (
-                        navigator.clipboard &&
-                        window.isSecureContext
-                      ) {
-                        navigator.clipboard
-                          .writeText(url)
-                          .then(() => showToast("Medical card link copied!"));
-                      } else {
-                        window.prompt("Copy this link:", url);
-                      }
-                    }}
-                    className="btn-secondary"
-                    style={{ fontSize: "12px", padding: "5px 10px" }}
-                  >
-                    🔗 Share
-                  </button>
-                </div>
+                  Hi, I'm {pet.name}! {speciesEmoji(pet.species)}
+                </h3>
               </div>
 
               {/* Inline Edit Form */}
               {editingPetId === pet.id && (
-                <div
-                  style={{
-                    background: "#f9f9f9",
-                    borderRadius: "10px",
-                    padding: "16px",
-                    margin: "12px 0",
-                  }}
-                >
-                  {renderPetFormFields()}
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "8px",
-                      marginTop: "4px",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <button
-                      onClick={handleSavePet}
-                      className="btn-primary"
-                      disabled={saving || !petForm.name || !!microchipError}
-                    >
-                      {saving ? "Saving..." : "Save Changes"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditingPetId(null);
-                        setMicrochipError("");
-                      }}
-                      className="btn-secondary"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+                <div style={{ margin: "12px 0" }}>{renderPetFormFields()}</div>
               )}
 
               {/* Tags */}
@@ -1358,8 +1330,8 @@ export default function ProfilePage() {
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: "4px",
-                  marginBottom: "6px",
+                  gap: "6px",
+                  marginBottom: "12px",
                 }}
               >
                 {pet.breed && <span className="tag">{pet.breed}</span>}
@@ -1374,10 +1346,11 @@ export default function ProfilePage() {
               {pet.notes && (
                 <p
                   style={{
-                    margin: "0 0 10px 0",
+                    margin: "0 0 14px 0",
                     fontSize: "13px",
                     color: "#666",
                     fontStyle: "italic",
+                    lineHeight: "1.5",
                   }}
                 >
                   {pet.notes}
@@ -1392,8 +1365,8 @@ export default function ProfilePage() {
                 <div
                   style={{
                     borderTop: "1px solid #eee",
-                    paddingTop: "8px",
-                    marginBottom: "4px",
+                    paddingTop: "12px",
+                    marginBottom: "8px",
                   }}
                 >
                   {pet.allergies && (
@@ -1448,30 +1421,6 @@ export default function ProfilePage() {
                   )}
                 </div>
               )}
-
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  marginTop: "8px",
-                  marginBottom: "2px",
-                }}
-              >
-                <button
-                  onClick={() => handleDeletePet(pet.id)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#c62828",
-                    fontSize: "12px",
-                    cursor: "pointer",
-                    padding: "2px 0",
-                    fontFamily: "system-ui, sans-serif",
-                  }}
-                >
-                  🗑️ Delete pet
-                </button>
-              </div>
 
               {/* Check Symptoms */}
               <div
@@ -1911,6 +1860,98 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Bottom action row — swaps based on edit state */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent:
+                    editingPetId === pet.id ? "flex-start" : "flex-end",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginTop: "12px",
+                  paddingTop: "10px",
+                  borderTop: "1px solid #eee",
+                }}
+              >
+                {editingPetId === pet.id ? (
+                  <>
+                    <button
+                      onClick={handleSavePet}
+                      className="btn-primary"
+                      disabled={saving || !petForm.name || !!microchipError}
+                      style={{ fontSize: "12px", padding: "6px 16px" }}
+                    >
+                      {saving ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingPetId(null);
+                        setMicrochipError("");
+                      }}
+                      className="btn-secondary"
+                      style={{ fontSize: "12px", padding: "6px 14px" }}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/pet/${pet.id}`;
+                        if (navigator.share) {
+                          navigator
+                            .share({
+                              title: `${pet.name}'s Medical Card`,
+                              text: `View ${pet.name}'s pet medical card on PetParrk`,
+                              url,
+                            })
+                            .catch((e) => {
+                              if (e.name !== "AbortError") console.error(e);
+                            });
+                        } else if (
+                          navigator.clipboard &&
+                          window.isSecureContext
+                        ) {
+                          navigator.clipboard
+                            .writeText(url)
+                            .then(() => showToast("Medical card link copied!"));
+                        } else {
+                          window.prompt("Copy this link:", url);
+                        }
+                      }}
+                      className="btn-secondary"
+                      style={{ fontSize: "12px", padding: "5px 10px" }}
+                    >
+                      🔗 Share
+                    </button>
+                    <button
+                      onClick={() => startEditPet(pet)}
+                      className="btn-secondary"
+                      style={{ fontSize: "12px", padding: "5px 14px" }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeletePet(pet.id)}
+                      style={{
+                        background: "none",
+                        border: "1px solid #ffcdd2",
+                        borderRadius: "6px",
+                        color: "#c62828",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        padding: "5px 10px",
+                        fontFamily: "system-ui, sans-serif",
+                        fontWeight: "600",
+                      }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
