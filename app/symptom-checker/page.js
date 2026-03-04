@@ -23,6 +23,7 @@ export default function SymptomCheckerPage() {
   const [guestPet, setGuestPet] = useState({ species: "", breed: "", age: "" });
   const [freeCheckUsed, setFreeCheckUsed] = useState(false);
   const [autoStartPet, setAutoStartPet] = useState(null);
+  const [triageMounted, setTriageMounted] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -46,13 +47,12 @@ export default function SymptomCheckerPage() {
       .then(({ data }) => setPets(data || []));
   }, [session]);
 
-  // Restore session from sessionStorage on every mount — no matter how user navigated away
+  // Restore session from sessionStorage on every mount
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(SESSION_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // autoStart: came from profile page "Check Symptoms" button — store pet and let startSession run after mount
         if (parsed.autoStart && parsed.selectedPet) {
           sessionStorage.removeItem(SESSION_KEY);
           setSelectedPet(parsed.selectedPet);
@@ -106,8 +106,7 @@ export default function SymptomCheckerPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Only auto-focus on desktop — on mobile this triggers the keyboard
-  // which scrolls past all the chat messages before the user can read them
+  // Only auto-focus on desktop
   useEffect(() => {
     if (!sessionStarted) return;
     const isMobile = window.innerWidth < 768;
@@ -117,6 +116,9 @@ export default function SymptomCheckerPage() {
   // Fetch nearby vets when triage result arrives
   useEffect(() => {
     if (!triageResult) return;
+    // Delay mounting the triage card by one frame to prevent animation on mount
+    setTriageMounted(false);
+    requestAnimationFrame(() => setTriageMounted(true));
     supabase
       .from("vets")
       .select("*")
@@ -126,7 +128,6 @@ export default function SymptomCheckerPage() {
   }, [triageResult]);
 
   async function startSession(pet) {
-    // Clear previous session first, then start fresh
     try {
       sessionStorage.removeItem(SESSION_KEY);
     } catch (e) {}
@@ -134,6 +135,7 @@ export default function SymptomCheckerPage() {
     setSessionStarted(true);
     setMessages([]);
     setTriageResult(null);
+    setTriageMounted(false);
     setTriageCardExpanded(true);
     setFreeCheckUsed(false);
 
@@ -144,7 +146,6 @@ export default function SymptomCheckerPage() {
     setMessages([{ role: "assistant", content: greeting }]);
   }
 
-  // Only "Start New Check" clears the session — back/navigate away never clears it
   function resetSession() {
     try {
       sessionStorage.removeItem(SESSION_KEY);
@@ -152,6 +153,7 @@ export default function SymptomCheckerPage() {
     setSelectedPet(null);
     setMessages([]);
     setTriageResult(null);
+    setTriageMounted(false);
     setSessionStarted(false);
     setInput("");
     setFreeCheckUsed(false);
@@ -303,7 +305,7 @@ export default function SymptomCheckerPage() {
   }
 
   function renderTriageCard() {
-    if (!triageResult) return null;
+    if (!triageResult || !triageMounted) return null;
 
     const config = {
       EMERGENCY: {
@@ -336,9 +338,8 @@ export default function SymptomCheckerPage() {
     }[triageResult];
 
     return (
-      <motion.div
-        layout
-        transition={{ duration: 0.35, ease: "easeInOut" }}
+      // Plain div — no framer-motion on the outer wrapper, kills the mount animation entirely
+      <div
         style={{
           marginBottom: "10px",
           background: config.bg,
@@ -351,8 +352,9 @@ export default function SymptomCheckerPage() {
           !triageCardExpanded ? () => setTriageCardExpanded(true) : undefined
         }
       >
-        {/* Collapsed pill row — always rendered, visibility toggled */}
+        {/* Collapsed pill row */}
         <motion.div
+          initial={false}
           animate={{
             opacity: triageCardExpanded ? 0 : 1,
             height: triageCardExpanded ? 0 : "auto",
@@ -398,8 +400,9 @@ export default function SymptomCheckerPage() {
           </div>
         </motion.div>
 
-        {/* Expanded full card — always rendered, visibility toggled */}
+        {/* Expanded full card */}
         <motion.div
+          initial={false}
           animate={{
             opacity: triageCardExpanded ? 1 : 0,
             height: triageCardExpanded ? "auto" : 0,
@@ -602,11 +605,9 @@ export default function SymptomCheckerPage() {
                 </Link>
               )}
             </div>
-            {/* end buttons row */}
           </div>
-          {/* end padding wrapper */}
         </motion.div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -676,7 +677,6 @@ export default function SymptomCheckerPage() {
 
           {session ? (
             <>
-              {/* Resume banner if there's an active saved session */}
               {messages.length > 0 && selectedPet && (
                 <div
                   style={{
@@ -1014,7 +1014,6 @@ export default function SymptomCheckerPage() {
           flexDirection: "column",
         }}
       >
-        {/* Back goes to pet selector — keeps session saved in storage so returning to checker restores it */}
         <div
           style={{
             display: "flex",
@@ -1113,7 +1112,6 @@ export default function SymptomCheckerPage() {
           </div>
         )}
 
-        {/* Triage card is sticky so it stays visible as conversation grows */}
         {triageResult && (
           <div
             style={{
@@ -1137,7 +1135,6 @@ export default function SymptomCheckerPage() {
         >
           {messages.map((msg, i) => renderMessage(msg, i))}
 
-          {/* Animated thinking dots */}
           {loading && (
             <div
               style={{
