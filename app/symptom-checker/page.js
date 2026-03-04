@@ -113,6 +113,7 @@ export default function SymptomCheckerPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [triageResult, setTriageResult] = useState(null);
+  const [differentials, setDifferentials] = useState([]);
   const [triageCardExpanded, setTriageCardExpanded] = useState(true);
   const [nearbyVets, setNearbyVets] = useState([]);
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -165,6 +166,7 @@ export default function SymptomCheckerPage() {
           setSelectedPet(parsed.selectedPet || null);
           setMessages(parsed.messages || []);
           setTriageResult(parsed.triageResult || null);
+          setDifferentials(parsed.differentials || []);
           setSessionStarted(true);
           setGuestMode(parsed.guestMode || false);
           setFreeCheckUsed(parsed.freeCheckUsed || false);
@@ -190,6 +192,7 @@ export default function SymptomCheckerPage() {
           selectedPet,
           messages,
           triageResult,
+          differentials,
           guestMode,
           freeCheckUsed,
         })
@@ -234,6 +237,7 @@ export default function SymptomCheckerPage() {
     setSessionStarted(true);
     setMessages([]);
     setTriageResult(null);
+    setDifferentials([]);
     setTriageMounted(false);
     setTriageCardExpanded(true);
     setFreeCheckUsed(false);
@@ -248,6 +252,7 @@ export default function SymptomCheckerPage() {
     setSelectedPet(null);
     setMessages([]);
     setTriageResult(null);
+    setDifferentials([]);
     setTriageMounted(false);
     setSessionStarted(false);
     setInput("");
@@ -303,12 +308,15 @@ export default function SymptomCheckerPage() {
       petName || "your pet"
     } today? Describe what you're seeing and I'll ask a few follow-up questions.`;
 
-    const initialMessages = [
-      { role: "assistant", content: greeting },
-      { role: "user", content: firstMessage },
-    ];
-    setMessages(initialMessages);
-    await sendGuidedMessage(initialMessages, answers);
+    const greetingMessage = { role: "assistant", content: greeting };
+    const userMessage = { role: "user", content: firstMessage };
+
+    // Show greeting + user message in UI immediately
+    const displayMessages = [greetingMessage, userMessage];
+    setMessages(displayMessages);
+
+    // Only send user message to API — Anthropic requires first message to be from user
+    await sendGuidedMessage([userMessage], answers);
   }
 
   async function sendGuidedMessage(initialMessages, answers) {
@@ -337,6 +345,16 @@ export default function SymptomCheckerPage() {
       else if (content.includes("[TRIAGE_RESULT: MONITOR]"))
         newTriageResult = "MONITOR";
 
+      // Parse differentials tag
+      const diffMatch = content.match(/\[DIFFERENTIALS:\s*([^\]]+)\]/);
+      if (diffMatch) {
+        const parsed = diffMatch[1]
+          .split(",")
+          .map((d) => d.trim())
+          .filter(Boolean);
+        setDifferentials(parsed);
+      }
+
       if (newTriageResult) {
         setTriageResult(newTriageResult);
         setTriageCardExpanded(true);
@@ -347,20 +365,18 @@ export default function SymptomCheckerPage() {
         .replace(/\[TRIAGE_RESULT: EMERGENCY\]/g, "")
         .replace(/\[TRIAGE_RESULT: SEE_VET\]/g, "")
         .replace(/\[TRIAGE_RESULT: MONITOR\]/g, "")
+        .replace(/\[DIFFERENTIALS:[^\]]*\]/g, "")
         .trim();
 
-      const finalMessages = [
-        ...initialMessages,
-        { role: "assistant", content: cleanContent },
-      ];
-      setMessages(finalMessages);
+      const assistantMessage = { role: "assistant", content: cleanContent };
+      setMessages((prev) => [...prev, assistantMessage]);
 
       if (session && selectedPet && newTriageResult) {
         await supabase.from("symptom_checks").insert({
           pet_id: selectedPet.id,
           owner_id: session.user.id,
           triage_result: newTriageResult,
-          transcript: JSON.stringify(finalMessages),
+          transcript: JSON.stringify([...initialMessages, assistantMessage]),
           created_at: new Date().toISOString(),
         });
       }
@@ -391,10 +407,11 @@ export default function SymptomCheckerPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: updatedMessages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
+          messages: updatedMessages
+            .filter(
+              (_, i) => !(i === 0 && updatedMessages[0].role === "assistant")
+            )
+            .map((m) => ({ role: m.role, content: m.content })),
           pet: selectedPet || (guestMode ? guestPet : null),
         }),
       });
@@ -414,6 +431,16 @@ export default function SymptomCheckerPage() {
         if (guestMode) setFreeCheckUsed(true);
       }
 
+      // Parse differentials tag
+      const diffMatch = content.match(/\[DIFFERENTIALS:\s*([^\]]+)\]/);
+      if (diffMatch) {
+        const parsed = diffMatch[1]
+          .split(",")
+          .map((d) => d.trim())
+          .filter(Boolean);
+        setDifferentials(parsed);
+      }
+
       if (newTriageResult !== triageResult) {
         setTriageResult(newTriageResult);
         setTriageCardExpanded(true);
@@ -423,20 +450,18 @@ export default function SymptomCheckerPage() {
         .replace(/\[TRIAGE_RESULT: EMERGENCY\]/g, "")
         .replace(/\[TRIAGE_RESULT: SEE_VET\]/g, "")
         .replace(/\[TRIAGE_RESULT: MONITOR\]/g, "")
+        .replace(/\[DIFFERENTIALS:[^\]]*\]/g, "")
         .trim();
 
-      const finalMessages = [
-        ...updatedMessages,
-        { role: "assistant", content: cleanContent },
-      ];
-      setMessages(finalMessages);
+      const assistantMessage = { role: "assistant", content: cleanContent };
+      setMessages((prev) => [...prev, assistantMessage]);
 
       if (session && selectedPet && content.includes("[TRIAGE_RESULT:")) {
         await supabase.from("symptom_checks").insert({
           pet_id: selectedPet.id,
           owner_id: session.user.id,
           triage_result: newTriageResult,
-          transcript: JSON.stringify(finalMessages),
+          transcript: JSON.stringify([...updatedMessages, assistantMessage]),
           created_at: new Date().toISOString(),
         });
       }
@@ -665,6 +690,43 @@ export default function SymptomCheckerPage() {
             >
               {config.message}
             </p>
+
+            {differentials.length > 0 && (
+              <div style={{ marginBottom: "14px" }}>
+                <p
+                  style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    color: "#888",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  Could be
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {differentials.map((d, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        display: "inline-block",
+                        padding: "4px 10px",
+                        background: "#fff",
+                        border: `1px solid ${config.border}`,
+                        borderRadius: "20px",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        color: config.color,
+                      }}
+                    >
+                      {d}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {config.vetLabel && nearbyVets.length > 0 && (
               <div>
                 <p
