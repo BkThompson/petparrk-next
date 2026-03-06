@@ -41,7 +41,7 @@ export default function SymptomCheckerHomePage() {
             petsData.map((pet) =>
               supabase
                 .from("symptom_checks")
-                .select("triage_result, created_at")
+                .select("triage_result, created_at, differentials, transcript")
                 .eq("pet_id", pet.id)
                 .order("created_at", { ascending: false })
                 .limit(1)
@@ -343,10 +343,34 @@ export default function SymptomCheckerHomePage() {
                             });
                             return (
                               <p
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    const transcript = JSON.parse(
+                                      c.transcript || "[]"
+                                    );
+                                    sessionStorage.setItem(
+                                      SESSION_KEY,
+                                      JSON.stringify({
+                                        selectedPet: pet,
+                                        messages: transcript,
+                                        triageResult: c.triage_result,
+                                        differentials: c.differentials || [],
+                                        guestMode: false,
+                                        freeCheckUsed: false,
+                                      })
+                                    );
+                                  } catch (err) {}
+                                  router.push("/symptom-checker/chat");
+                                }}
                                 style={{
                                   margin: "3px 0 0 0",
                                   fontSize: "11px",
-                                  color: "#aaa",
+                                  color: "#2d6a4f",
+                                  cursor: "pointer",
+                                  textDecoration: "underline",
+                                  textDecorationStyle: "dotted",
+                                  textUnderlineOffset: "2px",
                                 }}
                               >
                                 Last check: {emoji} {label} · {date}
