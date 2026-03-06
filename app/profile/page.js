@@ -372,6 +372,7 @@ export default function ProfilePage() {
     setEditingContactId(null);
     setShowAddContactFor(null);
     setNewContact({ name: "", phone: "", relationship: "" });
+    setDeleteCheckConfirm(null);
     setPetForm(emptyPetForm);
     setPendingPetPhoto(null);
     setMicrochipError("");
@@ -859,7 +860,9 @@ export default function ProfilePage() {
         @media (max-width: 600px) {
           .form-grid { grid-template-columns: 1fr; }
           .contact-grid { grid-template-columns: 1fr; }
-          .contact-grid .btn-primary { width: 100%; justify-content: center; margin-top: 12px; }
+          .contact-grid .contact-btn-row { margin-top: 12px; }
+          .contact-grid .contact-btn-row .btn-primary,
+          .contact-grid .contact-btn-row .btn-secondary { flex: 1; justify-content: center; }
           .history-row { flex-direction: column; align-items: flex-start; gap: 0; }
           .history-row-btns { width: 100%; margin-top: 12px; }
           .btn-row { flex-direction: column; align-items: stretch; }
@@ -1653,12 +1656,13 @@ export default function ProfilePage() {
                                     View →
                                   </button>
                                   <button
-                                    onClick={() =>
+                                    onClick={() => {
+                                      closeAllEditing();
                                       setDeleteCheckConfirm({
                                         petId: pet.id,
                                         checkId: check.id,
-                                      })
-                                    }
+                                      });
+                                    }}
                                     className="btn-sm"
                                     style={{
                                       color: "#c62828",
@@ -1954,18 +1958,31 @@ export default function ProfilePage() {
                                   }
                                 />
                               </div>
-                              <button
-                                onClick={() =>
-                                  handleUpdateContact(pet.id, c.id)
-                                }
-                                className="btn-primary"
+                              <div
+                                className="contact-btn-row"
                                 style={{
-                                  height: "40px",
+                                  display: "flex",
+                                  gap: "8px",
                                   alignSelf: "flex-end",
                                 }}
                               >
-                                Save
-                              </button>
+                                <button
+                                  onClick={() =>
+                                    handleUpdateContact(pet.id, c.id)
+                                  }
+                                  className="btn-primary"
+                                  style={{ height: "40px" }}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingContactId(null)}
+                                  className="btn-secondary"
+                                  style={{ height: "40px" }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -2032,11 +2049,11 @@ export default function ProfilePage() {
                           />
                         </div>
                         <div
+                          className="contact-btn-row"
                           style={{
                             display: "flex",
                             gap: "8px",
                             alignSelf: "flex-end",
-                            marginTop: "8px",
                           }}
                         >
                           <button
