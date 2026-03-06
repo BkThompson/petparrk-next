@@ -840,8 +840,8 @@ export default function ProfilePage() {
           .form-grid { grid-template-columns: 1fr; }
           .contact-grid { grid-template-columns: 1fr; }
           .contact-grid .btn-primary { width: 100%; justify-content: center; margin-top: 12px; }
-          .history-row { flex-direction: column; align-items: flex-start; gap: 8px; }
-          .history-row-btns { width: 100%; }
+          .history-row { flex-direction: column; align-items: flex-start; gap: 0; }
+          .history-row-btns { width: 100%; margin-top: 12px; }
           .btn-row { flex-direction: column; align-items: stretch; }
           .btn-row .btn-primary, .btn-row .btn-secondary { width: 100%; justify-content: center; }
           .pet-bottom-row { justify-content: stretch; }
@@ -1798,14 +1798,7 @@ export default function ProfilePage() {
                             borderBottom: "1px solid #f5f5f5",
                           }}
                         >
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "flex-start",
-                              justifyContent: "space-between",
-                              gap: "10px",
-                            }}
-                          >
+                          <div className="history-row">
                             <div style={{ minWidth: 0, flex: 1 }}>
                               <span
                                 style={{
@@ -1847,14 +1840,7 @@ export default function ProfilePage() {
                                 </span>
                               )}
                             </div>
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: "8px",
-                                flexShrink: 0,
-                                paddingTop: "2px",
-                              }}
-                            >
+                            <div className="history-row-btns">
                               <button
                                 onClick={() =>
                                   editingContactId === c.id
