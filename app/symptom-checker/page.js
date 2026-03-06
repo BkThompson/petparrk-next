@@ -201,6 +201,7 @@ export default function SymptomCheckerPage() {
   }, [
     messages,
     triageResult,
+    differentials,
     selectedPet,
     sessionStarted,
     guestMode,
