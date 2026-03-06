@@ -7,9 +7,6 @@ import Link from "next/link";
 import Navbar from "../../../components/Navbar";
 
 // ─── Accordion copy by service id ────────────────────────────────────────────
-// Only dental, spay, neuter, and emergency get accordions.
-// Collapsed row shows: service name + price + [+] only.
-// Expanded panel shows: vet-specific notes (if any) + generic explanation.
 const ACCORDION_COPY = {
   4: {
     heading: "About dental pricing",
@@ -72,17 +69,13 @@ export default function VetPage() {
         .select("*")
         .eq("slug", slug)
         .single();
-
-      // Explicitly select services(id, name) so service id is available for accordion lookup
       const { data: priceData } = await supabase
         .from("vet_prices")
         .select("*, services(id, name)")
         .eq("vet_id", vetData?.id);
-
       const { data: allPricesData } = await supabase
         .from("vet_prices")
         .select("*, services(id, name)");
-
       setVet(vetData);
       setPrices(priceData || []);
       setAllPrices(allPricesData || []);
@@ -208,13 +201,9 @@ export default function VetPage() {
   }
 
   function toggleRow(id) {
-    setExpandedRows((prev) => ({
-      // If this row is already open, close it. Otherwise close all and open this one.
-      [id]: !prev[id],
-    }));
+    setExpandedRows((prev) => ({ [id]: !prev[id] }));
   }
 
-  // Most recent created_at across all price rows for this vet
   const lastVerified =
     prices.length > 0
       ? prices
@@ -244,43 +233,36 @@ export default function VetPage() {
         .save-btn:hover { transform: scale(1.15); }
         .save-animating { animation: heartPop 0.4s ease forwards; }
 
-        /* Expand button — circular, green outline */
+        /* ── Expand button ──────────────────────────────────────────────
+           line-height: 0 removes line-height influence entirely so
+           flexbox centers the glyph purely on its ink bounds.
+           + and − have different ascender heights in most fonts —
+           this is the only reliable cross-browser fix.
+        ── */
         .expand-btn {
-          width: 22px; height: 22px; border-radius: 50%;
+          width: 26px; height: 26px; border-radius: 50%;
           border: 1.5px solid #2d6a4f; background: #fff; color: #2d6a4f;
-          font-size: 16px; font-weight: 300; line-height: 1; cursor: pointer;
+          font-size: 18px; font-weight: 400; line-height: 0;
+          cursor: pointer; padding: 0; user-select: none;
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
           transition: background 0.2s ease, color 0.2s ease;
         }
         .expand-btn:hover { background: #2d6a4f; color: #fff; }
 
-        /*
-          Accordion uses CSS grid-template-rows trick for smooth height animation.
-          max-height transitions can't animate to "auto" smoothly —
-          grid-template-rows: 0fr → 1fr works perfectly.
-          Speed: 0.38s matches Modern Animal's feel. Easing: standard material curve.
-        */
         .accordion-wrap {
-          display: grid;
-          grid-template-rows: 0fr;
-          opacity: 0;
+          display: grid; grid-template-rows: 0fr; opacity: 0;
           transition:
             grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1),
             opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .accordion-wrap.open {
-          grid-template-rows: 1fr;
-          opacity: 1;
-        }
+        .accordion-wrap.open { grid-template-rows: 1fr; opacity: 1; }
         .accordion-inner { overflow: hidden; }
 
-        /* Modal */
         .modal-overlay {
           position: fixed; inset: 0; background: rgba(0,0,0,0.45);
           display: flex; align-items: center; justify-content: center;
-          z-index: 1000; padding: 20px;
-          animation: mFadeIn 0.15s ease;
+          z-index: 1000; padding: 20px; animation: mFadeIn 0.15s ease;
         }
         @keyframes mFadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal-box {
@@ -294,7 +276,6 @@ export default function VetPage() {
         }
       `}</style>
 
-      {/* Pricing disclaimer modal */}
       {showPricingModal && (
         <div
           className="modal-overlay"
@@ -406,6 +387,7 @@ export default function VetPage() {
               </button>
             ))}
         </div>
+
         {/* Vet Info Card */}
         <div
           style={{
@@ -619,6 +601,7 @@ export default function VetPage() {
             <span style={{ textDecoration: "underline" }}>Share this vet</span>
           </button>
         </div>
+
         {/* Price Comparison Chart */}
         {prices.length > 0 && allPrices.length > 0 && (
           <div
@@ -647,13 +630,9 @@ export default function VetPage() {
               How this vet compares to the East Bay average
             </p>
             {prices.map((price) => {
-              // Starting prices excluded — floor price vs average is misleading
               if (price.price_type === "starting") return null;
-
               const serviceName = price.services?.name;
               const vetPrice = price.price_low || price.price_paid;
-
-              // Exclude no-anesthesia dental (id 8) and starting prices from average
               const allForService = allPrices.filter(
                 (p) =>
                   p.services?.name === serviceName &&
@@ -668,13 +647,11 @@ export default function VetPage() {
                         allForService.length
                     )
                   : null;
-
               if (!vetPrice || !avg) return null;
               const isCheaper = vetPrice <= avg;
               const max = Math.max(vetPrice, avg) * 1.2;
               const vetWidth = Math.round((vetPrice / max) * 100);
               const avgWidth = Math.round((avg / max) * 100);
-
               return (
                 <div key={price.id} style={{ marginBottom: "20px" }}>
                   <div
@@ -788,13 +765,8 @@ export default function VetPage() {
             })}
           </div>
         )}
-        {/* ── Pricing Section ───────────────────────────────────────────────── */}
-        {/*
-          Three possible states:
-          1. Not accepting new patients + no verified prices → show banner only, no pricing table
-          2. Has verified prices → show full pricing table
-          3. Accepting patients but no prices yet → show "no pricing available" message
-        */}
+
+        {/* Pricing Section */}
         {vet.accepting_new_patients === false &&
         !prices.some((p) => p.is_verified && p.price_low) ? (
           <div
@@ -855,7 +827,6 @@ export default function VetPage() {
               marginBottom: "8px",
             }}
           >
-            {/* Header */}
             <div
               style={{
                 display: "flex",
@@ -883,7 +854,6 @@ export default function VetPage() {
               </button>
             </div>
 
-            {/* Verified date — shown when available, same pattern as homepage card */}
             {lastVerified && (
               <p
                 style={{
@@ -896,7 +866,6 @@ export default function VetPage() {
               </p>
             )}
 
-            {/* Only show rows that have actual prices (filter skeleton/unverified null rows) */}
             {prices.filter((p) => p.price_low !== null).length === 0 ? (
               <p style={{ color: "#999", fontStyle: "italic" }}>
                 No pricing available yet.
@@ -913,7 +882,6 @@ export default function VetPage() {
 
                   return (
                     <div key={p.id}>
-                      {/* ── Collapsed row ───────────────────────────────────── */}
                       <div
                         onClick={
                           accordionCopy ? () => toggleRow(p.id) : undefined
@@ -934,13 +902,6 @@ export default function VetPage() {
                             <span style={{ fontSize: "14px", color: "#111" }}>
                               {p.services?.name}
                             </span>
-
-                            {/*
-                          ONLY show inline notes on rows WITHOUT an accordion.
-                          Accordion rows surface their notes inside the expanded panel —
-                          showing them here too would duplicate content and undermine
-                          the purpose of the expand button. (UX principle: one source of truth)
-                        */}
                             {!accordionCopy &&
                               noteLines.map((note, j) => (
                                 <p
@@ -955,7 +916,6 @@ export default function VetPage() {
                                 </p>
                               ))}
                           </div>
-
                           <div
                             style={{
                               display: "flex",
@@ -998,7 +958,6 @@ export default function VetPage() {
                         </div>
                       </div>
 
-                      {/* ── Accordion panel ─────────────────────────────────── */}
                       {accordionCopy && (
                         <div
                           className={`accordion-wrap${
@@ -1012,14 +971,12 @@ export default function VetPage() {
                                 borderRadius: "8px",
                                 padding: "16px",
                                 marginBottom: "8px",
-                                // Two columns when vet has notes, one column when they don't
                                 display: "grid",
                                 gridTemplateColumns:
                                   noteLines.length > 0 ? "1fr 1fr" : "1fr",
                                 gap: "20px",
                               }}
                             >
-                              {/* Left column: vet-specific inclusions (only when notes exist) */}
                               {noteLines.length > 0 && (
                                 <div>
                                   <p
@@ -1049,8 +1006,6 @@ export default function VetPage() {
                                   ))}
                                 </div>
                               )}
-
-                              {/* Right column: generic pricing explanation (always shown) */}
                               <div>
                                 <p
                                   style={{
@@ -1088,9 +1043,8 @@ export default function VetPage() {
                 })
             )}
           </div>
-        )}{" "}
-        {/* end not-accepting ternary */}
-        {/* Bottom disclaimer — only shown when pricing table is visible */}
+        )}
+
         {!(
           vet.accepting_new_patients === false &&
           !prices.some((p) => p.is_verified && p.price_low)
@@ -1121,6 +1075,7 @@ export default function VetPage() {
             </button>
           </p>
         )}
+
         {/* Submit a Price */}
         <div style={{ textAlign: "center", marginBottom: "16px" }}>
           <button
@@ -1140,7 +1095,6 @@ export default function VetPage() {
           >
             {showForm ? "Cancel" : "💰 Submit a Price"}
           </button>
-
           {showForm && (
             <div
               style={{
@@ -1231,6 +1185,7 @@ export default function VetPage() {
             </div>
           )}
         </div>
+
         {/* Footer */}
         <footer
           style={{
