@@ -234,6 +234,13 @@ export default function SymptomCheckerChatPage() {
 
   // ── Speech recognition support check ─────────────────────────────
   useEffect(() => {
+    // Chrome on iOS uses WebKit engine — Web Speech API not supported (Apple restriction)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isChrome = /CriOS/.test(navigator.userAgent); // CriOS = Chrome on iOS
+    if (isIOS && isChrome) {
+      setSpeechSupported(false);
+      return;
+    }
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     setSpeechSupported(!!SpeechRecognition);
@@ -262,10 +269,14 @@ export default function SymptomCheckerChatPage() {
     };
     recognition.onerror = (e) => {
       setRecording(false);
-      if (e.error === "not-allowed")
-        alert(
-          "Microphone access was denied. Please allow mic access in your browser settings."
-        );
+      if (e.error === "not-allowed") {
+        // Safari iOS: Settings > Safari > Microphone > Allow
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const msg = isIOS
+          ? "Mic access denied. On iPhone: Settings → Safari → Microphone → Allow."
+          : "Mic access denied. Please allow microphone access in your browser settings.";
+        alert(msg);
+      }
     };
     recognition.onend = () => setRecording(false);
 

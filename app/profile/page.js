@@ -828,7 +828,7 @@ export default function ProfilePage() {
         /* ── Row layouts ── */
         .history-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .history-row-btns { display: flex; gap: 8px; flex-shrink: 0; }
-        .contact-row-info { margin-bottom: 10px; }
+        .contact-row-info { margin-bottom: 14px; }
         .contact-row-btns { display: flex; gap: 8px; }
         .btn-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .profile-edit-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
@@ -1778,7 +1778,7 @@ export default function ProfilePage() {
                 <div
                   style={{
                     overflow: "hidden",
-                    maxHeight: showContactsFor === pet.id ? "600px" : "0px",
+                    maxHeight: showContactsFor === pet.id ? "1200px" : "0px",
                     opacity: showContactsFor === pet.id ? 1 : 0,
                     transition:
                       showContactsFor === pet.id
