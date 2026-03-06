@@ -366,7 +366,7 @@ export default function SymptomCheckerHomePage() {
                                 style={{
                                   display: "inline-flex",
                                   alignItems: "center",
-                                  marginTop: "6px",
+                                  marginTop: "4px",
                                   fontSize: "12px",
                                   color: "#2d6a4f",
                                   cursor: "pointer",

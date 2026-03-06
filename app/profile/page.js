@@ -1544,173 +1544,155 @@ export default function ProfilePage() {
                           <div
                             key={check.id}
                             style={{
-                              padding: "8px 0",
+                              padding: "10px 0",
                               borderBottom: "1px solid #f5f5f5",
                             }}
                           >
+                            {/* Info row */}
                             <div
                               style={{
                                 display: "flex",
                                 alignItems: "center",
-                                justifyContent: "space-between",
-                                gap: "6px",
-                                flexWrap: "wrap",
+                                gap: "8px",
+                                marginBottom: "8px",
                               }}
                             >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  minWidth: 0,
-                                  flex: 1,
-                                }}
-                              >
-                                <span
-                                  style={{ fontSize: "16px", flexShrink: 0 }}
-                                >
-                                  {t.emoji}
-                                </span>
-                                <div style={{ minWidth: 0 }}>
-                                  <p
-                                    style={{
-                                      margin: 0,
-                                      fontSize: "13px",
-                                      fontWeight: "600",
-                                      color: t.color,
-                                    }}
-                                  >
-                                    {t.label}
-                                  </p>
-                                  <p
-                                    style={{
-                                      margin: 0,
-                                      fontSize: "12px",
-                                      color: "#aaa",
-                                    }}
-                                  >
-                                    {formatDate(check.created_at)}
-                                  </p>
-                                </div>
-                              </div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: "4px",
-                                  alignItems: "center",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                <button
-                                  onClick={() =>
-                                    handleViewSymptomCheck(pet, check)
-                                  }
+                              <span style={{ fontSize: "16px", flexShrink: 0 }}>
+                                {t.emoji}
+                              </span>
+                              <div>
+                                <p
                                   style={{
-                                    fontSize: "12px",
-                                    color: "#2d6a4f",
-                                    background: "none",
-                                    border: "1px solid #c8e6c9",
-                                    borderRadius: "8px",
-                                    padding: "0 10px",
-                                    cursor: "pointer",
-                                    fontFamily: "system-ui, sans-serif",
-                                    height: "44px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    whiteSpace: "nowrap",
+                                    margin: 0,
+                                    fontSize: "13px",
+                                    fontWeight: "600",
+                                    color: t.color,
                                   }}
                                 >
-                                  View →
+                                  {t.label}
+                                </p>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "12px",
+                                    color: "#aaa",
+                                  }}
+                                >
+                                  {formatDate(check.created_at)}
+                                </p>
+                              </div>
+                            </div>
+                            {/* Button row — always on its own line, never competes with text */}
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "8px",
+                                alignItems: "center",
+                              }}
+                            >
+                              <button
+                                onClick={() =>
+                                  handleViewSymptomCheck(pet, check)
+                                }
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#2d6a4f",
+                                  background: "none",
+                                  border: "1px solid #c8e6c9",
+                                  borderRadius: "8px",
+                                  padding: "0 14px",
+                                  cursor: "pointer",
+                                  fontFamily: "system-ui, sans-serif",
+                                  height: "40px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                View →
+                              </button>
+                              {!isConfirming ? (
+                                <button
+                                  onClick={() =>
+                                    setDeleteCheckConfirm({
+                                      petId: pet.id,
+                                      checkId: check.id,
+                                    })
+                                  }
+                                  style={{
+                                    fontSize: "15px",
+                                    color: "#c62828",
+                                    background: "none",
+                                    border: "1px solid #ffcdd2",
+                                    borderRadius: "8px",
+                                    padding: "0 12px",
+                                    cursor: "pointer",
+                                    fontFamily: "system-ui, sans-serif",
+                                    height: "40px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  🗑️
                                 </button>
-                                {!isConfirming ? (
+                              ) : (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    gap: "6px",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      color: "#c62828",
+                                      fontWeight: "600",
+                                    }}
+                                  >
+                                    Delete?
+                                  </span>
                                   <button
                                     onClick={() =>
-                                      setDeleteCheckConfirm({
-                                        petId: pet.id,
-                                        checkId: check.id,
-                                      })
+                                      handleDeleteSymptomCheck(pet.id, check.id)
                                     }
                                     style={{
-                                      fontSize: "15px",
-                                      color: "#c62828",
-                                      background: "none",
-                                      border: "1px solid #ffcdd2",
+                                      fontSize: "12px",
+                                      color: "#fff",
+                                      background: "#c62828",
+                                      border: "none",
                                       borderRadius: "8px",
-                                      padding: "0 10px",
+                                      padding: "0 14px",
                                       cursor: "pointer",
+                                      fontWeight: "600",
                                       fontFamily: "system-ui, sans-serif",
-                                      height: "44px",
+                                      height: "40px",
                                       display: "inline-flex",
                                       alignItems: "center",
                                     }}
                                   >
-                                    🗑️
+                                    Yes
                                   </button>
-                                ) : (
-                                  <div
+                                  <button
+                                    onClick={() => setDeleteCheckConfirm(null)}
                                     style={{
-                                      display: "flex",
-                                      gap: "4px",
+                                      fontSize: "12px",
+                                      color: "#555",
+                                      background: "#f0f0f0",
+                                      border: "none",
+                                      borderRadius: "8px",
+                                      padding: "0 14px",
+                                      cursor: "pointer",
+                                      fontFamily: "system-ui, sans-serif",
+                                      height: "40px",
+                                      display: "inline-flex",
                                       alignItems: "center",
                                     }}
                                   >
-                                    <span
-                                      style={{
-                                        fontSize: "12px",
-                                        color: "#c62828",
-                                        fontWeight: "600",
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      Delete?
-                                    </span>
-                                    <button
-                                      onClick={() =>
-                                        handleDeleteSymptomCheck(
-                                          pet.id,
-                                          check.id
-                                        )
-                                      }
-                                      style={{
-                                        fontSize: "12px",
-                                        color: "#fff",
-                                        background: "#c62828",
-                                        border: "none",
-                                        borderRadius: "8px",
-                                        padding: "0 10px",
-                                        cursor: "pointer",
-                                        fontWeight: "600",
-                                        fontFamily: "system-ui, sans-serif",
-                                        height: "44px",
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      Yes
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        setDeleteCheckConfirm(null)
-                                      }
-                                      style={{
-                                        fontSize: "12px",
-                                        color: "#555",
-                                        background: "#f0f0f0",
-                                        border: "none",
-                                        borderRadius: "8px",
-                                        padding: "0 10px",
-                                        cursor: "pointer",
-                                        fontFamily: "system-ui, sans-serif",
-                                        height: "44px",
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      No
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
+                                    No
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
