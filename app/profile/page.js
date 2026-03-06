@@ -794,9 +794,10 @@ export default function ProfilePage() {
       <style>{`
         /* ── Base inputs ── */
         .input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; font-family: system-ui, sans-serif; outline: none; background: #fff; height: 40px; color: #111; -webkit-appearance: none; appearance: none; display: block; text-align: left; }
-        input[type="date"].input { text-align: left !important; -webkit-text-align: left !important; direction: ltr; padding-left: 12px; }
-        input[type="date"].input::-webkit-datetime-edit { text-align: left; padding: 0; margin: 0; }
-        input[type="date"].input::-webkit-datetime-edit-fields-wrapper { padding: 0; }
+        input[type="date"].input { text-align: left; }
+        input[type="date"].input::-webkit-date-and-time-value { text-align: left; }
+        input[type="date"].input::-webkit-datetime-edit { text-align: left; padding: 0; }
+        input[type="date"].input::-webkit-datetime-edit-fields-wrapper { padding: 0; text-align: left; }
         .input:focus { border-color: #2d6a4f; }
         select.input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 42px; cursor: pointer; }
         input[type="number"].input { -moz-appearance: textfield; }
@@ -806,10 +807,10 @@ export default function ProfilePage() {
         .btn-primary { padding: 0 20px; height: 44px; background: #2d6a4f; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; white-space: nowrap; }
         .btn-primary:hover { background: #245a42; }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-secondary { padding: 0 20px; height: 44px; background: #fff; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+        .btn-secondary { padding: 0 20px; height: 44px; min-width: 80px; background: #fff; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
         .btn-secondary:hover { background: #f5f5f5; }
         .btn-sm { height: 40px; min-width: 80px; padding: 0 14px; font-size: 13px; border-radius: 8px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
-        .btn-danger-sm { height: 44px; padding: 0 20px; font-size: 14px; border-radius: 8px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; color: #c62828; background: none; border: 1px solid #ffcdd2; white-space: nowrap; }
+        .btn-danger-sm { height: 44px; padding: 0 20px; min-width: 80px; font-size: 14px; border-radius: 8px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; color: #c62828; background: none; border: 1px solid #ffcdd2; white-space: nowrap; }
 
         /* ── Layout ── */
         .section { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
