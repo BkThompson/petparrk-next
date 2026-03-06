@@ -1556,7 +1556,7 @@ export default function SymptomCheckerChatPage() {
         )}
 
         {!(guestMode && freeCheckUsed) && (
-          <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <div style={{ flex: 1, position: "relative" }}>
               <textarea
                 ref={inputRef}
@@ -1573,8 +1573,9 @@ export default function SymptomCheckerChatPage() {
                 }
                 rows={2}
                 style={{
-                  paddingRight: speechSupported ? "40px" : "14px",
+                  paddingRight: speechSupported ? "42px" : "14px",
                   borderColor: recording ? "#2d6a4f" : undefined,
+                  display: "block",
                 }}
               />
               {speechSupported && (
@@ -1583,21 +1584,23 @@ export default function SymptomCheckerChatPage() {
                   title={recording ? "Stop recording" : "Record voice"}
                   style={{
                     position: "absolute",
-                    right: "8px",
-                    bottom: "8px",
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "6px",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "4px",
                     border: "none",
                     background: "transparent",
                     cursor: "pointer",
-                    fontSize: "16px",
+                    fontSize: "15px",
                     padding: 0,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: recording ? "#c62828" : "#aaa",
+                    color: recording ? "#c62828" : "#bbb",
                     animation: recording ? "pulse 1.2s infinite" : "none",
+                    lineHeight: 1,
                   }}
                 >
                   {recording ? "⏹" : "🎙"}
