@@ -997,7 +997,13 @@ export default function ProfilePage() {
                   setShowAddPet(false);
                 }}
                 className="btn-secondary"
-                style={{ fontSize: "12px", padding: "5px 14px" }}
+                style={{
+                  fontSize: "13px",
+                  padding: "0 14px",
+                  height: "44px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
               >
                 Edit Profile
               </button>
@@ -1547,15 +1553,17 @@ export default function ProfilePage() {
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
-                                gap: "8px",
+                                gap: "6px",
+                                flexWrap: "wrap",
                               }}
                             >
                               <div
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
-                                  gap: "8px",
+                                  gap: "6px",
                                   minWidth: 0,
+                                  flex: 1,
                                 }}
                               >
                                 <span
@@ -1588,7 +1596,7 @@ export default function ProfilePage() {
                               <div
                                 style={{
                                   display: "flex",
-                                  gap: "6px",
+                                  gap: "4px",
                                   alignItems: "center",
                                   flexShrink: 0,
                                 }}
@@ -1598,14 +1606,18 @@ export default function ProfilePage() {
                                     handleViewSymptomCheck(pet, check)
                                   }
                                   style={{
-                                    fontSize: "11px",
+                                    fontSize: "12px",
                                     color: "#2d6a4f",
                                     background: "none",
                                     border: "1px solid #c8e6c9",
-                                    borderRadius: "6px",
-                                    padding: "3px 10px",
+                                    borderRadius: "8px",
+                                    padding: "0 10px",
                                     cursor: "pointer",
                                     fontFamily: "system-ui, sans-serif",
+                                    height: "44px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    whiteSpace: "nowrap",
                                   }}
                                 >
                                   View →
@@ -1619,14 +1631,17 @@ export default function ProfilePage() {
                                       })
                                     }
                                     style={{
-                                      fontSize: "11px",
+                                      fontSize: "15px",
                                       color: "#c62828",
                                       background: "none",
                                       border: "1px solid #ffcdd2",
-                                      borderRadius: "6px",
-                                      padding: "3px 8px",
+                                      borderRadius: "8px",
+                                      padding: "0 10px",
                                       cursor: "pointer",
                                       fontFamily: "system-ui, sans-serif",
+                                      height: "44px",
+                                      display: "inline-flex",
+                                      alignItems: "center",
                                     }}
                                   >
                                     🗑️
@@ -1641,9 +1656,10 @@ export default function ProfilePage() {
                                   >
                                     <span
                                       style={{
-                                        fontSize: "11px",
+                                        fontSize: "12px",
                                         color: "#c62828",
                                         fontWeight: "600",
+                                        whiteSpace: "nowrap",
                                       }}
                                     >
                                       Delete?
@@ -1656,15 +1672,18 @@ export default function ProfilePage() {
                                         )
                                       }
                                       style={{
-                                        fontSize: "11px",
+                                        fontSize: "12px",
                                         color: "#fff",
                                         background: "#c62828",
                                         border: "none",
-                                        borderRadius: "6px",
-                                        padding: "3px 8px",
+                                        borderRadius: "8px",
+                                        padding: "0 10px",
                                         cursor: "pointer",
                                         fontWeight: "600",
                                         fontFamily: "system-ui, sans-serif",
+                                        height: "44px",
+                                        display: "inline-flex",
+                                        alignItems: "center",
                                       }}
                                     >
                                       Yes
@@ -1674,14 +1693,17 @@ export default function ProfilePage() {
                                         setDeleteCheckConfirm(null)
                                       }
                                       style={{
-                                        fontSize: "11px",
+                                        fontSize: "12px",
                                         color: "#555",
                                         background: "#f0f0f0",
                                         border: "none",
-                                        borderRadius: "6px",
-                                        padding: "3px 8px",
+                                        borderRadius: "8px",
+                                        padding: "0 10px",
                                         cursor: "pointer",
                                         fontFamily: "system-ui, sans-serif",
+                                        height: "44px",
+                                        display: "inline-flex",
+                                        alignItems: "center",
                                       }}
                                     >
                                       No
@@ -1809,21 +1831,30 @@ export default function ProfilePage() {
                                   : startEditContact(c)
                               }
                               className="btn-secondary"
-                              style={{ fontSize: "11px", padding: "3px 10px" }}
+                              style={{
+                                fontSize: "12px",
+                                padding: "0 10px",
+                                height: "44px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                              }}
                             >
                               {editingContactId === c.id ? "Cancel" : "Edit"}
                             </button>
                             <button
                               onClick={() => handleDeleteContact(pet.id, c.id)}
                               style={{
-                                fontSize: "11px",
+                                fontSize: "15px",
                                 color: "#c62828",
                                 background: "none",
                                 border: "1px solid #ffcdd2",
-                                borderRadius: "6px",
-                                padding: "3px 8px",
+                                borderRadius: "8px",
+                                padding: "0 10px",
                                 cursor: "pointer",
                                 fontFamily: "system-ui, sans-serif",
+                                height: "44px",
+                                display: "inline-flex",
+                                alignItems: "center",
                               }}
                             >
                               Remove
@@ -1979,7 +2010,13 @@ export default function ProfilePage() {
                       onClick={handleSavePet}
                       className="btn-primary"
                       disabled={saving || !petForm.name || !!microchipError}
-                      style={{ fontSize: "12px", padding: "6px 16px" }}
+                      style={{
+                        fontSize: "13px",
+                        padding: "0 16px",
+                        height: "44px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
                     >
                       {saving ? "Saving..." : "Save Changes"}
                     </button>
@@ -1989,7 +2026,13 @@ export default function ProfilePage() {
                         setMicrochipError("");
                       }}
                       className="btn-secondary"
-                      style={{ fontSize: "12px", padding: "6px 14px" }}
+                      style={{
+                        fontSize: "13px",
+                        padding: "0 14px",
+                        height: "44px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
                     >
                       Cancel
                     </button>
@@ -2012,14 +2055,26 @@ export default function ProfilePage() {
                         }
                       }}
                       className="btn-secondary"
-                      style={{ fontSize: "12px", padding: "5px 10px" }}
+                      style={{
+                        fontSize: "13px",
+                        padding: "0 12px",
+                        height: "44px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
                     >
                       🔗 Share
                     </button>
                     <button
                       onClick={() => startEditPet(pet)}
                       className="btn-secondary"
-                      style={{ fontSize: "12px", padding: "5px 14px" }}
+                      style={{
+                        fontSize: "13px",
+                        padding: "0 12px",
+                        height: "44px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
                     >
                       Edit
                     </button>
@@ -2028,13 +2083,16 @@ export default function ProfilePage() {
                       style={{
                         background: "none",
                         border: "1px solid #ffcdd2",
-                        borderRadius: "6px",
+                        borderRadius: "8px",
                         color: "#c62828",
-                        fontSize: "12px",
+                        fontSize: "13px",
                         cursor: "pointer",
-                        padding: "5px 10px",
+                        padding: "0 12px",
                         fontFamily: "system-ui, sans-serif",
                         fontWeight: "600",
+                        height: "44px",
+                        display: "inline-flex",
+                        alignItems: "center",
                       }}
                     >
                       🗑️ Delete

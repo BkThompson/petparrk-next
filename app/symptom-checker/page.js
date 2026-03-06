@@ -364,13 +364,17 @@ export default function SymptomCheckerHomePage() {
                                   router.push("/symptom-checker/chat");
                                 }}
                                 style={{
-                                  margin: "3px 0 0 0",
-                                  fontSize: "11px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  marginTop: "6px",
+                                  fontSize: "12px",
                                   color: "#2d6a4f",
                                   cursor: "pointer",
                                   textDecoration: "underline",
                                   textDecorationStyle: "dotted",
                                   textUnderlineOffset: "2px",
+                                  padding: "6px 8px 6px 0",
+                                  minHeight: "44px",
                                 }}
                               >
                                 Last check: {emoji} {label} · {date}
