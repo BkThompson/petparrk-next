@@ -51,6 +51,7 @@ export default function ProfilePage() {
     relationship: "",
   });
   const [editingContactId, setEditingContactId] = useState(null);
+  const [showAddContactFor, setShowAddContactFor] = useState(null); // petId or null
   const [editContactForm, setEditContactForm] = useState({
     name: "",
     phone: "",
@@ -329,6 +330,7 @@ export default function ProfilePage() {
       [petId]: [...(prev[petId] || []), data],
     }));
     setNewContact({ name: "", phone: "", relationship: "" });
+    setShowAddContactFor(null);
     showToast("Contact added!");
   }
 
@@ -368,6 +370,7 @@ export default function ProfilePage() {
     setShowAddPet(false);
     setEditingPetId(null);
     setEditingContactId(null);
+    setShowAddContactFor(null);
     setNewContact({ name: "", phone: "", relationship: "" });
     setPetForm(emptyPetForm);
     setPendingPetPhoto(null);
@@ -375,9 +378,8 @@ export default function ProfilePage() {
   }
 
   function startEditContact(c) {
-    // Close any other open contact edit first
+    closeAllEditing();
     setEditingContactId(c.id);
-    setNewContact({ name: "", phone: "", relationship: "" }); // close add-contact form
     setEditContactForm({
       name: c.name || "",
       phone: c.phone || "",
@@ -1771,9 +1773,11 @@ export default function ProfilePage() {
                     if (showContactsFor === pet.id) {
                       setShowContactsFor(null);
                       setEditingContactId(null);
+                      setShowAddContactFor(null);
                       setNewContact({ name: "", phone: "", relationship: "" });
                     } else {
                       setEditingContactId(null);
+                      setShowAddContactFor(null);
                       setNewContact({ name: "", phone: "", relationship: "" });
                       fetchContactsForPet(pet.id);
                     }
@@ -1979,61 +1983,97 @@ export default function ProfilePage() {
                         No emergency contacts yet.
                       </p>
                     )}
-                    <div className="contact-grid" style={{ marginTop: "10px" }}>
-                      <div>
-                        <label className="label">Name</label>
-                        <input
-                          className="input"
-                          value={newContact.name}
-                          onChange={(e) =>
-                            setNewContact({
-                              ...newContact,
-                              name: e.target.value,
-                            })
-                          }
-                          placeholder="Contact name"
-                        />
-                      </div>
-                      <div>
-                        <label className="label">Phone</label>
-                        <input
-                          className="input"
-                          value={newContact.phone}
-                          onChange={(e) =>
-                            setNewContact({
-                              ...newContact,
-                              phone: handlePhoneInput(e.target.value),
-                            })
-                          }
-                          placeholder="(555) 555-5555"
-                        />
-                      </div>
-                      <div>
-                        <label className="label">Relationship</label>
-                        <input
-                          className="input"
-                          value={newContact.relationship}
-                          onChange={(e) =>
-                            setNewContact({
-                              ...newContact,
-                              relationship: e.target.value,
-                            })
-                          }
-                          placeholder="e.g. Spouse"
-                        />
-                      </div>
-                      <button
-                        onClick={() => handleAddContact(pet.id)}
-                        className="btn-primary"
-                        style={{
-                          height: "40px",
-                          alignSelf: "flex-end",
-                          marginTop: "8px",
-                        }}
+                    {showAddContactFor === pet.id ? (
+                      <div
+                        className="contact-grid"
+                        style={{ marginTop: "10px" }}
                       >
-                        Add
+                        <div>
+                          <label className="label">Name</label>
+                          <input
+                            className="input"
+                            value={newContact.name}
+                            onChange={(e) =>
+                              setNewContact({
+                                ...newContact,
+                                name: e.target.value,
+                              })
+                            }
+                            placeholder="Contact name"
+                            autoFocus
+                          />
+                        </div>
+                        <div>
+                          <label className="label">Phone</label>
+                          <input
+                            className="input"
+                            value={newContact.phone}
+                            onChange={(e) =>
+                              setNewContact({
+                                ...newContact,
+                                phone: handlePhoneInput(e.target.value),
+                              })
+                            }
+                            placeholder="(555) 555-5555"
+                          />
+                        </div>
+                        <div>
+                          <label className="label">Relationship</label>
+                          <input
+                            className="input"
+                            value={newContact.relationship}
+                            onChange={(e) =>
+                              setNewContact({
+                                ...newContact,
+                                relationship: e.target.value,
+                              })
+                            }
+                            placeholder="e.g. Spouse"
+                          />
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            alignSelf: "flex-end",
+                            marginTop: "8px",
+                          }}
+                        >
+                          <button
+                            onClick={() => handleAddContact(pet.id)}
+                            className="btn-primary"
+                            style={{ height: "40px" }}
+                          >
+                            Add
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowAddContactFor(null);
+                              setNewContact({
+                                name: "",
+                                phone: "",
+                                relationship: "",
+                              });
+                            }}
+                            className="btn-secondary"
+                            style={{ height: "40px" }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          closeAllEditing();
+                          setShowAddContactFor(pet.id);
+                        }}
+                        className="btn-secondary"
+                        style={{ marginTop: "10px", width: "100%" }}
+                      >
+                        + Add Contact
                       </button>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2062,6 +2102,7 @@ export default function ProfilePage() {
                 <div className="pet-bottom-row">
                   <button
                     onClick={() => {
+                      closeAllEditing();
                       const url = `${window.location.origin}/pet/${pet.id}`;
                       if (navigator.share) {
                         navigator
@@ -2086,7 +2127,10 @@ export default function ProfilePage() {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeletePet(pet.id)}
+                    onClick={() => {
+                      closeAllEditing();
+                      handleDeletePet(pet.id);
+                    }}
                     className="btn-danger-sm"
                   >
                     🗑️ Delete
