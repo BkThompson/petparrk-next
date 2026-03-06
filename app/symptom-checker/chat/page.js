@@ -136,6 +136,7 @@ export default function SymptomCheckerChatPage() {
   const recognitionRef = useRef(null);
   const [recording, setRecording] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [isChromeiOS, setIsChromeiOS] = useState(false);
   const inputRef = useRef(null);
 
   // ── Auth ──────────────────────────────────────────────────────────
@@ -234,10 +235,10 @@ export default function SymptomCheckerChatPage() {
 
   // ── Speech recognition support check ─────────────────────────────
   useEffect(() => {
-    // Chrome on iOS uses WebKit engine — Web Speech API not supported (Apple restriction)
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isChrome = /CriOS/.test(navigator.userAgent); // CriOS = Chrome on iOS
-    if (isIOS && isChrome) {
+    const isChromeIOS = isIOS && /CriOS/.test(navigator.userAgent);
+    if (isChromeIOS) {
+      setIsChromeiOS(true);
       setSpeechSupported(false);
       return;
     }
@@ -250,7 +251,12 @@ export default function SymptomCheckerChatPage() {
   function toggleRecording() {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      alert(
+        "Voice input isn't supported in Chrome on iPhone. Try Safari instead — it works great!"
+      );
+      return;
+    }
 
     if (recording) {
       recognitionRef.current?.stop();
@@ -1546,6 +1552,41 @@ export default function SymptomCheckerChatPage() {
           </div>
         )}
 
+        {isChromeiOS && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "#fff8e1",
+              border: "1px solid #ffe082",
+              borderRadius: "8px",
+              padding: "8px 12px",
+              marginBottom: "8px",
+              fontSize: "12px",
+              color: "#795548",
+            }}
+          >
+            <span style={{ flexShrink: 0 }}>🎙️</span>
+            <span>
+              Voice input works in <strong>Safari</strong> on iPhone.{" "}
+              <a
+                href="x-web-search://?q=open+in+safari"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open(window.location.href, "_blank");
+                }}
+                style={{
+                  color: "#2d6a4f",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+              >
+                Open in Safari →
+              </a>
+            </span>
+          </div>
+        )}
         {!(guestMode && freeCheckUsed) && (
           <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
             <div style={{ flex: 1, position: "relative" }}>

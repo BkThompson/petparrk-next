@@ -1795,7 +1795,14 @@ export default function ProfilePage() {
                             borderBottom: "1px solid #f5f5f5",
                           }}
                         >
-                          <div className="history-row">
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "flex-start",
+                              justifyContent: "space-between",
+                              gap: "10px",
+                            }}
+                          >
                             <div style={{ minWidth: 0, flex: 1 }}>
                               <span
                                 style={{
@@ -1822,7 +1829,7 @@ export default function ProfilePage() {
                                   style={{
                                     display: "block",
                                     fontSize: "13px",
-                                    marginTop: "12px",
+                                    marginTop: "8px",
                                   }}
                                 >
                                   <a
@@ -1837,7 +1844,14 @@ export default function ProfilePage() {
                                 </span>
                               )}
                             </div>
-                            <div className="history-row-btns">
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "8px",
+                                flexShrink: 0,
+                                paddingTop: "2px",
+                              }}
+                            >
                               <button
                                 onClick={() =>
                                   editingContactId === c.id
