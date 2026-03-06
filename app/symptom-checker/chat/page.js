@@ -234,37 +234,25 @@ export default function SymptomCheckerChatPage() {
   }, [guidedStep]);
 
   // ── Speech recognition support check ─────────────────────────────
-  // Whitelist approach: only enable mic on browsers confirmed to work.
-  // Blacklisting is unreliable — many browsers define the API but don't implement it.
-  //
-  // Works:  Safari (macOS + iOS), Chrome desktop (macOS/Windows/Linux),
-  //         Edge desktop, Chrome Android
-  // Broken: Firefox (all), Chrome iOS (Apple blocks it), Samsung Internet,
-  //         any browser on iOS that isn't Safari
+  // Explicit checks — never rely on the API existing as a proxy for "works".
+  // Firefox defines nothing. Chrome/FF iOS define it but Apple blocks access.
   useEffect(() => {
     const ua = navigator.userAgent;
-    const isIOS = /iPad|iPhone|iPod/.test(ua);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-    const isSafariIOS = isIOS && isSafari;
-    const isChromeDesktop =
-      !isIOS && /Chrome\//.test(ua) && !/Edg\//.test(ua) && !/OPR\//.test(ua);
-    const isEdgeDesktop = !isIOS && /Edg\//.test(ua);
-    const isChromeAndroid =
-      /Android/.test(ua) && /Chrome\//.test(ua) && !/EdgA|OPR/.test(ua);
-    const isSafariDesktop = !isIOS && isSafari;
 
-    const supported =
-      isSafariIOS ||
-      isSafariDesktop ||
-      isChromeDesktop ||
-      isEdgeDesktop ||
-      isChromeAndroid;
+    // Always block these — they either have no API or it doesn't work
+    const isFirefox = ua.includes("Firefox") || ua.includes("FxiOS");
+    const isChromeIOS = ua.includes("CriOS"); // Chrome on iPhone/iPad
+    const isIOS = /iPhone|iPad|iPod/.test(ua);
+    const isNonSafariIOS = isIOS && !ua.includes("Safari"); // any iOS browser that isn't Safari
 
-    // API must also actually exist (final safety check)
-    const apiExists = !!(
-      window.SpeechRecognition || window.webkitSpeechRecognition
-    );
-    setSpeechSupported(supported && apiExists);
+    if (isFirefox || isChromeIOS || isNonSafariIOS) {
+      setSpeechSupported(false);
+      return;
+    }
+
+    // For everything else, check if the API actually exists
+    const api = window.SpeechRecognition || window.webkitSpeechRecognition;
+    setSpeechSupported(!!api);
   }, []);
 
   // ── Voice recording ───────────────────────────────────────────────
