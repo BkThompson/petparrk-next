@@ -827,7 +827,7 @@ export default function ProfilePage() {
 
         /* ── Row layouts ── */
         .history-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .history-row-btns { display: flex; gap: 8px; flex-shrink: 0; }
+        .history-row-btns { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
         .contact-row-info { margin-bottom: 14px; }
         .contact-row-btns { display: flex; gap: 8px; }
         .btn-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -1570,7 +1570,7 @@ export default function ProfilePage() {
                           <div
                             key={check.id}
                             style={{
-                              padding: "10px 0",
+                              padding: "12px 0",
                               borderBottom: "1px solid #f5f5f5",
                             }}
                           >
@@ -1636,13 +1636,12 @@ export default function ProfilePage() {
                                     }
                                     className="btn-sm"
                                     style={{
-                                      fontSize: "15px",
                                       color: "#c62828",
                                       background: "none",
                                       border: "1px solid #ffcdd2",
                                     }}
                                   >
-                                    🗑️
+                                    Delete
                                   </button>
                                 </div>
                               </div>
@@ -1685,13 +1684,17 @@ export default function ProfilePage() {
                                     </p>
                                   </div>
                                 </div>
-                                <div className="history-row-btns">
+                                <div
+                                  className="history-row-btns"
+                                  style={{ alignItems: "center" }}
+                                >
                                   <span
                                     style={{
                                       fontSize: "12px",
                                       color: "#c62828",
                                       fontWeight: "600",
                                       whiteSpace: "nowrap",
+                                      lineHeight: "40px",
                                     }}
                                   >
                                     Delete?
