@@ -235,10 +235,14 @@ export default function SymptomCheckerChatPage() {
 
   // ── Speech recognition support check ─────────────────────────────
   useEffect(() => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isChromeIOS = isIOS && /CriOS/.test(navigator.userAgent);
-    if (isChromeIOS) {
-      setIsChromeiOS(true);
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isChromeIOS = isIOS && /CriOS/.test(ua);
+    const isFirefox = /Firefox\//.test(ua);
+    // Chrome iOS: Apple forces WebKit, blocks Web Speech API
+    // Firefox: no Web Speech API support on any platform
+    if (isChromeIOS || isFirefox) {
+      if (isChromeIOS) setIsChromeiOS(true);
       setSpeechSupported(false);
       return;
     }
@@ -251,12 +255,7 @@ export default function SymptomCheckerChatPage() {
   function toggleRecording() {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert(
-        "Voice input isn't supported in Chrome on iPhone. Try Safari instead — it works great!"
-      );
-      return;
-    }
+    if (!SpeechRecognition) return; // Button shouldn't show — guard just in case
 
     if (recording) {
       recognitionRef.current?.stop();
