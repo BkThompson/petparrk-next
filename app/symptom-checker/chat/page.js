@@ -234,21 +234,37 @@ export default function SymptomCheckerChatPage() {
   }, [guidedStep]);
 
   // ── Speech recognition support check ─────────────────────────────
+  // Whitelist approach: only enable mic on browsers confirmed to work.
+  // Blacklisting is unreliable — many browsers define the API but don't implement it.
+  //
+  // Works:  Safari (macOS + iOS), Chrome desktop (macOS/Windows/Linux),
+  //         Edge desktop, Chrome Android
+  // Broken: Firefox (all), Chrome iOS (Apple blocks it), Samsung Internet,
+  //         any browser on iOS that isn't Safari
   useEffect(() => {
     const ua = navigator.userAgent;
     const isIOS = /iPad|iPhone|iPod/.test(ua);
-    const isChromeIOS = isIOS && /CriOS/.test(ua);
-    const isFirefox = /Firefox\//.test(ua);
-    // Chrome iOS: Apple forces WebKit, blocks Web Speech API
-    // Firefox: no Web Speech API support on any platform
-    if (isChromeIOS || isFirefox) {
-      if (isChromeIOS) setIsChromeiOS(true);
-      setSpeechSupported(false);
-      return;
-    }
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    setSpeechSupported(!!SpeechRecognition);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+    const isSafariIOS = isIOS && isSafari;
+    const isChromeDesktop =
+      !isIOS && /Chrome\//.test(ua) && !/Edg\//.test(ua) && !/OPR\//.test(ua);
+    const isEdgeDesktop = !isIOS && /Edg\//.test(ua);
+    const isChromeAndroid =
+      /Android/.test(ua) && /Chrome\//.test(ua) && !/EdgA|OPR/.test(ua);
+    const isSafariDesktop = !isIOS && isSafari;
+
+    const supported =
+      isSafariIOS ||
+      isSafariDesktop ||
+      isChromeDesktop ||
+      isEdgeDesktop ||
+      isChromeAndroid;
+
+    // API must also actually exist (final safety check)
+    const apiExists = !!(
+      window.SpeechRecognition || window.webkitSpeechRecognition
+    );
+    setSpeechSupported(supported && apiExists);
   }, []);
 
   // ── Voice recording ───────────────────────────────────────────────
