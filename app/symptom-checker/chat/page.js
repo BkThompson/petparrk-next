@@ -133,6 +133,9 @@ export default function SymptomCheckerChatPage() {
   const [stepDirection, setStepDirection] = useState(1);
 
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const [recording, setRecording] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
   const inputRef = useRef(null);
 
   // ── Auth ──────────────────────────────────────────────────────────
@@ -228,6 +231,42 @@ export default function SymptomCheckerChatPage() {
     const isMobile = window.innerWidth < 768;
     if (!isMobile) inputRef.current?.focus();
   }, [guidedStep]);
+
+  // ── Speech recognition support check ─────────────────────────────
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    setSpeechSupported(!!SpeechRecognition);
+  }, []);
+
+  // ── Voice recording ───────────────────────────────────────────────
+  function toggleRecording() {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    if (recording) {
+      recognitionRef.current?.stop();
+      setRecording(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      setInput((prev) => (prev ? prev + " " + transcript : transcript));
+    };
+    recognition.onerror = () => setRecording(false);
+    recognition.onend = () => setRecording(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setRecording(true);
+  }
 
   // ── Triage card mount — fires on every entry into chat ────────────
   useEffect(() => {
@@ -1275,6 +1314,7 @@ export default function SymptomCheckerChatPage() {
         .send-btn:hover { background: #245a42; }
         .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         @keyframes dotBounce { 0%, 80%, 100% { transform: translateY(0); opacity: 0.4; } 40% { transform: translateY(-5px); opacity: 1; } }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(198,40,40,0.4); } 50% { box-shadow: 0 0 0 6px rgba(198,40,40,0); } }
         .thinking-dot { width: 7px; height: 7px; border-radius: 50%; background: #999; display: inline-block; animation: dotBounce 1.2s infinite ease-in-out; }
         .thinking-dot:nth-child(1) { animation-delay: 0s; }
         .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -1490,7 +1530,7 @@ export default function SymptomCheckerChatPage() {
         )}
 
         {!(guestMode && freeCheckUsed) && (
-          <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
+          <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
             <textarea
               ref={inputRef}
               className="chat-input"
@@ -1498,13 +1538,40 @@ export default function SymptomCheckerChatPage() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={
-                triageResult
+                recording
+                  ? "Listening..."
+                  : triageResult
                   ? "Ask a follow-up question..."
                   : "Add more detail or ask a follow-up..."
               }
               rows={2}
-              style={{ flex: 1 }}
+              style={{
+                flex: 1,
+                borderColor: recording ? "#2d6a4f" : undefined,
+              }}
             />
+            {speechSupported && (
+              <button
+                onClick={toggleRecording}
+                title={recording ? "Stop recording" : "Record voice"}
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "12px",
+                  border: recording ? "2px solid #c62828" : "1px solid #ddd",
+                  background: recording ? "#fce8e8" : "#fff",
+                  cursor: "pointer",
+                  fontSize: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  animation: recording ? "pulse 1.2s infinite" : "none",
+                }}
+              >
+                {recording ? "⏹️" : "🎙️"}
+              </button>
+            )}
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
