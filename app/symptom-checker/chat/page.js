@@ -1554,36 +1554,70 @@ export default function SymptomCheckerChatPage() {
         {isChromeiOS && (
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
               background: "#fff8e1",
               border: "1px solid #ffe082",
               borderRadius: "8px",
-              padding: "8px 12px",
+              padding: "10px 12px",
               marginBottom: "8px",
               fontSize: "12px",
               color: "#795548",
             }}
           >
-            <span style={{ flexShrink: 0 }}>🎙️</span>
-            <span>
-              Voice input works in <strong>Safari</strong> on iPhone.{" "}
-              <a
-                href="x-web-search://?q=open+in+safari"
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.open(window.location.href, "_blank");
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "6px",
+              }}
+            >
+              <span>🎙️</span>
+              <span>
+                Voice input works in <strong>Safari</strong> on iPhone.
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <input
+                readOnly
+                value={
+                  typeof window !== "undefined" ? window.location.href : ""
+                }
+                style={{
+                  flex: 1,
+                  fontSize: "11px",
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                  border: "1px solid #ffe082",
+                  background: "#fffde7",
+                  color: "#555",
+                  fontFamily: "monospace",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              />
+              <button
+                onClick={() => {
+                  navigator.clipboard
+                    ?.writeText(window.location.href)
+                    .then(() => alert("Link copied! Paste it in Safari."));
                 }}
                 style={{
-                  color: "#2d6a4f",
-                  textDecoration: "underline",
+                  fontSize: "11px",
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  border: "1px solid #ffca28",
+                  background: "#ffca28",
+                  color: "#555",
                   cursor: "pointer",
+                  fontFamily: "system-ui",
+                  whiteSpace: "nowrap",
+                  fontWeight: "600",
                 }}
               >
-                Open in Safari →
-              </a>
-            </span>
+                Copy link
+              </button>
+            </div>
           </div>
         )}
         {!(guestMode && freeCheckUsed) && (
