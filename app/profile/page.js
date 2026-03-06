@@ -839,7 +839,7 @@ export default function ProfilePage() {
         @media (max-width: 600px) {
           .form-grid { grid-template-columns: 1fr; }
           .contact-grid { grid-template-columns: 1fr; }
-          .contact-grid .btn-primary { width: 100%; justify-content: center; margin-top: 4px; }
+          .contact-grid .btn-primary { width: 100%; justify-content: center; margin-top: 12px; }
           .history-row { flex-direction: column; align-items: flex-start; gap: 8px; }
           .history-row-btns { width: 100%; }
           .btn-row { flex-direction: column; align-items: stretch; }
@@ -1474,17 +1474,24 @@ export default function ProfilePage() {
               )}
 
               {/* Check Symptoms button */}
-              <div style={{ marginTop: "4px", marginBottom: "10px" }}>
+              <div
+                style={{
+                  marginTop: "16px",
+                  marginBottom: "16px",
+                  paddingTop: "16px",
+                  borderTop: "1px solid #f0f0f0",
+                }}
+              >
                 <button
                   onClick={() => handleCheckSymptoms(pet)}
                   style={{
                     width: "100%",
-                    padding: "10px",
+                    padding: "14px",
                     background: "#2d6a4f",
                     color: "#fff",
                     border: "none",
-                    borderRadius: "8px",
-                    fontSize: "14px",
+                    borderRadius: "10px",
+                    fontSize: "15px",
                     cursor: "pointer",
                     fontWeight: "600",
                     fontFamily: "system-ui, sans-serif",
@@ -1815,7 +1822,7 @@ export default function ProfilePage() {
                                   style={{
                                     display: "block",
                                     fontSize: "13px",
-                                    marginTop: "6px",
+                                    marginTop: "12px",
                                   }}
                                 >
                                   <a
@@ -1986,7 +1993,11 @@ export default function ProfilePage() {
                       <button
                         onClick={() => handleAddContact(pet.id)}
                         className="btn-primary"
-                        style={{ height: "40px", alignSelf: "flex-end" }}
+                        style={{
+                          height: "40px",
+                          alignSelf: "flex-end",
+                          marginTop: "8px",
+                        }}
                       >
                         Add
                       </button>
