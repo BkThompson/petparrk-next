@@ -255,13 +255,11 @@ export default function ProfilePage() {
       data: { publicUrl },
     } = supabase.storage.from("avatars").getPublicUrl(filePath);
     const urlWithCache = `${publicUrl}?t=${Date.now()}`;
-    await supabase
-      .from("profiles")
-      .upsert({
-        id: session.user.id,
-        avatar_url: urlWithCache,
-        updated_at: new Date().toISOString(),
-      });
+    await supabase.from("profiles").upsert({
+      id: session.user.id,
+      avatar_url: urlWithCache,
+      updated_at: new Date().toISOString(),
+    });
     setProfile((prev) => ({ ...prev, avatar_url: urlWithCache }));
     showToast("Profile photo updated!");
     setUploadingPhoto(false);
@@ -374,16 +372,14 @@ export default function ProfilePage() {
   // ── Profile / Pet save ────────────────────────────────────────────
   async function handleSaveProfile() {
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({
-        id: session.user.id,
-        full_name: profileForm.full_name,
-        bio: profileForm.bio,
-        zip_code: profileForm.zip_code,
-        is_public: profileForm.is_public,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabase.from("profiles").upsert({
+      id: session.user.id,
+      full_name: profileForm.full_name,
+      bio: profileForm.bio,
+      zip_code: profileForm.zip_code,
+      is_public: profileForm.is_public,
+      updated_at: new Date().toISOString(),
+    });
     if (!error) {
       setProfile((prev) => ({ ...prev, ...profileForm }));
       setEditingProfile(false);
@@ -792,16 +788,23 @@ export default function ProfilePage() {
   return (
     <>
       <style>{`
+        /* ── Base inputs ── */
         .input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; font-family: system-ui, sans-serif; outline: none; background: #fff; height: 40px; color: #111; -webkit-appearance: none; appearance: none; display: block; }
         .input:focus { border-color: #2d6a4f; }
         select.input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 42px; cursor: pointer; }
         input[type="number"].input { -moz-appearance: textfield; }
         input[type="number"].input::-webkit-outer-spin-button, input[type="number"].input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .btn-primary { padding: 8px 20px; background: #2d6a4f; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; font-family: system-ui, sans-serif; }
+
+        /* ── Buttons ── */
+        .btn-primary { padding: 0 20px; height: 44px; background: #2d6a4f; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; white-space: nowrap; }
         .btn-primary:hover { background: #245a42; }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-secondary { padding: 8px 20px; background: #fff; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: system-ui, sans-serif; }
+        .btn-secondary { padding: 0 20px; height: 44px; background: #fff; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; white-space: nowrap; }
         .btn-secondary:hover { background: #f5f5f5; }
+        .btn-sm { height: 40px; padding: 0 14px; font-size: 13px; border-radius: 8px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; white-space: nowrap; }
+        .btn-danger-sm { height: 40px; padding: 0 14px; font-size: 13px; border-radius: 8px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; color: #c62828; background: none; border: 1px solid #ffcdd2; }
+
+        /* ── Layout ── */
         .section { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
         .label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
         .field { margin-bottom: 14px; }
@@ -812,10 +815,33 @@ export default function ProfilePage() {
         .pet-photo-wrap:hover .pet-photo-overlay { opacity: 1; }
         .section-divider { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin: 20px 0 12px 0; padding-top: 16px; border-top: 1px solid #f0f0f0; }
         .pet-hi-card { text-align: center; padding: 16px 0 20px 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px; }
+        .detail-row { margin: 0 0 10px 0; font-size: 13px; line-height: 1.4; }
+
+        /* ── Grids: 2-col above 600px ── */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .contact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
-        .detail-row { margin: 0 0 10px 0; font-size: 13px; line-height: 1.4; }
-        @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } .contact-grid { grid-template-columns: 1fr; } }
+
+        /* ── Row layouts ── */
+        .history-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .history-row-btns { display: flex; gap: 8px; flex-shrink: 0; }
+        .contact-row-info { margin-bottom: 10px; }
+        .contact-row-btns { display: flex; gap: 8px; }
+        .btn-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .profile-edit-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+        .pet-bottom-row { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
+        .pet-bottom-row-editing { display: flex; justify-content: flex-start; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
+
+        /* ── Single breakpoint: 600px — everything stacks ── */
+        @media (max-width: 600px) {
+          .form-grid { grid-template-columns: 1fr; }
+          .contact-grid { grid-template-columns: 1fr; }
+          .history-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+          .history-row-btns { width: 100%; }
+          .btn-row { flex-direction: column; align-items: stretch; }
+          .btn-row .btn-primary, .btn-row .btn-secondary { width: 100%; justify-content: center; }
+          .pet-bottom-row { justify-content: stretch; }
+          .pet-bottom-row > *, .pet-bottom-row-editing > * { flex: 1; justify-content: center; }
+        }
       `}</style>
 
       <div
@@ -978,6 +1004,8 @@ export default function ProfilePage() {
                 alignItems: "center",
                 paddingTop: "12px",
                 borderTop: "1px solid #f0f0f0",
+                flexWrap: "wrap",
+                gap: "10px",
               }}
             >
               <Link
@@ -997,13 +1025,6 @@ export default function ProfilePage() {
                   setShowAddPet(false);
                 }}
                 className="btn-secondary"
-                style={{
-                  fontSize: "13px",
-                  padding: "0 14px",
-                  height: "44px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
               >
                 Edit Profile
               </button>
@@ -1082,7 +1103,7 @@ export default function ProfilePage() {
                   Make my profile public
                 </label>
               </div>
-              <div style={{ display: "flex", gap: "8px" }}>
+              <div className="btn-row">
                 <button
                   onClick={handleSaveProfile}
                   className="btn-primary"
@@ -1213,14 +1234,7 @@ export default function ProfilePage() {
                 )}
               </div>
               {renderPetFormFields()}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  marginTop: "4px",
-                  flexWrap: "wrap",
-                }}
-              >
+              <div className="btn-row" style={{ marginTop: "4px" }}>
                 <button
                   onClick={handleSavePet}
                   className="btn-primary"
@@ -1548,98 +1562,118 @@ export default function ProfilePage() {
                               borderBottom: "1px solid #f5f5f5",
                             }}
                           >
-                            {/* Info row */}
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                marginBottom: "8px",
-                              }}
-                            >
-                              <span style={{ fontSize: "16px", flexShrink: 0 }}>
-                                {t.emoji}
-                              </span>
-                              <div>
-                                <p
-                                  style={{
-                                    margin: 0,
-                                    fontSize: "13px",
-                                    fontWeight: "600",
-                                    color: t.color,
-                                  }}
-                                >
-                                  {t.label}
-                                </p>
-                                <p
-                                  style={{
-                                    margin: 0,
-                                    fontSize: "12px",
-                                    color: "#aaa",
-                                  }}
-                                >
-                                  {formatDate(check.created_at)}
-                                </p>
-                              </div>
-                            </div>
-                            {/* Button row — always on its own line, never competes with text */}
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: "8px",
-                                alignItems: "center",
-                              }}
-                            >
-                              <button
-                                onClick={() =>
-                                  handleViewSymptomCheck(pet, check)
-                                }
-                                style={{
-                                  fontSize: "12px",
-                                  color: "#2d6a4f",
-                                  background: "none",
-                                  border: "1px solid #c8e6c9",
-                                  borderRadius: "8px",
-                                  padding: "0 14px",
-                                  cursor: "pointer",
-                                  fontFamily: "system-ui, sans-serif",
-                                  height: "40px",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                View →
-                              </button>
-                              {!isConfirming ? (
-                                <button
-                                  onClick={() =>
-                                    setDeleteCheckConfirm({
-                                      petId: pet.id,
-                                      checkId: check.id,
-                                    })
-                                  }
-                                  style={{
-                                    fontSize: "15px",
-                                    color: "#c62828",
-                                    background: "none",
-                                    border: "1px solid #ffcdd2",
-                                    borderRadius: "8px",
-                                    padding: "0 12px",
-                                    cursor: "pointer",
-                                    fontFamily: "system-ui, sans-serif",
-                                    height: "40px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  🗑️
-                                </button>
-                              ) : (
+                            {/* Normal state — inline above 600px, stacked below */}
+                            {!isConfirming ? (
+                              <div className="history-row">
                                 <div
                                   style={{
                                     display: "flex",
-                                    gap: "6px",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    minWidth: 0,
+                                    flex: 1,
+                                  }}
+                                >
+                                  <span
+                                    style={{ fontSize: "16px", flexShrink: 0 }}
+                                  >
+                                    {t.emoji}
+                                  </span>
+                                  <div style={{ minWidth: 0 }}>
+                                    <p
+                                      style={{
+                                        margin: 0,
+                                        fontSize: "13px",
+                                        fontWeight: "600",
+                                        color: t.color,
+                                      }}
+                                    >
+                                      {t.label}
+                                    </p>
+                                    <p
+                                      style={{
+                                        margin: 0,
+                                        fontSize: "11px",
+                                        color: "#aaa",
+                                      }}
+                                    >
+                                      {formatDate(check.created_at)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="history-row-btns">
+                                  <button
+                                    onClick={() =>
+                                      handleViewSymptomCheck(pet, check)
+                                    }
+                                    className="btn-sm"
+                                    style={{
+                                      color: "#2d6a4f",
+                                      background: "none",
+                                      border: "1px solid #c8e6c9",
+                                    }}
+                                  >
+                                    View →
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      setDeleteCheckConfirm({
+                                        petId: pet.id,
+                                        checkId: check.id,
+                                      })
+                                    }
+                                    className="btn-sm"
+                                    style={{
+                                      fontSize: "15px",
+                                      color: "#c62828",
+                                      background: "none",
+                                      border: "1px solid #ffcdd2",
+                                    }}
+                                  >
+                                    🗑️
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Confirm state: info on top, confirm buttons below */
+                              <div>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    marginBottom: "8px",
+                                  }}
+                                >
+                                  <span style={{ fontSize: "16px" }}>
+                                    {t.emoji}
+                                  </span>
+                                  <div>
+                                    <p
+                                      style={{
+                                        margin: 0,
+                                        fontSize: "13px",
+                                        fontWeight: "600",
+                                        color: t.color,
+                                      }}
+                                    >
+                                      {t.label}
+                                    </p>
+                                    <p
+                                      style={{
+                                        margin: 0,
+                                        fontSize: "11px",
+                                        color: "#aaa",
+                                      }}
+                                    >
+                                      {formatDate(check.created_at)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    gap: "8px",
                                     alignItems: "center",
                                   }}
                                 >
@@ -1650,7 +1684,7 @@ export default function ProfilePage() {
                                       fontWeight: "600",
                                     }}
                                   >
-                                    Delete?
+                                    Delete this check?
                                   </span>
                                   <button
                                     onClick={() =>
@@ -1692,8 +1726,8 @@ export default function ProfilePage() {
                                     No
                                   </button>
                                 </div>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })
@@ -1761,14 +1795,11 @@ export default function ProfilePage() {
                       <div key={c.id}>
                         <div
                           style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            padding: "8px 0",
+                            padding: "12px 0",
                             borderBottom: "1px solid #f5f5f5",
                           }}
                         >
-                          <div>
+                          <div className="contact-row-info">
                             <span
                               style={{
                                 fontSize: "14px",
@@ -1791,7 +1822,11 @@ export default function ProfilePage() {
                             )}
                             {c.phone && (
                               <span
-                                style={{ display: "block", fontSize: "13px" }}
+                                style={{
+                                  display: "block",
+                                  fontSize: "13px",
+                                  marginTop: "4px",
+                                }}
                               >
                                 <a
                                   href={`tel:${c.phone}`}
@@ -1805,38 +1840,29 @@ export default function ProfilePage() {
                               </span>
                             )}
                           </div>
-                          <div style={{ display: "flex", gap: "6px" }}>
+                          <div className="contact-row-btns">
                             <button
                               onClick={() =>
                                 editingContactId === c.id
                                   ? setEditingContactId(null)
                                   : startEditContact(c)
                               }
-                              className="btn-secondary"
+                              className="btn-sm"
                               style={{
-                                fontSize: "12px",
-                                padding: "0 10px",
-                                height: "44px",
-                                display: "inline-flex",
-                                alignItems: "center",
+                                background: "#fff",
+                                color: "#555",
+                                border: "1px solid #ddd",
                               }}
                             >
                               {editingContactId === c.id ? "Cancel" : "Edit"}
                             </button>
                             <button
                               onClick={() => handleDeleteContact(pet.id, c.id)}
+                              className="btn-sm"
                               style={{
-                                fontSize: "15px",
                                 color: "#c62828",
                                 background: "none",
                                 border: "1px solid #ffcdd2",
-                                borderRadius: "8px",
-                                padding: "0 10px",
-                                cursor: "pointer",
-                                fontFamily: "system-ui, sans-serif",
-                                height: "44px",
-                                display: "inline-flex",
-                                alignItems: "center",
                               }}
                             >
                               Remove
@@ -1848,7 +1874,7 @@ export default function ProfilePage() {
                             style={{
                               background: "#f9f9f9",
                               borderRadius: "8px",
-                              padding: "12px",
+                              padding: "12px 0",
                               marginBottom: "8px",
                             }}
                           >
@@ -1897,7 +1923,6 @@ export default function ProfilePage() {
                                   handleUpdateContact(pet.id, c.id)
                                 }
                                 className="btn-primary"
-                                style={{ padding: "8px 12px" }}
                               >
                                 Save
                               </button>
@@ -1964,7 +1989,6 @@ export default function ProfilePage() {
                       <button
                         onClick={() => handleAddContact(pet.id)}
                         className="btn-primary"
-                        style={{ padding: "8px 12px" }}
                       >
                         Add
                       </button>
@@ -1974,114 +1998,60 @@ export default function ProfilePage() {
               </div>
 
               {/* Bottom row */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent:
-                    editingPetId === pet.id ? "flex-start" : "flex-end",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginTop: "12px",
-                  paddingTop: "10px",
-                  borderTop: "1px solid #eee",
-                }}
-              >
-                {editingPetId === pet.id ? (
-                  <>
-                    <button
-                      onClick={handleSavePet}
-                      className="btn-primary"
-                      disabled={saving || !petForm.name || !!microchipError}
-                      style={{
-                        fontSize: "13px",
-                        padding: "0 16px",
-                        height: "44px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      {saving ? "Saving..." : "Save Changes"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditingPetId(null);
-                        setMicrochipError("");
-                      }}
-                      className="btn-secondary"
-                      style={{
-                        fontSize: "13px",
-                        padding: "0 14px",
-                        height: "44px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        const url = `${window.location.origin}/pet/${pet.id}`;
-                        if (navigator.share) {
-                          navigator
-                            .share({ title: `${pet.name}'s Medical Card`, url })
-                            .catch(() => {});
-                        } else if (navigator.clipboard) {
-                          navigator.clipboard
-                            .writeText(url)
-                            .then(() => showToast("Link copied!"));
-                        } else {
-                          window.prompt("Copy this link:", url);
-                        }
-                      }}
-                      className="btn-secondary"
-                      style={{
-                        fontSize: "13px",
-                        padding: "0 12px",
-                        height: "44px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      🔗 Share
-                    </button>
-                    <button
-                      onClick={() => startEditPet(pet)}
-                      className="btn-secondary"
-                      style={{
-                        fontSize: "13px",
-                        padding: "0 12px",
-                        height: "44px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeletePet(pet.id)}
-                      style={{
-                        background: "none",
-                        border: "1px solid #ffcdd2",
-                        borderRadius: "8px",
-                        color: "#c62828",
-                        fontSize: "13px",
-                        cursor: "pointer",
-                        padding: "0 12px",
-                        fontFamily: "system-ui, sans-serif",
-                        fontWeight: "600",
-                        height: "44px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      🗑️ Delete
-                    </button>
-                  </>
-                )}
-              </div>
+              {editingPetId === pet.id ? (
+                <div className="pet-bottom-row-editing">
+                  <button
+                    onClick={handleSavePet}
+                    className="btn-primary"
+                    disabled={saving || !petForm.name || !!microchipError}
+                  >
+                    {saving ? "Saving..." : "Save Changes"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingPetId(null);
+                      setMicrochipError("");
+                    }}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="pet-bottom-row">
+                  <button
+                    onClick={() => {
+                      const url = `${window.location.origin}/pet/${pet.id}`;
+                      if (navigator.share) {
+                        navigator
+                          .share({ title: `${pet.name}'s Medical Card`, url })
+                          .catch(() => {});
+                      } else if (navigator.clipboard) {
+                        navigator.clipboard
+                          .writeText(url)
+                          .then(() => showToast("Link copied!"));
+                      } else {
+                        window.prompt("Copy this link:", url);
+                      }
+                    }}
+                    className="btn-secondary"
+                  >
+                    Share
+                  </button>
+                  <button
+                    onClick={() => startEditPet(pet)}
+                    className="btn-secondary"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeletePet(pet.id)}
+                    className="btn-danger-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
