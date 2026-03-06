@@ -14,6 +14,7 @@ export default function SymptomCheckerHomePage() {
   const [pets, setPets] = useState([]);
   const [resumeData, setResumeData] = useState(null); // { pet, messages, triageResult }
   const [guestPet, setGuestPet] = useState({ species: "", breed: "", age: "" });
+  const [lastChecks, setLastChecks] = useState({}); // { [petId]: { triage_result, created_at } }
 
   // ── Auth ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -24,7 +25,7 @@ export default function SymptomCheckerHomePage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Pets ──────────────────────────────────────────────────────────
+  // ── Pets + last symptom check per pet ────────────────────────────
   useEffect(() => {
     if (!session) return;
     supabase
@@ -32,7 +33,31 @@ export default function SymptomCheckerHomePage() {
       .select("*")
       .eq("owner_id", session.user.id)
       .order("created_at")
-      .then(({ data }) => setPets(data || []));
+      .then(async ({ data: petsData }) => {
+        setPets(petsData || []);
+        // Fetch most recent symptom check for each pet in parallel
+        if (petsData?.length) {
+          const checks = await Promise.all(
+            petsData.map((pet) =>
+              supabase
+                .from("symptom_checks")
+                .select("triage_result, created_at")
+                .eq("pet_id", pet.id)
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .then(({ data }) => ({
+                  petId: pet.id,
+                  check: data?.[0] || null,
+                }))
+            )
+          );
+          const map = {};
+          checks.forEach(({ petId, check }) => {
+            if (check) map[petId] = check;
+          });
+          setLastChecks(map);
+        }
+      });
   }, [session]);
 
   // ── Check for resumable session ───────────────────────────────────
@@ -295,6 +320,39 @@ export default function SymptomCheckerHomePage() {
                         >
                           {[pet.species, pet.breed].filter(Boolean).join(" · ")}
                         </p>
+                        {lastChecks[pet.id] &&
+                          (() => {
+                            const c = lastChecks[pet.id];
+                            const emoji =
+                              c.triage_result === "EMERGENCY"
+                                ? "🔴"
+                                : c.triage_result === "SEE_VET"
+                                ? "🟡"
+                                : "🟢";
+                            const label =
+                              c.triage_result === "EMERGENCY"
+                                ? "Emergency"
+                                : c.triage_result === "SEE_VET"
+                                ? "See vet soon"
+                                : "Monitor at home";
+                            const date = new Date(
+                              c.created_at
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            });
+                            return (
+                              <p
+                                style={{
+                                  margin: "3px 0 0 0",
+                                  fontSize: "11px",
+                                  color: "#aaa",
+                                }}
+                              >
+                                Last check: {emoji} {label} · {date}
+                              </p>
+                            );
+                          })()}
                       </div>
                       <span
                         style={{
