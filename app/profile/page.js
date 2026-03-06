@@ -63,11 +63,13 @@ export default function ProfilePage() {
   const [symptomHistory, setSymptomHistory] = useState({});
   const [showHistoryFor, setShowHistoryFor] = useState(null);
   const [cityState, setCityState] = useState("");
+  const [deleteCheckConfirm, setDeleteCheckConfirm] = useState(null); // { petId, checkId }
   const fileInputRef = useRef(null);
   const petPhotoRefs = useRef({});
   const newPetPhotoRef = useRef(null);
   const petCardRefs = useRef({});
 
+  // ── Auth ──────────────────────────────────────────────────────────
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -82,6 +84,7 @@ export default function ProfilePage() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // ── Data fetch ────────────────────────────────────────────────────
   useEffect(() => {
     if (!session) return;
     async function fetchData() {
@@ -121,6 +124,7 @@ export default function ProfilePage() {
     fetchData();
   }, [session]);
 
+  // ── Symptom history ───────────────────────────────────────────────
   async function fetchSymptomHistory(petId) {
     const { data } = await supabase
       .from("symptom_checks")
@@ -132,6 +136,24 @@ export default function ProfilePage() {
     setShowHistoryFor(petId);
   }
 
+  async function handleDeleteSymptomCheck(petId, checkId) {
+    const { error } = await supabase
+      .from("symptom_checks")
+      .delete()
+      .eq("id", checkId);
+    if (!error) {
+      setSymptomHistory((prev) => ({
+        ...prev,
+        [petId]: prev[petId].filter((c) => c.id !== checkId),
+      }));
+      showToast("Check deleted.");
+    } else {
+      showToast("Failed to delete.", "error");
+    }
+    setDeleteCheckConfirm(null);
+  }
+
+  // ── Navigate to symptom checker ───────────────────────────────────
   function handleCheckSymptoms(pet) {
     try {
       sessionStorage.setItem(
@@ -140,15 +162,35 @@ export default function ProfilePage() {
           selectedPet: pet,
           messages: [],
           triageResult: null,
+          differentials: [],
           guestMode: false,
           freeCheckUsed: false,
           autoStart: true,
         })
       );
     } catch (e) {}
-    router.push("/symptom-checker");
+    router.push("/symptom-checker/chat");
   }
 
+  function handleViewSymptomCheck(pet, check) {
+    try {
+      const transcript = JSON.parse(check.transcript || "[]");
+      sessionStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({
+          selectedPet: pet,
+          messages: transcript,
+          triageResult: check.triage_result,
+          differentials: check.differentials || [],
+          guestMode: false,
+          freeCheckUsed: false,
+        })
+      );
+    } catch (e) {}
+    router.push("/symptom-checker/chat");
+  }
+
+  // ── Photo handling ────────────────────────────────────────────────
   async function prepareImageFile(file, setConverting) {
     if (!file) return null;
     const isHeic =
@@ -213,11 +255,13 @@ export default function ProfilePage() {
       data: { publicUrl },
     } = supabase.storage.from("avatars").getPublicUrl(filePath);
     const urlWithCache = `${publicUrl}?t=${Date.now()}`;
-    await supabase.from("profiles").upsert({
-      id: session.user.id,
-      avatar_url: urlWithCache,
-      updated_at: new Date().toISOString(),
-    });
+    await supabase
+      .from("profiles")
+      .upsert({
+        id: session.user.id,
+        avatar_url: urlWithCache,
+        updated_at: new Date().toISOString(),
+      });
     setProfile((prev) => ({ ...prev, avatar_url: urlWithCache }));
     showToast("Profile photo updated!");
     setUploadingPhoto(false);
@@ -263,6 +307,7 @@ export default function ProfilePage() {
     setPendingPetPhoto({ file, previewUrl: url });
   }
 
+  // ── Contacts ──────────────────────────────────────────────────────
   async function fetchContactsForPet(petId) {
     const { data } = await supabase
       .from("pet_emergency_contacts")
@@ -270,103 +315,6 @@ export default function ProfilePage() {
       .eq("pet_id", petId);
     setContacts((prev) => ({ ...prev, [petId]: data || [] }));
     setShowContactsFor(petId);
-  }
-
-  async function handleSaveProfile() {
-    setSaving(true);
-    const { error } = await supabase.from("profiles").upsert({
-      id: session.user.id,
-      full_name: profileForm.full_name,
-      bio: profileForm.bio,
-      zip_code: profileForm.zip_code,
-      is_public: profileForm.is_public,
-      updated_at: new Date().toISOString(),
-    });
-    if (!error) {
-      setProfile((prev) => ({ ...prev, ...profileForm }));
-      setEditingProfile(false);
-      showToast("Profile saved!");
-    } else showToast("Failed to save profile.", "error");
-    setSaving(false);
-  }
-
-  async function handleSavePet() {
-    setSaving(true);
-    if (editingPetId) {
-      const { species_other: _so1, ...petFormClean1 } = petForm;
-      const resolvedSpecies1 =
-        petForm.species === "Other"
-          ? petForm.species_other || "Other"
-          : petForm.species;
-      const { error } = await supabase
-        .from("pets")
-        .update({
-          ...petFormClean1,
-          species: resolvedSpecies1,
-          weight_lbs: petForm.weight_lbs || null,
-          birthday: petForm.birthday || null,
-        })
-        .eq("id", editingPetId);
-      if (!error) {
-        setPets((prev) =>
-          prev.map((p) => (p.id === editingPetId ? { ...p, ...petForm } : p))
-        );
-        setEditingPetId(null);
-        showToast("Pet updated!");
-      } else showToast("Failed to update pet.", "error");
-    } else {
-      const { species_other: _so2, ...petFormClean2 } = petForm;
-      const resolvedSpecies2 =
-        petForm.species === "Other"
-          ? petForm.species_other || "Other"
-          : petForm.species;
-      const { data, error } = await supabase
-        .from("pets")
-        .insert({
-          owner_id: session.user.id,
-          ...petFormClean2,
-          species: resolvedSpecies2,
-          weight_lbs: petForm.weight_lbs || null,
-          birthday: petForm.birthday || null,
-        })
-        .select()
-        .single();
-      if (!error) {
-        let finalPet = data;
-        if (pendingPetPhoto) {
-          const ext = pendingPetPhoto.file.name.split(".").pop();
-          const filePath = `${session.user.id}/${data.id}.${ext}`;
-          const { error: uploadErr } = await supabase.storage
-            .from("pets")
-            .upload(filePath, pendingPetPhoto.file, { upsert: true });
-          if (!uploadErr) {
-            const {
-              data: { publicUrl },
-            } = supabase.storage.from("pets").getPublicUrl(filePath);
-            const urlWithCache = `${publicUrl}?t=${Date.now()}`;
-            await supabase
-              .from("pets")
-              .update({ photo_url: urlWithCache })
-              .eq("id", data.id);
-            finalPet = { ...data, photo_url: urlWithCache };
-          }
-        }
-        setPets((prev) => [...prev, finalPet]);
-        setShowAddPet(false);
-        setPendingPetPhoto(null);
-        showToast("Pet added!");
-      } else showToast("Failed to add pet.", "error");
-    }
-    setPetForm(emptyPetForm);
-    setMicrochipError("");
-    setSaving(false);
-  }
-
-  async function handleDeletePet(petId) {
-    if (!confirm("Remove this pet?")) return;
-    await supabase.from("pets").delete().eq("id", petId);
-    setPets((prev) => prev.filter((p) => p.id !== petId));
-    showToast("Pet removed.");
   }
 
   async function handleAddContact(petId) {
@@ -423,15 +371,119 @@ export default function ProfilePage() {
     });
   }
 
+  // ── Profile / Pet save ────────────────────────────────────────────
+  async function handleSaveProfile() {
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({
+        id: session.user.id,
+        full_name: profileForm.full_name,
+        bio: profileForm.bio,
+        zip_code: profileForm.zip_code,
+        is_public: profileForm.is_public,
+        updated_at: new Date().toISOString(),
+      });
+    if (!error) {
+      setProfile((prev) => ({ ...prev, ...profileForm }));
+      setEditingProfile(false);
+      showToast("Profile saved!");
+    } else showToast("Failed to save profile.", "error");
+    setSaving(false);
+  }
+
+  async function handleSavePet() {
+    setSaving(true);
+    if (editingPetId) {
+      const { species_other: _so, ...petFormClean } = petForm;
+      const resolvedSpecies =
+        petForm.species === "Other"
+          ? petForm.species_other || "Other"
+          : petForm.species;
+      const { error } = await supabase
+        .from("pets")
+        .update({
+          ...petFormClean,
+          species: resolvedSpecies,
+          weight_lbs: petForm.weight_lbs || null,
+          birthday: petForm.birthday || null,
+        })
+        .eq("id", editingPetId);
+      if (!error) {
+        setPets((prev) =>
+          prev.map((p) =>
+            p.id === editingPetId
+              ? { ...p, ...petForm, species: resolvedSpecies }
+              : p
+          )
+        );
+        setEditingPetId(null);
+        showToast("Pet updated!");
+      } else showToast("Failed to update pet.", "error");
+    } else {
+      const { species_other: _so, ...petFormClean } = petForm;
+      const resolvedSpecies =
+        petForm.species === "Other"
+          ? petForm.species_other || "Other"
+          : petForm.species;
+      const { data, error } = await supabase
+        .from("pets")
+        .insert({
+          owner_id: session.user.id,
+          ...petFormClean,
+          species: resolvedSpecies,
+          weight_lbs: petForm.weight_lbs || null,
+          birthday: petForm.birthday || null,
+        })
+        .select()
+        .single();
+      if (!error) {
+        let finalPet = data;
+        if (pendingPetPhoto) {
+          const ext = pendingPetPhoto.file.name.split(".").pop();
+          const filePath = `${session.user.id}/${data.id}.${ext}`;
+          const { error: uploadErr } = await supabase.storage
+            .from("pets")
+            .upload(filePath, pendingPetPhoto.file, { upsert: true });
+          if (!uploadErr) {
+            const {
+              data: { publicUrl },
+            } = supabase.storage.from("pets").getPublicUrl(filePath);
+            const urlWithCache = `${publicUrl}?t=${Date.now()}`;
+            await supabase
+              .from("pets")
+              .update({ photo_url: urlWithCache })
+              .eq("id", data.id);
+            finalPet = { ...data, photo_url: urlWithCache };
+          }
+        }
+        setPets((prev) => [...prev, finalPet]);
+        setShowAddPet(false);
+        setPendingPetPhoto(null);
+        showToast("Pet added!");
+      } else showToast("Failed to add pet.", "error");
+    }
+    setPetForm(emptyPetForm);
+    setMicrochipError("");
+    setSaving(false);
+  }
+
+  async function handleDeletePet(petId) {
+    if (!confirm("Remove this pet?")) return;
+    await supabase.from("pets").delete().eq("id", petId);
+    setPets((prev) => prev.filter((p) => p.id !== petId));
+    showToast("Pet removed.");
+  }
+
   function startEditPet(pet) {
-    setEditingProfile(false); // close profile edit if open
+    setEditingProfile(false);
     setEditingPetId(pet.id);
     setTimeout(() => {
       const el = petCardRefs.current[pet.id];
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
-      if (!inView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (rect.top < 0 || rect.bottom > window.innerHeight)
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
     setPetForm({
       name: pet.name || "",
@@ -452,6 +504,7 @@ export default function ProfilePage() {
     setPendingPetPhoto(null);
   }
 
+  // ── Helpers ───────────────────────────────────────────────────────
   const calcAge = (birthday) => {
     if (!birthday) return null;
     const years = Math.floor(
@@ -464,48 +517,22 @@ export default function ProfilePage() {
       : `${years} years old`;
   };
 
-  const speciesEmoji = (s) => (s === "Dog" ? "🐶" : "🐾");
-
-  // ── Zip → City, State lookup ──────────────────────────────────
-  useEffect(() => {
-    const zip = profile?.zip_code;
-    if (!zip || zip.length !== 5) {
-      setCityState("");
-      return;
-    }
-    fetch(`https://api.zippopotam.us/us/${zip}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d?.places?.[0]) {
-          setCityState(
-            `${d.places[0]["place name"]}, ${d.places[0]["state abbreviation"]}`
-          );
-        } else setCityState("");
-      })
-      .catch(() => setCityState(""));
-  }, [profile?.zip_code]);
-
-  // ── Auto-close edit forms on page visibility change ───────────
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.hidden) {
-        setEditingProfile(false);
-        setEditingPetId(null);
-        setShowAddPet(false);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibility);
-  }, []);
+  const speciesEmoji = (s) =>
+    s === "Dog"
+      ? "🐶"
+      : s === "Cat"
+      ? "🐱"
+      : s === "Bird"
+      ? "🐦"
+      : s === "Rabbit"
+      ? "🐰"
+      : "🐾";
 
   function formatPhone(phone) {
     if (!phone) return null;
     const d = phone.replace(/\D/g, "");
     if (d.length === 10)
       return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
-    if (d.length === 11 && d[0] === "1")
-      return `+1 (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
     return phone;
   }
 
@@ -536,6 +563,25 @@ export default function ProfilePage() {
     });
   }
 
+  // ── Zip → city/state ──────────────────────────────────────────────
+  useEffect(() => {
+    const zip = profile?.zip_code;
+    if (!zip || zip.length !== 5) {
+      setCityState("");
+      return;
+    }
+    fetch(`https://api.zippopotam.us/us/${zip}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.places?.[0])
+          setCityState(
+            `${d.places[0]["place name"]}, ${d.places[0]["state abbreviation"]}`
+          );
+        else setCityState("");
+      })
+      .catch(() => setCityState(""));
+  }, [profile?.zip_code]);
+
   const previewName = petForm.name.trim() || "...";
   const previewSubtitle = [
     petForm.breed,
@@ -552,7 +598,6 @@ export default function ProfilePage() {
   if (session === undefined || loading) return null;
   if (!session) return null;
 
-  // ─── Shared pet form fields (used in both Add and Edit) ──────────────────
   function renderPetFormFields() {
     return (
       <>
@@ -580,6 +625,9 @@ export default function ProfilePage() {
               }
             >
               <option>Dog</option>
+              <option>Cat</option>
+              <option>Bird</option>
+              <option>Rabbit</option>
               <option>Other</option>
             </select>
             {petForm.species === "Other" && (
@@ -590,7 +638,7 @@ export default function ProfilePage() {
                 onChange={(e) =>
                   setPetForm({ ...petForm, species_other: e.target.value })
                 }
-                placeholder="e.g. Guinea Pig, Ferret, Rabbit..."
+                placeholder="e.g. Guinea Pig, Ferret..."
               />
             )}
           </div>
@@ -747,18 +795,13 @@ export default function ProfilePage() {
         .input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; font-family: system-ui, sans-serif; outline: none; background: #fff; height: 40px; color: #111; -webkit-appearance: none; appearance: none; display: block; }
         .input:focus { border-color: #2d6a4f; }
         select.input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 42px; cursor: pointer; }
-        input[type="date"].input { text-align: left; padding-right: 12px; direction: ltr; }
-        input[type="date"].input::-webkit-date-and-time-value { text-align: left; margin: 0; }
-        input[type="date"].input::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
         input[type="number"].input { -moz-appearance: textfield; }
         input[type="number"].input::-webkit-outer-spin-button, input[type="number"].input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .btn-primary { padding: 8px 20px; background: #2d6a4f; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; }
+        .btn-primary { padding: 8px 20px; background: #2d6a4f; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; font-family: system-ui, sans-serif; }
         .btn-primary:hover { background: #245a42; }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-secondary { padding: 8px 20px; background: #fff; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; cursor: pointer; }
+        .btn-secondary { padding: 8px 20px; background: #fff; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: system-ui, sans-serif; }
         .btn-secondary:hover { background: #f5f5f5; }
-        .btn-danger { padding: 6px 14px; background: none; color: #c62828; border: 1px solid #c62828; border-radius: 8px; font-size: 12px; cursor: pointer; }
-        .btn-danger:hover { background: #fce8e8; }
         .section { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
         .label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
         .field { margin-bottom: 14px; }
@@ -768,17 +811,10 @@ export default function ProfilePage() {
         .pet-photo-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; }
         .pet-photo-wrap:hover .pet-photo-overlay { opacity: 1; }
         .section-divider { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin: 20px 0 12px 0; padding-top: 16px; border-top: 1px solid #f0f0f0; }
-        .pet-header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-        .pet-name-block { flex: 1; min-width: 0; }
-
         .pet-hi-card { text-align: center; padding: 16px 0 20px 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .contact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
-        /* Pet detail row: muted label + normal-weight value */
         .detail-row { margin: 0 0 10px 0; font-size: 13px; line-height: 1.4; }
-        .detail-label { color: #888; }
-        .detail-value { color: #333; }
-        .detail-value-alert { color: #c62828; }
         @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } .contact-grid { grid-template-columns: 1fr; } }
       `}</style>
 
@@ -791,7 +827,6 @@ export default function ProfilePage() {
           minHeight: "100vh",
         }}
       >
-        {/* Top nav */}
         <div
           style={{
             display: "flex",
@@ -813,9 +848,8 @@ export default function ProfilePage() {
           <Navbar />
         </div>
 
-        {/* Profile Header */}
+        {/* ── Profile header ── */}
         <div className="section">
-          {/* Row 1: Photo + Name/Email/Location */}
           <div
             style={{
               display: "flex",
@@ -923,7 +957,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Row 2: Bio — full width */}
           {profile?.bio && (
             <p
               style={{
@@ -937,7 +970,6 @@ export default function ProfilePage() {
             </p>
           )}
 
-          {/* Row 3: Saved vets link left, Edit Profile right — hidden when editing */}
           {!editingProfile && (
             <div
               style={{
@@ -1041,7 +1073,7 @@ export default function ProfilePage() {
                   htmlFor="is_public"
                   style={{ fontSize: "14px", color: "#333", cursor: "pointer" }}
                 >
-                  Make my profile public (shareable link)
+                  Make my profile public
                 </label>
               </div>
               <div style={{ display: "flex", gap: "8px" }}>
@@ -1063,7 +1095,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* My Pets */}
+        {/* ── My Pets ── */}
         <div className="section">
           <div
             style={{
@@ -1089,9 +1121,14 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {/* Add Pet Form */}
           {showAddPet && (
-            <div style={{ marginBottom: "16px" }}>
+            <div
+              style={{
+                marginBottom: "16px",
+                paddingBottom: "16px",
+                borderBottom: "1px solid #eee",
+              }}
+            >
               <div className="pet-hi-card">
                 <div
                   className="pet-photo-wrap"
@@ -1197,7 +1234,7 @@ export default function ProfilePage() {
                   }}
                   className="btn-secondary"
                 >
-                  Clear Form
+                  Clear
                 </button>
                 <button
                   onClick={() => {
@@ -1219,7 +1256,6 @@ export default function ProfilePage() {
             </p>
           )}
 
-          {/* Pet Cards */}
           {pets.map((pet) => (
             <div
               key={pet.id}
@@ -1234,7 +1270,7 @@ export default function ProfilePage() {
                 background: "#fafafa",
               }}
             >
-              {/* Pet header: photo + name vertically centered */}
+              {/* Pet header */}
               <div
                 style={{
                   display: "flex",
@@ -1309,25 +1345,22 @@ export default function ProfilePage() {
                     color: "#111",
                     fontWeight: "700",
                     flex: 1,
-                    minWidth: 0,
                   }}
                 >
                   Hi, I'm {pet.name}! {speciesEmoji(pet.species)}
                 </h3>
               </div>
 
-              {/* Inline Edit Form */}
               {editingPetId === pet.id && (
                 <div style={{ margin: "12px 0" }}>{renderPetFormFields()}</div>
               )}
 
-              {/* Tags */}
               <div
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
                   gap: "6px",
-                  marginBottom: "12px",
+                  marginBottom: pet.notes ? "8px" : "12px",
                 }}
               >
                 {pet.breed && <span className="tag">{pet.breed}</span>}
@@ -1342,7 +1375,7 @@ export default function ProfilePage() {
               {pet.notes && (
                 <p
                   style={{
-                    margin: "0 0 14px 0",
+                    margin: "0 0 12px 0",
                     fontSize: "13px",
                     color: "#666",
                     fontStyle: "italic",
@@ -1353,7 +1386,6 @@ export default function ProfilePage() {
                 </p>
               )}
 
-              {/* ── Medical details: muted label + normal-weight value ──────── */}
               {(pet.allergies ||
                 pet.medications ||
                 pet.microchip_number ||
@@ -1361,41 +1393,39 @@ export default function ProfilePage() {
                 <div
                   style={{
                     borderTop: "1px solid #eee",
-                    paddingTop: "12px",
-                    marginBottom: "8px",
+                    paddingTop: "10px",
+                    marginBottom: "10px",
                   }}
                 >
                   {pet.allergies && (
                     <p className="detail-row">
-                      <span className="detail-label">⚠️ Allergies: </span>
-                      <span className="detail-value-alert">
-                        {pet.allergies}
-                      </span>
+                      <span style={{ color: "#888" }}>⚠️ Allergies: </span>
+                      <span style={{ color: "#c62828" }}>{pet.allergies}</span>
                     </p>
                   )}
                   {pet.medications && (
                     <p className="detail-row">
-                      <span className="detail-label">💊 Medications: </span>
-                      <span className="detail-value">{pet.medications}</span>
+                      <span style={{ color: "#888" }}>💊 Medications: </span>
+                      <span style={{ color: "#333" }}>{pet.medications}</span>
                     </p>
                   )}
                   {pet.microchip_number && (
                     <p className="detail-row">
-                      <span className="detail-label">🔖 Microchip: </span>
-                      <span className="detail-value">
+                      <span style={{ color: "#888" }}>🔖 Microchip: </span>
+                      <span style={{ color: "#333" }}>
                         {pet.microchip_number}
                       </span>
                     </p>
                   )}
                   {pet.owner_name && (
                     <p className="detail-row">
-                      <span className="detail-label">👤 Owner: </span>
-                      <span className="detail-value">{pet.owner_name}</span>
+                      <span style={{ color: "#888" }}>👤 Owner: </span>
+                      <span style={{ color: "#333" }}>{pet.owner_name}</span>
                     </p>
                   )}
                   {pet.owner_phone && (
                     <p className="detail-row">
-                      <span className="detail-label">📞 Phone: </span>
+                      <span style={{ color: "#888" }}>📞 Phone: </span>
                       <a
                         href={`tel:${pet.owner_phone}`}
                         style={{ color: "#2d6a4f", textDecoration: "none" }}
@@ -1406,7 +1436,7 @@ export default function ProfilePage() {
                   )}
                   {pet.owner_email && (
                     <p className="detail-row">
-                      <span className="detail-label">✉️ Email: </span>
+                      <span style={{ color: "#888" }}>✉️ Email: </span>
                       <a
                         href={`mailto:${pet.owner_email}`}
                         style={{ color: "#2d6a4f", textDecoration: "none" }}
@@ -1418,14 +1448,8 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* Check Symptoms */}
-              <div
-                style={{
-                  marginTop: "12px",
-                  paddingTop: "12px",
-                  borderTop: "1px solid #eee",
-                }}
-              >
+              {/* Check Symptoms button */}
+              <div style={{ marginTop: "4px", marginBottom: "10px" }}>
                 <button
                   onClick={() => handleCheckSymptoms(pet)}
                   style={{
@@ -1438,24 +1462,15 @@ export default function ProfilePage() {
                     fontSize: "14px",
                     cursor: "pointer",
                     fontWeight: "600",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
+                    fontFamily: "system-ui, sans-serif",
                   }}
                 >
                   🩺 Check Symptoms for {pet.name}
                 </button>
               </div>
 
-              {/* Symptom Check History */}
-              <div
-                style={{
-                  marginTop: "10px",
-                  paddingTop: "10px",
-                  borderTop: "1px solid #eee",
-                }}
-              >
+              {/* Symptom History */}
+              <div style={{ paddingTop: "10px", borderTop: "1px solid #eee" }}>
                 <button
                   onClick={() =>
                     showHistoryFor === pet.id
@@ -1470,6 +1485,7 @@ export default function ProfilePage() {
                     cursor: "pointer",
                     padding: 0,
                     fontWeight: "600",
+                    fontFamily: "system-ui, sans-serif",
                     display: "flex",
                     alignItems: "center",
                     gap: "6px",
@@ -1479,7 +1495,7 @@ export default function ProfilePage() {
                   <span
                     style={{
                       display: "inline-block",
-                      transition: "transform 0.3s ease",
+                      transition: "transform 0.3s",
                       transform:
                         showHistoryFor === pet.id
                           ? "rotate(180deg)"
@@ -1493,12 +1509,12 @@ export default function ProfilePage() {
                 <div
                   style={{
                     overflow: "hidden",
-                    maxHeight: showHistoryFor === pet.id ? "600px" : "0px",
+                    maxHeight: showHistoryFor === pet.id ? "800px" : "0px",
                     opacity: showHistoryFor === pet.id ? 1 : 0,
                     transition:
                       showHistoryFor === pet.id
-                        ? "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease"
-                        : "max-height 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease",
+                        ? "max-height 0.4s ease, opacity 0.3s ease"
+                        : "max-height 0.25s ease, opacity 0.2s ease",
                   }}
                 >
                   <div style={{ marginTop: "10px" }}>
@@ -1516,80 +1532,164 @@ export default function ProfilePage() {
                     ) : (
                       (symptomHistory[pet.id] || []).map((check) => {
                         const t = triageLabel(check.triage_result);
+                        const isConfirming =
+                          deleteCheckConfirm?.checkId === check.id;
                         return (
                           <div
                             key={check.id}
                             style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
                               padding: "8px 0",
-                              borderBottom: "1px solid #f0f0f0",
+                              borderBottom: "1px solid #f5f5f5",
                             }}
                           >
                             <div
                               style={{
                                 display: "flex",
                                 alignItems: "center",
+                                justifyContent: "space-between",
                                 gap: "8px",
                               }}
                             >
-                              <span style={{ fontSize: "16px" }}>
-                                {t.emoji}
-                              </span>
-                              <div>
-                                <p
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  minWidth: 0,
+                                }}
+                              >
+                                <span
+                                  style={{ fontSize: "16px", flexShrink: 0 }}
+                                >
+                                  {t.emoji}
+                                </span>
+                                <div style={{ minWidth: 0 }}>
+                                  <p
+                                    style={{
+                                      margin: 0,
+                                      fontSize: "13px",
+                                      fontWeight: "600",
+                                      color: t.color,
+                                    }}
+                                  >
+                                    {t.label}
+                                  </p>
+                                  <p
+                                    style={{
+                                      margin: 0,
+                                      fontSize: "12px",
+                                      color: "#aaa",
+                                    }}
+                                  >
+                                    {formatDate(check.created_at)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: "6px",
+                                  alignItems: "center",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <button
+                                  onClick={() =>
+                                    handleViewSymptomCheck(pet, check)
+                                  }
                                   style={{
-                                    margin: 0,
-                                    fontSize: "13px",
-                                    fontWeight: "600",
-                                    color: t.color,
+                                    fontSize: "11px",
+                                    color: "#2d6a4f",
+                                    background: "none",
+                                    border: "1px solid #c8e6c9",
+                                    borderRadius: "6px",
+                                    padding: "3px 10px",
+                                    cursor: "pointer",
+                                    fontFamily: "system-ui, sans-serif",
                                   }}
                                 >
-                                  {t.label}
-                                </p>
-                                <p
-                                  style={{
-                                    margin: 0,
-                                    fontSize: "12px",
-                                    color: "#aaa",
-                                  }}
-                                >
-                                  {formatDate(check.created_at)}
-                                </p>
+                                  View →
+                                </button>
+                                {!isConfirming ? (
+                                  <button
+                                    onClick={() =>
+                                      setDeleteCheckConfirm({
+                                        petId: pet.id,
+                                        checkId: check.id,
+                                      })
+                                    }
+                                    style={{
+                                      fontSize: "11px",
+                                      color: "#c62828",
+                                      background: "none",
+                                      border: "1px solid #ffcdd2",
+                                      borderRadius: "6px",
+                                      padding: "3px 8px",
+                                      cursor: "pointer",
+                                      fontFamily: "system-ui, sans-serif",
+                                    }}
+                                  >
+                                    🗑️
+                                  </button>
+                                ) : (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      gap: "4px",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        fontSize: "11px",
+                                        color: "#c62828",
+                                        fontWeight: "600",
+                                      }}
+                                    >
+                                      Delete?
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteSymptomCheck(
+                                          pet.id,
+                                          check.id
+                                        )
+                                      }
+                                      style={{
+                                        fontSize: "11px",
+                                        color: "#fff",
+                                        background: "#c62828",
+                                        border: "none",
+                                        borderRadius: "6px",
+                                        padding: "3px 8px",
+                                        cursor: "pointer",
+                                        fontWeight: "600",
+                                        fontFamily: "system-ui, sans-serif",
+                                      }}
+                                    >
+                                      Yes
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        setDeleteCheckConfirm(null)
+                                      }
+                                      style={{
+                                        fontSize: "11px",
+                                        color: "#555",
+                                        background: "#f0f0f0",
+                                        border: "none",
+                                        borderRadius: "6px",
+                                        padding: "3px 8px",
+                                        cursor: "pointer",
+                                        fontFamily: "system-ui, sans-serif",
+                                      }}
+                                    >
+                                      No
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            <button
-                              onClick={() => {
-                                try {
-                                  const transcript = JSON.parse(
-                                    check.transcript || "[]"
-                                  );
-                                  sessionStorage.setItem(
-                                    SESSION_KEY,
-                                    JSON.stringify({
-                                      selectedPet: pet,
-                                      messages: transcript,
-                                      triageResult: check.triage_result,
-                                      guestMode: false,
-                                      freeCheckUsed: false,
-                                    })
-                                  );
-                                } catch (e) {}
-                                router.push("/symptom-checker");
-                              }}
-                              style={{
-                                fontSize: "11px",
-                                color: "#2d6a4f",
-                                background: "none",
-                                border: "1px solid #c8e6c9",
-                                borderRadius: "6px",
-                                padding: "3px 10px",
-                                cursor: "pointer",
-                              }}
-                            >
-                              View →
-                            </button>
                           </div>
                         );
                       })
@@ -1620,6 +1720,7 @@ export default function ProfilePage() {
                     cursor: "pointer",
                     padding: 0,
                     fontWeight: "600",
+                    fontFamily: "system-ui, sans-serif",
                     display: "flex",
                     alignItems: "center",
                     gap: "6px",
@@ -1629,7 +1730,7 @@ export default function ProfilePage() {
                   <span
                     style={{
                       display: "inline-block",
-                      transition: "transform 0.3s ease",
+                      transition: "transform 0.3s",
                       transform:
                         showContactsFor === pet.id
                           ? "rotate(180deg)"
@@ -1647,8 +1748,8 @@ export default function ProfilePage() {
                     opacity: showContactsFor === pet.id ? 1 : 0,
                     transition:
                       showContactsFor === pet.id
-                        ? "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease"
-                        : "max-height 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease",
+                        ? "max-height 0.4s ease, opacity 0.3s ease"
+                        : "max-height 0.25s ease, opacity 0.2s ease",
                   }}
                 >
                   <div style={{ marginTop: "10px" }}>
@@ -1660,10 +1761,7 @@ export default function ProfilePage() {
                             justifyContent: "space-between",
                             alignItems: "center",
                             padding: "8px 0",
-                            borderBottom:
-                              editingContactId === c.id
-                                ? "none"
-                                : "1px solid #f0f0f0",
+                            borderBottom: "1px solid #f5f5f5",
                           }}
                         >
                           <div>
@@ -1717,8 +1815,16 @@ export default function ProfilePage() {
                             </button>
                             <button
                               onClick={() => handleDeleteContact(pet.id, c.id)}
-                              className="btn-danger"
-                              style={{ fontSize: "11px", padding: "3px 8px" }}
+                              style={{
+                                fontSize: "11px",
+                                color: "#c62828",
+                                background: "none",
+                                border: "1px solid #ffcdd2",
+                                borderRadius: "6px",
+                                padding: "3px 8px",
+                                cursor: "pointer",
+                                fontFamily: "system-ui, sans-serif",
+                              }}
                             >
                               Remove
                             </button>
@@ -1731,7 +1837,6 @@ export default function ProfilePage() {
                               borderRadius: "8px",
                               padding: "12px",
                               marginBottom: "8px",
-                              borderBottom: "1px solid #f0f0f0",
                             }}
                           >
                             <div className="contact-grid">
@@ -1746,7 +1851,6 @@ export default function ProfilePage() {
                                       name: e.target.value,
                                     })
                                   }
-                                  placeholder="Contact name"
                                 />
                               </div>
                               <div>
@@ -1760,7 +1864,6 @@ export default function ProfilePage() {
                                       phone: handlePhoneInput(e.target.value),
                                     })
                                   }
-                                  placeholder="(555) 555-5555"
                                 />
                               </div>
                               <div>
@@ -1774,7 +1877,6 @@ export default function ProfilePage() {
                                       relationship: e.target.value,
                                     })
                                   }
-                                  placeholder="e.g. Spouse"
                                 />
                               </div>
                               <button
@@ -1858,7 +1960,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Bottom action row — swaps based on edit state */}
+              {/* Bottom row */}
               <div
                 style={{
                   display: "flex",
@@ -1899,21 +2001,12 @@ export default function ProfilePage() {
                         const url = `${window.location.origin}/pet/${pet.id}`;
                         if (navigator.share) {
                           navigator
-                            .share({
-                              title: `${pet.name}'s Medical Card`,
-                              text: `View ${pet.name}'s pet medical card on PetParrk`,
-                              url,
-                            })
-                            .catch((e) => {
-                              if (e.name !== "AbortError") console.error(e);
-                            });
-                        } else if (
-                          navigator.clipboard &&
-                          window.isSecureContext
-                        ) {
+                            .share({ title: `${pet.name}'s Medical Card`, url })
+                            .catch(() => {});
+                        } else if (navigator.clipboard) {
                           navigator.clipboard
                             .writeText(url)
-                            .then(() => showToast("Medical card link copied!"));
+                            .then(() => showToast("Link copied!"));
                         } else {
                           window.prompt("Copy this link:", url);
                         }
@@ -1974,8 +2067,8 @@ export default function ProfilePage() {
           >
             🐾 PetParrk
           </p>
-          <p style={{ margin: "0" }}>
-            Questions or feedback?{" "}
+          <p style={{ margin: 0 }}>
+            Questions?{" "}
             <a
               href="mailto:bkalthompson@gmail.com"
               style={{ color: "#2d6a4f", textDecoration: "none" }}
