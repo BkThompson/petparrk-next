@@ -362,8 +362,22 @@ export default function ProfilePage() {
     showToast("Contact removed.");
   }
 
+  // ── Single-active-context: only one edit state open at a time ────
+  function closeAllEditing() {
+    setEditingProfile(false);
+    setShowAddPet(false);
+    setEditingPetId(null);
+    setEditingContactId(null);
+    setNewContact({ name: "", phone: "", relationship: "" });
+    setPetForm(emptyPetForm);
+    setPendingPetPhoto(null);
+    setMicrochipError("");
+  }
+
   function startEditContact(c) {
+    // Close any other open contact edit first
     setEditingContactId(c.id);
+    setNewContact({ name: "", phone: "", relationship: "" }); // close add-contact form
     setEditContactForm({
       name: c.name || "",
       phone: c.phone || "",
@@ -476,7 +490,7 @@ export default function ProfilePage() {
   }
 
   function startEditPet(pet) {
-    setEditingProfile(false);
+    closeAllEditing();
     setEditingPetId(pet.id);
     setTimeout(() => {
       const el = petCardRefs.current[pet.id];
@@ -1029,9 +1043,8 @@ export default function ProfilePage() {
               </Link>
               <button
                 onClick={() => {
+                  closeAllEditing();
                   setEditingProfile(true);
-                  setEditingPetId(null);
-                  setShowAddPet(false);
                 }}
                 className="btn-secondary"
               >
@@ -1146,10 +1159,12 @@ export default function ProfilePage() {
             </h2>
             <button
               onClick={() => {
-                setShowAddPet(!showAddPet);
-                setEditingPetId(null);
-                setPetForm(emptyPetForm);
-                setPendingPetPhoto(null);
+                if (showAddPet) {
+                  setShowAddPet(false);
+                } else {
+                  closeAllEditing();
+                  setShowAddPet(true);
+                }
               }}
               className="btn-primary"
             >
@@ -1508,11 +1523,15 @@ export default function ProfilePage() {
               {/* Symptom History */}
               <div style={{ paddingTop: "10px", borderTop: "1px solid #eee" }}>
                 <button
-                  onClick={() =>
-                    showHistoryFor === pet.id
-                      ? setShowHistoryFor(null)
-                      : fetchSymptomHistory(pet.id)
-                  }
+                  onClick={() => {
+                    if (showHistoryFor === pet.id) {
+                      setShowHistoryFor(null);
+                    } else {
+                      setEditingContactId(null);
+                      setNewContact({ name: "", phone: "", relationship: "" });
+                      fetchSymptomHistory(pet.id);
+                    }
+                  }}
                   style={{
                     background: "none",
                     border: "none",
@@ -1748,11 +1767,17 @@ export default function ProfilePage() {
                 }}
               >
                 <button
-                  onClick={() =>
-                    showContactsFor === pet.id
-                      ? setShowContactsFor(null)
-                      : fetchContactsForPet(pet.id)
-                  }
+                  onClick={() => {
+                    if (showContactsFor === pet.id) {
+                      setShowContactsFor(null);
+                      setEditingContactId(null);
+                      setNewContact({ name: "", phone: "", relationship: "" });
+                    } else {
+                      setEditingContactId(null);
+                      setNewContact({ name: "", phone: "", relationship: "" });
+                      fetchContactsForPet(pet.id);
+                    }
+                  }}
                   style={{
                     background: "none",
                     border: "none",
