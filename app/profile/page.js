@@ -255,11 +255,13 @@ export default function ProfilePage() {
       data: { publicUrl },
     } = supabase.storage.from("avatars").getPublicUrl(filePath);
     const urlWithCache = `${publicUrl}?t=${Date.now()}`;
-    await supabase.from("profiles").upsert({
-      id: session.user.id,
-      avatar_url: urlWithCache,
-      updated_at: new Date().toISOString(),
-    });
+    await supabase
+      .from("profiles")
+      .upsert({
+        id: session.user.id,
+        avatar_url: urlWithCache,
+        updated_at: new Date().toISOString(),
+      });
     setProfile((prev) => ({ ...prev, avatar_url: urlWithCache }));
     showToast("Profile photo updated!");
     setUploadingPhoto(false);
@@ -372,14 +374,16 @@ export default function ProfilePage() {
   // ── Profile / Pet save ────────────────────────────────────────────
   async function handleSaveProfile() {
     setSaving(true);
-    const { error } = await supabase.from("profiles").upsert({
-      id: session.user.id,
-      full_name: profileForm.full_name,
-      bio: profileForm.bio,
-      zip_code: profileForm.zip_code,
-      is_public: profileForm.is_public,
-      updated_at: new Date().toISOString(),
-    });
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({
+        id: session.user.id,
+        full_name: profileForm.full_name,
+        bio: profileForm.bio,
+        zip_code: profileForm.zip_code,
+        is_public: profileForm.is_public,
+        updated_at: new Date().toISOString(),
+      });
     if (!error) {
       setProfile((prev) => ({ ...prev, ...profileForm }));
       setEditingProfile(false);
@@ -802,7 +806,7 @@ export default function ProfilePage() {
         .btn-secondary { padding: 0 20px; height: 44px; background: #fff; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; white-space: nowrap; }
         .btn-secondary:hover { background: #f5f5f5; }
         .btn-sm { height: 40px; padding: 0 14px; font-size: 13px; border-radius: 8px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; white-space: nowrap; }
-        .btn-danger-sm { height: 40px; padding: 0 14px; font-size: 13px; border-radius: 8px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; color: #c62828; background: none; border: 1px solid #ffcdd2; }
+        .btn-danger-sm { height: 44px; padding: 0 20px; font-size: 14px; border-radius: 8px; cursor: pointer; font-family: system-ui, sans-serif; display: inline-flex; align-items: center; color: #c62828; background: none; border: 1px solid #ffcdd2; white-space: nowrap; }
 
         /* ── Layout ── */
         .section { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
@@ -835,6 +839,7 @@ export default function ProfilePage() {
         @media (max-width: 600px) {
           .form-grid { grid-template-columns: 1fr; }
           .contact-grid { grid-template-columns: 1fr; }
+          .contact-grid .btn-primary { width: 100%; justify-content: center; margin-top: 4px; }
           .history-row { flex-direction: column; align-items: flex-start; gap: 8px; }
           .history-row-btns { width: 100%; }
           .btn-row { flex-direction: column; align-items: stretch; }
@@ -1635,20 +1640,23 @@ export default function ProfilePage() {
                                 </div>
                               </div>
                             ) : (
-                              /* Confirm state: info on top, confirm buttons below */
-                              <div>
+                              /* Confirm state — uses same history-row class so it stays inline above 600px */
+                              <div className="history-row">
                                 <div
                                   style={{
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "8px",
-                                    marginBottom: "8px",
+                                    minWidth: 0,
+                                    flex: 1,
                                   }}
                                 >
-                                  <span style={{ fontSize: "16px" }}>
+                                  <span
+                                    style={{ fontSize: "16px", flexShrink: 0 }}
+                                  >
                                     {t.emoji}
                                   </span>
-                                  <div>
+                                  <div style={{ minWidth: 0 }}>
                                     <p
                                       style={{
                                         margin: 0,
@@ -1670,57 +1678,38 @@ export default function ProfilePage() {
                                     </p>
                                   </div>
                                 </div>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    gap: "8px",
-                                    alignItems: "center",
-                                  }}
-                                >
+                                <div className="history-row-btns">
                                   <span
                                     style={{
                                       fontSize: "12px",
                                       color: "#c62828",
                                       fontWeight: "600",
+                                      whiteSpace: "nowrap",
                                     }}
                                   >
-                                    Delete this check?
+                                    Delete?
                                   </span>
                                   <button
                                     onClick={() =>
                                       handleDeleteSymptomCheck(pet.id, check.id)
                                     }
+                                    className="btn-sm"
                                     style={{
-                                      fontSize: "12px",
                                       color: "#fff",
                                       background: "#c62828",
                                       border: "none",
-                                      borderRadius: "8px",
-                                      padding: "0 14px",
-                                      cursor: "pointer",
                                       fontWeight: "600",
-                                      fontFamily: "system-ui, sans-serif",
-                                      height: "40px",
-                                      display: "inline-flex",
-                                      alignItems: "center",
                                     }}
                                   >
                                     Yes
                                   </button>
                                   <button
                                     onClick={() => setDeleteCheckConfirm(null)}
+                                    className="btn-sm"
                                     style={{
-                                      fontSize: "12px",
                                       color: "#555",
                                       background: "#f0f0f0",
                                       border: "none",
-                                      borderRadius: "8px",
-                                      padding: "0 14px",
-                                      cursor: "pointer",
-                                      fontFamily: "system-ui, sans-serif",
-                                      height: "40px",
-                                      display: "inline-flex",
-                                      alignItems: "center",
                                     }}
                                   >
                                     No
@@ -1799,74 +1788,78 @@ export default function ProfilePage() {
                             borderBottom: "1px solid #f5f5f5",
                           }}
                         >
-                          <div className="contact-row-info">
-                            <span
-                              style={{
-                                fontSize: "14px",
-                                fontWeight: "600",
-                                color: "#111",
-                              }}
-                            >
-                              {c.name}
-                            </span>
-                            {c.relationship && (
+                          <div className="history-row">
+                            <div style={{ minWidth: 0, flex: 1 }}>
                               <span
                                 style={{
-                                  fontSize: "12px",
-                                  color: "#888",
-                                  marginLeft: "8px",
+                                  fontSize: "14px",
+                                  fontWeight: "600",
+                                  color: "#111",
                                 }}
                               >
-                                ({c.relationship})
+                                {c.name}
                               </span>
-                            )}
-                            {c.phone && (
-                              <span
-                                style={{
-                                  display: "block",
-                                  fontSize: "13px",
-                                  marginTop: "4px",
-                                }}
-                              >
-                                <a
-                                  href={`tel:${c.phone}`}
+                              {c.relationship && (
+                                <span
                                   style={{
-                                    color: "#2d6a4f",
-                                    textDecoration: "none",
+                                    fontSize: "12px",
+                                    color: "#888",
+                                    marginLeft: "8px",
                                   }}
                                 >
-                                  📞 {formatPhone(c.phone)}
-                                </a>
-                              </span>
-                            )}
-                          </div>
-                          <div className="contact-row-btns">
-                            <button
-                              onClick={() =>
-                                editingContactId === c.id
-                                  ? setEditingContactId(null)
-                                  : startEditContact(c)
-                              }
-                              className="btn-sm"
-                              style={{
-                                background: "#fff",
-                                color: "#555",
-                                border: "1px solid #ddd",
-                              }}
-                            >
-                              {editingContactId === c.id ? "Cancel" : "Edit"}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteContact(pet.id, c.id)}
-                              className="btn-sm"
-                              style={{
-                                color: "#c62828",
-                                background: "none",
-                                border: "1px solid #ffcdd2",
-                              }}
-                            >
-                              Remove
-                            </button>
+                                  ({c.relationship})
+                                </span>
+                              )}
+                              {c.phone && (
+                                <span
+                                  style={{
+                                    display: "block",
+                                    fontSize: "13px",
+                                    marginTop: "6px",
+                                  }}
+                                >
+                                  <a
+                                    href={`tel:${c.phone}`}
+                                    style={{
+                                      color: "#2d6a4f",
+                                      textDecoration: "none",
+                                    }}
+                                  >
+                                    📞 {formatPhone(c.phone)}
+                                  </a>
+                                </span>
+                              )}
+                            </div>
+                            <div className="history-row-btns">
+                              <button
+                                onClick={() =>
+                                  editingContactId === c.id
+                                    ? setEditingContactId(null)
+                                    : startEditContact(c)
+                                }
+                                className="btn-sm"
+                                style={{
+                                  background: "#fff",
+                                  color: "#555",
+                                  border: "1px solid #ddd",
+                                }}
+                              >
+                                {editingContactId === c.id ? "Cancel" : "Edit"}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDeleteContact(pet.id, c.id)
+                                }
+                                className="btn-sm"
+                                style={{
+                                  color: "#c62828",
+                                  background: "none",
+                                  border: "1px solid #ffcdd2",
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
                           </div>
                         </div>
                         {editingContactId === c.id && (
@@ -1923,6 +1916,10 @@ export default function ProfilePage() {
                                   handleUpdateContact(pet.id, c.id)
                                 }
                                 className="btn-primary"
+                                style={{
+                                  height: "40px",
+                                  alignSelf: "flex-end",
+                                }}
                               >
                                 Save
                               </button>
@@ -1989,6 +1986,7 @@ export default function ProfilePage() {
                       <button
                         onClick={() => handleAddContact(pet.id)}
                         className="btn-primary"
+                        style={{ height: "40px", alignSelf: "flex-end" }}
                       >
                         Add
                       </button>
@@ -2036,7 +2034,7 @@ export default function ProfilePage() {
                     }}
                     className="btn-secondary"
                   >
-                    Share
+                    🔗 Share
                   </button>
                   <button
                     onClick={() => startEditPet(pet)}
@@ -2048,7 +2046,7 @@ export default function ProfilePage() {
                     onClick={() => handleDeletePet(pet.id)}
                     className="btn-danger-sm"
                   >
-                    Delete
+                    🗑️ Delete
                   </button>
                 </div>
               )}

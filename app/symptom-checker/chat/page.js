@@ -260,7 +260,13 @@ export default function SymptomCheckerChatPage() {
       const transcript = e.results[0][0].transcript;
       setInput((prev) => (prev ? prev + " " + transcript : transcript));
     };
-    recognition.onerror = () => setRecording(false);
+    recognition.onerror = (e) => {
+      setRecording(false);
+      if (e.error === "not-allowed")
+        alert(
+          "Microphone access was denied. Please allow mic access in your browser settings."
+        );
+    };
     recognition.onend = () => setRecording(false);
 
     recognitionRef.current = recognition;
@@ -1531,47 +1537,53 @@ export default function SymptomCheckerChatPage() {
 
         {!(guestMode && freeCheckUsed) && (
           <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
-            <textarea
-              ref={inputRef}
-              className="chat-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                recording
-                  ? "Listening..."
-                  : triageResult
-                  ? "Ask a follow-up question..."
-                  : "Add more detail or ask a follow-up..."
-              }
-              rows={2}
-              style={{
-                flex: 1,
-                borderColor: recording ? "#2d6a4f" : undefined,
-              }}
-            />
-            {speechSupported && (
-              <button
-                onClick={toggleRecording}
-                title={recording ? "Stop recording" : "Record voice"}
+            <div style={{ flex: 1, position: "relative" }}>
+              <textarea
+                ref={inputRef}
+                className="chat-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  recording
+                    ? "Listening..."
+                    : triageResult
+                    ? "Ask a follow-up question..."
+                    : "Add more detail or ask a follow-up..."
+                }
+                rows={2}
                 style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "12px",
-                  border: recording ? "2px solid #c62828" : "1px solid #ddd",
-                  background: recording ? "#fce8e8" : "#fff",
-                  cursor: "pointer",
-                  fontSize: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  animation: recording ? "pulse 1.2s infinite" : "none",
+                  paddingRight: speechSupported ? "40px" : "14px",
+                  borderColor: recording ? "#2d6a4f" : undefined,
                 }}
-              >
-                {recording ? "⏹️" : "🎙️"}
-              </button>
-            )}
+              />
+              {speechSupported && (
+                <button
+                  onClick={toggleRecording}
+                  title={recording ? "Stop recording" : "Record voice"}
+                  style={{
+                    position: "absolute",
+                    right: "8px",
+                    bottom: "8px",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "6px",
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    fontSize: "16px",
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: recording ? "#c62828" : "#aaa",
+                    animation: recording ? "pulse 1.2s infinite" : "none",
+                  }}
+                >
+                  {recording ? "⏹" : "🎙"}
+                </button>
+              )}
+            </div>
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
