@@ -159,7 +159,7 @@ export default function AdminPage() {
 
   async function fetchSymptomLogs() {
     setSymptomLoading(true);
-    const { data } = await supabase.from("symptom_checks").select("id, created_at, triage_result, species, pets(name)").order("created_at", { ascending: false }).limit(200);
+    const { data } = await supabase.from("symptom_checks").select("id, created_at, triage_result, species").order("created_at", { ascending: false }).limit(200);
     setSymptomLogs(data || []); setSymptomLoading(false);
   }
 
@@ -816,7 +816,7 @@ export default function AdminPage() {
                     const cfg = TRIAGE_CONFIG[s.triage_result] || { color: "#888", bg: "#f5f5f5", label: s.triage_result };
                     return (
                       <div key={s.id} className="log-row">
-                        <span style={{ fontSize: "13px", fontWeight: "600", color: "#111" }}>{s.pets?.name || <span style={{ color: "#bbb", fontStyle: "italic" }}>Guest</span>}</span>
+                        <span style={{ fontSize: "13px", fontWeight: "600", color: "#111" }}>{s.pet_id ? <span style={{ color: "#888", fontFamily: "monospace", fontSize: "11px" }}>{s.pet_id.slice(0,8)}…</span> : <span style={{ color: "#bbb", fontStyle: "italic" }}>Guest</span>}</span>
                         <span style={{ fontSize: "13px", color: "#666", textTransform: "capitalize" }}>{s.species || "—"}</span>
                         <span style={{ fontSize: "11px", fontWeight: "600", color: cfg.color, background: cfg.bg, padding: "2px 8px", borderRadius: "20px", whiteSpace: "nowrap", display: "inline-block" }}>{cfg.label || s.triage_result}</span>
                         <span style={{ fontSize: "12px", color: "#bbb" }}>{formatDateTime(s.created_at)}</span>
