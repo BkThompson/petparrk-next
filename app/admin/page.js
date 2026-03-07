@@ -29,20 +29,20 @@ const STATUS_TYPES = ["active", "inactive", "pending"];
 const PRICE_TYPES = ["exact", "range", "starting"];
 
 const TRIAGE_CONFIG = {
-  emergency: {
+  EMERGENCY: {
     color: "#c62828",
     bg: "#fdecea",
     emoji: "🚨",
     label: "Emergency",
   },
-  see_vet_soon: {
+  SEE_VET: {
     color: "#e65100",
     bg: "#fff3e0",
     emoji: "🟡",
     label: "See vet soon",
   },
-  monitor: { color: "#1565c0", bg: "#e3f2fd", emoji: "🔵", label: "Monitor" },
-  looks_ok: { color: "#2d6a4f", bg: "#e8f5e9", emoji: "✅", label: "Looks OK" },
+  MONITOR: { color: "#1565c0", bg: "#e3f2fd", emoji: "🔵", label: "Monitor" },
+  LOOKS_OK: { color: "#2d6a4f", bg: "#e8f5e9", emoji: "✅", label: "Looks OK" },
 };
 
 export default function AdminPage() {
