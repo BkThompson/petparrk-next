@@ -6,10 +6,7 @@ import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 
 // ── Admin whitelist ───────────────────────────────────────────────────────────
-const ADMIN_EMAILS = [
-  "bkalthompson@gmail.com",
-  "maggie.tursi@gmail.com", // ← update with Susan's real email
-];
+const ADMIN_EMAILS = ["bkalthompson@gmail.com", "maggie.tursi@gmail.com"];
 
 const TABS = [
   "Submissions",
@@ -255,7 +252,7 @@ export default function AdminPage() {
     setSymptomLoading(true);
     const { data } = await supabase
       .from("symptom_checks")
-      .select("id, created_at, triage_result, pet_id")
+      .select("id, created_at, triage_result, pet_id, pets(name, species)")
       .order("created_at", { ascending: false })
       .limit(200);
     setSymptomLogs(data || []);
@@ -2708,7 +2705,7 @@ export default function AdminPage() {
                     }}
                   >
                     <span>Pet</span>
-                    <span>Pet ID</span>
+                    <span>Species</span>
                     <span>Result</span>
                     <span>Date</span>
                   </div>
@@ -2739,17 +2736,7 @@ export default function AdminPage() {
                             color: "#111",
                           }}
                         >
-                          {s.pet_id ? (
-                            <span
-                              style={{
-                                color: "#888",
-                                fontFamily: "monospace",
-                                fontSize: "11px",
-                              }}
-                            >
-                              {s.pet_id.slice(0, 8)}…
-                            </span>
-                          ) : (
+                          {s.pets?.name || (
                             <span
                               style={{ color: "#bbb", fontStyle: "italic" }}
                             >
@@ -2759,12 +2746,12 @@ export default function AdminPage() {
                         </span>
                         <span
                           style={{
-                            fontSize: "11px",
-                            color: "#aaa",
-                            fontFamily: "monospace",
+                            fontSize: "13px",
+                            color: "#666",
+                            textTransform: "capitalize",
                           }}
                         >
-                          {s.pet_id ? s.pet_id.slice(0, 8) + "…" : "Guest"}
+                          {s.pets?.species || "—"}
                         </span>
                         <span
                           style={{
