@@ -172,7 +172,7 @@ export default function AdminPage() {
     setUnverifiedLoading(true);
     const { data } = await supabase
       .from("vet_prices")
-      .select("*, services(name), vets(name)")
+      .select("*, services(name), vets(name), pending_vets(name)")
       .eq("is_verified", false)
       .eq("source", "ai_scraper")
       .order("created_at", { ascending: false });
@@ -780,7 +780,7 @@ export default function AdminPage() {
                       {unverifiedPrices.map((p, i) => (
                         <div key={p.id} style={{ padding: "12px 16px", borderBottom: i < unverifiedPrices.length - 1 ? "1px solid #f0f0f0" : "none", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                           <div style={{ flex: 1, minWidth: "200px" }}>
-                            <div style={{ fontWeight: "600", fontSize: "13px", color: "#111" }}>{p.vets?.name || "Unknown vet"}</div>
+                            <div style={{ fontWeight: "600", fontSize: "13px", color: "#111" }}>{p.vets?.name || p.pending_vets?.name || "Unknown vet"}</div>
                             <div style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}>{p.services?.name || "Unknown service"} — <span style={{ color: "#2d6a4f", fontWeight: "600" }}>{formatPrice(p.price_low, p.price_high, p.price_type)}</span></div>
                             {p.notes && <div style={{ fontSize: "11px", color: "#888", fontStyle: "italic", marginTop: "2px" }}>{p.notes}</div>}
                           </div>
