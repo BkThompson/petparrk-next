@@ -89,6 +89,10 @@ export default function AdminPage() {
   const [callPrices, setCallPrices] = useState([]);
   const [callSaving, setCallSaving] = useState(false);
 
+  // Unverified prices
+  const [unverifiedPrices, setUnverifiedPrices] = useState([]);
+  const [unverifiedLoading, setUnverifiedLoading] = useState(true);
+
   // Stats
   const [stats, setStats] = useState({ activeVets: 0, pendingSubs: 0, totalPrices: 0, pendingVets: 0, totalUsers: 0, totalSymptomChecks: 0 });
 
@@ -117,7 +121,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!authorized) return;
     fetchSubmissions(); fetchPendingVets(); fetchVets();
-    fetchServices(); fetchUsers(); fetchSymptomLogs(); fetchStats(); fetchCallQueue();
+    fetchServices(); fetchUsers(); fetchSymptomLogs(); fetchStats(); fetchCallQueue(); fetchUnverifiedPrices();
   }, [authorized]);
 
   async function fetchStats() {
@@ -162,6 +166,29 @@ export default function AdminPage() {
     setUsersLoading(true);
     const { data } = await supabase.from("profiles").select("id, full_name, bio, zip_code, created_at, is_public").order("created_at", { ascending: false });
     setUsers(data || []); setUsersLoading(false);
+  }
+
+  async function fetchUnverifiedPrices() {
+    setUnverifiedLoading(true);
+    const { data } = await supabase
+      .from("vet_prices")
+      .select("*, services(name), vets(name)")
+      .eq("is_verified", false)
+      .eq("source", "ai_scraper")
+      .order("created_at", { ascending: false });
+    setUnverifiedPrices(data || []);
+    setUnverifiedLoading(false);
+  }
+
+  async function approveUnverifiedPrice(id) {
+    await supabase.from("vet_prices").update({ is_verified: true }).eq("id", id);
+    setUnverifiedPrices(prev => prev.filter(p => p.id !== id));
+    fetchStats();
+  }
+
+  async function rejectUnverifiedPrice(id) {
+    await supabase.from("vet_prices").delete().eq("id", id);
+    setUnverifiedPrices(prev => prev.filter(p => p.id !== id));
   }
 
   async function fetchCallQueue() {
@@ -739,6 +766,34 @@ export default function AdminPage() {
             {/* ── PRICES ───────────────────────────────────────────── */}
             {tab === "Prices" && (
               <div>
+                {/* Unverified prices from AI scraper */}
+                {unverifiedPrices.length > 0 && (
+                  <div style={{ marginBottom: "24px" }}>
+                    <div className="section-header" style={{ marginBottom: "12px" }}>
+                      <h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>
+                        🤖 AI-Found Prices
+                        <span style={{ marginLeft: "8px", fontSize: "12px", background: "#fff8e1", color: "#e65100", padding: "2px 8px", borderRadius: "20px", fontWeight: "600" }}>{unverifiedPrices.length} to review</span>
+                      </h2>
+                      <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>Found by the price scraper — verify before going live</p>
+                    </div>
+                    <div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: "8px", overflow: "hidden" }}>
+                      {unverifiedPrices.map((p, i) => (
+                        <div key={p.id} style={{ padding: "12px 16px", borderBottom: i < unverifiedPrices.length - 1 ? "1px solid #f0f0f0" : "none", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                          <div style={{ flex: 1, minWidth: "200px" }}>
+                            <div style={{ fontWeight: "600", fontSize: "13px", color: "#111" }}>{p.vets?.name || "Unknown vet"}</div>
+                            <div style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}>{p.services?.name || "Unknown service"} — <span style={{ color: "#2d6a4f", fontWeight: "600" }}>{formatPrice(p.price_low, p.price_high, p.price_type)}</span></div>
+                            {p.notes && <div style={{ fontSize: "11px", color: "#888", fontStyle: "italic", marginTop: "2px" }}>{p.notes}</div>}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <button className="adm-btn adm-btn-green" onClick={() => approveUnverifiedPrice(p.id)}>✓ Approve</button>
+                            <button className="adm-btn adm-btn-red" onClick={() => rejectUnverifiedPrice(p.id)}>✕ Reject</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {unverifiedLoading && <p style={{ color: "#888", fontSize: "14px" }}>Loading unverified prices...</p>}
                 <div className="section-header"><h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>Prices</h2></div>
                 <div style={{ marginBottom: "16px", maxWidth: "400px" }}>
                   <label className="field-label">Select Vet</label>
