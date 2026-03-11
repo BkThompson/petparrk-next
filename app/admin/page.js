@@ -59,6 +59,7 @@ export default function AdminPage() {
 
   // Prices
   const [selectedVetId, setSelectedVetId] = useState("");
+  const [vetPriceSearch, setVetPriceSearch] = useState("");
   const [vetPrices, setVetPrices] = useState([]);
   const [services, setServices] = useState([]);
   const [pricesLoading, setPricesLoading] = useState(false);
@@ -210,6 +211,24 @@ export default function AdminPage() {
     setCallSaving(true);
     const validPrices = callPrices.filter(p => p.service_id && (p.price_low || p.call_for_quote));
 
+    function cleanPrice(p, vetId) {
+      return {
+        vet_id: vetId,
+        service_id: p.service_id,
+        price_low: p.price_low ? parseFloat(p.price_low) : null,
+        price_high: p.price_high ? parseFloat(p.price_high) : null,
+        price_type: p.price_type || "exact",
+        includes_bloodwork: !!p.includes_bloodwork,
+        includes_xrays: !!p.includes_xrays,
+        includes_anesthesia: !!p.includes_anesthesia,
+        species: p.species || "dog",
+        call_for_quote: !!p.call_for_quote,
+        notes: p.notes || null,
+        is_verified: true,
+        source: "call_sheet",
+      };
+    }
+
     // If pending vet, approve it first
     if (vet._source === "pending") {
       const slug = (vet.slug || vet.name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -222,14 +241,14 @@ export default function AdminPage() {
       }).select().single();
       if (vetError) { alert("Error approving vet: " + vetError.message); setCallSaving(false); return; }
       await supabase.from("pending_vets").update({ status: "approved" }).eq("id", vet.id);
-      // Insert prices with new vet id
       for (const p of validPrices) {
-        await supabase.from("vet_prices").insert({ ...p, vet_id: newVet.id });
+        const { error } = await supabase.from("vet_prices").insert(cleanPrice(p, newVet.id));
+        if (error) alert("Price error: " + error.message);
       }
     } else {
-      // Active vet — just insert prices
       for (const p of validPrices) {
-        await supabase.from("vet_prices").insert({ ...p, vet_id: vet.id });
+        const { error } = await supabase.from("vet_prices").insert(cleanPrice(p, vet.id));
+        if (error) alert("Price error: " + error.message);
       }
     }
 
@@ -358,12 +377,17 @@ export default function AdminPage() {
   async function savePrice() {
     setPriceSaving(true);
     const { error } = await supabase.from("vet_prices").update({
-      service_id: priceForm.service_id, price_low: priceForm.price_low || null,
-      price_high: priceForm.price_high || null, price_type: priceForm.price_type,
-      includes_bloodwork: priceForm.includes_bloodwork, includes_xrays: priceForm.includes_xrays,
-      includes_anesthesia: priceForm.includes_anesthesia,
+      service_id: priceForm.service_id,
+      price_low: priceForm.price_low ? parseFloat(priceForm.price_low) : null,
+      price_high: priceForm.price_high ? parseFloat(priceForm.price_high) : null,
+      price_type: priceForm.price_type,
+      includes_bloodwork: !!priceForm.includes_bloodwork,
+      includes_xrays: !!priceForm.includes_xrays,
+      includes_anesthesia: !!priceForm.includes_anesthesia,
       species: priceForm.species === "other" ? priceForm.species_other || "Other" : priceForm.species,
-      call_for_quote: priceForm.call_for_quote, notes: priceForm.notes,
+      call_for_quote: !!priceForm.call_for_quote,
+      notes: priceForm.notes || null,
+      is_verified: true,
     }).eq("id", editingPrice);
     if (!error) { await fetchPricesForVet(selectedVetId); setEditingPrice(null); }
     else { alert("Save failed: " + error.message); }
@@ -796,11 +820,22 @@ export default function AdminPage() {
                 {unverifiedLoading && <p style={{ color: "#888", fontSize: "14px" }}>Loading unverified prices...</p>}
                 <div className="section-header"><h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>Prices</h2></div>
                 <div style={{ marginBottom: "16px", maxWidth: "400px" }}>
-                  <label className="field-label">Select Vet</label>
-                  <select className="adm-input" value={selectedVetId} onChange={e => { setSelectedVetId(e.target.value); setEditingPrice(null); setShowAddPrice(false); if (e.target.value) fetchPricesForVet(e.target.value); else setVetPrices([]); }}>
-                    <option value="">— Choose a vet —</option>
-                    {vets.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                  </select>
+                  <label className="field-label">Search & Select Vet</label>
+                  <input className="adm-input" value={vetPriceSearch} onChange={e => { setVetPriceSearch(e.target.value); setSelectedVetId(""); setVetPrices([]); }} placeholder="Type vet name..." style={{ marginBottom: "8px" }} />
+                  {vetPriceSearch && (
+                    <div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: "8px", maxHeight: "200px", overflowY: "auto" }}>
+                      {vets.filter(v => v.name.toLowerCase().includes(vetPriceSearch.toLowerCase())).slice(0, 20).map(v => (
+                        <div key={v.id} onClick={() => { setSelectedVetId(v.id); setVetPriceSearch(v.name); fetchPricesForVet(v.id); setEditingPrice(null); setShowAddPrice(false); }}
+                          style={{ padding: "8px 12px", cursor: "pointer", fontSize: "13px", borderBottom: "1px solid #f5f5f5" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#f9f9f9"}
+                          onMouseLeave={e => e.currentTarget.style.background = ""}
+                        >{v.name} {v.city ? <span style={{ color: "#888", fontSize: "12px" }}>— {v.city}</span> : ""}</div>
+                      ))}
+                      {vets.filter(v => v.name.toLowerCase().includes(vetPriceSearch.toLowerCase())).length === 0 && (
+                        <div style={{ padding: "8px 12px", fontSize: "13px", color: "#888" }}>No vets found</div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {selectedVetId && (
                   <>

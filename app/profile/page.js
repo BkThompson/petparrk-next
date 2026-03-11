@@ -26,10 +26,10 @@ export default function ProfilePage() {
   const [pendingPetPhoto, setPendingPetPhoto] = useState(null);
   const [contacts, setContacts] = useState({});
   const [showContactsFor, setShowContactsFor] = useState(null);
-  const [newContact, setNewContact] = useState({ name: "", phone: "", relationship: "" });
+  const [newContact, setNewContact] = useState({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" });
   const [editingContactId, setEditingContactId] = useState(null);
   const [showAddContactFor, setShowAddContactFor] = useState(null); // petId or null
-  const [editContactForm, setEditContactForm] = useState({ name: "", phone: "", relationship: "" });
+  const [editContactForm, setEditContactForm] = useState({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingPetPhoto, setUploadingPetPhoto] = useState(null);
@@ -208,13 +208,13 @@ export default function ProfilePage() {
     if (!newContact.name) return;
     const { data } = await supabase.from("pet_emergency_contacts").insert({ pet_id: petId, ...newContact }).select().single();
     setContacts(prev => ({ ...prev, [petId]: [...(prev[petId] || []), data] }));
-    setNewContact({ name: "", phone: "", relationship: "" });
+    setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" });
     setShowAddContactFor(null);
     showToast("Contact added!");
   }
 
   async function handleUpdateContact(petId, contactId) {
-    const { error } = await supabase.from("pet_emergency_contacts").update({ name: editContactForm.name, phone: editContactForm.phone, relationship: editContactForm.relationship }).eq("id", contactId);
+    const { error } = await supabase.from("pet_emergency_contacts").update({ name: editContactForm.name, phone: editContactForm.phone, relationship: editContactForm.relationship, vet_name: editContactForm.vet_name, vet_address: editContactForm.vet_address }).eq("id", contactId);
     if (!error) {
       setContacts(prev => ({ ...prev, [petId]: prev[petId].map(c => c.id === contactId ? { ...c, ...editContactForm } : c) }));
       setEditingContactId(null);
@@ -235,7 +235,7 @@ export default function ProfilePage() {
     setEditingPetId(null);
     setEditingContactId(null);
     setShowAddContactFor(null);
-    setNewContact({ name: "", phone: "", relationship: "" });
+    setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" });
     setDeleteCheckConfirm(null);
     setPetForm(emptyPetForm);
     setPendingPetPhoto(null);
@@ -245,7 +245,7 @@ export default function ProfilePage() {
   function startEditContact(c) {
     closeAllEditing();
     setEditingContactId(c.id);
-    setEditContactForm({ name: c.name || "", phone: c.phone || "", relationship: c.relationship || "" });
+    setEditContactForm({ name: c.name || "", phone: c.phone || "", relationship: c.relationship || "", vet_name: c.vet_name || "", vet_address: c.vet_address || "" });
   }
 
   // ── Profile / Pet save ────────────────────────────────────────────
@@ -605,7 +605,7 @@ export default function ProfilePage() {
 
               {/* Symptom History */}
               <div style={{ paddingTop: "10px", borderTop: "1px solid #eee" }}>
-                <button onClick={() => { if (showHistoryFor === pet.id) { setShowHistoryFor(null); } else { setEditingContactId(null); setNewContact({ name: "", phone: "", relationship: "" }); fetchSymptomHistory(pet.id); } }}
+                <button onClick={() => { if (showHistoryFor === pet.id) { setShowHistoryFor(null); } else { setEditingContactId(null); setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" }); fetchSymptomHistory(pet.id); } }}
                   style={{ background: "none", border: "none", color: "#2d6a4f", fontSize: "13px", cursor: "pointer", padding: 0, fontWeight: "600", fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", gap: "6px" }}>
                   🩺 Symptom History
                   <span style={{ display: "inline-block", transition: "transform 0.3s", transform: showHistoryFor === pet.id ? "rotate(180deg)" : "rotate(0deg)", fontSize: "10px" }}>▼</span>
@@ -674,7 +674,7 @@ export default function ProfilePage() {
 
               {/* Emergency Contacts */}
               <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid #eee" }}>
-                <button onClick={() => { if (showContactsFor === pet.id) { setShowContactsFor(null); setEditingContactId(null); setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "" }); } else { setEditingContactId(null); setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "" }); fetchContactsForPet(pet.id); } }}
+                <button onClick={() => { if (showContactsFor === pet.id) { setShowContactsFor(null); setEditingContactId(null); setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" }); } else { setEditingContactId(null); setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" }); fetchContactsForPet(pet.id); } }}
                   style={{ background: "none", border: "none", color: "#2d6a4f", fontSize: "13px", cursor: "pointer", padding: 0, fontWeight: "600", fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", gap: "6px" }}>
                   🚨 Emergency Contacts
                   <span style={{ display: "inline-block", transition: "transform 0.3s", transform: showContactsFor === pet.id ? "rotate(180deg)" : "rotate(0deg)", fontSize: "10px" }}>▼</span>
@@ -689,6 +689,8 @@ export default function ProfilePage() {
                               <span style={{ fontSize: "14px", fontWeight: "600", color: "#111" }}>{c.name}</span>
                               {c.relationship && <span style={{ fontSize: "12px", color: "#888", marginLeft: "8px" }}>({c.relationship})</span>}
                               {c.phone && <span style={{ display: "block", fontSize: "13px", marginTop: "8px" }}><a href={`tel:${c.phone}`} style={{ color: "#2d6a4f", textDecoration: "none" }}>📞 {formatPhone(c.phone)}</a></span>}
+                              {c.vet_name && <span style={{ display: "block", fontSize: "13px", marginTop: "4px", color: "#111", fontWeight: "500" }}>🏥 {c.vet_address ? <a href={`https://maps.google.com/?q=${encodeURIComponent(c.vet_name + " " + c.vet_address)}`} target="_blank" rel="noreferrer" style={{ color: "#2d6a4f", textDecoration: "none" }}>{c.vet_name}</a> : c.vet_name}</span>}
+                              {c.vet_address && !c.vet_name && <span style={{ display: "block", fontSize: "12px", marginTop: "2px" }}><a href={`https://maps.google.com/?q=${encodeURIComponent(c.vet_address)}`} target="_blank" rel="noreferrer" style={{ color: "#2d6a4f", textDecoration: "none" }}>📍 {c.vet_address}</a></span>}
                             </div>
                             <div className="history-row-btns">
                               <button onClick={() => editingContactId === c.id ? setEditingContactId(null) : startEditContact(c)} className="btn-sm" style={{ background: "#fff", color: "#555", border: "1px solid #ddd" }}>{editingContactId === c.id ? "Cancel" : "Edit"}</button>
@@ -702,6 +704,8 @@ export default function ProfilePage() {
                               <div><label className="label">Name</label><input className="input" value={editContactForm.name} onChange={e => setEditContactForm({ ...editContactForm, name: e.target.value })} /></div>
                               <div><label className="label">Phone</label><input className="input" value={editContactForm.phone} onChange={e => setEditContactForm({ ...editContactForm, phone: handlePhoneInput(e.target.value) })} /></div>
                               <div><label className="label">Relationship</label><input className="input" value={editContactForm.relationship} onChange={e => setEditContactForm({ ...editContactForm, relationship: e.target.value })} /></div>
+                              <div><label className="label">Vet Name</label><input className="input" value={editContactForm.vet_name} onChange={e => setEditContactForm({ ...editContactForm, vet_name: e.target.value })} placeholder="e.g. Oakland Animal Hospital" /></div>
+                              <div><label className="label">Vet Address</label><input className="input" value={editContactForm.vet_address} onChange={e => setEditContactForm({ ...editContactForm, vet_address: e.target.value })} placeholder="e.g. 123 Main St, Oakland" /></div>
                               <div className="contact-btn-row" style={{ display: "flex", gap: "8px", alignSelf: "flex-end" }}>
                                 <button onClick={() => handleUpdateContact(pet.id, c.id)} className="btn-primary" style={{ height: "40px" }}>Save</button>
                                 <button onClick={() => setEditingContactId(null)} className="btn-secondary" style={{ height: "40px" }}>Cancel</button>
@@ -717,9 +721,11 @@ export default function ProfilePage() {
                         <div><label className="label">Name</label><input className="input" value={newContact.name} onChange={e => setNewContact({ ...newContact, name: e.target.value })} placeholder="Contact name" autoFocus /></div>
                         <div><label className="label">Phone</label><input className="input" value={newContact.phone} onChange={e => setNewContact({ ...newContact, phone: handlePhoneInput(e.target.value) })} placeholder="(555) 555-5555" /></div>
                         <div><label className="label">Relationship</label><input className="input" value={newContact.relationship} onChange={e => setNewContact({ ...newContact, relationship: e.target.value })} placeholder="e.g. Spouse" /></div>
+                        <div><label className="label">Vet Name</label><input className="input" value={newContact.vet_name} onChange={e => setNewContact({ ...newContact, vet_name: e.target.value })} placeholder="e.g. Oakland Animal Hospital" /></div>
+                        <div><label className="label">Vet Address</label><input className="input" value={newContact.vet_address} onChange={e => setNewContact({ ...newContact, vet_address: e.target.value })} placeholder="e.g. 123 Main St, Oakland" /></div>
                         <div className="contact-btn-row" style={{ display: "flex", gap: "8px", alignSelf: "flex-end" }}>
                           <button onClick={() => handleAddContact(pet.id)} className="btn-primary" style={{ height: "40px" }}>Add</button>
-                          <button onClick={() => { setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "" }); }} className="btn-secondary" style={{ height: "40px" }}>Cancel</button>
+                          <button onClick={() => { setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" }); }} className="btn-secondary" style={{ height: "40px" }}>Cancel</button>
                         </div>
                       </div>
                     ) : (
