@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 
-// ── Admin whitelist ───────────────────────────────────────────────────────────
 const ADMIN_EMAILS = ["bkalthompson@gmail.com", "maggie.tursi@gmail.com"];
 
 const TABS = [
@@ -92,6 +91,7 @@ export default function AdminPage() {
   // Prices
   const [selectedVetId, setSelectedVetId] = useState("");
   const [vetPriceSearch, setVetPriceSearch] = useState("");
+  const [showVetDropdown, setShowVetDropdown] = useState(false);
   const [vetPrices, setVetPrices] = useState([]);
   const [services, setServices] = useState([]);
   const [pricesLoading, setPricesLoading] = useState(false);
@@ -112,6 +112,7 @@ export default function AdminPage() {
     call_for_quote: false,
     notes: "",
   });
+  const priceSearchRef = useRef(null);
 
   // Users
   const [users, setUsers] = useState([]);
@@ -291,7 +292,6 @@ export default function AdminPage() {
 
   async function fetchCallQueue() {
     setCallQueueLoading(true);
-    // Get pending vets + active vets missing prices
     const [{ data: pendingVetsList }, { data: activeVets }, { data: prices }] =
       await Promise.all([
         supabase
@@ -338,7 +338,6 @@ export default function AdminPage() {
       };
     }
 
-    // If pending vet, approve it first
     if (vet._source === "pending") {
       const slug = (vet.slug || vet.name)
         .toLowerCase()
@@ -460,6 +459,7 @@ export default function AdminPage() {
   }
 
   async function fetchPricesForVet(vetId) {
+    if (!vetId) return;
     setPricesLoading(true);
     const { data } = await supabase
       .from("vet_prices")
@@ -627,6 +627,7 @@ export default function AdminPage() {
   }
 
   // ── Price actions ─────────────────────────────────────────────────
+  // FIX: convert numbers to strings so controlled number inputs work correctly
   function startEditPrice(price) {
     setEditingPrice(price.id);
     setPriceForm({
@@ -642,10 +643,10 @@ export default function AdminPage() {
       .from("vet_prices")
       .update({
         service_id: priceForm.service_id,
-        price_low: priceForm.price_low ? parseFloat(priceForm.price_low) : null,
-        price_high: priceForm.price_high
-          ? parseFloat(priceForm.price_high)
-          : null,
+        price_low:
+          priceForm.price_low !== "" ? parseFloat(priceForm.price_low) : null,
+        price_high:
+          priceForm.price_high !== "" ? parseFloat(priceForm.price_high) : null,
         price_type: priceForm.price_type,
         includes_bloodwork: !!priceForm.includes_bloodwork,
         includes_xrays: !!priceForm.includes_xrays,
@@ -722,6 +723,33 @@ export default function AdminPage() {
     }
   }
 
+  // ── Vet price search helpers ──────────────────────────────────────
+  const filteredPriceVets = vetPriceSearch.trim()
+    ? vets.filter((v) =>
+        v.name.toLowerCase().includes(vetPriceSearch.trim().toLowerCase()),
+      )
+    : vets;
+
+  function selectPriceVet(v) {
+    setSelectedVetId(v.id);
+    setVetPriceSearch(v.name);
+    setShowVetDropdown(false);
+    setEditingPrice(null);
+    setShowAddPrice(false);
+    fetchPricesForVet(v.id);
+  }
+
+  function handlePriceSearchChange(e) {
+    const val = e.target.value;
+    setVetPriceSearch(val);
+    setShowVetDropdown(true);
+    // If user clears the search, reset selected vet
+    if (!val.trim()) {
+      setSelectedVetId("");
+      setVetPrices([]);
+    }
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────
   function formatDate(iso) {
     if (!iso) return "—";
@@ -769,7 +797,6 @@ export default function AdminPage() {
 
   if (session === undefined || !authorized) return null;
 
-  // Reusable pending vet edit form
   function PendingVetEditForm({ form, setForm, onApprove, onCancel }) {
     return (
       <div className="row-edit-bg" style={{ marginTop: "10px" }}>
@@ -910,6 +937,25 @@ export default function AdminPage() {
         .table-header { display: grid; padding: 8px 14px; background: #fafaf8; border-bottom: 1px solid #efefed; }
         .table-header span { font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         html { scrollbar-gutter: stable; }
+        /* Price search dropdown — absolute so it doesn't push page content */
+        .price-search-wrap { position: relative; }
+        .price-search-dropdown {
+          position: absolute;
+          top: calc(100% + 4px);
+          left: 0;
+          right: 0;
+          background: #fff;
+          border: 1px solid #e8e8e8;
+          border-radius: 8px;
+          max-height: 220px;
+          overflow-y: auto;
+          z-index: 100;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+        }
+        .price-search-item { padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f5f5f5; }
+        .price-search-item:last-child { border-bottom: none; }
+        .price-search-item:hover { background: #f0f7f4; }
+        .price-search-item.selected { background: #e8f5e9; }
         @media (max-width: 700px) {
           .stat-grid { grid-template-columns: repeat(3, 1fr); }
           .form-grid-2, .form-grid-3, .form-grid-4 { grid-template-columns: 1fr; }
@@ -1212,8 +1258,7 @@ export default function AdminPage() {
                   <div style={{ textAlign: "center", padding: "48px 20px" }}>
                     <p style={{ fontSize: "32px", margin: "0 0 8px 0" }}>🏥</p>
                     <p style={{ color: "#bbb", fontSize: "14px", margin: 0 }}>
-                      No pending vets. The AI agent hasn't found any new ones
-                      yet.
+                      No pending vets.
                     </p>
                   </div>
                 )}
@@ -2085,34 +2130,38 @@ export default function AdminPage() {
             {/* ── PRICES ───────────────────────────────────────────── */}
             {tab === "Prices" && (
               <div>
-                {/* Unverified prices from AI scraper */}
+                {/* Unverified AI prices */}
                 {unverifiedPrices.length > 0 && (
                   <div style={{ marginBottom: "24px" }}>
                     <div
                       className="section-header"
                       style={{ marginBottom: "12px" }}
                     >
-                      <h2
-                        style={{ margin: 0, fontSize: "1rem", color: "#111" }}
-                      >
-                        🤖 AI-Found Prices
-                        <span
-                          style={{
-                            marginLeft: "8px",
-                            fontSize: "12px",
-                            background: "#fff8e1",
-                            color: "#e65100",
-                            padding: "2px 8px",
-                            borderRadius: "20px",
-                            fontWeight: "600",
-                          }}
+                      <div>
+                        <h2
+                          style={{ margin: 0, fontSize: "1rem", color: "#111" }}
                         >
-                          {unverifiedPrices.length} to review
-                        </span>
-                      </h2>
-                      <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
-                        Found by the price scraper — verify before going live
-                      </p>
+                          🤖 AI-Found Prices
+                          <span
+                            style={{
+                              marginLeft: "8px",
+                              fontSize: "12px",
+                              background: "#fff8e1",
+                              color: "#e65100",
+                              padding: "2px 8px",
+                              borderRadius: "20px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            {unverifiedPrices.length} to review
+                          </span>
+                        </h2>
+                        <p
+                          style={{ margin: 0, fontSize: "12px", color: "#888" }}
+                        >
+                          Found by the price scraper — verify before going live
+                        </p>
+                      </div>
                     </div>
                     <div
                       style={{
@@ -2204,73 +2253,49 @@ export default function AdminPage() {
                     Loading unverified prices...
                   </p>
                 )}
+
                 <div className="section-header">
                   <h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>
                     Prices
                   </h2>
                 </div>
+
+                {/* ── Vet search with absolute dropdown ── */}
                 <div style={{ marginBottom: "16px", maxWidth: "400px" }}>
                   <label className="field-label">Search Vet</label>
-                  <input
-                    className="adm-input"
-                    value={vetPriceSearch}
-                    onChange={(e) => {
-                      setVetPriceSearch(e.target.value);
-                      setSelectedVetId("");
-                      setVetPrices([]);
-                    }}
-                    onFocus={() => {
-                      if (!vetPriceSearch) setVetPriceSearch(" ");
-                    }}
-                    onBlur={() => {
-                      if (vetPriceSearch.trim() === "") setVetPriceSearch("");
-                    }}
-                    placeholder="Search or browse all vets..."
-                    style={{ marginBottom: "8px" }}
-                  />
-                  {vetPriceSearch && (
-                    <div
-                      style={{
-                        background: "#fff",
-                        border: "1px solid #e8e8e8",
-                        borderRadius: "8px",
-                        maxHeight: "200px",
-                        overflowY: "auto",
-                        marginBottom: "8px",
+                  <div className="price-search-wrap">
+                    <input
+                      ref={priceSearchRef}
+                      className="adm-input"
+                      value={vetPriceSearch}
+                      onChange={handlePriceSearchChange}
+                      onFocus={() => setShowVetDropdown(true)}
+                      onBlur={() => {
+                        // Delay so onMouseDown on items fires first
+                        setTimeout(() => setShowVetDropdown(false), 150);
                       }}
-                    >
-                      {vets
-                        .filter((v) =>
-                          v.name
-                            .toLowerCase()
-                            .includes(vetPriceSearch.trim().toLowerCase()),
-                        )
-                        .slice(0, 30)
-                        .map((v) => (
+                      placeholder="Click to browse or type to filter..."
+                      autoComplete="off"
+                    />
+                    {showVetDropdown && (
+                      <div className="price-search-dropdown">
+                        {filteredPriceVets.length === 0 && (
+                          <div
+                            style={{
+                              padding: "10px 12px",
+                              fontSize: "13px",
+                              color: "#888",
+                            }}
+                          >
+                            No vets found
+                          </div>
+                        )}
+                        {filteredPriceVets.slice(0, 50).map((v) => (
                           <div
                             key={v.id}
-                            onClick={() => {
-                              setSelectedVetId(v.id);
-                              setVetPriceSearch(v.name);
-                              fetchPricesForVet(v.id);
-                              setEditingPrice(null);
-                              setShowAddPrice(false);
-                            }}
-                            style={{
-                              padding: "8px 12px",
-                              cursor: "pointer",
-                              fontSize: "13px",
-                              borderBottom: "1px solid #f5f5f5",
-                              background:
-                                selectedVetId === v.id ? "#f0f7f4" : "",
-                            }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.background = "#f9f9f9")
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.background =
-                                selectedVetId === v.id ? "#f0f7f4" : "")
-                            }
+                            className={`price-search-item${selectedVetId === v.id ? " selected" : ""}`}
+                            // onMouseDown fires BEFORE onBlur — this is the key fix
+                            onMouseDown={() => selectPriceVet(v)}
                           >
                             {v.name}
                             {v.city ? (
@@ -2283,24 +2308,22 @@ export default function AdminPage() {
                             )}
                           </div>
                         ))}
-                      {vets.filter((v) =>
-                        v.name
-                          .toLowerCase()
-                          .includes(vetPriceSearch.trim().toLowerCase()),
-                      ).length === 0 && (
-                        <div
-                          style={{
-                            padding: "8px 12px",
-                            fontSize: "13px",
-                            color: "#888",
-                          }}
-                        >
-                          No vets found
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                  </div>
+                  {selectedVetId && (
+                    <p
+                      style={{
+                        margin: "6px 0 0 0",
+                        fontSize: "12px",
+                        color: "#2d6a4f",
+                      }}
+                    >
+                      ✓ Showing prices for <strong>{vetPriceSearch}</strong>
+                    </p>
                   )}
                 </div>
+
                 {selectedVetId && (
                   <>
                     <div className="section-header">
@@ -2315,6 +2338,7 @@ export default function AdminPage() {
                         {showAddPrice ? "Cancel" : "+ Add Price"}
                       </button>
                     </div>
+
                     {showAddPrice && (
                       <div
                         className="row-edit-bg"
@@ -2500,6 +2524,7 @@ export default function AdminPage() {
                         </button>
                       </div>
                     )}
+
                     {pricesLoading && (
                       <p style={{ color: "#888", fontSize: "14px" }}>
                         Loading prices...
@@ -2516,6 +2541,7 @@ export default function AdminPage() {
                         No prices on file for this vet.
                       </p>
                     )}
+
                     <div
                       style={{
                         background: "#fff",
@@ -2732,7 +2758,7 @@ export default function AdminPage() {
                                     <input
                                       className="adm-input"
                                       type="number"
-                                      value={priceForm.price_low || ""}
+                                      value={priceForm.price_low}
                                       onChange={(e) =>
                                         setPriceForm({
                                           ...priceForm,
@@ -2748,7 +2774,7 @@ export default function AdminPage() {
                                     <input
                                       className="adm-input"
                                       type="number"
-                                      value={priceForm.price_high || ""}
+                                      value={priceForm.price_high}
                                       onChange={(e) =>
                                         setPriceForm({
                                           ...priceForm,
@@ -2915,7 +2941,6 @@ export default function AdminPage() {
                     const vet = callQueue[callIndex];
                     return (
                       <div>
-                        {/* Progress */}
                         <div
                           style={{
                             display: "flex",
@@ -2965,8 +2990,6 @@ export default function AdminPage() {
                             </button>
                           </div>
                         </div>
-
-                        {/* Progress bar */}
                         <div
                           style={{
                             height: "4px",
@@ -2985,8 +3008,6 @@ export default function AdminPage() {
                             }}
                           />
                         </div>
-
-                        {/* Vet card */}
                         <div
                           style={{
                             background: "#fff",
@@ -3086,8 +3107,6 @@ export default function AdminPage() {
                               </a>
                             )}
                           </div>
-
-                          {/* Status buttons */}
                           <div
                             style={{
                               display: "flex",
@@ -3130,8 +3149,6 @@ export default function AdminPage() {
                               ✕ Skip
                             </button>
                           </div>
-
-                          {/* Price entry */}
                           <div>
                             <div
                               style={{
@@ -3158,7 +3175,6 @@ export default function AdminPage() {
                                 + Add Price
                               </button>
                             </div>
-
                             {callPrices.length === 0 && (
                               <p
                                 style={{
@@ -3172,7 +3188,6 @@ export default function AdminPage() {
                                 each service they quote you.
                               </p>
                             )}
-
                             {callPrices.map((p, i) => (
                               <div
                                 key={i}
@@ -3360,7 +3375,6 @@ export default function AdminPage() {
                                 </div>
                               </div>
                             ))}
-
                             {callPrices.length > 0 && (
                               <button
                                 className="adm-btn adm-btn-green"
@@ -3523,7 +3537,6 @@ export default function AdminPage() {
                     </span>
                   </h2>
                 </div>
-                {/* Triage breakdown — click to filter */}
                 <div
                   style={{
                     display: "flex",

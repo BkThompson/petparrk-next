@@ -687,8 +687,8 @@ export default function ProfilePage() {
             <p style={sectionHead}>🩺 My Vet</p>
             {pet.vet_name && (
               <p className="detail-row">
-                <span style={{ color: "#888" }}>Vet: </span>
-                {/* Show vet name as plain text if address exists (address gets the GPS link), otherwise link vet name to maps */}
+                {/* No "Vet:" label — section title already says My Vet */}
+                {/* Link vet name only if no address (address gets the GPS link) */}
                 {pet.vet_address && vetGpsUrl ? (
                   <span style={{ color: "#333", fontWeight: "600" }}>
                     {pet.vet_name}
@@ -722,11 +722,19 @@ export default function ProfilePage() {
                   rel="noreferrer"
                   style={{ color: "#2d6a4f", textDecoration: "none" }}
                 >
-                  📍{" "}
-                  {[pet.vet_address, pet.vet_city, pet.vet_zip]
-                    .filter(Boolean)
-                    .join(", ")}
+                  📍 {pet.vet_address}
                 </a>
+                {(pet.vet_city || pet.vet_zip) && (
+                  <span
+                    style={{
+                      display: "block",
+                      paddingLeft: "20px",
+                      color: "#2d6a4f",
+                    }}
+                  >
+                    {[pet.vet_city, pet.vet_zip].filter(Boolean).join(", ")}
+                  </span>
+                )}
               </p>
             )}
             {pet.vet_phone && (

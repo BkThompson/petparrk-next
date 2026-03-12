@@ -368,7 +368,7 @@ export default function PetCardPage() {
                           rel="noreferrer"
                           style={{ color: "#2d6a4f", textDecoration: "none" }}
                         >
-                          📍 {pet.vet_name}
+                          {pet.vet_name}
                         </a>
                       ) : (
                         pet.vet_name
@@ -413,7 +413,7 @@ export default function PetCardPage() {
                           fontSize: "15px",
                         }}
                       >
-                        📞 {formatPhone(pet.vet_phone)}
+                        {formatPhone(pet.vet_phone)}
                       </a>
                     </span>
                   </div>
@@ -446,7 +446,7 @@ export default function PetCardPage() {
                           fontSize: "15px",
                         }}
                       >
-                        📞 {formatPhone(pet.owner_phone)}
+                        {formatPhone(pet.owner_phone)}
                       </a>
                     </span>
                   </div>
@@ -459,7 +459,7 @@ export default function PetCardPage() {
                         href={`mailto:${pet.owner_email}`}
                         style={{ color: "#2d6a4f", textDecoration: "none" }}
                       >
-                        ✉️ {pet.owner_email}
+                        {pet.owner_email}
                       </a>
                     </span>
                   </div>
@@ -488,7 +488,7 @@ export default function PetCardPage() {
                             marginTop: "2px",
                           }}
                         >
-                          📞 {formatPhone(c.phone)}
+                          {formatPhone(c.phone)}
                         </a>
                       )}
                     </span>
@@ -542,21 +542,30 @@ export default function PetCardPage() {
           </div>
         </div>
 
-        <p
+        <div
           className="no-print"
           style={{
             maxWidth: "600px",
             margin: "16px auto 0 auto",
             textAlign: "center",
-            fontSize: "12px",
-            color: "#bbb",
           }}
         >
-          This card was shared by the pet owner.{" "}
-          <Link href="/" style={{ color: "#2d6a4f", textDecoration: "none" }}>
-            Create your own on PetParrk →
-          </Link>
-        </p>
+          <p style={{ margin: "0 0 4px 0", fontSize: "12px", color: "#bbb" }}>
+            This card was shared by the pet owner.
+          </p>
+          <p style={{ margin: 0, fontSize: "12px" }}>
+            <Link
+              href="/"
+              style={{
+                color: "#2d6a4f",
+                textDecoration: "none",
+                fontWeight: "600",
+              }}
+            >
+              Create your own on PetParrk →
+            </Link>
+          </p>
+        </div>
       </div>
     </>
   );
