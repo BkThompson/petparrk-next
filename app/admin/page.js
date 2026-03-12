@@ -820,22 +820,27 @@ export default function AdminPage() {
                 {unverifiedLoading && <p style={{ color: "#888", fontSize: "14px" }}>Loading unverified prices...</p>}
                 <div className="section-header"><h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>Prices</h2></div>
                 <div style={{ marginBottom: "16px", maxWidth: "400px" }}>
-                  <label className="field-label">Search & Select Vet</label>
-                  <input className="adm-input" value={vetPriceSearch} onChange={e => { setVetPriceSearch(e.target.value); setSelectedVetId(""); setVetPrices([]); }} placeholder="Type vet name..." style={{ marginBottom: "8px" }} />
+                  <label className="field-label">Search Vet</label>
+                  <input className="adm-input" value={vetPriceSearch} onChange={e => { setVetPriceSearch(e.target.value); setSelectedVetId(""); setVetPrices([]); }} onFocus={() => { if (!vetPriceSearch) setVetPriceSearch(" "); }} onBlur={() => { if (vetPriceSearch.trim() === "") setVetPriceSearch(""); }} placeholder="Search or browse all vets..." style={{ marginBottom: "8px" }} />
                   {vetPriceSearch && (
-                    <div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: "8px", maxHeight: "200px", overflowY: "auto" }}>
-                      {vets.filter(v => v.name.toLowerCase().includes(vetPriceSearch.toLowerCase())).slice(0, 20).map(v => (
+                    <div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: "8px", maxHeight: "200px", overflowY: "auto", marginBottom: "8px" }}>
+                      {vets.filter(v => v.name.toLowerCase().includes(vetPriceSearch.trim().toLowerCase())).slice(0, 30).map(v => (
                         <div key={v.id} onClick={() => { setSelectedVetId(v.id); setVetPriceSearch(v.name); fetchPricesForVet(v.id); setEditingPrice(null); setShowAddPrice(false); }}
-                          style={{ padding: "8px 12px", cursor: "pointer", fontSize: "13px", borderBottom: "1px solid #f5f5f5" }}
+                          style={{ padding: "8px 12px", cursor: "pointer", fontSize: "13px", borderBottom: "1px solid #f5f5f5", background: selectedVetId === v.id ? "#f0f7f4" : "" }}
                           onMouseEnter={e => e.currentTarget.style.background = "#f9f9f9"}
-                          onMouseLeave={e => e.currentTarget.style.background = ""}
-                        >{v.name} {v.city ? <span style={{ color: "#888", fontSize: "12px" }}>— {v.city}</span> : ""}</div>
+                          onMouseLeave={e => e.currentTarget.style.background = selectedVetId === v.id ? "#f0f7f4" : ""}
+                        >{v.name}{v.city ? <span style={{ color: "#888", fontSize: "12px" }}> — {v.city}</span> : ""}</div>
                       ))}
-                      {vets.filter(v => v.name.toLowerCase().includes(vetPriceSearch.toLowerCase())).length === 0 && (
+                      {vets.filter(v => v.name.toLowerCase().includes(vetPriceSearch.trim().toLowerCase())).length === 0 && (
                         <div style={{ padding: "8px 12px", fontSize: "13px", color: "#888" }}>No vets found</div>
                       )}
                     </div>
                   )}
+                  <label className="field-label">Or select from dropdown</label>
+                  <select className="adm-input" value={selectedVetId} onChange={e => { const v = vets.find(v => v.id === e.target.value); setSelectedVetId(e.target.value); if (v) setVetPriceSearch(v.name); setEditingPrice(null); setShowAddPrice(false); if (e.target.value) fetchPricesForVet(e.target.value); else setVetPrices([]); }}>
+                    <option value="">— Choose a vet —</option>
+                    {vets.map(v => <option key={v.id} value={v.id}>{v.name}{v.city ? ` — ${v.city}` : ""}</option>)}
+                  </select>
                 </div>
                 {selectedVetId && (
                   <>

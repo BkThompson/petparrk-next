@@ -20,16 +20,16 @@ export default function ProfilePage() {
   const [showAddPet, setShowAddPet] = useState(false);
   const [editingPetId, setEditingPetId] = useState(null);
   const [profileForm, setProfileForm] = useState({ full_name: "", bio: "", zip_code: "", is_public: false });
-  const emptyPetForm = { name: "", species: "Dog", species_other: "", breed: "", birthday: "", weight_lbs: "", allergies: "", medications: "", microchip_number: "", notes: "", owner_name: "", owner_phone: "", owner_email: "" };
+  const emptyPetForm = { name: "", species: "Dog", species_other: "", breed: "", birthday: "", weight_lbs: "", allergies: "", medications: "", microchip_number: "", notes: "", owner_name: "", owner_phone: "", owner_email: "", vet_name: "", vet_address: "", vet_city: "", vet_zip: "", vet_phone: "" };
   const [petForm, setPetForm] = useState(emptyPetForm);
   const [microchipError, setMicrochipError] = useState("");
   const [pendingPetPhoto, setPendingPetPhoto] = useState(null);
   const [contacts, setContacts] = useState({});
   const [showContactsFor, setShowContactsFor] = useState(null);
-  const [newContact, setNewContact] = useState({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" });
+  const [newContact, setNewContact] = useState({ name: "", phone: "", relationship: "" });
   const [editingContactId, setEditingContactId] = useState(null);
   const [showAddContactFor, setShowAddContactFor] = useState(null); // petId or null
-  const [editContactForm, setEditContactForm] = useState({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" });
+  const [editContactForm, setEditContactForm] = useState({ name: "", phone: "", relationship: "" });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingPetPhoto, setUploadingPetPhoto] = useState(null);
@@ -208,13 +208,13 @@ export default function ProfilePage() {
     if (!newContact.name) return;
     const { data } = await supabase.from("pet_emergency_contacts").insert({ pet_id: petId, ...newContact }).select().single();
     setContacts(prev => ({ ...prev, [petId]: [...(prev[petId] || []), data] }));
-    setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" });
+    setNewContact({ name: "", phone: "", relationship: "" });
     setShowAddContactFor(null);
     showToast("Contact added!");
   }
 
   async function handleUpdateContact(petId, contactId) {
-    const { error } = await supabase.from("pet_emergency_contacts").update({ name: editContactForm.name, phone: editContactForm.phone, relationship: editContactForm.relationship, vet_name: editContactForm.vet_name, vet_address: editContactForm.vet_address }).eq("id", contactId);
+    const { error } = await supabase.from("pet_emergency_contacts").update({ name: editContactForm.name, phone: editContactForm.phone, relationship: editContactForm.relationship }).eq("id", contactId);
     if (!error) {
       setContacts(prev => ({ ...prev, [petId]: prev[petId].map(c => c.id === contactId ? { ...c, ...editContactForm } : c) }));
       setEditingContactId(null);
@@ -235,7 +235,7 @@ export default function ProfilePage() {
     setEditingPetId(null);
     setEditingContactId(null);
     setShowAddContactFor(null);
-    setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" });
+    setNewContact({ name: "", phone: "", relationship: "" });
     setDeleteCheckConfirm(null);
     setPetForm(emptyPetForm);
     setPendingPetPhoto(null);
@@ -245,7 +245,7 @@ export default function ProfilePage() {
   function startEditContact(c) {
     closeAllEditing();
     setEditingContactId(c.id);
-    setEditContactForm({ name: c.name || "", phone: c.phone || "", relationship: c.relationship || "", vet_name: c.vet_name || "", vet_address: c.vet_address || "" });
+    setEditContactForm({ name: c.name || "", phone: c.phone || "", relationship: c.relationship || "" });
   }
 
   // ── Profile / Pet save ────────────────────────────────────────────
@@ -309,7 +309,7 @@ export default function ProfilePage() {
       const rect = el.getBoundingClientRect();
       if (rect.top < 0 || rect.bottom > window.innerHeight) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
-    setPetForm({ name: pet.name || "", species: pet.species || "Dog", species_other: "", breed: pet.breed || "", birthday: pet.birthday || "", weight_lbs: pet.weight_lbs || "", allergies: pet.allergies || "", medications: pet.medications || "", microchip_number: pet.microchip_number || "", notes: pet.notes || "", owner_name: pet.owner_name || "", owner_phone: pet.owner_phone || "", owner_email: pet.owner_email || "" });
+    setPetForm({ name: pet.name || "", species: pet.species || "Dog", species_other: "", breed: pet.breed || "", birthday: pet.birthday || "", weight_lbs: pet.weight_lbs || "", allergies: pet.allergies || "", medications: pet.medications || "", microchip_number: pet.microchip_number || "", notes: pet.notes || "", owner_name: pet.owner_name || "", owner_phone: pet.owner_phone || "", owner_email: pet.owner_email || "", vet_name: pet.vet_name || "", vet_address: pet.vet_address || "", vet_city: pet.vet_city || "", vet_zip: pet.vet_zip || "", vet_phone: pet.vet_phone || "" });
     setShowAddPet(false);
     setPendingPetPhoto(null);
   }
@@ -406,6 +406,17 @@ export default function ProfilePage() {
           <div className="field"><label className="label">Owner Phone</label><input className="input" value={petForm.owner_phone} onChange={e => setPetForm({ ...petForm, owner_phone: handlePhoneInput(e.target.value) })} placeholder="(555) 555-5555" /></div>
         </div>
         <div className="field"><label className="label">Owner Email</label><input className="input" type="email" value={petForm.owner_email} onChange={e => setPetForm({ ...petForm, owner_email: e.target.value })} placeholder="e.g. you@email.com" /></div>
+        <p className="label" style={{ margin: "16px 0 4px 0", fontWeight: "700", fontSize: "13px", color: "#111" }}>🏥 My Vet</p>
+        <p style={{ margin: "0 0 12px 0", fontSize: "12px", color: "#aaa" }}>Shown on the medical card so emergency responders know your vet.</p>
+        <div className="form-grid">
+          <div className="field"><label className="label">Vet Name</label><input className="input" value={petForm.vet_name} onChange={e => setPetForm({ ...petForm, vet_name: e.target.value })} placeholder="e.g. Oakland Animal Hospital" /></div>
+          <div className="field"><label className="label">Vet Phone</label><input className="input" value={petForm.vet_phone} onChange={e => setPetForm({ ...petForm, vet_phone: handlePhoneInput(e.target.value) })} placeholder="(555) 555-5555" /></div>
+        </div>
+        <div className="field"><label className="label">Vet Address</label><input className="input" value={petForm.vet_address} onChange={e => setPetForm({ ...petForm, vet_address: e.target.value })} placeholder="e.g. 123 Main St" /></div>
+        <div className="form-grid">
+          <div className="field"><label className="label">City</label><input className="input" value={petForm.vet_city} onChange={e => setPetForm({ ...petForm, vet_city: e.target.value })} placeholder="e.g. Oakland" /></div>
+          <div className="field"><label className="label">ZIP</label><input className="input" value={petForm.vet_zip} onChange={e => setPetForm({ ...petForm, vet_zip: e.target.value })} placeholder="e.g. 94601" /></div>
+        </div>
       </>
     );
   }
@@ -593,6 +604,8 @@ export default function ProfilePage() {
                   {pet.owner_name && <p className="detail-row"><span style={{ color: "#888" }}>👤 Owner: </span><span style={{ color: "#333" }}>{pet.owner_name}</span></p>}
                   {pet.owner_phone && <p className="detail-row"><span style={{ color: "#888" }}>📞 Phone: </span><a href={`tel:${pet.owner_phone}`} style={{ color: "#2d6a4f", textDecoration: "none" }}>{formatPhone(pet.owner_phone)}</a></p>}
                   {pet.owner_email && <p className="detail-row"><span style={{ color: "#888" }}>✉️ Email: </span><a href={`mailto:${pet.owner_email}`} style={{ color: "#2d6a4f", textDecoration: "none" }}>{pet.owner_email}</a></p>}
+                  {pet.vet_name && <p className="detail-row"><span style={{ color: "#888" }}>🏥 Vet: </span><a href={`https://maps.google.com/?q=${encodeURIComponent([pet.vet_name, pet.vet_address, pet.vet_city].filter(Boolean).join(", "))}`} target="_blank" rel="noreferrer" style={{ color: "#2d6a4f", textDecoration: "none" }}>{pet.vet_name}</a></p>}
+                  {pet.vet_phone && <p className="detail-row"><span style={{ color: "#888" }}>📞 Vet Phone: </span><a href={`tel:${pet.vet_phone}`} style={{ color: "#2d6a4f", textDecoration: "none" }}>{formatPhone(pet.vet_phone)}</a></p>}
                 </div>
               )}
 
@@ -605,7 +618,7 @@ export default function ProfilePage() {
 
               {/* Symptom History */}
               <div style={{ paddingTop: "10px", borderTop: "1px solid #eee" }}>
-                <button onClick={() => { if (showHistoryFor === pet.id) { setShowHistoryFor(null); } else { setEditingContactId(null); setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" }); fetchSymptomHistory(pet.id); } }}
+                <button onClick={() => { if (showHistoryFor === pet.id) { setShowHistoryFor(null); } else { setEditingContactId(null); setNewContact({ name: "", phone: "", relationship: "" }); fetchSymptomHistory(pet.id); } }}
                   style={{ background: "none", border: "none", color: "#2d6a4f", fontSize: "13px", cursor: "pointer", padding: 0, fontWeight: "600", fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", gap: "6px" }}>
                   🩺 Symptom History
                   <span style={{ display: "inline-block", transition: "transform 0.3s", transform: showHistoryFor === pet.id ? "rotate(180deg)" : "rotate(0deg)", fontSize: "10px" }}>▼</span>
@@ -674,7 +687,7 @@ export default function ProfilePage() {
 
               {/* Emergency Contacts */}
               <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid #eee" }}>
-                <button onClick={() => { if (showContactsFor === pet.id) { setShowContactsFor(null); setEditingContactId(null); setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" }); } else { setEditingContactId(null); setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" }); fetchContactsForPet(pet.id); } }}
+                <button onClick={() => { if (showContactsFor === pet.id) { setShowContactsFor(null); setEditingContactId(null); setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "" }); } else { setEditingContactId(null); setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "" }); fetchContactsForPet(pet.id); } }}
                   style={{ background: "none", border: "none", color: "#2d6a4f", fontSize: "13px", cursor: "pointer", padding: 0, fontWeight: "600", fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", gap: "6px" }}>
                   🚨 Emergency Contacts
                   <span style={{ display: "inline-block", transition: "transform 0.3s", transform: showContactsFor === pet.id ? "rotate(180deg)" : "rotate(0deg)", fontSize: "10px" }}>▼</span>
@@ -704,8 +717,6 @@ export default function ProfilePage() {
                               <div><label className="label">Name</label><input className="input" value={editContactForm.name} onChange={e => setEditContactForm({ ...editContactForm, name: e.target.value })} /></div>
                               <div><label className="label">Phone</label><input className="input" value={editContactForm.phone} onChange={e => setEditContactForm({ ...editContactForm, phone: handlePhoneInput(e.target.value) })} /></div>
                               <div><label className="label">Relationship</label><input className="input" value={editContactForm.relationship} onChange={e => setEditContactForm({ ...editContactForm, relationship: e.target.value })} /></div>
-                              <div><label className="label">Vet Name</label><input className="input" value={editContactForm.vet_name} onChange={e => setEditContactForm({ ...editContactForm, vet_name: e.target.value })} placeholder="e.g. Oakland Animal Hospital" /></div>
-                              <div><label className="label">Vet Address</label><input className="input" value={editContactForm.vet_address} onChange={e => setEditContactForm({ ...editContactForm, vet_address: e.target.value })} placeholder="e.g. 123 Main St, Oakland" /></div>
                               <div className="contact-btn-row" style={{ display: "flex", gap: "8px", alignSelf: "flex-end" }}>
                                 <button onClick={() => handleUpdateContact(pet.id, c.id)} className="btn-primary" style={{ height: "40px" }}>Save</button>
                                 <button onClick={() => setEditingContactId(null)} className="btn-secondary" style={{ height: "40px" }}>Cancel</button>
@@ -721,11 +732,9 @@ export default function ProfilePage() {
                         <div><label className="label">Name</label><input className="input" value={newContact.name} onChange={e => setNewContact({ ...newContact, name: e.target.value })} placeholder="Contact name" autoFocus /></div>
                         <div><label className="label">Phone</label><input className="input" value={newContact.phone} onChange={e => setNewContact({ ...newContact, phone: handlePhoneInput(e.target.value) })} placeholder="(555) 555-5555" /></div>
                         <div><label className="label">Relationship</label><input className="input" value={newContact.relationship} onChange={e => setNewContact({ ...newContact, relationship: e.target.value })} placeholder="e.g. Spouse" /></div>
-                        <div><label className="label">Vet Name</label><input className="input" value={newContact.vet_name} onChange={e => setNewContact({ ...newContact, vet_name: e.target.value })} placeholder="e.g. Oakland Animal Hospital" /></div>
-                        <div><label className="label">Vet Address</label><input className="input" value={newContact.vet_address} onChange={e => setNewContact({ ...newContact, vet_address: e.target.value })} placeholder="e.g. 123 Main St, Oakland" /></div>
                         <div className="contact-btn-row" style={{ display: "flex", gap: "8px", alignSelf: "flex-end" }}>
                           <button onClick={() => handleAddContact(pet.id)} className="btn-primary" style={{ height: "40px" }}>Add</button>
-                          <button onClick={() => { setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "", vet_name: "", vet_address: "" }); }} className="btn-secondary" style={{ height: "40px" }}>Cancel</button>
+                          <button onClick={() => { setShowAddContactFor(null); setNewContact({ name: "", phone: "", relationship: "" }); }} className="btn-secondary" style={{ height: "40px" }}>Cancel</button>
                         </div>
                       </div>
                     ) : (

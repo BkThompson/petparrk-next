@@ -5,56 +5,60 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
 const GREEN = "#2d6a4f";
-const GREEN_LIGHT = "#e8f5e9";
-const GREEN_DARK = "#1b4332";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [status, setStatus] = useState("idle");
+  const [message, setMessage] = useState("");
+  const [ready, setReady] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
-  const [validSession, setValidSession] = useState(false);
 
-  // Supabase puts the recovery token in the URL hash — this checks for it
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        setValidSession(true);
-      } else {
-        setError(
-          "This reset link is invalid or has expired. Please request a new one."
-        );
+    // Method 1: Check URL hash directly for recovery token
+    const hash = window.location.hash;
+    if (hash && hash.includes("type=recovery")) {
+      setReady(true);
+      return;
+    }
+
+    // Method 2: Listen for PASSWORD_RECOVERY auth event
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setReady(true);
       }
     });
+
+    // Method 3: Check if already has a valid session
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setReady(true);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   async function handleReset(e) {
     e.preventDefault();
-    setError("");
+    if (!password) return setMessage("Please enter a new password.");
+    if (password.length < 8)
+      return setMessage("Password must be at least 8 characters.");
+    if (password !== confirm) return setMessage("Passwords don't match.");
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
+    setStatus("loading");
+    setMessage("");
 
-    setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
-    setLoading(false);
-
     if (error) {
-      setError(error.message);
+      setStatus("error");
+      setMessage(error.message);
     } else {
+      setStatus("success");
+      setMessage("Password updated! Redirecting to sign in...");
       await supabase.auth.signOut();
-      setSuccessMsg("✅ Password updated! Redirecting you to sign in…");
-      setTimeout(() => router.push("/auth"), 2500);
+      setTimeout(() => router.push("/auth"), 2000);
     }
   }
 
@@ -67,27 +71,6 @@ export default function ResetPasswordPage() {
     fontFamily: "system-ui, sans-serif",
     outline: "none",
     boxSizing: "border-box",
-  };
-
-  const labelStyle = {
-    display: "block",
-    fontSize: "13px",
-    fontWeight: "600",
-    color: "#444",
-    marginBottom: "6px",
-  };
-
-  const primaryBtn = {
-    width: "100%",
-    padding: "13px",
-    background: loading ? "#aaa" : GREEN,
-    color: "#fff",
-    border: "none",
-    borderRadius: "8px",
-    fontSize: "15px",
-    fontWeight: "600",
-    cursor: loading ? "not-allowed" : "pointer",
-    fontFamily: "system-ui, sans-serif",
   };
 
   return (
@@ -112,7 +95,6 @@ export default function ResetPasswordPage() {
           boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
         }}
       >
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
           <div style={{ fontSize: "36px", marginBottom: "4px" }}>🐾</div>
           <h1
@@ -126,62 +108,68 @@ export default function ResetPasswordPage() {
             PetParrk
           </h1>
           <p style={{ margin: "6px 0 0", color: "#777", fontSize: "14px" }}>
-            Choose a new password
+            Set your new password
           </p>
         </div>
 
-        {/* Banners */}
-        {error && (
-          <div
-            style={{
-              background: "#fde8e8",
-              color: "#b91c1c",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              fontSize: "14px",
-              marginBottom: "16px",
-            }}
-          >
-            {error}
-            {!validSession && (
-              <div style={{ marginTop: "10px" }}>
-                <button
-                  onClick={() => router.push("/auth")}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#b91c1c",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    padding: 0,
-                  }}
-                >
-                  Request a new reset link →
-                </button>
+        {status === "success" ? (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ fontSize: "40px", marginBottom: "12px" }}>✅</div>
+            <p style={{ color: GREEN, fontWeight: "600", fontSize: "14px" }}>
+              {message}
+            </p>
+          </div>
+        ) : !ready ? (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <p style={{ color: "#888", fontSize: "14px" }}>
+              Verifying your reset link...
+            </p>
+            <p style={{ color: "#bbb", fontSize: "12px", marginTop: "12px" }}>
+              If nothing happens,{" "}
+              <button
+                onClick={() => setReady(true)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: GREEN,
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                }}
+              >
+                click here to continue
+              </button>
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleReset}>
+            {message && (
+              <div
+                style={{
+                  background: status === "error" ? "#fde8e8" : "#e8f5e9",
+                  color: status === "error" ? "#b91c1c" : GREEN,
+                  borderRadius: "8px",
+                  padding: "10px 14px",
+                  fontSize: "14px",
+                  marginBottom: "16px",
+                }}
+              >
+                {message}
               </div>
             )}
-          </div>
-        )}
-        {successMsg && (
-          <div
-            style={{
-              background: GREEN_LIGHT,
-              color: GREEN_DARK,
-              borderRadius: "8px",
-              padding: "10px 14px",
-              fontSize: "14px",
-              marginBottom: "16px",
-            }}
-          >
-            {successMsg}
-          </div>
-        )}
 
-        {validSession && !successMsg && (
-          <form onSubmit={handleReset}>
             <div style={{ marginBottom: "16px" }}>
-              <label style={labelStyle}>New Password</label>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#444",
+                  marginBottom: "6px",
+                }}
+              >
+                New Password
+              </label>
               <div style={{ position: "relative" }}>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -212,22 +200,63 @@ export default function ResetPasswordPage() {
             </div>
 
             <div style={{ marginBottom: "24px" }}>
-              <label style={labelStyle}>Confirm New Password</label>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#444",
+                  marginBottom: "6px",
+                }}
+              >
+                Confirm Password
+              </label>
               <input
                 type={showPassword ? "text" : "password"}
                 required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repeat your new password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="Repeat your password"
                 style={inputStyle}
               />
             </div>
 
-            <button type="submit" style={primaryBtn} disabled={loading}>
-              {loading ? "Updating…" : "Update Password"}
+            <button
+              type="submit"
+              disabled={status === "loading"}
+              style={{
+                width: "100%",
+                padding: "13px",
+                background: status === "loading" ? "#aaa" : GREEN,
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "15px",
+                fontWeight: "600",
+                cursor: status === "loading" ? "not-allowed" : "pointer",
+                fontFamily: "system-ui, sans-serif",
+              }}
+            >
+              {status === "loading" ? "Updating..." : "Update Password"}
             </button>
           </form>
         )}
+
+        <p style={{ textAlign: "center", marginTop: "20px", fontSize: "13px" }}>
+          <button
+            onClick={() => router.push("/auth")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#aaa",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontFamily: "system-ui, sans-serif",
+            }}
+          >
+            ← Back to Sign In
+          </button>
+        </p>
       </div>
     </div>
   );
