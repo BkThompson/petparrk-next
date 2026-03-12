@@ -430,7 +430,7 @@ export default function PetCardPage() {
                           fontSize: "15px",
                         }}
                       >
-                        📞 {formatPhone(pet.vet_phone)}
+                        {formatPhone(pet.vet_phone)}
                       </a>
                     </span>
                   </div>
@@ -463,7 +463,7 @@ export default function PetCardPage() {
                           fontSize: "15px",
                         }}
                       >
-                        📞 {formatPhone(pet.owner_phone)}
+                        {formatPhone(pet.owner_phone)}
                       </a>
                     </span>
                   </div>
@@ -476,7 +476,7 @@ export default function PetCardPage() {
                         href={`mailto:${pet.owner_email}`}
                         style={{ color: "#2d6a4f", textDecoration: "none" }}
                       >
-                        ✉️ {pet.owner_email}
+                        {pet.owner_email}
                       </a>
                     </span>
                   </div>
@@ -505,7 +505,7 @@ export default function PetCardPage() {
                             marginTop: "2px",
                           }}
                         >
-                          📞 {formatPhone(c.phone)}
+                          {formatPhone(c.phone)}
                         </a>
                       )}
                     </span>
