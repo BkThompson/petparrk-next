@@ -358,9 +358,11 @@ export default function PetCardPage() {
                 <p className="section-title">🩺 My Vet</p>
                 {pet.vet_name && (
                   <div className="info-row">
-                    <span className="info-label">Vet</span>
-                    <span className="info-value" style={{ fontWeight: "600" }}>
-                      {/* Link vet name to maps only if there's no address to link instead */}
+                    <span
+                      className="info-value"
+                      style={{ fontWeight: "600", gridColumn: "1 / -1" }}
+                    >
+                      {/* No label — section title already says My Vet */}
                       {!vetHasAddress && vetGpsUrl ? (
                         <a
                           href={vetGpsUrl}
@@ -387,15 +389,30 @@ export default function PetCardPage() {
                           rel="noreferrer"
                           style={{ color: "#2d6a4f", textDecoration: "none" }}
                         >
-                          📍{" "}
-                          {[pet.vet_address, pet.vet_city, pet.vet_zip]
-                            .filter(Boolean)
-                            .join(", ")}
+                          <span style={{ display: "block" }}>
+                            {pet.vet_address}
+                          </span>
+                          {(pet.vet_city || pet.vet_zip) && (
+                            <span style={{ display: "block" }}>
+                              {[pet.vet_city, pet.vet_zip]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </span>
+                          )}
                         </a>
                       ) : (
-                        [pet.vet_address, pet.vet_city, pet.vet_zip]
-                          .filter(Boolean)
-                          .join(", ")
+                        <>
+                          <span style={{ display: "block" }}>
+                            {pet.vet_address}
+                          </span>
+                          {(pet.vet_city || pet.vet_zip) && (
+                            <span style={{ display: "block" }}>
+                              {[pet.vet_city, pet.vet_zip]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </span>
+                          )}
+                        </>
                       )}
                     </span>
                   </div>
@@ -413,7 +430,7 @@ export default function PetCardPage() {
                           fontSize: "15px",
                         }}
                       >
-                        {formatPhone(pet.vet_phone)}
+                        📞 {formatPhone(pet.vet_phone)}
                       </a>
                     </span>
                   </div>
@@ -446,7 +463,7 @@ export default function PetCardPage() {
                           fontSize: "15px",
                         }}
                       >
-                        {formatPhone(pet.owner_phone)}
+                        📞 {formatPhone(pet.owner_phone)}
                       </a>
                     </span>
                   </div>
@@ -459,7 +476,7 @@ export default function PetCardPage() {
                         href={`mailto:${pet.owner_email}`}
                         style={{ color: "#2d6a4f", textDecoration: "none" }}
                       >
-                        {pet.owner_email}
+                        ✉️ {pet.owner_email}
                       </a>
                     </span>
                   </div>
@@ -488,7 +505,7 @@ export default function PetCardPage() {
                             marginTop: "2px",
                           }}
                         >
-                          {formatPhone(c.phone)}
+                          📞 {formatPhone(c.phone)}
                         </a>
                       )}
                     </span>

@@ -704,7 +704,7 @@ export default function ProfilePage() {
                       fontWeight: "600",
                     }}
                   >
-                    📍 {pet.vet_name}
+                    {pet.vet_name}
                   </a>
                 ) : (
                   <span style={{ color: "#333", fontWeight: "600" }}>
@@ -716,25 +716,21 @@ export default function ProfilePage() {
             {pet.vet_address && vetGpsUrl && (
               <p className="detail-row">
                 <span style={{ color: "#888" }}>Address: </span>
-                <a
-                  href={vetGpsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ color: "#2d6a4f", textDecoration: "none" }}
-                >
-                  📍 {pet.vet_address}
-                </a>
-                {(pet.vet_city || pet.vet_zip) && (
-                  <span
-                    style={{
-                      display: "block",
-                      paddingLeft: "20px",
-                      color: "#2d6a4f",
-                    }}
+                <span style={{ display: "inline-block", verticalAlign: "top" }}>
+                  <a
+                    href={vetGpsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "#2d6a4f", textDecoration: "none" }}
                   >
-                    {[pet.vet_city, pet.vet_zip].filter(Boolean).join(", ")}
-                  </span>
-                )}
+                    {pet.vet_address}
+                  </a>
+                  {(pet.vet_city || pet.vet_zip) && (
+                    <span style={{ display: "block", color: "#2d6a4f" }}>
+                      {[pet.vet_city, pet.vet_zip].filter(Boolean).join(", ")}
+                    </span>
+                  )}
+                </span>
               </p>
             )}
             {pet.vet_phone && (

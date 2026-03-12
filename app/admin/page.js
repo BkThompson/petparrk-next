@@ -639,32 +639,46 @@ export default function AdminPage() {
 
   async function savePrice() {
     setPriceSaving(true);
-    const { error } = await supabase
+    const payload = {
+      service_id: priceForm.service_id,
+      price_low:
+        priceForm.price_low !== "" ? parseFloat(priceForm.price_low) : null,
+      price_high:
+        priceForm.price_high !== "" ? parseFloat(priceForm.price_high) : null,
+      price_type: priceForm.price_type,
+      includes_bloodwork: !!priceForm.includes_bloodwork,
+      includes_xrays: !!priceForm.includes_xrays,
+      includes_anesthesia: !!priceForm.includes_anesthesia,
+      species:
+        priceForm.species === "other"
+          ? priceForm.species_other || "Other"
+          : priceForm.species,
+      call_for_quote: !!priceForm.call_for_quote,
+      notes: priceForm.notes || null,
+      is_verified: true,
+    };
+    console.log("savePrice — id:", editingPrice, "payload:", payload);
+    const { data, error } = await supabase
       .from("vet_prices")
-      .update({
-        service_id: priceForm.service_id,
-        price_low:
-          priceForm.price_low !== "" ? parseFloat(priceForm.price_low) : null,
-        price_high:
-          priceForm.price_high !== "" ? parseFloat(priceForm.price_high) : null,
-        price_type: priceForm.price_type,
-        includes_bloodwork: !!priceForm.includes_bloodwork,
-        includes_xrays: !!priceForm.includes_xrays,
-        includes_anesthesia: !!priceForm.includes_anesthesia,
-        species:
-          priceForm.species === "other"
-            ? priceForm.species_other || "Other"
-            : priceForm.species,
-        call_for_quote: !!priceForm.call_for_quote,
-        notes: priceForm.notes || null,
-        is_verified: true,
-      })
-      .eq("id", editingPrice);
-    if (!error) {
+      .update(payload)
+      .eq("id", editingPrice)
+      .select();
+    console.log("savePrice — result data:", data, "error:", error);
+    if (error) {
+      alert(
+        "Save failed: " +
+          error.message +
+          "\n\nCode: " +
+          error.code +
+          "\n\nThis may be a Supabase RLS policy. Check that your admin user has UPDATE permission on vet_prices.",
+      );
+    } else if (!data || data.length === 0) {
+      alert(
+        "Save ran but 0 rows were updated.\n\nCheck Supabase RLS policies on the vet_prices table — the UPDATE policy may be blocking this.",
+      );
+    } else {
       await fetchPricesForVet(selectedVetId);
       setEditingPrice(null);
-    } else {
-      alert("Save failed: " + error.message);
     }
     setPriceSaving(false);
   }
@@ -1069,7 +1083,6 @@ export default function AdminPage() {
             background: "#fff",
             borderRadius: "12px",
             border: "1px solid #e8e8e8",
-            overflow: "hidden",
           }}
         >
           <div className="tabs-scroll">
