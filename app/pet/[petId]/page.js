@@ -150,15 +150,17 @@ export default function PetCardPage() {
           letter-spacing: 1px;
           color: #aaa;
           margin: 0 0 8px 0;
+        }
+        /* One container — every direct child div gets padding, every div after another div gets a single top border */
+        .sections-container > div {
+          padding: 14px 0;
+        }
+        .sections-container > div:first-child {
           padding-top: 0;
-          border-top: none;
         }
-        .section-block {
-          padding: 16px 0;
-          border-bottom: 1px solid #f0f0f0;
+        .sections-container > div + div {
+          border-top: 1px solid #f0f0f0;
         }
-        .section-block:first-of-type { padding-top: 0; }
-        .section-block:last-of-type { border-bottom: none; }
       `}</style>
 
       <div
@@ -308,259 +310,281 @@ export default function PetCardPage() {
           </div>
 
           <div style={{ padding: "20px 24px" }}>
-            {/* ── Section 1: Medical Info ── */}
-            {(pet.allergies ||
-              pet.medications ||
-              pet.microchip_number ||
-              pet.notes) && (
-              <div className="section-block">
-                <p className="section-title">🏥 Medical Info</p>
-                {pet.allergies && (
-                  <div className="info-row">
-                    <span className="info-label">⚠️ Allergies</span>
-                    <span
-                      className="info-value"
-                      style={{ color: "#c62828", fontWeight: "600" }}
-                    >
-                      {pet.allergies}
-                    </span>
-                  </div>
-                )}
-                {pet.medications && (
-                  <div className="info-row">
-                    <span className="info-label">💊 Medications</span>
-                    <span className="info-value">{pet.medications}</span>
-                  </div>
-                )}
-                {pet.microchip_number && (
-                  <div className="info-row">
-                    <span className="info-label">🔖 Microchip</span>
-                    <span
-                      className="info-value"
-                      style={{ fontFamily: "monospace", fontSize: "13px" }}
-                    >
-                      {pet.microchip_number}
-                    </span>
-                  </div>
-                )}
-                {pet.notes && (
-                  <p
-                    style={{
-                      margin: "10px 0 0 0",
-                      fontSize: "14px",
-                      fontStyle: "italic",
-                      color: "#555",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    {pet.notes}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* ── Section 2: My Vet ── */}
-            {(pet.vet_name || pet.vet_phone) && (
-              <div className="section-block">
-                <p className="section-title">🩺 My Vet</p>
-                {pet.vet_name && (
-                  <p
-                    style={{
-                      margin: "0 0 3px 0",
-                      fontSize: "15px",
-                      fontWeight: "700",
-                      color: "#111",
-                    }}
-                  >
-                    {!vetHasAddress && vetGpsUrl ? (
-                      <a
-                        href={vetGpsUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: "#2d6a4f", textDecoration: "none" }}
+            <div className="sections-container">
+              {/* ── Section 1: Medical Info ── */}
+              {(pet.allergies ||
+                pet.medications ||
+                pet.microchip_number ||
+                pet.notes) && (
+                <div>
+                  <p className="section-title">🏥 Medical Info</p>
+                  {pet.allergies && (
+                    <div className="info-row">
+                      <span className="info-label">⚠️ Allergies</span>
+                      <span
+                        className="info-value"
+                        style={{ color: "#c62828", fontWeight: "600" }}
                       >
-                        {pet.vet_name}
-                      </a>
-                    ) : (
-                      pet.vet_name
-                    )}
-                  </p>
-                )}
-                {vetHasAddress && (
-                  <p
-                    style={{
-                      margin: "0 0 3px 0",
-                      fontSize: "14px",
-                      lineHeight: "1.5",
-                    }}
-                  >
-                    {vetGpsUrl ? (
-                      <a
-                        href={vetGpsUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: "#2d6a4f", textDecoration: "none" }}
+                        {pet.allergies}
+                      </span>
+                    </div>
+                  )}
+                  {pet.medications && (
+                    <div className="info-row">
+                      <span className="info-label">💊 Medications</span>
+                      <span className="info-value">{pet.medications}</span>
+                    </div>
+                  )}
+                  {pet.microchip_number && (
+                    <div className="info-row">
+                      <span className="info-label">🔖 Microchip</span>
+                      <span
+                        className="info-value"
+                        style={{ fontFamily: "monospace", fontSize: "13px" }}
                       >
-                        <span style={{ display: "block" }}>
-                          {pet.vet_address}
-                        </span>
-                        {(pet.vet_city || pet.vet_zip) && (
-                          <span style={{ display: "block" }}>
-                            {[pet.vet_city, pet.vet_zip]
-                              .filter(Boolean)
-                              .join(", ")}
-                          </span>
-                        )}
-                      </a>
-                    ) : (
-                      <>
-                        <span style={{ display: "block", color: "#555" }}>
-                          {pet.vet_address}
-                        </span>
-                        {(pet.vet_city || pet.vet_zip) && (
-                          <span style={{ display: "block", color: "#555" }}>
-                            {[pet.vet_city, pet.vet_zip]
-                              .filter(Boolean)
-                              .join(", ")}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </p>
-                )}
-                {pet.vet_phone && (
-                  <p style={{ margin: "0", fontSize: "14px" }}>
-                    <a
-                      href={`tel:${pet.vet_phone}`}
+                        {pet.microchip_number}
+                      </span>
+                    </div>
+                  )}
+                  {pet.notes && (
+                    <div
                       style={{
-                        color: "#2d6a4f",
-                        textDecoration: "none",
-                        fontWeight: "600",
+                        borderTop: "1px solid #f0f0f0",
+                        paddingTop: "10px",
+                        marginTop: "2px",
                       }}
                     >
-                      {formatPhone(pet.vet_phone)}
-                    </a>
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* ── Section 3: Owner Contact ── */}
-            {(pet.owner_name || pet.owner_phone || pet.owner_email) && (
-              <div className="section-block">
-                <p className="section-title">👤 Owner Contact</p>
-                {pet.owner_name && (
-                  <div className="info-row">
-                    <span className="info-label">Name</span>
-                    <span className="info-value" style={{ fontWeight: "600" }}>
-                      {pet.owner_name}
-                    </span>
-                  </div>
-                )}
-                {pet.owner_phone && (
-                  <div className="info-row">
-                    <span className="info-label">Phone</span>
-                    <span className="info-value">
-                      <a
-                        href={`tel:${pet.owner_phone}`}
+                      <p
                         style={{
-                          color: "#2d6a4f",
-                          fontWeight: "600",
-                          textDecoration: "none",
+                          margin: "0 0 5px 0",
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          color: "#aaa",
                         }}
                       >
-                        {formatPhone(pet.owner_phone)}
-                      </a>
-                    </span>
-                  </div>
-                )}
-                {pet.owner_email && (
-                  <div className="info-row">
-                    <span className="info-label">Email</span>
-                    <span className="info-value">
-                      <a
-                        href={`mailto:${pet.owner_email}`}
-                        style={{ color: "#2d6a4f", textDecoration: "none" }}
+                        📝 Notes
+                      </p>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "14px",
+                          fontStyle: "italic",
+                          color: "#555",
+                          lineHeight: "1.6",
+                        }}
                       >
-                        {pet.owner_email}
-                      </a>
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
+                        {pet.notes}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
-            {/* ── Section 4: Emergency Contacts ── */}
-            {contacts.length > 0 && (
-              <div className="section-block">
-                <p className="section-title">🚨 Emergency Contacts</p>
-                {contacts.map((c) => (
-                  <div key={c.id} className="info-row">
-                    <span className="info-label">
-                      {c.relationship || "Contact"}
-                    </span>
-                    <span className="info-value">
-                      <span style={{ fontWeight: "600" }}>{c.name}</span>
-                      {c.phone && (
+              {/* ── Section 2: My Vet ── */}
+              {(pet.vet_name || pet.vet_phone) && (
+                <div>
+                  <p className="section-title">🩺 My Vet</p>
+                  {pet.vet_name && (
+                    <p
+                      style={{
+                        margin: "0 0 3px 0",
+                        fontSize: "15px",
+                        fontWeight: "700",
+                        color: "#111",
+                      }}
+                    >
+                      {!vetHasAddress && vetGpsUrl ? (
                         <a
-                          href={`tel:${c.phone}`}
+                          href={vetGpsUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: "#2d6a4f", textDecoration: "none" }}
+                        >
+                          {pet.vet_name}
+                        </a>
+                      ) : (
+                        pet.vet_name
+                      )}
+                    </p>
+                  )}
+                  {vetHasAddress && (
+                    <p
+                      style={{
+                        margin: "0 0 3px 0",
+                        fontSize: "14px",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      {vetGpsUrl ? (
+                        <a
+                          href={vetGpsUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: "#2d6a4f", textDecoration: "none" }}
+                        >
+                          <span style={{ display: "block" }}>
+                            {pet.vet_address}
+                          </span>
+                          {(pet.vet_city || pet.vet_zip) && (
+                            <span style={{ display: "block" }}>
+                              {[pet.vet_city, pet.vet_zip]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </span>
+                          )}
+                        </a>
+                      ) : (
+                        <>
+                          <span style={{ display: "block", color: "#555" }}>
+                            {pet.vet_address}
+                          </span>
+                          {(pet.vet_city || pet.vet_zip) && (
+                            <span style={{ display: "block", color: "#555" }}>
+                              {[pet.vet_city, pet.vet_zip]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </p>
+                  )}
+                  {pet.vet_phone && (
+                    <p style={{ margin: "0", fontSize: "14px" }}>
+                      <a
+                        href={`tel:${pet.vet_phone}`}
+                        style={{
+                          color: "#2d6a4f",
+                          textDecoration: "none",
+                          fontWeight: "600",
+                        }}
+                      >
+                        {formatPhone(pet.vet_phone)}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* ── Section 3: Owner Contact ── */}
+              {(pet.owner_name || pet.owner_phone || pet.owner_email) && (
+                <div>
+                  <p className="section-title">👤 Owner Contact</p>
+                  {pet.owner_name && (
+                    <div className="info-row">
+                      <span className="info-label">Name</span>
+                      <span
+                        className="info-value"
+                        style={{ fontWeight: "600" }}
+                      >
+                        {pet.owner_name}
+                      </span>
+                    </div>
+                  )}
+                  {pet.owner_phone && (
+                    <div className="info-row">
+                      <span className="info-label">Phone</span>
+                      <span className="info-value">
+                        <a
+                          href={`tel:${pet.owner_phone}`}
                           style={{
-                            display: "block",
                             color: "#2d6a4f",
+                            fontWeight: "600",
                             textDecoration: "none",
-                            marginTop: "2px",
                           }}
                         >
-                          {formatPhone(c.phone)}
+                          {formatPhone(pet.owner_phone)}
                         </a>
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* QR + footer */}
-            <div
-              style={{
-                marginTop: "24px",
-                paddingTop: "20px",
-                borderTop: "1px solid #f0f0f0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "16px",
-              }}
-            >
-              <div>
-                <p
-                  style={{
-                    margin: "0 0 4px 0",
-                    fontSize: "12px",
-                    color: "#aaa",
-                    fontWeight: "600",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  Scan to view card
-                </p>
-                <p style={{ margin: 0, fontSize: "11px", color: "#ccc" }}>
-                  Powered by PetParrk
-                </p>
-              </div>
-              {qrUrl && (
-                <img
-                  src={qrUrl}
-                  alt="QR code"
-                  style={{
-                    width: "80px",
-                    height: "80px",
-                    borderRadius: "8px",
-                    border: "1px solid #eee",
-                  }}
-                />
+                      </span>
+                    </div>
+                  )}
+                  {pet.owner_email && (
+                    <div className="info-row">
+                      <span className="info-label">Email</span>
+                      <span className="info-value">
+                        <a
+                          href={`mailto:${pet.owner_email}`}
+                          style={{ color: "#2d6a4f", textDecoration: "none" }}
+                        >
+                          {pet.owner_email}
+                        </a>
+                      </span>
+                    </div>
+                  )}
+                </div>
               )}
+
+              {/* ── Section 4: Emergency Contacts ── */}
+              {contacts.length > 0 && (
+                <div>
+                  <p className="section-title">🚨 Emergency Contacts</p>
+                  {contacts.map((c) => (
+                    <div key={c.id} className="info-row">
+                      <span className="info-label">
+                        {c.relationship || "Contact"}
+                      </span>
+                      <span className="info-value">
+                        <span style={{ fontWeight: "600" }}>{c.name}</span>
+                        {c.phone && (
+                          <a
+                            href={`tel:${c.phone}`}
+                            style={{
+                              display: "block",
+                              color: "#2d6a4f",
+                              textDecoration: "none",
+                              marginTop: "2px",
+                            }}
+                          >
+                            {formatPhone(c.phone)}
+                          </a>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* QR + footer */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "16px",
+                }}
+              >
+                <div>
+                  <p
+                    style={{
+                      margin: "0 0 4px 0",
+                      fontSize: "12px",
+                      color: "#aaa",
+                      fontWeight: "600",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    Scan to view card
+                  </p>
+                  <p style={{ margin: 0, fontSize: "11px", color: "#ccc" }}>
+                    Powered by PetParrk
+                  </p>
+                </div>
+                {qrUrl && (
+                  <img
+                    src={qrUrl}
+                    alt="QR code"
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      borderRadius: "8px",
+                      border: "1px solid #eee",
+                    }}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
