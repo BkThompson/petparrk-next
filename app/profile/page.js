@@ -254,13 +254,11 @@ export default function ProfilePage() {
       data: { publicUrl },
     } = supabase.storage.from("avatars").getPublicUrl(filePath);
     const urlWithCache = `${publicUrl}?t=${Date.now()}`;
-    await supabase
-      .from("profiles")
-      .upsert({
-        id: session.user.id,
-        avatar_url: urlWithCache,
-        updated_at: new Date().toISOString(),
-      });
+    await supabase.from("profiles").upsert({
+      id: session.user.id,
+      avatar_url: urlWithCache,
+      updated_at: new Date().toISOString(),
+    });
     setProfile((prev) => ({ ...prev, avatar_url: urlWithCache }));
     showToast("Profile photo updated!");
     setUploadingPhoto(false);
@@ -386,16 +384,14 @@ export default function ProfilePage() {
 
   async function handleSaveProfile() {
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({
-        id: session.user.id,
-        full_name: profileForm.full_name,
-        bio: profileForm.bio,
-        zip_code: profileForm.zip_code,
-        is_public: profileForm.is_public,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabase.from("profiles").upsert({
+      id: session.user.id,
+      full_name: profileForm.full_name,
+      bio: profileForm.bio,
+      zip_code: profileForm.zip_code,
+      is_public: profileForm.is_public,
+      updated_at: new Date().toISOString(),
+    });
     if (!error) {
       setProfile((prev) => ({ ...prev, ...profileForm }));
       setEditingProfile(false);
@@ -685,15 +681,17 @@ export default function ProfilePage() {
             }}
           >
             <p style={sectionHead}>🩺 My Vet</p>
+            {/* Contact card style — no labels, stacked lines */}
             {pet.vet_name && (
-              <p className="detail-row">
-                {/* No "Vet:" label — section title already says My Vet */}
-                {/* Link vet name only if no address (address gets the GPS link) */}
-                {pet.vet_address && vetGpsUrl ? (
-                  <span style={{ color: "#333", fontWeight: "600" }}>
-                    {pet.vet_name}
-                  </span>
-                ) : vetGpsUrl ? (
+              <p
+                className="detail-row"
+                style={{
+                  fontWeight: "600",
+                  color: "#333",
+                  marginBottom: "2px",
+                }}
+              >
+                {!pet.vet_address && vetGpsUrl ? (
                   <a
                     href={vetGpsUrl}
                     target="_blank"
@@ -707,35 +705,40 @@ export default function ProfilePage() {
                     {pet.vet_name}
                   </a>
                 ) : (
-                  <span style={{ color: "#333", fontWeight: "600" }}>
-                    {pet.vet_name}
-                  </span>
+                  pet.vet_name
                 )}
               </p>
             )}
-            {pet.vet_address && vetGpsUrl && (
-              <p className="detail-row">
-                <span style={{ color: "#888" }}>Address: </span>
-                <span style={{ display: "inline-block", verticalAlign: "top" }}>
+            {pet.vet_address && (
+              <p className="detail-row" style={{ marginBottom: "2px" }}>
+                {vetGpsUrl ? (
                   <a
                     href={vetGpsUrl}
                     target="_blank"
                     rel="noreferrer"
                     style={{ color: "#2d6a4f", textDecoration: "none" }}
                   >
-                    {pet.vet_address}
+                    <span style={{ display: "block" }}>{pet.vet_address}</span>
+                    {(pet.vet_city || pet.vet_zip) && (
+                      <span style={{ display: "block" }}>
+                        {[pet.vet_city, pet.vet_zip].filter(Boolean).join(", ")}
+                      </span>
+                    )}
                   </a>
-                  {(pet.vet_city || pet.vet_zip) && (
-                    <span style={{ display: "block", color: "#2d6a4f" }}>
-                      {[pet.vet_city, pet.vet_zip].filter(Boolean).join(", ")}
-                    </span>
-                  )}
-                </span>
+                ) : (
+                  <>
+                    <span style={{ display: "block" }}>{pet.vet_address}</span>
+                    {(pet.vet_city || pet.vet_zip) && (
+                      <span style={{ display: "block", color: "#555" }}>
+                        {[pet.vet_city, pet.vet_zip].filter(Boolean).join(", ")}
+                      </span>
+                    )}
+                  </>
+                )}
               </p>
             )}
             {pet.vet_phone && (
-              <p className="detail-row">
-                <span style={{ color: "#888" }}>Phone: </span>
+              <p className="detail-row" style={{ marginBottom: "2px" }}>
                 <a
                   href={`tel:${pet.vet_phone}`}
                   style={{ color: "#2d6a4f", textDecoration: "none" }}
@@ -1659,7 +1662,7 @@ export default function ProfilePage() {
               {pet.notes && (
                 <p
                   style={{
-                    margin: "0 0 4px 0",
+                    margin: "0 0 20px 0",
                     fontSize: "13px",
                     color: "#666",
                     fontStyle: "italic",
@@ -2046,7 +2049,7 @@ export default function ProfilePage() {
                                       textDecoration: "none",
                                     }}
                                   >
-                                    📞 {formatPhone(c.phone)}
+                                    {formatPhone(c.phone)}
                                   </a>
                                 </span>
                               )}

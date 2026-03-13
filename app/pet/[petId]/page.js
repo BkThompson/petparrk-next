@@ -149,11 +149,11 @@ export default function PetCardPage() {
           text-transform: uppercase;
           letter-spacing: 1px;
           color: #aaa;
-          margin: 24px 0 2px 0;
-          padding-top: 20px;
-          border-top: 1px solid #f0f0f0;
+          margin: 28px 0 4px 0;
+          padding-top: 0;
+          border-top: none;
         }
-        .section-title:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+        .section-title:first-of-type { margin-top: 0; }
       `}</style>
 
       <div
@@ -356,13 +356,17 @@ export default function PetCardPage() {
             {(pet.vet_name || pet.vet_phone) && (
               <>
                 <p className="section-title">🩺 My Vet</p>
-                {pet.vet_name && (
-                  <div className="info-row">
-                    <span
-                      className="info-value"
-                      style={{ fontWeight: "600", gridColumn: "1 / -1" }}
+                {/* Contact card style — stacked, no labels, no inner dividers */}
+                <div style={{ paddingBottom: "4px" }}>
+                  {pet.vet_name && (
+                    <p
+                      style={{
+                        margin: "0 0 3px 0",
+                        fontSize: "15px",
+                        fontWeight: "700",
+                        color: "#111",
+                      }}
                     >
-                      {/* No label — section title already says My Vet */}
                       {!vetHasAddress && vetGpsUrl ? (
                         <a
                           href={vetGpsUrl}
@@ -375,13 +379,16 @@ export default function PetCardPage() {
                       ) : (
                         pet.vet_name
                       )}
-                    </span>
-                  </div>
-                )}
-                {vetHasAddress && (
-                  <div className="info-row">
-                    <span className="info-label">Address</span>
-                    <span className="info-value">
+                    </p>
+                  )}
+                  {vetHasAddress && (
+                    <p
+                      style={{
+                        margin: "0 0 3px 0",
+                        fontSize: "14px",
+                        lineHeight: "1.5",
+                      }}
+                    >
                       {vetGpsUrl ? (
                         <a
                           href={vetGpsUrl}
@@ -402,11 +409,11 @@ export default function PetCardPage() {
                         </a>
                       ) : (
                         <>
-                          <span style={{ display: "block" }}>
+                          <span style={{ display: "block", color: "#555" }}>
                             {pet.vet_address}
                           </span>
                           {(pet.vet_city || pet.vet_zip) && (
-                            <span style={{ display: "block" }}>
+                            <span style={{ display: "block", color: "#555" }}>
                               {[pet.vet_city, pet.vet_zip]
                                 .filter(Boolean)
                                 .join(", ")}
@@ -414,27 +421,23 @@ export default function PetCardPage() {
                           )}
                         </>
                       )}
-                    </span>
-                  </div>
-                )}
-                {pet.vet_phone && (
-                  <div className="info-row">
-                    <span className="info-label">Phone</span>
-                    <span className="info-value">
+                    </p>
+                  )}
+                  {pet.vet_phone && (
+                    <p style={{ margin: "0", fontSize: "14px" }}>
                       <a
                         href={`tel:${pet.vet_phone}`}
                         style={{
                           color: "#2d6a4f",
-                          fontWeight: "600",
                           textDecoration: "none",
-                          fontSize: "15px",
+                          fontWeight: "600",
                         }}
                       >
                         {formatPhone(pet.vet_phone)}
                       </a>
-                    </span>
-                  </div>
-                )}
+                    </p>
+                  )}
+                </div>
               </>
             )}
 
