@@ -2579,10 +2579,10 @@ export default function AdminPage() {
                                   key={f}
                                   type="button"
                                   onClick={() =>
-                                    setAddPriceForm({
-                                      ...addPriceForm,
-                                      [f]: !addPriceForm[f],
-                                    })
+                                    setAddPriceForm((prev) => ({
+                                      ...prev,
+                                      [f]: !prev[f],
+                                    }))
                                   }
                                   style={{
                                     padding: "3px 8px",
@@ -2995,10 +2995,10 @@ export default function AdminPage() {
                                           key={f}
                                           type="button"
                                           onClick={() =>
-                                            setPriceForm({
-                                              ...priceForm,
-                                              [f]: !priceForm[f],
-                                            })
+                                            setPriceForm((prev) => ({
+                                              ...prev,
+                                              [f]: !prev[f],
+                                            }))
                                           }
                                           style={{
                                             padding: "3px 8px",
@@ -3304,60 +3304,84 @@ export default function AdminPage() {
                           )}
                           {(() => {
                             const cityVal = vet.city || vet.neighborhood || "";
-                            const line2 = [cityVal, vet.state, vet.zip_code]
+                            const restLine = [vet.state, vet.zip_code]
                               .filter(Boolean)
                               .join(", ");
-                            return line2 ? (
-                              <p
-                                style={{
-                                  margin: "0 0 8px 0",
-                                  fontSize: "14px",
-                                  color: "#555",
-                                }}
-                              >
-                                {line2}
-                              </p>
-                            ) : (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  margin: "0 0 8px 0",
-                                }}
-                              >
-                                <input
-                                  className="adm-input"
+                            if (cityVal) {
+                              return (
+                                <p
                                   style={{
-                                    maxWidth: "200px",
-                                    fontSize: "13px",
-                                    padding: "4px 8px",
+                                    margin: "0 0 8px 0",
+                                    fontSize: "14px",
+                                    color: "#555",
                                   }}
-                                  placeholder="Enter city..."
-                                  defaultValue=""
-                                  onBlur={async (e) => {
-                                    const city = e.target.value.trim();
-                                    if (!city) return;
-                                    const table =
-                                      vet._source === "pending"
-                                        ? "pending_vets"
-                                        : "vets";
-                                    await supabase
-                                      .from(table)
-                                      .update({ city })
-                                      .eq("id", vet.id);
-                                    setCallQueue((prev) =>
-                                      prev.map((v, idx) =>
-                                        idx === callIndex ? { ...v, city } : v,
-                                      ),
-                                    );
-                                  }}
-                                />
-                                <span
-                                  style={{ fontSize: "12px", color: "#aaa" }}
                                 >
-                                  city missing — enter to save
-                                </span>
+                                  {[cityVal, vet.state, vet.zip_code]
+                                    .filter(Boolean)
+                                    .join(", ")}
+                                </p>
+                              );
+                            }
+                            // City is missing — show editable input + whatever state/zip we have
+                            return (
+                              <div style={{ margin: "0 0 8px 0" }}>
+                                {restLine && (
+                                  <p
+                                    style={{
+                                      margin: "0 0 4px 0",
+                                      fontSize: "14px",
+                                      color: "#555",
+                                    }}
+                                  >
+                                    {restLine}
+                                  </p>
+                                )}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                  }}
+                                >
+                                  <input
+                                    className="adm-input"
+                                    style={{
+                                      maxWidth: "180px",
+                                      fontSize: "13px",
+                                      padding: "4px 8px",
+                                    }}
+                                    placeholder="Enter city..."
+                                    defaultValue=""
+                                    onBlur={async (e) => {
+                                      const city = e.target.value.trim();
+                                      if (!city) return;
+                                      const table =
+                                        vet._source === "pending"
+                                          ? "pending_vets"
+                                          : "vets";
+                                      await supabase
+                                        .from(table)
+                                        .update({ city })
+                                        .eq("id", vet.id);
+                                      setCallQueue((prev) =>
+                                        prev.map((v, idx) =>
+                                          idx === callIndex
+                                            ? { ...v, city }
+                                            : v,
+                                        ),
+                                      );
+                                    }}
+                                  />
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      color: "#e65100",
+                                      fontWeight: "600",
+                                    }}
+                                  >
+                                    ⚠️ City missing
+                                  </span>
+                                </div>
                               </div>
                             );
                           })()}
@@ -3663,11 +3687,11 @@ export default function AdminPage() {
                                     placeholder="Notes..."
                                   />
                                 </div>
-                                {/* Row 4: Clear + Remove buttons */}
+                                {/* Row 4: Clear + Remove buttons — left aligned */}
                                 <div
                                   style={{
                                     display: "flex",
-                                    justifyContent: "flex-end",
+                                    justifyContent: "flex-start",
                                     gap: "8px",
                                     alignItems: "center",
                                   }}
