@@ -317,43 +317,47 @@ export default function PetCardPage() {
                 pet.microchip_number ||
                 pet.notes) && (
                 <div>
-                  <p className="section-title">🏥 Medical Info</p>
                   {(pet.allergies ||
                     pet.medications ||
                     pet.microchip_number) && (
-                    <div className="info-rows">
-                      {pet.allergies && (
-                        <div className="info-row">
-                          <span className="info-label">⚠️ Allergies</span>
-                          <span
-                            className="info-value"
-                            style={{ color: "#c62828", fontWeight: "600" }}
-                          >
-                            {pet.allergies}
-                          </span>
-                        </div>
-                      )}
-                      {pet.medications && (
-                        <div className="info-row">
-                          <span className="info-label">💊 Medications</span>
-                          <span className="info-value">{pet.medications}</span>
-                        </div>
-                      )}
-                      {pet.microchip_number && (
-                        <div className="info-row">
-                          <span className="info-label">🔖 Microchip</span>
-                          <span
-                            className="info-value"
-                            style={{
-                              fontFamily: "monospace",
-                              fontSize: "13px",
-                            }}
-                          >
-                            {pet.microchip_number}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    <>
+                      <p className="section-title">🏥 Medical Info</p>
+                      <div className="info-rows">
+                        {pet.allergies && (
+                          <div className="info-row">
+                            <span className="info-label">⚠️ Allergies</span>
+                            <span
+                              className="info-value"
+                              style={{ color: "#c62828", fontWeight: "600" }}
+                            >
+                              {pet.allergies}
+                            </span>
+                          </div>
+                        )}
+                        {pet.medications && (
+                          <div className="info-row">
+                            <span className="info-label">💊 Medications</span>
+                            <span className="info-value">
+                              {pet.medications}
+                            </span>
+                          </div>
+                        )}
+                        {pet.microchip_number && (
+                          <div className="info-row">
+                            <span className="info-label">🔖 Microchip</span>
+                            <span
+                              className="info-value"
+                              style={{
+                                fontFamily: "monospace",
+                                fontSize: "13px",
+                              }}
+                            >
+                              {pet.microchip_number}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </>
                   )}
                   {pet.notes && (
                     <div
@@ -370,7 +374,12 @@ export default function PetCardPage() {
                           pet.microchip_number
                             ? "10px"
                             : "0",
-                        marginTop: "2px",
+                        marginTop:
+                          pet.allergies ||
+                          pet.medications ||
+                          pet.microchip_number
+                            ? "10px"
+                            : "0",
                       }}
                     >
                       <p
