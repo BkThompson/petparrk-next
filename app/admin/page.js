@@ -130,6 +130,8 @@ export default function AdminPage() {
   const [callIndex, setCallIndex] = useState(0);
   const [callPrices, setCallPrices] = useState([]);
   const [callSaving, setCallSaving] = useState(false);
+  const [callLog, setCallLog] = useState([]); // recently processed vets
+  const [deletePriceConfirm, setDeletePriceConfirm] = useState(null); // price id pending delete
   const [callSaved, setCallSaved] = useState(false);
   const [callReviewPrices, setCallReviewPrices] = useState([]); // saved prices shown in review
   const [callReviewVetId, setCallReviewVetId] = useState(null); // vet id for editing saved prices
@@ -452,6 +454,15 @@ export default function AdminPage() {
   }
 
   function advanceFromReview() {
+    const vet = callQueue[callIndex];
+    if (vet) {
+      setCallLog((prev) =>
+        [
+          { name: vet.name, count: callReviewPrices.length, ts: new Date() },
+          ...prev,
+        ].slice(0, 10),
+      );
+    }
     setCallSaved(false);
     setCallReviewPrices([]);
     setCallReviewVetId(null);
@@ -746,9 +757,9 @@ export default function AdminPage() {
   }
 
   async function deletePrice(id) {
-    if (!confirm("Delete this price row?")) return;
     await supabase.from("vet_prices").delete().eq("id", id);
     setVetPrices((prev) => prev.filter((p) => p.id !== id));
+    setDeletePriceConfirm(null);
     fetchStats();
   }
 
@@ -2544,43 +2555,76 @@ export default function AdminPage() {
                               />
                             )}
                           </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: "6px",
-                              paddingTop: "18px",
-                            }}
-                          >
-                            {[
-                              ["includes_bloodwork", "Includes bloodwork"],
-                              ["includes_xrays", "Includes x-rays"],
-                              ["includes_anesthesia", "Includes anesthesia"],
-                              ["call_for_quote", "Call for quote"],
-                            ].map(([f, l]) => (
-                              <label
-                                key={f}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  fontSize: "13px",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={!!addPriceForm[f]}
-                                  onChange={(e) =>
+                          <div>
+                            <label
+                              className="field-label"
+                              style={{ display: "block", marginBottom: "6px" }}
+                            >
+                              Includes
+                            </label>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "6px",
+                                flexWrap: "wrap",
+                                marginBottom: "8px",
+                              }}
+                            >
+                              {[
+                                ["includes_bloodwork", "Bloodwork"],
+                                ["includes_xrays", "X-rays"],
+                                ["includes_anesthesia", "Anesthesia"],
+                              ].map(([f, l]) => (
+                                <button
+                                  key={f}
+                                  type="button"
+                                  onClick={() =>
                                     setAddPriceForm({
                                       ...addPriceForm,
-                                      [f]: e.target.checked,
+                                      [f]: !addPriceForm[f],
                                     })
                                   }
-                                />
-                                {l}
-                              </label>
-                            ))}
+                                  style={{
+                                    padding: "3px 8px",
+                                    borderRadius: "20px",
+                                    fontSize: "11px",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    border: addPriceForm[f]
+                                      ? "none"
+                                      : "1px solid #ddd",
+                                    background: addPriceForm[f]
+                                      ? "#2d6a4f"
+                                      : "#f5f5f5",
+                                    color: addPriceForm[f] ? "#fff" : "#555",
+                                    transition: "all 0.15s",
+                                  }}
+                                >
+                                  {l}
+                                </button>
+                              ))}
+                            </div>
+                            <label
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={!!addPriceForm.call_for_quote}
+                                onChange={(e) =>
+                                  setAddPriceForm({
+                                    ...addPriceForm,
+                                    call_for_quote: e.target.checked,
+                                  })
+                                }
+                              />
+                              Call for quote
+                            </label>
                           </div>
                           <div>
                             <label className="field-label">Notes</label>
@@ -2769,20 +2813,53 @@ export default function AdminPage() {
                             >
                               <button
                                 className="adm-btn adm-btn-outline"
-                                onClick={() =>
+                                onClick={() => {
+                                  setDeletePriceConfirm(null);
                                   editingPrice === p.id
                                     ? setEditingPrice(null)
-                                    : startEditPrice(p)
-                                }
+                                    : startEditPrice(p);
+                                }}
                               >
                                 {editingPrice === p.id ? "Cancel" : "Edit"}
                               </button>
-                              <button
-                                className="adm-btn adm-btn-red"
-                                onClick={() => deletePrice(p.id)}
-                              >
-                                Delete
-                              </button>
+                              {deletePriceConfirm === p.id ? (
+                                <span
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      color: "#c62828",
+                                      fontWeight: "600",
+                                    }}
+                                  >
+                                    Delete?
+                                  </span>
+                                  <button
+                                    className="adm-btn adm-btn-red"
+                                    onClick={() => deletePrice(p.id)}
+                                  >
+                                    Yes
+                                  </button>
+                                  <button
+                                    className="adm-btn adm-btn-gray"
+                                    onClick={() => setDeletePriceConfirm(null)}
+                                  >
+                                    No
+                                  </button>
+                                </span>
+                              ) : (
+                                <button
+                                  className="adm-btn adm-btn-red"
+                                  onClick={() => setDeletePriceConfirm(p.id)}
+                                >
+                                  Delete
+                                </button>
+                              )}
                             </div>
                           </div>
                           {editingPrice === p.id && (
@@ -2891,49 +2968,81 @@ export default function AdminPage() {
                                       <option value="other">Other</option>
                                     </select>
                                   </div>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      gap: "6px",
-                                      paddingTop: "18px",
-                                    }}
-                                  >
-                                    {[
-                                      [
-                                        "includes_bloodwork",
-                                        "Includes bloodwork",
-                                      ],
-                                      ["includes_xrays", "Includes x-rays"],
-                                      [
-                                        "includes_anesthesia",
-                                        "Includes anesthesia",
-                                      ],
-                                      ["call_for_quote", "Call for quote"],
-                                    ].map(([f, l]) => (
-                                      <label
-                                        key={f}
-                                        style={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: "6px",
-                                          fontSize: "13px",
-                                          cursor: "pointer",
-                                        }}
-                                      >
-                                        <input
-                                          type="checkbox"
-                                          checked={!!priceForm[f]}
-                                          onChange={(e) =>
+                                  <div>
+                                    <label
+                                      className="field-label"
+                                      style={{
+                                        display: "block",
+                                        marginBottom: "6px",
+                                      }}
+                                    >
+                                      Includes
+                                    </label>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: "6px",
+                                        flexWrap: "wrap",
+                                        marginBottom: "8px",
+                                      }}
+                                    >
+                                      {[
+                                        ["includes_bloodwork", "Bloodwork"],
+                                        ["includes_xrays", "X-rays"],
+                                        ["includes_anesthesia", "Anesthesia"],
+                                      ].map(([f, l]) => (
+                                        <button
+                                          key={f}
+                                          type="button"
+                                          onClick={() =>
                                             setPriceForm({
                                               ...priceForm,
-                                              [f]: e.target.checked,
+                                              [f]: !priceForm[f],
                                             })
                                           }
-                                        />
-                                        {l}
-                                      </label>
-                                    ))}
+                                          style={{
+                                            padding: "3px 8px",
+                                            borderRadius: "20px",
+                                            fontSize: "11px",
+                                            fontWeight: "600",
+                                            cursor: "pointer",
+                                            border: priceForm[f]
+                                              ? "none"
+                                              : "1px solid #ddd",
+                                            background: priceForm[f]
+                                              ? "#2d6a4f"
+                                              : "#f5f5f5",
+                                            color: priceForm[f]
+                                              ? "#fff"
+                                              : "#555",
+                                            transition: "all 0.15s",
+                                          }}
+                                        >
+                                          {l}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    <label
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        fontSize: "13px",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={!!priceForm.call_for_quote}
+                                        onChange={(e) =>
+                                          setPriceForm({
+                                            ...priceForm,
+                                            call_for_quote: e.target.checked,
+                                          })
+                                        }
+                                      />
+                                      Call for quote
+                                    </label>
                                   </div>
                                   <div>
                                     <label className="field-label">Notes</label>
@@ -3027,7 +3136,7 @@ export default function AdminPage() {
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
-                            marginBottom: "16px",
+                            marginBottom: "8px",
                           }}
                         >
                           <div>
@@ -3053,6 +3162,19 @@ export default function AdminPage() {
                           <div style={{ display: "flex", gap: "8px" }}>
                             <button
                               className="adm-btn adm-btn-gray"
+                              onClick={() => {
+                                fetchCallQueue();
+                                setCallIndex(0);
+                                setCallPrices([]);
+                                setCallReviewPrices([]);
+                                setCallReviewVetId(null);
+                                setCallSaved(false);
+                              }}
+                            >
+                              ↺ Refresh
+                            </button>
+                            <button
+                              className="adm-btn adm-btn-gray"
                               onClick={() =>
                                 setCallIndex((i) => Math.max(0, i - 1))
                               }
@@ -3071,6 +3193,43 @@ export default function AdminPage() {
                             </button>
                           </div>
                         </div>
+                        {callLog.length > 0 && (
+                          <div
+                            style={{
+                              background: "#f9f9f9",
+                              border: "1px solid #eee",
+                              borderRadius: "8px",
+                              padding: "8px 12px",
+                              marginBottom: "14px",
+                            }}
+                          >
+                            <p
+                              style={{
+                                margin: "0 0 4px 0",
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                color: "#aaa",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px",
+                              }}
+                            >
+                              Recently processed
+                            </p>
+                            {callLog.map((entry, i) => (
+                              <p
+                                key={i}
+                                style={{
+                                  margin: "2px 0",
+                                  fontSize: "12px",
+                                  color: "#555",
+                                }}
+                              >
+                                ✅ <strong>{entry.name}</strong> — {entry.count}{" "}
+                                price{entry.count !== 1 ? "s" : ""} saved
+                              </p>
+                            ))}
+                          </div>
+                        )}
                         <div
                           style={{
                             height: "4px",
@@ -3508,7 +3667,8 @@ export default function AdminPage() {
                                 <div
                                   style={{
                                     display: "flex",
-                                    justifyContent: "space-between",
+                                    justifyContent: "flex-end",
+                                    gap: "8px",
                                     alignItems: "center",
                                   }}
                                 >
