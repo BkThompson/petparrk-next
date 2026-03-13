@@ -139,8 +139,9 @@ export default function PetCardPage() {
           body { background: white !important; }
           .card { box-shadow: none !important; border: 1px solid #ccc !important; }
         }
-        .info-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
-        .info-row:last-child { border-bottom: none; }
+        .info-rows > .info-row { border-bottom: 1px solid #f0f0f0; }
+        .info-rows > .info-row:last-child { border-bottom: none; }
+        .info-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; }
         .info-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; width: 110px; flex-shrink: 0; padding-top: 1px; }
         .info-value { font-size: 14px; color: #222; flex: 1; line-height: 1.4; }
         .section-title {
@@ -151,7 +152,6 @@ export default function PetCardPage() {
           color: #aaa;
           margin: 0 0 8px 0;
         }
-        /* One container — every direct child div gets padding, every div after another div gets a single top border */
         .sections-container > div {
           padding: 14px 0;
         }
@@ -318,42 +318,38 @@ export default function PetCardPage() {
                 pet.notes) && (
                 <div>
                   <p className="section-title">🏥 Medical Info</p>
-                  {pet.allergies && (
-                    <div className="info-row">
-                      <span className="info-label">⚠️ Allergies</span>
-                      <span
-                        className="info-value"
-                        style={{ color: "#c62828", fontWeight: "600" }}
-                      >
-                        {pet.allergies}
-                      </span>
-                    </div>
-                  )}
-                  {pet.medications && (
-                    <div className="info-row">
-                      <span className="info-label">💊 Medications</span>
-                      <span className="info-value">{pet.medications}</span>
-                    </div>
-                  )}
-                  {pet.microchip_number && (
-                    <div className="info-row">
-                      <span className="info-label">🔖 Microchip</span>
-                      <span
-                        className="info-value"
-                        style={{ fontFamily: "monospace", fontSize: "13px" }}
-                      >
-                        {pet.microchip_number}
-                      </span>
-                    </div>
-                  )}
+                  <div className="info-rows">
+                    {pet.allergies && (
+                      <div className="info-row">
+                        <span className="info-label">⚠️ Allergies</span>
+                        <span
+                          className="info-value"
+                          style={{ color: "#c62828", fontWeight: "600" }}
+                        >
+                          {pet.allergies}
+                        </span>
+                      </div>
+                    )}
+                    {pet.medications && (
+                      <div className="info-row">
+                        <span className="info-label">💊 Medications</span>
+                        <span className="info-value">{pet.medications}</span>
+                      </div>
+                    )}
+                    {pet.microchip_number && (
+                      <div className="info-row">
+                        <span className="info-label">🔖 Microchip</span>
+                        <span
+                          className="info-value"
+                          style={{ fontFamily: "monospace", fontSize: "13px" }}
+                        >
+                          {pet.microchip_number}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   {pet.notes && (
-                    <div
-                      style={{
-                        borderTop: "1px solid #f0f0f0",
-                        paddingTop: "10px",
-                        marginTop: "2px",
-                      }}
-                    >
+                    <div style={{ paddingTop: "10px", marginTop: "2px" }}>
                       <p
                         style={{
                           margin: "0 0 5px 0",
@@ -472,47 +468,49 @@ export default function PetCardPage() {
               {(pet.owner_name || pet.owner_phone || pet.owner_email) && (
                 <div>
                   <p className="section-title">👤 Owner Contact</p>
-                  {pet.owner_name && (
-                    <div className="info-row">
-                      <span className="info-label">Name</span>
-                      <span
-                        className="info-value"
-                        style={{ fontWeight: "600" }}
-                      >
-                        {pet.owner_name}
-                      </span>
-                    </div>
-                  )}
-                  {pet.owner_phone && (
-                    <div className="info-row">
-                      <span className="info-label">Phone</span>
-                      <span className="info-value">
-                        <a
-                          href={`tel:${pet.owner_phone}`}
-                          style={{
-                            color: "#2d6a4f",
-                            fontWeight: "600",
-                            textDecoration: "none",
-                          }}
+                  <div className="info-rows">
+                    {pet.owner_name && (
+                      <div className="info-row">
+                        <span className="info-label">Name</span>
+                        <span
+                          className="info-value"
+                          style={{ fontWeight: "600" }}
                         >
-                          {formatPhone(pet.owner_phone)}
-                        </a>
-                      </span>
-                    </div>
-                  )}
-                  {pet.owner_email && (
-                    <div className="info-row">
-                      <span className="info-label">Email</span>
-                      <span className="info-value">
-                        <a
-                          href={`mailto:${pet.owner_email}`}
-                          style={{ color: "#2d6a4f", textDecoration: "none" }}
-                        >
-                          {pet.owner_email}
-                        </a>
-                      </span>
-                    </div>
-                  )}
+                          {pet.owner_name}
+                        </span>
+                      </div>
+                    )}
+                    {pet.owner_phone && (
+                      <div className="info-row">
+                        <span className="info-label">Phone</span>
+                        <span className="info-value">
+                          <a
+                            href={`tel:${pet.owner_phone}`}
+                            style={{
+                              color: "#2d6a4f",
+                              fontWeight: "600",
+                              textDecoration: "none",
+                            }}
+                          >
+                            {formatPhone(pet.owner_phone)}
+                          </a>
+                        </span>
+                      </div>
+                    )}
+                    {pet.owner_email && (
+                      <div className="info-row">
+                        <span className="info-label">Email</span>
+                        <span className="info-value">
+                          <a
+                            href={`mailto:${pet.owner_email}`}
+                            style={{ color: "#2d6a4f", textDecoration: "none" }}
+                          >
+                            {pet.owner_email}
+                          </a>
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -520,29 +518,31 @@ export default function PetCardPage() {
               {contacts.length > 0 && (
                 <div>
                   <p className="section-title">🚨 Emergency Contacts</p>
-                  {contacts.map((c) => (
-                    <div key={c.id} className="info-row">
-                      <span className="info-label">
-                        {c.relationship || "Contact"}
-                      </span>
-                      <span className="info-value">
-                        <span style={{ fontWeight: "600" }}>{c.name}</span>
-                        {c.phone && (
-                          <a
-                            href={`tel:${c.phone}`}
-                            style={{
-                              display: "block",
-                              color: "#2d6a4f",
-                              textDecoration: "none",
-                              marginTop: "2px",
-                            }}
-                          >
-                            {formatPhone(c.phone)}
-                          </a>
-                        )}
-                      </span>
-                    </div>
-                  ))}
+                  <div className="info-rows">
+                    {contacts.map((c) => (
+                      <div key={c.id} className="info-row">
+                        <span className="info-label">
+                          {c.relationship || "Contact"}
+                        </span>
+                        <span className="info-value">
+                          <span style={{ fontWeight: "600" }}>{c.name}</span>
+                          {c.phone && (
+                            <a
+                              href={`tel:${c.phone}`}
+                              style={{
+                                display: "block",
+                                color: "#2d6a4f",
+                                textDecoration: "none",
+                                marginTop: "2px",
+                              }}
+                            >
+                              {formatPhone(c.phone)}
+                            </a>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
