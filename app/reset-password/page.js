@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
 const GREEN = "#2d6a4f";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState("idle");
@@ -18,8 +17,10 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     async function init() {
-      // Method 1: exchange PKCE code from URL if present
-      const code = searchParams.get("code");
+      // Read code directly from window.location — no useSearchParams needed
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
@@ -28,21 +29,21 @@ export default function ResetPasswordPage() {
         }
       }
 
-      // Method 2: already have a session (hash-based flow)
+      // Fallback: already have a session
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         setReady(true);
         return;
       }
 
-      // Method 3: listen for PASSWORD_RECOVERY event
+      // Fallback: listen for PASSWORD_RECOVERY event
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === "PASSWORD_RECOVERY") {
           setReady(true);
         }
       });
 
-      // Fallback: show form anyway after short delay so user isn't stuck
+      // Last resort: show form after 2s so user isn't stuck
       setTimeout(() => setReady(true), 2000);
 
       return () => subscription.unsubscribe();
@@ -172,5 +173,13 @@ export default function ResetPasswordPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", color: "#888" }}>Loading...</div>}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
