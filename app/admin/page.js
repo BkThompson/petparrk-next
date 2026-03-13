@@ -3143,26 +3143,65 @@ export default function AdminPage() {
                               {vet.address}
                             </p>
                           )}
-                          {(vet.city ||
-                            vet.neighborhood ||
-                            vet.state ||
-                            vet.zip_code) && (
-                            <p
-                              style={{
-                                margin: "0 0 8px 0",
-                                fontSize: "14px",
-                                color: "#555",
-                              }}
-                            >
-                              {[
-                                vet.city || vet.neighborhood,
-                                vet.state,
-                                vet.zip_code,
-                              ]
-                                .filter(Boolean)
-                                .join(", ")}
-                            </p>
-                          )}
+                          {(() => {
+                            const cityVal = vet.city || vet.neighborhood || "";
+                            const line2 = [cityVal, vet.state, vet.zip_code]
+                              .filter(Boolean)
+                              .join(", ");
+                            return line2 ? (
+                              <p
+                                style={{
+                                  margin: "0 0 8px 0",
+                                  fontSize: "14px",
+                                  color: "#555",
+                                }}
+                              >
+                                {line2}
+                              </p>
+                            ) : (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  margin: "0 0 8px 0",
+                                }}
+                              >
+                                <input
+                                  className="adm-input"
+                                  style={{
+                                    maxWidth: "200px",
+                                    fontSize: "13px",
+                                    padding: "4px 8px",
+                                  }}
+                                  placeholder="Enter city..."
+                                  defaultValue=""
+                                  onBlur={async (e) => {
+                                    const city = e.target.value.trim();
+                                    if (!city) return;
+                                    const table =
+                                      vet._source === "pending"
+                                        ? "pending_vets"
+                                        : "vets";
+                                    await supabase
+                                      .from(table)
+                                      .update({ city })
+                                      .eq("id", vet.id);
+                                    setCallQueue((prev) =>
+                                      prev.map((v, idx) =>
+                                        idx === callIndex ? { ...v, city } : v,
+                                      ),
+                                    );
+                                  }}
+                                />
+                                <span
+                                  style={{ fontSize: "12px", color: "#aaa" }}
+                                >
+                                  city missing — enter to save
+                                </span>
+                              </div>
+                            );
+                          })()}
                           {vet.website &&
                             (() => {
                               try {
