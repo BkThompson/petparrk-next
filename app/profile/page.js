@@ -1680,271 +1680,6 @@ export default function ProfilePage() {
               {/* ── 3 Sectioned info blocks ── */}
               {renderPetInfoSections(pet)}
 
-              {/* Check Symptoms */}
-              <div
-                style={{
-                  marginTop: "16px",
-                  marginBottom: "16px",
-                  paddingTop: "16px",
-                  borderTop: "1px solid #f0f0f0",
-                }}
-              >
-                <button
-                  onClick={() => handleCheckSymptoms(pet)}
-                  style={{
-                    width: "100%",
-                    padding: "14px",
-                    background: "#2d6a4f",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "10px",
-                    fontSize: "15px",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    fontFamily: "system-ui, sans-serif",
-                  }}
-                >
-                  🩺 Check Symptoms for {pet.name}
-                </button>
-              </div>
-
-              {/* Symptom History */}
-              <div style={{ paddingTop: "10px", borderTop: "1px solid #eee" }}>
-                <button
-                  onClick={() => {
-                    if (showHistoryFor === pet.id) {
-                      setShowHistoryFor(null);
-                    } else {
-                      setEditingContactId(null);
-                      setNewContact({ name: "", phone: "", relationship: "" });
-                      fetchSymptomHistory(pet.id);
-                    }
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#2d6a4f",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                    padding: 0,
-                    fontWeight: "600",
-                    fontFamily: "system-ui, sans-serif",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
-                  🩺 Symptom History
-                  <span
-                    style={{
-                      display: "inline-block",
-                      transition: "transform 0.3s",
-                      transform:
-                        showHistoryFor === pet.id
-                          ? "rotate(180deg)"
-                          : "rotate(0deg)",
-                      fontSize: "10px",
-                    }}
-                  >
-                    ▼
-                  </span>
-                </button>
-                <div
-                  style={{
-                    overflow: "hidden",
-                    maxHeight: showHistoryFor === pet.id ? "800px" : "0px",
-                    opacity: showHistoryFor === pet.id ? 1 : 0,
-                    transition:
-                      showHistoryFor === pet.id
-                        ? "max-height 0.4s ease, opacity 0.3s ease"
-                        : "max-height 0.25s ease, opacity 0.2s ease",
-                  }}
-                >
-                  <div style={{ marginTop: "10px" }}>
-                    {(symptomHistory[pet.id] || []).length === 0 ? (
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          color: "#999",
-                          fontStyle: "italic",
-                          margin: "4px 0 8px 0",
-                        }}
-                      >
-                        No symptom checks yet.
-                      </p>
-                    ) : (
-                      (symptomHistory[pet.id] || []).map((check) => {
-                        const t = triageLabel(check.triage_result);
-                        const isConfirming =
-                          deleteCheckConfirm?.checkId === check.id;
-                        return (
-                          <div
-                            key={check.id}
-                            style={{
-                              padding: "12px 0",
-                              borderBottom: "1px solid #f5f5f5",
-                            }}
-                          >
-                            {!isConfirming ? (
-                              <div className="history-row">
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    minWidth: 0,
-                                    flex: 1,
-                                  }}
-                                >
-                                  <span
-                                    style={{ fontSize: "16px", flexShrink: 0 }}
-                                  >
-                                    {t.emoji}
-                                  </span>
-                                  <div style={{ minWidth: 0 }}>
-                                    <p
-                                      style={{
-                                        margin: 0,
-                                        fontSize: "13px",
-                                        fontWeight: "600",
-                                        color: t.color,
-                                      }}
-                                    >
-                                      {t.label}
-                                    </p>
-                                    <p
-                                      style={{
-                                        margin: 0,
-                                        fontSize: "11px",
-                                        color: "#aaa",
-                                      }}
-                                    >
-                                      {formatDate(check.created_at)}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="history-row-btns">
-                                  <button
-                                    onClick={() =>
-                                      handleViewSymptomCheck(pet, check)
-                                    }
-                                    className="btn-sm"
-                                    style={{
-                                      color: "#2d6a4f",
-                                      background: "none",
-                                      border: "1px solid #c8e6c9",
-                                    }}
-                                  >
-                                    View →
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      closeAllEditing();
-                                      setDeleteCheckConfirm({
-                                        petId: pet.id,
-                                        checkId: check.id,
-                                      });
-                                    }}
-                                    className="btn-sm"
-                                    style={{
-                                      color: "#c62828",
-                                      background: "none",
-                                      border: "1px solid #ffcdd2",
-                                    }}
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="history-row">
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    minWidth: 0,
-                                    flex: 1,
-                                  }}
-                                >
-                                  <span
-                                    style={{ fontSize: "16px", flexShrink: 0 }}
-                                  >
-                                    {t.emoji}
-                                  </span>
-                                  <div style={{ minWidth: 0 }}>
-                                    <p
-                                      style={{
-                                        margin: 0,
-                                        fontSize: "13px",
-                                        fontWeight: "600",
-                                        color: t.color,
-                                      }}
-                                    >
-                                      {t.label}
-                                    </p>
-                                    <p
-                                      style={{
-                                        margin: 0,
-                                        fontSize: "11px",
-                                        color: "#aaa",
-                                      }}
-                                    >
-                                      {formatDate(check.created_at)}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div
-                                  className="history-row-btns"
-                                  style={{ alignItems: "center" }}
-                                >
-                                  <span
-                                    style={{
-                                      fontSize: "12px",
-                                      color: "#c62828",
-                                      fontWeight: "600",
-                                      whiteSpace: "nowrap",
-                                      lineHeight: "40px",
-                                    }}
-                                  >
-                                    Delete?
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      handleDeleteSymptomCheck(pet.id, check.id)
-                                    }
-                                    className="btn-sm"
-                                    style={{
-                                      color: "#fff",
-                                      background: "#c62828",
-                                      border: "none",
-                                      fontWeight: "600",
-                                    }}
-                                  >
-                                    Yes
-                                  </button>
-                                  <button
-                                    onClick={() => setDeleteCheckConfirm(null)}
-                                    className="btn-sm"
-                                    style={{
-                                      color: "#555",
-                                      background: "#f0f0f0",
-                                      border: "none",
-                                    }}
-                                  >
-                                    No
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              </div>
-
               {/* Emergency Contacts */}
               <div
                 style={{
@@ -2271,6 +2006,276 @@ export default function ProfilePage() {
                       >
                         + Add Contact
                       </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Check Symptoms */}
+              <div
+                style={{
+                  marginTop: "16px",
+                  paddingTop: "16px",
+                  borderTop: "1px solid #f0f0f0",
+                }}
+              >
+                <button
+                  onClick={() => handleCheckSymptoms(pet)}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    background: "#2d6a4f",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "10px",
+                    fontSize: "15px",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    fontFamily: "system-ui, sans-serif",
+                  }}
+                >
+                  🩺 Check Symptoms for {pet.name}
+                </button>
+              </div>
+
+              {/* Symptom History */}
+              <div
+                style={{
+                  marginTop: "10px",
+                  paddingTop: "10px",
+                  borderTop: "1px solid #eee",
+                }}
+              >
+                <button
+                  onClick={() => {
+                    if (showHistoryFor === pet.id) {
+                      setShowHistoryFor(null);
+                    } else {
+                      setEditingContactId(null);
+                      setNewContact({ name: "", phone: "", relationship: "" });
+                      fetchSymptomHistory(pet.id);
+                    }
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#2d6a4f",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    padding: 0,
+                    fontWeight: "600",
+                    fontFamily: "system-ui, sans-serif",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  🩺 Symptom History
+                  <span
+                    style={{
+                      display: "inline-block",
+                      transition: "transform 0.3s",
+                      transform:
+                        showHistoryFor === pet.id
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                      fontSize: "10px",
+                    }}
+                  >
+                    ▼
+                  </span>
+                </button>
+                <div
+                  style={{
+                    overflow: "hidden",
+                    maxHeight: showHistoryFor === pet.id ? "800px" : "0px",
+                    opacity: showHistoryFor === pet.id ? 1 : 0,
+                    transition:
+                      showHistoryFor === pet.id
+                        ? "max-height 0.4s ease, opacity 0.3s ease"
+                        : "max-height 0.25s ease, opacity 0.2s ease",
+                  }}
+                >
+                  <div style={{ marginTop: "10px" }}>
+                    {(symptomHistory[pet.id] || []).length === 0 ? (
+                      <p
+                        style={{
+                          fontSize: "13px",
+                          color: "#999",
+                          fontStyle: "italic",
+                          margin: "4px 0 8px 0",
+                        }}
+                      >
+                        No symptom checks yet.
+                      </p>
+                    ) : (
+                      (symptomHistory[pet.id] || []).map((check) => {
+                        const t = triageLabel(check.triage_result);
+                        const isConfirming =
+                          deleteCheckConfirm?.checkId === check.id;
+                        return (
+                          <div
+                            key={check.id}
+                            style={{
+                              padding: "12px 0",
+                              borderBottom: "1px solid #f5f5f5",
+                            }}
+                          >
+                            {!isConfirming ? (
+                              <div className="history-row">
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    minWidth: 0,
+                                    flex: 1,
+                                  }}
+                                >
+                                  <span
+                                    style={{ fontSize: "16px", flexShrink: 0 }}
+                                  >
+                                    {t.emoji}
+                                  </span>
+                                  <div style={{ minWidth: 0 }}>
+                                    <p
+                                      style={{
+                                        margin: 0,
+                                        fontSize: "13px",
+                                        fontWeight: "600",
+                                        color: t.color,
+                                      }}
+                                    >
+                                      {t.label}
+                                    </p>
+                                    <p
+                                      style={{
+                                        margin: 0,
+                                        fontSize: "11px",
+                                        color: "#aaa",
+                                      }}
+                                    >
+                                      {formatDate(check.created_at)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="history-row-btns">
+                                  <button
+                                    onClick={() =>
+                                      handleViewSymptomCheck(pet, check)
+                                    }
+                                    className="btn-sm"
+                                    style={{
+                                      color: "#2d6a4f",
+                                      background: "none",
+                                      border: "1px solid #c8e6c9",
+                                    }}
+                                  >
+                                    View →
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      closeAllEditing();
+                                      setDeleteCheckConfirm({
+                                        petId: pet.id,
+                                        checkId: check.id,
+                                      });
+                                    }}
+                                    className="btn-sm"
+                                    style={{
+                                      color: "#c62828",
+                                      background: "none",
+                                      border: "1px solid #ffcdd2",
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="history-row">
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    minWidth: 0,
+                                    flex: 1,
+                                  }}
+                                >
+                                  <span
+                                    style={{ fontSize: "16px", flexShrink: 0 }}
+                                  >
+                                    {t.emoji}
+                                  </span>
+                                  <div style={{ minWidth: 0 }}>
+                                    <p
+                                      style={{
+                                        margin: 0,
+                                        fontSize: "13px",
+                                        fontWeight: "600",
+                                        color: t.color,
+                                      }}
+                                    >
+                                      {t.label}
+                                    </p>
+                                    <p
+                                      style={{
+                                        margin: 0,
+                                        fontSize: "11px",
+                                        color: "#aaa",
+                                      }}
+                                    >
+                                      {formatDate(check.created_at)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div
+                                  className="history-row-btns"
+                                  style={{ alignItems: "center" }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      color: "#c62828",
+                                      fontWeight: "600",
+                                      whiteSpace: "nowrap",
+                                      lineHeight: "40px",
+                                    }}
+                                  >
+                                    Delete?
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteSymptomCheck(pet.id, check.id)
+                                    }
+                                    className="btn-sm"
+                                    style={{
+                                      color: "#fff",
+                                      background: "#c62828",
+                                      border: "none",
+                                      fontWeight: "600",
+                                    }}
+                                  >
+                                    Yes
+                                  </button>
+                                  <button
+                                    onClick={() => setDeleteCheckConfirm(null)}
+                                    className="btn-sm"
+                                    style={{
+                                      color: "#555",
+                                      background: "#f0f0f0",
+                                      border: "none",
+                                    }}
+                                  >
+                                    No
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                 </div>
