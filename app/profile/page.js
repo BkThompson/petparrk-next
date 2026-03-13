@@ -1742,7 +1742,7 @@ export default function ProfilePage() {
                         : "max-height 0.25s ease, opacity 0.2s ease",
                   }}
                 >
-                  <div style={{ marginTop: "10px" }}>
+                  <div style={{ marginTop: "6px" }}>
                     {(contacts[pet.id] || []).map((c) => (
                       <div key={c.id}>
                         <div
@@ -2014,9 +2014,9 @@ export default function ProfilePage() {
               {/* Check Symptoms */}
               <div
                 style={{
-                  marginTop: "16px",
-                  paddingTop: "16px",
-                  borderTop: "1px solid #f0f0f0",
+                  marginTop: "10px",
+                  paddingTop: "10px",
+                  borderTop: "1px solid #eee",
                 }}
               >
                 <button
@@ -2096,7 +2096,7 @@ export default function ProfilePage() {
                         : "max-height 0.25s ease, opacity 0.2s ease",
                   }}
                 >
-                  <div style={{ marginTop: "10px" }}>
+                  <div style={{ marginTop: "6px" }}>
                     {(symptomHistory[pet.id] || []).length === 0 ? (
                       <p
                         style={{
