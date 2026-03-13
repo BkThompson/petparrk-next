@@ -140,7 +140,7 @@ export default function PetCardPage() {
           .card { box-shadow: none !important; border: 1px solid #ccc !important; }
         }
         .info-rows > .info-row { border-bottom: 1px solid #f0f0f0; }
-        .info-rows > .info-row:last-child { border-bottom: none; }
+        .info-rows > .info-row:last-child { border-bottom: none; padding-bottom: 0; }
         .info-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; }
         .info-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; width: 110px; flex-shrink: 0; padding-top: 1px; }
         .info-value { font-size: 14px; color: #222; flex: 1; line-height: 1.4; }
@@ -318,38 +318,61 @@ export default function PetCardPage() {
                 pet.notes) && (
                 <div>
                   <p className="section-title">🏥 Medical Info</p>
-                  <div className="info-rows">
-                    {pet.allergies && (
-                      <div className="info-row">
-                        <span className="info-label">⚠️ Allergies</span>
-                        <span
-                          className="info-value"
-                          style={{ color: "#c62828", fontWeight: "600" }}
-                        >
-                          {pet.allergies}
-                        </span>
-                      </div>
-                    )}
-                    {pet.medications && (
-                      <div className="info-row">
-                        <span className="info-label">💊 Medications</span>
-                        <span className="info-value">{pet.medications}</span>
-                      </div>
-                    )}
-                    {pet.microchip_number && (
-                      <div className="info-row">
-                        <span className="info-label">🔖 Microchip</span>
-                        <span
-                          className="info-value"
-                          style={{ fontFamily: "monospace", fontSize: "13px" }}
-                        >
-                          {pet.microchip_number}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  {(pet.allergies ||
+                    pet.medications ||
+                    pet.microchip_number) && (
+                    <div className="info-rows">
+                      {pet.allergies && (
+                        <div className="info-row">
+                          <span className="info-label">⚠️ Allergies</span>
+                          <span
+                            className="info-value"
+                            style={{ color: "#c62828", fontWeight: "600" }}
+                          >
+                            {pet.allergies}
+                          </span>
+                        </div>
+                      )}
+                      {pet.medications && (
+                        <div className="info-row">
+                          <span className="info-label">💊 Medications</span>
+                          <span className="info-value">{pet.medications}</span>
+                        </div>
+                      )}
+                      {pet.microchip_number && (
+                        <div className="info-row">
+                          <span className="info-label">🔖 Microchip</span>
+                          <span
+                            className="info-value"
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "13px",
+                            }}
+                          >
+                            {pet.microchip_number}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {pet.notes && (
-                    <div style={{ paddingTop: "10px", marginTop: "2px" }}>
+                    <div
+                      style={{
+                        borderTop:
+                          pet.allergies ||
+                          pet.medications ||
+                          pet.microchip_number
+                            ? "1px solid #f0f0f0"
+                            : "none",
+                        paddingTop:
+                          pet.allergies ||
+                          pet.medications ||
+                          pet.microchip_number
+                            ? "10px"
+                            : "0",
+                        marginTop: "2px",
+                      }}
+                    >
                       <p
                         style={{
                           margin: "0 0 5px 0",
