@@ -710,24 +710,21 @@ export default function AdminPage() {
     });
   }
 
-  async function savePrice() {
+  async function savePrice(formData) {
+    // Accept explicit formData so we never read stale closure state
+    const f = formData || priceForm;
     setPriceSaving(true);
     const payload = {
-      service_id: priceForm.service_id,
-      price_low:
-        priceForm.price_low !== "" ? parseFloat(priceForm.price_low) : null,
-      price_high:
-        priceForm.price_high !== "" ? parseFloat(priceForm.price_high) : null,
-      price_type: priceForm.price_type,
-      includes_bloodwork: !!priceForm.includes_bloodwork,
-      includes_xrays: !!priceForm.includes_xrays,
-      includes_anesthesia: !!priceForm.includes_anesthesia,
-      species:
-        priceForm.species === "other"
-          ? priceForm.species_other || "Other"
-          : priceForm.species,
-      call_for_quote: !!priceForm.call_for_quote,
-      notes: priceForm.notes || null,
+      service_id: f.service_id,
+      price_low: f.price_low !== "" ? parseFloat(f.price_low) : null,
+      price_high: f.price_high !== "" ? parseFloat(f.price_high) : null,
+      price_type: f.price_type,
+      includes_bloodwork: !!f.includes_bloodwork,
+      includes_xrays: !!f.includes_xrays,
+      includes_anesthesia: !!f.includes_anesthesia,
+      species: f.species === "other" ? f.species_other || "Other" : f.species,
+      call_for_quote: !!f.call_for_quote,
+      notes: f.notes || null,
       is_verified: true,
     };
     console.log("savePrice — id:", editingPrice, "payload:", payload);
@@ -3061,7 +3058,7 @@ export default function AdminPage() {
                                 <div style={{ display: "flex", gap: "8px" }}>
                                   <button
                                     className="adm-btn adm-btn-green"
-                                    onClick={savePrice}
+                                    onClick={() => savePrice(priceForm)}
                                     disabled={priceSaving}
                                   >
                                     {priceSaving ? "Saving..." : "Save Changes"}
@@ -3302,89 +3299,77 @@ export default function AdminPage() {
                               {vet.address}
                             </p>
                           )}
-                          {(() => {
-                            const cityVal = vet.city || vet.neighborhood || "";
-                            const restLine = [vet.state, vet.zip_code]
-                              .filter(Boolean)
-                              .join(", ");
-                            if (cityVal) {
-                              return (
+                          {vet.city || vet.neighborhood ? (
+                            <p
+                              style={{
+                                margin: "0 0 8px 0",
+                                fontSize: "14px",
+                                color: "#555",
+                              }}
+                            >
+                              {[vet.city || vet.neighborhood, vet.zip_code]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </p>
+                          ) : (
+                            <div style={{ margin: "0 0 8px 0" }}>
+                              {vet.zip_code && (
                                 <p
                                   style={{
-                                    margin: "0 0 8px 0",
+                                    margin: "0 0 4px 0",
                                     fontSize: "14px",
                                     color: "#555",
                                   }}
                                 >
-                                  {[cityVal, vet.state, vet.zip_code]
-                                    .filter(Boolean)
-                                    .join(", ")}
+                                  {vet.zip_code}
                                 </p>
-                              );
-                            }
-                            // City is missing — show editable input + whatever state/zip we have
-                            return (
-                              <div style={{ margin: "0 0 8px 0" }}>
-                                {restLine && (
-                                  <p
-                                    style={{
-                                      margin: "0 0 4px 0",
-                                      fontSize: "14px",
-                                      color: "#555",
-                                    }}
-                                  >
-                                    {restLine}
-                                  </p>
-                                )}
-                                <div
+                              )}
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                }}
+                              >
+                                <input
+                                  className="adm-input"
                                   style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
+                                    maxWidth: "180px",
+                                    fontSize: "13px",
+                                    padding: "4px 8px",
+                                  }}
+                                  placeholder="Enter city..."
+                                  defaultValue=""
+                                  onBlur={async (e) => {
+                                    const city = e.target.value.trim();
+                                    if (!city) return;
+                                    const table =
+                                      vet._source === "pending"
+                                        ? "pending_vets"
+                                        : "vets";
+                                    await supabase
+                                      .from(table)
+                                      .update({ city })
+                                      .eq("id", vet.id);
+                                    setCallQueue((prev) =>
+                                      prev.map((v, idx) =>
+                                        idx === callIndex ? { ...v, city } : v,
+                                      ),
+                                    );
+                                  }}
+                                />
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    color: "#e65100",
+                                    fontWeight: "600",
                                   }}
                                 >
-                                  <input
-                                    className="adm-input"
-                                    style={{
-                                      maxWidth: "180px",
-                                      fontSize: "13px",
-                                      padding: "4px 8px",
-                                    }}
-                                    placeholder="Enter city..."
-                                    defaultValue=""
-                                    onBlur={async (e) => {
-                                      const city = e.target.value.trim();
-                                      if (!city) return;
-                                      const table =
-                                        vet._source === "pending"
-                                          ? "pending_vets"
-                                          : "vets";
-                                      await supabase
-                                        .from(table)
-                                        .update({ city })
-                                        .eq("id", vet.id);
-                                      setCallQueue((prev) =>
-                                        prev.map((v, idx) =>
-                                          idx === callIndex
-                                            ? { ...v, city }
-                                            : v,
-                                        ),
-                                      );
-                                    }}
-                                  />
-                                  <span
-                                    style={{
-                                      fontSize: "11px",
-                                      color: "#e65100",
-                                      fontWeight: "600",
-                                    }}
-                                  >
-                                    ⚠️ City missing
-                                  </span>
-                                </div>
+                                  ⚠️ City missing
+                                </span>
                               </div>
-                            );
-                          })()}
+                            </div>
+                          )}
                           {vet.website &&
                             (() => {
                               try {
