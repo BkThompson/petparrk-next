@@ -342,8 +342,9 @@ export default function AdminPage() {
       };
     }
 
-    let savedVetId = vet.id;
-    if (vet._source === "pending") {
+    // If we already created/found this vet in a previous save (add more prices flow), reuse that ID
+    let savedVetId = callReviewVetId || vet.id;
+    if (vet._source === "pending" && !callReviewVetId) {
       const slug = (vet.slug || vet.name)
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
