@@ -3142,7 +3142,10 @@ export default function AdminPage() {
                               {vet.address}
                             </p>
                           )}
-                          {(vet.city || vet.state || vet.zip_code) && (
+                          {(vet.city ||
+                            vet.neighborhood ||
+                            vet.state ||
+                            vet.zip_code) && (
                             <p
                               style={{
                                 margin: "0 0 8px 0",
@@ -3150,7 +3153,11 @@ export default function AdminPage() {
                                 color: "#555",
                               }}
                             >
-                              {[vet.city, vet.state, vet.zip_code]
+                              {[
+                                vet.city || vet.neighborhood,
+                                vet.state,
+                                vet.zip_code,
+                              ]
                                 .filter(Boolean)
                                 .join(", ")}
                             </p>
@@ -3204,12 +3211,12 @@ export default function AdminPage() {
                                 alignItems: "center",
                                 background: "#2d6a4f",
                                 color: "#fff",
-                                padding: "8px 16px",
-                                borderRadius: "8px",
+                                padding: "5px 10px",
+                                borderRadius: "6px",
                                 textDecoration: "none",
-                                fontWeight: "700",
-                                fontSize: "14px",
-                                marginBottom: "16px",
+                                fontWeight: "600",
+                                fontSize: "13px",
+                                marginBottom: "12px",
                               }}
                             >
                               {vet.phone}
@@ -3252,7 +3259,7 @@ export default function AdminPage() {
                                 🕐 Call back later
                               </button>
                               <button
-                                className="adm-btn adm-btn-red"
+                                className="adm-btn adm-btn-gray"
                                 onClick={() => markCallStatus(vet, "skip")}
                               >
                                 Skip vet
@@ -3421,9 +3428,9 @@ export default function AdminPage() {
                                           updateCallPrice(i, field, !p[field])
                                         }
                                         style={{
-                                          padding: "4px 12px",
+                                          padding: "3px 8px",
                                           borderRadius: "20px",
-                                          fontSize: "12px",
+                                          fontSize: "11px",
                                           fontWeight: "600",
                                           cursor: "pointer",
                                           border: p[field]
@@ -3457,13 +3464,34 @@ export default function AdminPage() {
                                     placeholder="Notes..."
                                   />
                                 </div>
-                                {/* Row 4: Remove button bottom-right */}
+                                {/* Row 4: Clear + Remove buttons */}
                                 <div
                                   style={{
                                     display: "flex",
-                                    justifyContent: "flex-end",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
                                   }}
                                 >
+                                  <button
+                                    className="adm-btn adm-btn-gray"
+                                    onClick={() => {
+                                      const u = [...callPrices];
+                                      u[i] = {
+                                        ...u[i],
+                                        service_id: "",
+                                        price_low: "",
+                                        price_high: "",
+                                        price_type: "exact",
+                                        includes_bloodwork: false,
+                                        includes_xrays: false,
+                                        includes_anesthesia: false,
+                                        notes: "",
+                                      };
+                                      setCallPrices(u);
+                                    }}
+                                  >
+                                    Clear
+                                  </button>
                                   <button
                                     className="adm-btn adm-btn-red"
                                     onClick={() => removeCallPrice(i)}
@@ -3475,7 +3503,7 @@ export default function AdminPage() {
                             ))}
 
                             {/* Save button */}
-                            {callPrices.length > 0 && !callSaved && (
+                            {callPrices.length > 0 && (
                               <div style={{ marginTop: "8px" }}>
                                 <button
                                   className="adm-btn adm-btn-green"
@@ -3494,46 +3522,56 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        {/* ── Review State ── */}
-                        {callSaved && (
+                        {/* ── Review Panel — always visible once prices saved ── */}
+                        {callReviewPrices.length > 0 && (
                           <div
                             style={{
                               background: "#fff",
                               border: "2px solid #2d6a4f",
                               borderRadius: "12px",
                               padding: "20px",
+                              marginTop: "16px",
                             }}
                           >
                             <div
                               style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: "10px",
+                                justifyContent: "space-between",
                                 marginBottom: "16px",
                               }}
                             >
-                              <span style={{ fontSize: "20px" }}>✅</span>
-                              <div>
-                                <p
-                                  style={{
-                                    margin: 0,
-                                    fontSize: "15px",
-                                    fontWeight: "700",
-                                    color: "#2d6a4f",
-                                  }}
-                                >
-                                  Prices saved for {vet.name}
-                                </p>
-                                <p
-                                  style={{
-                                    margin: 0,
-                                    fontSize: "12px",
-                                    color: "#888",
-                                  }}
-                                >
-                                  Review below — edit or remove anything before
-                                  moving on.
-                                </p>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "10px",
+                                }}
+                              >
+                                <span style={{ fontSize: "20px" }}>✅</span>
+                                <div>
+                                  <p
+                                    style={{
+                                      margin: 0,
+                                      fontSize: "15px",
+                                      fontWeight: "700",
+                                      color: "#2d6a4f",
+                                    }}
+                                  >
+                                    Saved prices for {vet.name}
+                                  </p>
+                                  <p
+                                    style={{
+                                      margin: 0,
+                                      fontSize: "12px",
+                                      color: "#888",
+                                    }}
+                                  >
+                                    {callReviewPrices.length} price
+                                    {callReviewPrices.length !== 1 ? "s" : ""} —
+                                    edit or remove before moving on
+                                  </p>
+                                </div>
                               </div>
                             </div>
 
@@ -3819,9 +3857,9 @@ export default function AdminPage() {
                                                 setCallReviewPrices(u);
                                               }}
                                               style={{
-                                                padding: "4px 12px",
+                                                padding: "3px 8px",
                                                 borderRadius: "20px",
-                                                fontSize: "12px",
+                                                fontSize: "11px",
                                                 fontWeight: "600",
                                                 cursor: "pointer",
                                                 border: row[field]
@@ -3892,25 +3930,22 @@ export default function AdminPage() {
                                 marginTop: "20px",
                                 paddingTop: "16px",
                                 borderTop: "1px solid #f0f0f0",
-                                display: "flex",
-                                gap: "10px",
-                                flexWrap: "wrap",
                               }}
                             >
-                              <button
-                                className="adm-btn adm-btn-outline"
-                                style={{ flex: 1 }}
-                                onClick={() => {
-                                  setCallSaved(false);
+                              <p
+                                style={{
+                                  margin: "0 0 8px 0",
+                                  fontSize: "12px",
+                                  color: "#888",
                                 }}
                               >
-                                + Add More Prices
-                              </button>
+                                Add more prices above, or move on when ready.
+                              </p>
                               <button
                                 className="adm-btn adm-btn-green"
                                 style={{
-                                  flex: 1,
-                                  padding: "10px",
+                                  width: "100%",
+                                  padding: "12px",
                                   fontSize: "14px",
                                 }}
                                 onClick={advanceFromReview}
