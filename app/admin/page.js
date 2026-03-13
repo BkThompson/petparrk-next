@@ -130,6 +130,10 @@ export default function AdminPage() {
   const [callIndex, setCallIndex] = useState(0);
   const [callPrices, setCallPrices] = useState([]);
   const [callSaving, setCallSaving] = useState(false);
+  const [callSaved, setCallSaved] = useState(false);
+  const [callReviewPrices, setCallReviewPrices] = useState([]); // saved prices shown in review
+  const [callReviewVetId, setCallReviewVetId] = useState(null); // vet id for editing saved prices
+  const [callReviewEditing, setCallReviewEditing] = useState(null); // index of row being edited in review
 
   // Unverified prices
   const [unverifiedPrices, setUnverifiedPrices] = useState([]);
@@ -338,6 +342,7 @@ export default function AdminPage() {
       };
     }
 
+    let savedVetId = vet.id;
     if (vet._source === "pending") {
       const slug = (vet.slug || vet.name)
         .toLowerCase()
@@ -375,26 +380,81 @@ export default function AdminPage() {
         .from("pending_vets")
         .update({ status: "approved" })
         .eq("id", vet.id);
-      for (const p of validPrices) {
-        const { error } = await supabase
-          .from("vet_prices")
-          .insert(cleanPrice(p, newVet.id));
-        if (error) alert("Price error: " + error.message);
-      }
-    } else {
-      for (const p of validPrices) {
-        const { error } = await supabase
-          .from("vet_prices")
-          .insert(cleanPrice(p, vet.id));
-        if (error) alert("Price error: " + error.message);
+      savedVetId = newVet.id;
+    }
+
+    // Insert each price and capture the returned row with its DB id
+    const savedRows = [];
+    for (const p of validPrices) {
+      const { data, error } = await supabase
+        .from("vet_prices")
+        .insert(cleanPrice(p, savedVetId))
+        .select()
+        .single();
+      if (error) {
+        alert("Price error: " + error.message);
+      } else {
+        savedRows.push({ ...p, id: data.id });
       }
     }
 
-    setCallPrices([]);
-    setCallIndex((i) => i + 1);
     setCallSaving(false);
+    setCallSaved(true);
+    setCallReviewPrices(savedRows);
+    setCallReviewVetId(savedVetId);
+    setCallReviewEditing(null);
+    setCallPrices([]);
     fetchStats();
     fetchVets();
+  }
+
+  async function updateReviewPrice(index, form) {
+    const row = callReviewPrices[index];
+    const { error } = await supabase
+      .from("vet_prices")
+      .update({
+        service_id: form.service_id,
+        price_low: form.price_low ? parseFloat(form.price_low) : null,
+        price_high: form.price_high ? parseFloat(form.price_high) : null,
+        price_type: form.price_type,
+        includes_bloodwork: !!form.includes_bloodwork,
+        includes_xrays: !!form.includes_xrays,
+        includes_anesthesia: !!form.includes_anesthesia,
+        call_for_quote: !!form.call_for_quote,
+        notes: form.notes || null,
+      })
+      .eq("id", row.id);
+    if (error) {
+      alert("Update error: " + error.message);
+      return;
+    }
+    const updated = [...callReviewPrices];
+    updated[index] = { ...row, ...form };
+    setCallReviewPrices(updated);
+    setCallReviewEditing(null);
+    showToast("Price updated.");
+  }
+
+  async function deleteReviewPrice(index) {
+    const row = callReviewPrices[index];
+    const { error } = await supabase
+      .from("vet_prices")
+      .delete()
+      .eq("id", row.id);
+    if (error) {
+      alert("Delete error: " + error.message);
+      return;
+    }
+    setCallReviewPrices((prev) => prev.filter((_, i) => i !== index));
+    showToast("Price removed.");
+  }
+
+  function advanceFromReview() {
+    setCallSaved(false);
+    setCallReviewPrices([]);
+    setCallReviewVetId(null);
+    setCallReviewEditing(null);
+    setCallIndex((i) => i + 1);
   }
 
   async function markCallStatus(vet, status) {
@@ -3021,6 +3081,7 @@ export default function AdminPage() {
                             }}
                           />
                         </div>
+                        {/* Vet card */}
                         <div
                           style={{
                             background: "#fff",
@@ -3030,138 +3091,157 @@ export default function AdminPage() {
                             marginBottom: "16px",
                           }}
                         >
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "flex-start",
-                              flexWrap: "wrap",
-                              gap: "8px",
-                              marginBottom: "12px",
-                            }}
-                          >
-                            <div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  marginBottom: "4px",
-                                }}
-                              >
-                                <h3
-                                  style={{
-                                    margin: 0,
-                                    fontSize: "1.1rem",
-                                    color: "#111",
-                                    fontWeight: "700",
-                                  }}
-                                >
-                                  {vet.name}
-                                </h3>
-                                <span
-                                  style={{
-                                    fontSize: "11px",
-                                    background:
-                                      vet._source === "pending"
-                                        ? "#fff8e1"
-                                        : "#e8f5e9",
-                                    color:
-                                      vet._source === "pending"
-                                        ? "#e65100"
-                                        : "#2d6a4f",
-                                    padding: "2px 8px",
-                                    borderRadius: "20px",
-                                    fontWeight: "600",
-                                  }}
-                                >
-                                  {vet._source === "pending" ? "New" : "Active"}
-                                </span>
-                              </div>
-                              <p
-                                style={{
-                                  margin: "0 0 2px 0",
-                                  fontSize: "13px",
-                                  color: "#666",
-                                }}
-                              >
-                                {[vet.address, vet.city, vet.zip_code]
-                                  .filter(Boolean)
-                                  .join(", ")}
-                              </p>
-                              {vet.website && (
-                                <a
-                                  href={vet.website}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  style={{ fontSize: "12px", color: "#2d6a4f" }}
-                                >
-                                  {vet.website}
-                                </a>
-                              )}
-                            </div>
-                            {vet.phone && (
-                              <a
-                                href={`tel:${vet.phone}`}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  background: "#2d6a4f",
-                                  color: "#fff",
-                                  padding: "8px 16px",
-                                  borderRadius: "8px",
-                                  textDecoration: "none",
-                                  fontWeight: "700",
-                                  fontSize: "14px",
-                                }}
-                              >
-                                📞 {vet.phone}
-                              </a>
-                            )}
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: "8px",
-                              flexWrap: "wrap",
-                              marginBottom: "16px",
-                              paddingBottom: "16px",
-                              borderBottom: "1px solid #f0f0f0",
-                            }}
-                          >
+                          {/* Badge above name on mobile, inline on desktop */}
+                          <div style={{ marginBottom: "12px" }}>
                             <span
                               style={{
+                                fontSize: "11px",
+                                background:
+                                  vet._source === "pending"
+                                    ? "#fff8e1"
+                                    : "#e8f5e9",
+                                color:
+                                  vet._source === "pending"
+                                    ? "#e65100"
+                                    : "#2d6a4f",
+                                padding: "2px 8px",
+                                borderRadius: "20px",
+                                fontWeight: "600",
+                                display: "inline-block",
+                                marginBottom: "6px",
+                              }}
+                            >
+                              {vet._source === "pending" ? "New" : "Active"}
+                            </span>
+                            <h3
+                              style={{
+                                margin: 0,
+                                fontSize: "1.1rem",
+                                color: "#111",
+                                fontWeight: "700",
+                                width: "100%",
+                              }}
+                            >
+                              {vet.name}
+                            </h3>
+                          </div>
+
+                          {/* Address: street on line 1, city/state/zip on line 2 */}
+                          {vet.address && (
+                            <p
+                              style={{
+                                margin: "0 0 2px 0",
+                                fontSize: "13px",
+                                color: "#666",
+                              }}
+                            >
+                              {vet.address}
+                            </p>
+                          )}
+                          {(vet.city || vet.zip_code) && (
+                            <p
+                              style={{
+                                margin: "0 0 10px 0",
+                                fontSize: "13px",
+                                color: "#666",
+                              }}
+                            >
+                              {[vet.city, vet.zip_code]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </p>
+                          )}
+                          {vet.website && (
+                            <a
+                              href={vet.website}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                fontSize: "12px",
+                                color: "#2d6a4f",
+                                display: "block",
+                                marginBottom: "10px",
+                              }}
+                            >
+                              {vet.website}
+                            </a>
+                          )}
+
+                          {/* Phone button — no icon */}
+                          {vet.phone && (
+                            <a
+                              href={`tel:${vet.phone}`}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                background: "#2d6a4f",
+                                color: "#fff",
+                                padding: "8px 16px",
+                                borderRadius: "8px",
+                                textDecoration: "none",
+                                fontWeight: "700",
+                                fontSize: "14px",
+                                marginBottom: "16px",
+                              }}
+                            >
+                              {vet.phone}
+                            </a>
+                          )}
+
+                          {/* No prices? — stacked on mobile */}
+                          <div
+                            style={{
+                              borderTop: "1px solid #f0f0f0",
+                              paddingTop: "14px",
+                              marginBottom: "16px",
+                            }}
+                          >
+                            <p
+                              style={{
+                                margin: "0 0 8px 0",
                                 fontSize: "12px",
                                 color: "#888",
-                                alignSelf: "center",
+                                fontWeight: "600",
                               }}
                             >
                               No prices?
-                            </span>
-                            <button
-                              className="adm-btn adm-btn-gray"
-                              onClick={() =>
-                                markCallStatus(vet, "call_for_quote")
-                              }
+                            </p>
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px",
+                              }}
                             >
-                              📞 Call for quote
-                            </button>
-                            <button
-                              className="adm-btn adm-btn-gray"
-                              onClick={() =>
-                                markCallStatus(vet, "call_back_later")
-                              }
-                            >
-                              🕐 Call back later
-                            </button>
-                            <button
-                              className="adm-btn adm-btn-red"
-                              onClick={() => markCallStatus(vet, "skip")}
-                            >
-                              ✕ Skip
-                            </button>
+                              <button
+                                className="adm-btn adm-btn-gray"
+                                style={{ width: "100%" }}
+                                onClick={() =>
+                                  markCallStatus(vet, "call_for_quote")
+                                }
+                              >
+                                📞 Call for quote
+                              </button>
+                              <button
+                                className="adm-btn adm-btn-gray"
+                                style={{ width: "100%" }}
+                                onClick={() =>
+                                  markCallStatus(vet, "call_back_later")
+                                }
+                              >
+                                🕐 Call back later
+                              </button>
+                              <button
+                                className="adm-btn adm-btn-red"
+                                style={{ width: "100%" }}
+                                onClick={() => markCallStatus(vet, "skip")}
+                              >
+                                Skip vet
+                              </button>
+                            </div>
                           </div>
+
+                          {/* Price entry */}
                           <div>
                             <div
                               style={{
@@ -3205,8 +3285,9 @@ export default function AdminPage() {
                               <div
                                 key={i}
                                 className="row-edit-bg"
-                                style={{ marginBottom: "8px" }}
+                                style={{ marginBottom: "12px" }}
                               >
+                                {/* Row 1: Service + Price Type + Low + High */}
                                 <div
                                   className="form-grid-4"
                                   style={{ marginBottom: "8px" }}
@@ -3291,19 +3372,20 @@ export default function AdminPage() {
                                     />
                                   </div>
                                 </div>
+                                {/* Row 2: Checkboxes stacked */}
                                 <div
                                   style={{
                                     display: "flex",
-                                    gap: "16px",
-                                    alignItems: "center",
-                                    flexWrap: "wrap",
+                                    flexDirection: "column",
+                                    gap: "6px",
+                                    marginBottom: "8px",
                                   }}
                                 >
                                   <label
                                     style={{
                                       display: "flex",
                                       alignItems: "center",
-                                      gap: "6px",
+                                      gap: "8px",
                                       fontSize: "13px",
                                       cursor: "pointer",
                                     }}
@@ -3319,13 +3401,13 @@ export default function AdminPage() {
                                         )
                                       }
                                     />
-                                    Bloodwork
+                                    Includes bloodwork
                                   </label>
                                   <label
                                     style={{
                                       display: "flex",
                                       alignItems: "center",
-                                      gap: "6px",
+                                      gap: "8px",
                                       fontSize: "13px",
                                       cursor: "pointer",
                                     }}
@@ -3341,13 +3423,13 @@ export default function AdminPage() {
                                         )
                                       }
                                     />
-                                    X-rays
+                                    Includes x-rays
                                   </label>
                                   <label
                                     style={{
                                       display: "flex",
                                       alignItems: "center",
-                                      gap: "6px",
+                                      gap: "8px",
                                       fontSize: "13px",
                                       cursor: "pointer",
                                     }}
@@ -3363,49 +3445,498 @@ export default function AdminPage() {
                                         )
                                       }
                                     />
-                                    Anesthesia
+                                    Includes anesthesia
                                   </label>
-                                  <div style={{ flex: 1, minWidth: "120px" }}>
-                                    <input
-                                      className="adm-input"
-                                      value={p.notes}
-                                      onChange={(e) =>
-                                        updateCallPrice(
-                                          i,
-                                          "notes",
-                                          e.target.value,
-                                        )
-                                      }
-                                      placeholder="Notes..."
-                                    />
-                                  </div>
+                                </div>
+                                {/* Row 3: Notes full width */}
+                                <div style={{ marginBottom: "8px" }}>
+                                  <input
+                                    className="adm-input"
+                                    style={{ width: "100%" }}
+                                    value={p.notes}
+                                    onChange={(e) =>
+                                      updateCallPrice(
+                                        i,
+                                        "notes",
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder="Notes..."
+                                  />
+                                </div>
+                                {/* Row 4: Remove button bottom-right */}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                  }}
+                                >
                                   <button
                                     className="adm-btn adm-btn-red"
                                     onClick={() => removeCallPrice(i)}
                                   >
-                                    ✕
+                                    Remove
                                   </button>
                                 </div>
                               </div>
                             ))}
-                            {callPrices.length > 0 && (
-                              <button
-                                className="adm-btn adm-btn-green"
-                                style={{
-                                  marginTop: "8px",
-                                  padding: "8px 20px",
-                                  fontSize: "13px",
-                                }}
-                                onClick={() => saveCallPrices(vet)}
-                                disabled={callSaving}
-                              >
-                                {callSaving
-                                  ? "Saving..."
-                                  : "✅ Save & Next Vet"}
-                              </button>
+
+                            {/* Save button */}
+                            {callPrices.length > 0 && !callSaved && (
+                              <div style={{ marginTop: "8px" }}>
+                                <button
+                                  className="adm-btn adm-btn-green"
+                                  style={{
+                                    padding: "10px 24px",
+                                    fontSize: "14px",
+                                    width: "100%",
+                                  }}
+                                  onClick={() => saveCallPrices(vet)}
+                                  disabled={callSaving}
+                                >
+                                  {callSaving ? "Saving..." : "✅ Save Prices"}
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
+
+                        {/* ── Review State ── */}
+                        {callSaved && (
+                          <div
+                            style={{
+                              background: "#fff",
+                              border: "2px solid #2d6a4f",
+                              borderRadius: "12px",
+                              padding: "20px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "10px",
+                                marginBottom: "16px",
+                              }}
+                            >
+                              <span style={{ fontSize: "20px" }}>✅</span>
+                              <div>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "15px",
+                                    fontWeight: "700",
+                                    color: "#2d6a4f",
+                                  }}
+                                >
+                                  Prices saved for {vet.name}
+                                </p>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "12px",
+                                    color: "#888",
+                                  }}
+                                >
+                                  Review below — edit or remove anything before
+                                  moving on.
+                                </p>
+                              </div>
+                            </div>
+
+                            {callReviewPrices.map((row, i) => {
+                              const svc = services.find(
+                                (s) =>
+                                  s.id === row.service_id ||
+                                  s.id === parseInt(row.service_id),
+                              );
+                              const isEditing = callReviewEditing === i;
+                              return (
+                                <div
+                                  key={row.id || i}
+                                  style={{
+                                    borderTop: "1px solid #f0f0f0",
+                                    paddingTop: "12px",
+                                    marginTop: "12px",
+                                  }}
+                                >
+                                  {!isEditing ? (
+                                    /* ── Summary row ── */
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "flex-start",
+                                        gap: "12px",
+                                      }}
+                                    >
+                                      <div style={{ flex: 1 }}>
+                                        <p
+                                          style={{
+                                            margin: "0 0 3px 0",
+                                            fontSize: "14px",
+                                            fontWeight: "600",
+                                            color: "#111",
+                                          }}
+                                        >
+                                          {svc?.name || "Unknown service"}
+                                        </p>
+                                        <p
+                                          style={{
+                                            margin: "0 0 4px 0",
+                                            fontSize: "13px",
+                                            color: "#555",
+                                          }}
+                                        >
+                                          {row.call_for_quote
+                                            ? "Call for quote"
+                                            : [
+                                                row.price_low &&
+                                                  `$${parseFloat(row.price_low).toFixed(0)}`,
+                                                row.price_high &&
+                                                  `– $${parseFloat(row.price_high).toFixed(0)}`,
+                                              ]
+                                                .filter(Boolean)
+                                                .join(" ")}
+                                          {row.price_type &&
+                                            row.price_type !== "exact" && (
+                                              <span
+                                                style={{
+                                                  fontSize: "11px",
+                                                  color: "#888",
+                                                  marginLeft: "6px",
+                                                }}
+                                              >
+                                                ({row.price_type})
+                                              </span>
+                                            )}
+                                        </p>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            gap: "6px",
+                                            flexWrap: "wrap",
+                                          }}
+                                        >
+                                          {row.includes_bloodwork && (
+                                            <span
+                                              style={{
+                                                fontSize: "11px",
+                                                background: "#e8f5e9",
+                                                color: "#2d6a4f",
+                                                padding: "1px 6px",
+                                                borderRadius: "4px",
+                                              }}
+                                            >
+                                              + bloodwork
+                                            </span>
+                                          )}
+                                          {row.includes_xrays && (
+                                            <span
+                                              style={{
+                                                fontSize: "11px",
+                                                background: "#e8f5e9",
+                                                color: "#2d6a4f",
+                                                padding: "1px 6px",
+                                                borderRadius: "4px",
+                                              }}
+                                            >
+                                              + x-rays
+                                            </span>
+                                          )}
+                                          {row.includes_anesthesia && (
+                                            <span
+                                              style={{
+                                                fontSize: "11px",
+                                                background: "#e8f5e9",
+                                                color: "#2d6a4f",
+                                                padding: "1px 6px",
+                                                borderRadius: "4px",
+                                              }}
+                                            >
+                                              + anesthesia
+                                            </span>
+                                          )}
+                                        </div>
+                                        {row.notes && (
+                                          <p
+                                            style={{
+                                              margin: "4px 0 0 0",
+                                              fontSize: "12px",
+                                              color: "#888",
+                                              fontStyle: "italic",
+                                            }}
+                                          >
+                                            {row.notes}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          gap: "6px",
+                                          flexShrink: 0,
+                                        }}
+                                      >
+                                        <button
+                                          className="adm-btn adm-btn-outline"
+                                          onClick={() =>
+                                            setCallReviewEditing(i)
+                                          }
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          className="adm-btn adm-btn-red"
+                                          onClick={() => deleteReviewPrice(i)}
+                                        >
+                                          Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    /* ── Inline edit form ── */
+                                    <div
+                                      style={{
+                                        background: "#f9f9f9",
+                                        borderRadius: "8px",
+                                        padding: "12px",
+                                      }}
+                                    >
+                                      <div
+                                        className="form-grid-4"
+                                        style={{ marginBottom: "8px" }}
+                                      >
+                                        <div>
+                                          <label className="field-label">
+                                            Service
+                                          </label>
+                                          <select
+                                            className="adm-input"
+                                            value={row.service_id}
+                                            onChange={(e) => {
+                                              const u = [...callReviewPrices];
+                                              u[i] = {
+                                                ...u[i],
+                                                service_id: e.target.value,
+                                              };
+                                              setCallReviewPrices(u);
+                                            }}
+                                          >
+                                            <option value="">— Select —</option>
+                                            {services.map((s) => (
+                                              <option key={s.id} value={s.id}>
+                                                {s.name}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="field-label">
+                                            Price Type
+                                          </label>
+                                          <select
+                                            className="adm-input"
+                                            value={row.price_type}
+                                            onChange={(e) => {
+                                              const u = [...callReviewPrices];
+                                              u[i] = {
+                                                ...u[i],
+                                                price_type: e.target.value,
+                                              };
+                                              setCallReviewPrices(u);
+                                            }}
+                                          >
+                                            {PRICE_TYPES.map((t) => (
+                                              <option key={t}>{t}</option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="field-label">
+                                            Price Low
+                                          </label>
+                                          <input
+                                            className="adm-input"
+                                            type="number"
+                                            value={row.price_low || ""}
+                                            onChange={(e) => {
+                                              const u = [...callReviewPrices];
+                                              u[i] = {
+                                                ...u[i],
+                                                price_low: e.target.value,
+                                              };
+                                              setCallReviewPrices(u);
+                                            }}
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="field-label">
+                                            Price High
+                                          </label>
+                                          <input
+                                            className="adm-input"
+                                            type="number"
+                                            value={row.price_high || ""}
+                                            onChange={(e) => {
+                                              const u = [...callReviewPrices];
+                                              u[i] = {
+                                                ...u[i],
+                                                price_high: e.target.value,
+                                              };
+                                              setCallReviewPrices(u);
+                                            }}
+                                          />
+                                        </div>
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "6px",
+                                          marginBottom: "8px",
+                                        }}
+                                      >
+                                        <label
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "8px",
+                                            fontSize: "13px",
+                                            cursor: "pointer",
+                                          }}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={!!row.includes_bloodwork}
+                                            onChange={(e) => {
+                                              const u = [...callReviewPrices];
+                                              u[i] = {
+                                                ...u[i],
+                                                includes_bloodwork:
+                                                  e.target.checked,
+                                              };
+                                              setCallReviewPrices(u);
+                                            }}
+                                          />
+                                          Includes bloodwork
+                                        </label>
+                                        <label
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "8px",
+                                            fontSize: "13px",
+                                            cursor: "pointer",
+                                          }}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={!!row.includes_xrays}
+                                            onChange={(e) => {
+                                              const u = [...callReviewPrices];
+                                              u[i] = {
+                                                ...u[i],
+                                                includes_xrays:
+                                                  e.target.checked,
+                                              };
+                                              setCallReviewPrices(u);
+                                            }}
+                                          />
+                                          Includes x-rays
+                                        </label>
+                                        <label
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "8px",
+                                            fontSize: "13px",
+                                            cursor: "pointer",
+                                          }}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={!!row.includes_anesthesia}
+                                            onChange={(e) => {
+                                              const u = [...callReviewPrices];
+                                              u[i] = {
+                                                ...u[i],
+                                                includes_anesthesia:
+                                                  e.target.checked,
+                                              };
+                                              setCallReviewPrices(u);
+                                            }}
+                                          />
+                                          Includes anesthesia
+                                        </label>
+                                      </div>
+                                      <div style={{ marginBottom: "8px" }}>
+                                        <input
+                                          className="adm-input"
+                                          style={{ width: "100%" }}
+                                          value={row.notes || ""}
+                                          onChange={(e) => {
+                                            const u = [...callReviewPrices];
+                                            u[i] = {
+                                              ...u[i],
+                                              notes: e.target.value,
+                                            };
+                                            setCallReviewPrices(u);
+                                          }}
+                                          placeholder="Notes..."
+                                        />
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          gap: "8px",
+                                          justifyContent: "flex-end",
+                                        }}
+                                      >
+                                        <button
+                                          className="adm-btn adm-btn-gray"
+                                          onClick={() =>
+                                            setCallReviewEditing(null)
+                                          }
+                                        >
+                                          Cancel
+                                        </button>
+                                        <button
+                                          className="adm-btn adm-btn-green"
+                                          onClick={() =>
+                                            updateReviewPrice(i, row)
+                                          }
+                                        >
+                                          Save changes
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+
+                            <div
+                              style={{
+                                marginTop: "20px",
+                                paddingTop: "16px",
+                                borderTop: "1px solid #f0f0f0",
+                              }}
+                            >
+                              <button
+                                className="adm-btn adm-btn-green"
+                                style={{
+                                  width: "100%",
+                                  padding: "12px",
+                                  fontSize: "14px",
+                                }}
+                                onClick={advanceFromReview}
+                              >
+                                Next Vet →
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
