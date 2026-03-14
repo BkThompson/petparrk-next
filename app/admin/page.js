@@ -131,6 +131,8 @@ export default function AdminPage() {
   const [callPrices, setCallPrices] = useState([]);
   const [callSaving, setCallSaving] = useState(false);
   const [callLog, setCallLog] = useState([]); // recently processed vets
+  const [showAllVets, setShowAllVets] = useState(false); // toggle: show all vets vs only unpriced
+  const [fullCallQueue, setFullCallQueue] = useState([]); // all vets regardless of prices
   const [deletePriceConfirm, setDeletePriceConfirm] = useState(null); // price id pending delete
   const [callSaved, setCallSaved] = useState(false);
   const [callReviewPrices, setCallReviewPrices] = useState([]); // saved prices shown in review
@@ -309,14 +311,21 @@ export default function AdminPage() {
         supabase.from("vet_prices").select("vet_id"),
       ]);
     const vetsWithPrices = new Set((prices || []).map((p) => p.vet_id));
-    const activeMissingPrices = (activeVets || [])
-      .filter((v) => !vetsWithPrices.has(v.id))
-      .map((v) => ({ ...v, _source: "active" }));
     const pending = (pendingVetsList || []).map((v) => ({
       ...v,
       _source: "pending",
+      _hasPrices: false,
     }));
-    setCallQueue([...pending, ...activeMissingPrices]);
+    const activeAll = (activeVets || []).map((v) => ({
+      ...v,
+      _source: "active",
+      _hasPrices: vetsWithPrices.has(v.id),
+    }));
+    const activeMissing = activeAll.filter((v) => !v._hasPrices);
+    // Full queue = all pending + all active (for "show all" mode)
+    setFullCallQueue([...pending, ...activeAll]);
+    // Filtered queue = pending + active missing prices (normal mode)
+    setCallQueue([...pending, ...activeMissing]);
     setCallQueueLoading(false);
   }
 
@@ -454,7 +463,8 @@ export default function AdminPage() {
   }
 
   function advanceFromReview() {
-    const vet = callQueue[callIndex];
+    const activeQueue = showAllVets ? fullCallQueue : callQueue;
+    const vet = activeQueue[callIndex];
     if (vet) {
       setCallLog((prev) =>
         [
@@ -992,9 +1002,13 @@ export default function AdminPage() {
         .adm-btn-red:hover { background: #fbd0d0; }
         .call-no-prices-btns { display: flex; gap: 8px; }
         .call-no-prices-btns .adm-btn { flex: 1; }
+        .call-sheet-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
         @media (max-width: 600px) {
           .call-no-prices-btns { flex-direction: column; }
           .call-no-prices-btns .adm-btn { width: 100%; flex: unset; }
+          .call-sheet-header { flex-direction: column; align-items: flex-start; }
+          .call-sheet-header > div:last-child { width: 100%; display: flex; gap: 6px; }
+          .call-sheet-header > div:last-child .adm-btn { flex: 1; }
         }
         .adm-btn-gray { background: #f0f0f0; color: #444; border: 1px solid #ddd; }
         .adm-btn-gray:hover { background: #e5e5e5; }
@@ -3113,1105 +3127,1195 @@ export default function AdminPage() {
             )}
 
             {/* ── CALL SHEET ───────────────────────────────────────── */}
-            {tab === "Call Sheet" && (
-              <div>
-                {callQueueLoading && (
-                  <p style={{ color: "#888", fontSize: "14px" }}>
-                    Loading call queue...
-                  </p>
-                )}
-                {!callQueueLoading && callQueue.length === 0 && (
-                  <div style={{ textAlign: "center", padding: "48px 20px" }}>
-                    <p style={{ fontSize: "32px", margin: "0 0 8px 0" }}>🎉</p>
-                    <p style={{ color: "#bbb", fontSize: "14px" }}>
-                      All vets have been called!
-                    </p>
-                  </div>
-                )}
-                {!callQueueLoading &&
-                  callIndex >= callQueue.length &&
-                  callQueue.length > 0 && (
-                    <div style={{ textAlign: "center", padding: "48px 20px" }}>
-                      <p style={{ fontSize: "32px", margin: "0 0 8px 0" }}>
-                        ✅
+            {tab === "Call Sheet" &&
+              (() => {
+                const activeQueue = showAllVets ? fullCallQueue : callQueue;
+                return (
+                  <div>
+                    {callQueueLoading && (
+                      <p style={{ color: "#888", fontSize: "14px" }}>
+                        Loading call queue...
                       </p>
-                      <p
-                        style={{
-                          color: "#2d6a4f",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                        }}
+                    )}
+                    {!callQueueLoading && activeQueue.length === 0 && (
+                      <div
+                        style={{ textAlign: "center", padding: "48px 20px" }}
                       >
-                        You've reached the end of the queue!
-                      </p>
-                      <button
-                        className="adm-btn adm-btn-gray"
-                        style={{ marginTop: "12px" }}
-                        onClick={() => setCallIndex(0)}
-                      >
-                        Start over
-                      </button>
-                    </div>
-                  )}
-                {/* Recently processed — always visible when there's history */}
-                {callLog.length > 0 && (
-                  <div
-                    style={{
-                      background: "#f9f9f9",
-                      border: "1px solid #eee",
-                      borderRadius: "8px",
-                      padding: "8px 12px",
-                      marginBottom: "14px",
-                    }}
-                  >
-                    <p
-                      style={{
-                        margin: "0 0 4px 0",
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        color: "#aaa",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                      }}
-                    >
-                      Recently processed
-                    </p>
-                    {callLog.map((entry, i) => (
-                      <p
-                        key={i}
-                        style={{
-                          margin: "2px 0",
-                          fontSize: "12px",
-                          color: "#555",
-                        }}
-                      >
-                        ✅ <strong>{entry.name}</strong> — {entry.count} price
-                        {entry.count !== 1 ? "s" : ""} saved
-                      </p>
-                    ))}
-                  </div>
-                )}
-                {!callQueueLoading &&
-                  callIndex < callQueue.length &&
-                  (() => {
-                    const vet = callQueue[callIndex];
-                    return (
-                      <div>
+                        <p style={{ fontSize: "32px", margin: "0 0 8px 0" }}>
+                          🎉
+                        </p>
+                        <p style={{ color: "#bbb", fontSize: "14px" }}>
+                          All vets have been called!
+                        </p>
+                      </div>
+                    )}
+                    {!callQueueLoading &&
+                      callIndex >= activeQueue.length &&
+                      activeQueue.length > 0 && (
                         <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: "8px",
-                          }}
+                          style={{ textAlign: "center", padding: "48px 20px" }}
                         >
-                          <div>
-                            <h2
-                              style={{
-                                margin: "0 0 2px 0",
-                                fontSize: "1rem",
-                                color: "#111",
-                              }}
-                            >
-                              Call Sheet
-                            </h2>
-                            <p
-                              style={{
-                                margin: 0,
-                                fontSize: "12px",
-                                color: "#888",
-                              }}
-                            >
-                              {callIndex + 1} of {callQueue.length} vets
-                            </p>
-                          </div>
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <button
-                              className="adm-btn adm-btn-gray"
-                              onClick={() => {
-                                fetchCallQueue();
-                                setCallIndex(0);
-                                setCallPrices([]);
-                                setCallReviewPrices([]);
-                                setCallReviewVetId(null);
-                                setCallSaved(false);
-                                setCallReviewEditing(null);
-                              }}
-                            >
-                              ↺ Refresh
-                            </button>
-                            <button
-                              className="adm-btn adm-btn-gray"
-                              onClick={() =>
-                                setCallIndex((i) => Math.max(0, i - 1))
-                              }
-                              disabled={callIndex === 0}
-                            >
-                              ← Prev
-                            </button>
-                            <button
-                              className="adm-btn adm-btn-gray"
-                              onClick={() => {
-                                setCallIndex((i) => i + 1);
-                                setCallPrices([]);
-                              }}
-                            >
-                              Skip →
-                            </button>
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            height: "4px",
-                            background: "#f0f0f0",
-                            borderRadius: "4px",
-                            marginBottom: "20px",
-                          }}
-                        >
-                          <div
+                          <p style={{ fontSize: "32px", margin: "0 0 8px 0" }}>
+                            ✅
+                          </p>
+                          <p
                             style={{
-                              height: "4px",
-                              background: "#2d6a4f",
-                              borderRadius: "4px",
-                              width: `${((callIndex + 1) / callQueue.length) * 100}%`,
-                              transition: "width 0.3s",
-                            }}
-                          />
-                        </div>
-                        {/* Vet card */}
-                        <div
-                          style={{
-                            background: "#fff",
-                            border: "1px solid #e8e8e8",
-                            borderRadius: "12px",
-                            padding: "20px",
-                            marginBottom: "16px",
-                          }}
-                        >
-                          {/* Badge above name */}
-                          <span
-                            style={{
-                              fontSize: "11px",
-                              background:
-                                vet._source === "pending"
-                                  ? "#fff8e1"
-                                  : "#e8f5e9",
-                              color:
-                                vet._source === "pending"
-                                  ? "#e65100"
-                                  : "#2d6a4f",
-                              padding: "2px 8px",
-                              borderRadius: "20px",
+                              color: "#2d6a4f",
+                              fontSize: "14px",
                               fontWeight: "600",
-                              display: "inline-block",
-                              marginBottom: "6px",
                             }}
                           >
-                            {vet._source === "pending" ? "New" : "Active"}
-                          </span>
-                          <h3
+                            You've reached the end of the queue!
+                          </p>
+                          <button
+                            className="adm-btn adm-btn-gray"
+                            style={{ marginTop: "12px" }}
+                            onClick={() => setCallIndex(0)}
+                          >
+                            Start over
+                          </button>
+                        </div>
+                      )}
+                    {/* Recently processed — always visible when there's history */}
+                    {callLog.length > 0 && (
+                      <div
+                        style={{
+                          background: "#f9f9f9",
+                          border: "1px solid #eee",
+                          borderRadius: "8px",
+                          padding: "8px 12px",
+                          marginBottom: "14px",
+                        }}
+                      >
+                        <p
+                          style={{
+                            margin: "0 0 4px 0",
+                            fontSize: "11px",
+                            fontWeight: "700",
+                            color: "#aaa",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                          }}
+                        >
+                          Recently processed
+                        </p>
+                        {callLog.map((entry, i) => (
+                          <p
+                            key={i}
                             style={{
-                              margin: "0 0 4px 0",
-                              fontSize: "1.1rem",
-                              color: "#111",
-                              fontWeight: "700",
+                              margin: "2px 0",
+                              fontSize: "12px",
+                              color: "#555",
                             }}
                           >
-                            {vet.name}
-                          </h3>
-
-                          {/* Address: street on line 1, city/state/zip on line 2 */}
-                          {vet.address && (
-                            <p
-                              style={{
-                                margin: "0 0 2px 0",
-                                fontSize: "14px",
-                                color: "#555",
-                              }}
-                            >
-                              {vet.address}
-                            </p>
-                          )}
-                          {(vet.city && vet.city.length > 2) ||
-                          (vet.neighborhood && vet.neighborhood.length > 2) ? (
-                            <p
-                              style={{
-                                margin: "0 0 8px 0",
-                                fontSize: "14px",
-                                color: "#555",
-                              }}
-                            >
-                              {[
-                                (vet.city && vet.city.length > 2
-                                  ? vet.city
-                                  : null) ||
-                                  (vet.neighborhood &&
-                                  vet.neighborhood.length > 2
-                                    ? vet.neighborhood
-                                    : null),
-                                vet.zip_code,
-                              ]
-                                .filter(Boolean)
-                                .join(", ")}
-                            </p>
-                          ) : (
-                            <div style={{ margin: "0 0 8px 0" }}>
-                              {vet.zip_code && (
-                                <p
+                            ✅ <strong>{entry.name}</strong> — {entry.count}{" "}
+                            price{entry.count !== 1 ? "s" : ""} saved
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {!callQueueLoading &&
+                      callIndex < activeQueue.length &&
+                      (() => {
+                        const vet = activeQueue[callIndex];
+                        return (
+                          <div>
+                            {/* Header: title + toggle + nav buttons */}
+                            <div className="call-sheet-header">
+                              <div>
+                                <h2
                                   style={{
-                                    margin: "0 0 4px 0",
-                                    fontSize: "14px",
-                                    color: "#555",
+                                    margin: "0 0 2px 0",
+                                    fontSize: "1rem",
+                                    color: "#111",
                                   }}
                                 >
-                                  {vet.zip_code}
+                                  Call Sheet
+                                </h2>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "12px",
+                                    color: "#888",
+                                  }}
+                                >
+                                  {callIndex + 1} of {activeQueue.length}{" "}
+                                  {showAllVets ? "total" : "unpriced"} vets
                                 </p>
-                              )}
-                              <div
+                              </div>
+                              {/* Show all toggle */}
+                              <button
+                                onClick={() => {
+                                  setShowAllVets((v) => !v);
+                                  setCallIndex(0);
+                                  setCallPrices([]);
+                                  setCallReviewPrices([]);
+                                  setCallReviewVetId(null);
+                                  setCallSaved(false);
+                                }}
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
                                   gap: "6px",
-                                }}
-                              >
-                                <input
-                                  className="adm-input"
-                                  style={{
-                                    maxWidth: "180px",
-                                    fontSize: "13px",
-                                    padding: "4px 8px",
-                                  }}
-                                  placeholder="Enter city..."
-                                  defaultValue=""
-                                  onBlur={async (e) => {
-                                    const city = e.target.value.trim();
-                                    if (!city) return;
-                                    const table =
-                                      vet._source === "pending"
-                                        ? "pending_vets"
-                                        : "vets";
-                                    await supabase
-                                      .from(table)
-                                      .update({ city })
-                                      .eq("id", vet.id);
-                                    setCallQueue((prev) =>
-                                      prev.map((v, idx) =>
-                                        idx === callIndex ? { ...v, city } : v,
-                                      ),
-                                    );
-                                  }}
-                                />
-                                <span
-                                  style={{
-                                    fontSize: "11px",
-                                    color: "#e65100",
-                                    fontWeight: "600",
-                                  }}
-                                >
-                                  ⚠️ City missing
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                          {vet.website &&
-                            (() => {
-                              try {
-                                const host = new URL(
-                                  vet.website,
-                                ).hostname.replace(/^www\./, "");
-                                return (
-                                  <a
-                                    href={vet.website}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    style={{
-                                      fontSize: "13px",
-                                      color: "#2d6a4f",
-                                      display: "block",
-                                      marginBottom: "8px",
-                                    }}
-                                  >
-                                    {host}
-                                  </a>
-                                );
-                              } catch {
-                                return (
-                                  <a
-                                    href={vet.website}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    style={{
-                                      fontSize: "13px",
-                                      color: "#2d6a4f",
-                                      display: "block",
-                                      marginBottom: "8px",
-                                    }}
-                                  >
-                                    {vet.website}
-                                  </a>
-                                );
-                              }
-                            })()}
-
-                          {/* Phone button — no icon */}
-                          {vet.phone && (
-                            <a
-                              href={`tel:${vet.phone}`}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                background: "#2d6a4f",
-                                color: "#fff",
-                                padding: "5px 10px",
-                                borderRadius: "6px",
-                                textDecoration: "none",
-                                fontWeight: "600",
-                                fontSize: "13px",
-                                marginBottom: "12px",
-                              }}
-                            >
-                              {vet.phone}
-                            </a>
-                          )}
-
-                          {/* No prices? — row on desktop, stacked on mobile */}
-                          <div
-                            style={{
-                              borderTop: "1px solid #f0f0f0",
-                              paddingTop: "14px",
-                              marginBottom: "16px",
-                            }}
-                          >
-                            <p
-                              style={{
-                                margin: "0 0 8px 0",
-                                fontSize: "12px",
-                                color: "#888",
-                                fontWeight: "600",
-                              }}
-                            >
-                              No prices?
-                            </p>
-                            <div className="call-no-prices-btns">
-                              <button
-                                className="adm-btn adm-btn-gray"
-                                onClick={() =>
-                                  markCallStatus(vet, "call_for_quote")
-                                }
-                              >
-                                📞 Call for quote
-                              </button>
-                              <button
-                                className="adm-btn adm-btn-gray"
-                                onClick={() =>
-                                  markCallStatus(vet, "call_back_later")
-                                }
-                              >
-                                🕐 Call back later
-                              </button>
-                              <button
-                                className="adm-btn adm-btn-gray"
-                                onClick={() => markCallStatus(vet, "skip")}
-                              >
-                                Skip vet
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Price entry */}
-                          <div>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                marginBottom: "10px",
-                              }}
-                            >
-                              <p
-                                style={{
-                                  margin: 0,
-                                  fontSize: "13px",
+                                  padding: "5px 10px",
+                                  borderRadius: "20px",
+                                  fontSize: "12px",
                                   fontWeight: "600",
-                                  color: "#111",
+                                  cursor: "pointer",
+                                  border: "1px solid",
+                                  background: showAllVets ? "#2d6a4f" : "#fff",
+                                  color: showAllVets ? "#fff" : "#2d6a4f",
+                                  borderColor: "#2d6a4f",
+                                  transition: "all 0.15s",
+                                  whiteSpace: "nowrap",
                                 }}
                               >
-                                Enter prices from call
-                              </p>
-                              <button
-                                className="adm-btn adm-btn-outline"
-                                onClick={addCallPriceRow}
-                              >
-                                + Add Price
+                                {showAllVets
+                                  ? "👁 All vets"
+                                  : "👁 Unpriced only"}
                               </button>
-                            </div>
-                            {callPrices.length === 0 && (
-                              <p
-                                style={{
-                                  color: "#bbb",
-                                  fontSize: "13px",
-                                  fontStyle: "italic",
-                                  margin: "0 0 12px 0",
-                                }}
-                              >
-                                No prices added yet — click "+ Add Price" for
-                                each service they quote you.
-                              </p>
-                            )}
-                            {callPrices.map((p, i) => (
-                              <div
-                                key={i}
-                                className="row-edit-bg"
-                                style={{ marginBottom: "12px" }}
-                              >
-                                {/* Row 1: Service + Price Type + Low + High */}
-                                <div
-                                  className="form-grid-4"
-                                  style={{ marginBottom: "8px" }}
-                                >
-                                  <div>
-                                    <label className="field-label">
-                                      Service
-                                    </label>
-                                    <select
-                                      className="adm-input"
-                                      value={p.service_id}
-                                      onChange={(e) =>
-                                        updateCallPrice(
-                                          i,
-                                          "service_id",
-                                          e.target.value,
-                                        )
-                                      }
-                                    >
-                                      <option value="">— Select —</option>
-                                      {services.map((s) => (
-                                        <option key={s.id} value={s.id}>
-                                          {s.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                  <div>
-                                    <label className="field-label">
-                                      Price Type
-                                    </label>
-                                    <select
-                                      className="adm-input"
-                                      value={p.price_type}
-                                      onChange={(e) =>
-                                        updateCallPrice(
-                                          i,
-                                          "price_type",
-                                          e.target.value,
-                                        )
-                                      }
-                                    >
-                                      {PRICE_TYPES.map((t) => (
-                                        <option key={t}>{t}</option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                  <div>
-                                    <label className="field-label">
-                                      Price Low
-                                    </label>
-                                    <input
-                                      className="adm-input"
-                                      type="number"
-                                      value={p.price_low}
-                                      onChange={(e) =>
-                                        updateCallPrice(
-                                          i,
-                                          "price_low",
-                                          e.target.value,
-                                        )
-                                      }
-                                      placeholder="e.g. 65"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="field-label">
-                                      Price High
-                                    </label>
-                                    <input
-                                      className="adm-input"
-                                      type="number"
-                                      value={p.price_high}
-                                      onChange={(e) =>
-                                        updateCallPrice(
-                                          i,
-                                          "price_high",
-                                          e.target.value,
-                                        )
-                                      }
-                                      placeholder="range only"
-                                    />
-                                  </div>
-                                </div>
-                                {/* Row 2: Includes — toggle pills */}
-                                <div style={{ marginBottom: "8px" }}>
-                                  <label
-                                    className="field-label"
-                                    style={{
-                                      display: "block",
-                                      marginBottom: "6px",
-                                    }}
-                                  >
-                                    Includes
-                                  </label>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      gap: "6px",
-                                      flexWrap: "wrap",
-                                    }}
-                                  >
-                                    {[
-                                      ["includes_bloodwork", "Bloodwork"],
-                                      ["includes_xrays", "X-rays"],
-                                      ["includes_anesthesia", "Anesthesia"],
-                                    ].map(([field, label]) => (
-                                      <button
-                                        key={field}
-                                        type="button"
-                                        onClick={() =>
-                                          updateCallPrice(i, field, !p[field])
-                                        }
-                                        style={{
-                                          padding: "3px 8px",
-                                          borderRadius: "20px",
-                                          fontSize: "11px",
-                                          fontWeight: "600",
-                                          cursor: "pointer",
-                                          border: p[field]
-                                            ? "none"
-                                            : "1px solid #ddd",
-                                          background: p[field]
-                                            ? "#2d6a4f"
-                                            : "#f5f5f5",
-                                          color: p[field] ? "#fff" : "#555",
-                                          transition: "all 0.15s",
-                                        }}
-                                      >
-                                        {label}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                                {/* Row 3: Notes full width */}
-                                <div style={{ marginBottom: "8px" }}>
-                                  <input
-                                    className="adm-input"
-                                    style={{ width: "100%" }}
-                                    value={p.notes}
-                                    onChange={(e) =>
-                                      updateCallPrice(
-                                        i,
-                                        "notes",
-                                        e.target.value,
-                                      )
-                                    }
-                                    placeholder="Notes..."
-                                  />
-                                </div>
-                                {/* Row 4: Clear + Remove buttons — left aligned */}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "flex-start",
-                                    gap: "8px",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <button
-                                    className="adm-btn adm-btn-gray"
-                                    onClick={() => {
-                                      const u = [...callPrices];
-                                      u[i] = {
-                                        ...u[i],
-                                        service_id: "",
-                                        price_low: "",
-                                        price_high: "",
-                                        price_type: "exact",
-                                        includes_bloodwork: false,
-                                        includes_xrays: false,
-                                        includes_anesthesia: false,
-                                        notes: "",
-                                      };
-                                      setCallPrices(u);
-                                    }}
-                                  >
-                                    Clear
-                                  </button>
-                                  <button
-                                    className="adm-btn adm-btn-red"
-                                    onClick={() => removeCallPrice(i)}
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-
-                            {/* Save button */}
-                            {callPrices.length > 0 && (
-                              <div style={{ marginTop: "8px" }}>
+                              <div style={{ display: "flex", gap: "8px" }}>
                                 <button
-                                  className="adm-btn adm-btn-green"
-                                  style={{
-                                    padding: "10px 24px",
-                                    fontSize: "14px",
-                                    width: "100%",
+                                  className="adm-btn adm-btn-gray"
+                                  onClick={() => {
+                                    fetchCallQueue();
+                                    setCallIndex(0);
+                                    setCallPrices([]);
+                                    setCallReviewPrices([]);
+                                    setCallReviewVetId(null);
+                                    setCallSaved(false);
+                                    setCallReviewEditing(null);
                                   }}
-                                  onClick={() => saveCallPrices(vet)}
-                                  disabled={callSaving}
                                 >
-                                  {callSaving ? "Saving..." : "✅ Save Prices"}
+                                  ↺ Refresh
+                                </button>
+                                <button
+                                  className="adm-btn adm-btn-gray"
+                                  onClick={() =>
+                                    setCallIndex((i) => Math.max(0, i - 1))
+                                  }
+                                  disabled={callIndex === 0}
+                                >
+                                  ← Prev
+                                </button>
+                                <button
+                                  className="adm-btn adm-btn-gray"
+                                  onClick={() => {
+                                    setCallIndex((i) => i + 1);
+                                    setCallPrices([]);
+                                  }}
+                                >
+                                  Skip →
                                 </button>
                               </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* ── Review Panel — always visible once prices saved ── */}
-                        {callReviewPrices.length > 0 && (
-                          <div
-                            style={{
-                              background: "#fff",
-                              border: "2px solid #2d6a4f",
-                              borderRadius: "12px",
-                              padding: "20px",
-                              marginTop: "16px",
-                            }}
-                          >
+                            </div>
                             <div
                               style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
+                                height: "4px",
+                                background: "#f0f0f0",
+                                borderRadius: "4px",
+                                marginBottom: "20px",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: "4px",
+                                  background: "#2d6a4f",
+                                  borderRadius: "4px",
+                                  width: `${((callIndex + 1) / activeQueue.length) * 100}%`,
+                                  transition: "width 0.3s",
+                                }}
+                              />
+                            </div>
+                            {/* Vet card */}
+                            <div
+                              style={{
+                                background: "#fff",
+                                border: "1px solid #e8e8e8",
+                                borderRadius: "12px",
+                                padding: "20px",
                                 marginBottom: "16px",
                               }}
                             >
+                              {/* Badges: source + priced status */}
                               <div
                                 style={{
                                   display: "flex",
-                                  alignItems: "center",
-                                  gap: "10px",
+                                  gap: "6px",
+                                  marginBottom: "6px",
+                                  flexWrap: "wrap",
                                 }}
                               >
-                                <span style={{ fontSize: "20px" }}>✅</span>
-                                <div>
-                                  <p
-                                    style={{
-                                      margin: 0,
-                                      fontSize: "15px",
-                                      fontWeight: "700",
-                                      color: "#2d6a4f",
-                                    }}
-                                  >
-                                    Saved prices for {vet.name}
-                                  </p>
-                                  <p
-                                    style={{
-                                      margin: 0,
-                                      fontSize: "12px",
-                                      color: "#888",
-                                    }}
-                                  >
-                                    {callReviewPrices.length} price
-                                    {callReviewPrices.length !== 1 ? "s" : ""} —
-                                    edit or remove before moving on
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {callReviewPrices.map((row, i) => {
-                              const svc = services.find(
-                                (s) =>
-                                  s.id === row.service_id ||
-                                  s.id === parseInt(row.service_id),
-                              );
-                              const isEditing = callReviewEditing === i;
-                              return (
-                                <div
-                                  key={row.id || i}
+                                <span
                                   style={{
-                                    borderTop: "1px solid #f0f0f0",
-                                    paddingTop: "12px",
-                                    marginTop: "12px",
+                                    fontSize: "11px",
+                                    background:
+                                      vet._source === "pending"
+                                        ? "#fff8e1"
+                                        : "#e8f5e9",
+                                    color:
+                                      vet._source === "pending"
+                                        ? "#e65100"
+                                        : "#2d6a4f",
+                                    padding: "2px 8px",
+                                    borderRadius: "20px",
+                                    fontWeight: "600",
                                   }}
                                 >
-                                  {!isEditing ? (
-                                    /* ── Summary row ── */
-                                    <div
+                                  {vet._source === "pending" ? "New" : "Active"}
+                                </span>
+                                {vet._hasPrices && (
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      background: "#e8f5e9",
+                                      color: "#2d6a4f",
+                                      padding: "2px 8px",
+                                      borderRadius: "20px",
+                                      fontWeight: "600",
+                                      border: "1px solid #c8e6c9",
+                                    }}
+                                  >
+                                    ✓ Priced
+                                  </span>
+                                )}
+                              </div>
+                              <h3
+                                style={{
+                                  margin: "0 0 4px 0",
+                                  fontSize: "1.1rem",
+                                  color: "#111",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                {vet.name}
+                              </h3>
+
+                              {/* Address: street on line 1, city/state/zip on line 2 */}
+                              {vet.address && (
+                                <p
+                                  style={{
+                                    margin: "0 0 2px 0",
+                                    fontSize: "14px",
+                                    color: "#555",
+                                  }}
+                                >
+                                  {vet.address}
+                                </p>
+                              )}
+                              {(vet.city && vet.city.length > 2) ||
+                              (vet.neighborhood &&
+                                vet.neighborhood.length > 2) ? (
+                                <p
+                                  style={{
+                                    margin: "0 0 8px 0",
+                                    fontSize: "14px",
+                                    color: "#555",
+                                  }}
+                                >
+                                  {[
+                                    (vet.city && vet.city.length > 2
+                                      ? vet.city
+                                      : null) ||
+                                      (vet.neighborhood &&
+                                      vet.neighborhood.length > 2
+                                        ? vet.neighborhood
+                                        : null),
+                                    vet.zip_code,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(", ")}
+                                </p>
+                              ) : (
+                                <div style={{ margin: "0 0 8px 0" }}>
+                                  {vet.zip_code && (
+                                    <p
                                       style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "flex-start",
-                                        gap: "12px",
+                                        margin: "0 0 4px 0",
+                                        fontSize: "14px",
+                                        color: "#555",
                                       }}
                                     >
-                                      <div style={{ flex: 1 }}>
-                                        <p
-                                          style={{
-                                            margin: "0 0 3px 0",
-                                            fontSize: "14px",
-                                            fontWeight: "600",
-                                            color: "#111",
-                                          }}
+                                      {vet.zip_code}
+                                    </p>
+                                  )}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "6px",
+                                    }}
+                                  >
+                                    <input
+                                      className="adm-input"
+                                      style={{
+                                        maxWidth: "180px",
+                                        fontSize: "13px",
+                                        padding: "4px 8px",
+                                      }}
+                                      placeholder="Enter city..."
+                                      defaultValue=""
+                                      onBlur={async (e) => {
+                                        const city = e.target.value.trim();
+                                        if (!city) return;
+                                        const table =
+                                          vet._source === "pending"
+                                            ? "pending_vets"
+                                            : "vets";
+                                        await supabase
+                                          .from(table)
+                                          .update({ city })
+                                          .eq("id", vet.id);
+                                        setCallQueue((prev) =>
+                                          prev.map((v, idx) =>
+                                            idx === callIndex
+                                              ? { ...v, city }
+                                              : v,
+                                          ),
+                                        );
+                                      }}
+                                    />
+                                    <span
+                                      style={{
+                                        fontSize: "11px",
+                                        color: "#e65100",
+                                        fontWeight: "600",
+                                      }}
+                                    >
+                                      ⚠️ City missing
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                              {vet.website &&
+                                (() => {
+                                  try {
+                                    const host = new URL(
+                                      vet.website,
+                                    ).hostname.replace(/^www\./, "");
+                                    return (
+                                      <a
+                                        href={vet.website}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        style={{
+                                          fontSize: "13px",
+                                          color: "#2d6a4f",
+                                          display: "block",
+                                          marginBottom: "8px",
+                                        }}
+                                      >
+                                        {host}
+                                      </a>
+                                    );
+                                  } catch {
+                                    return (
+                                      <a
+                                        href={vet.website}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        style={{
+                                          fontSize: "13px",
+                                          color: "#2d6a4f",
+                                          display: "block",
+                                          marginBottom: "8px",
+                                        }}
+                                      >
+                                        {vet.website}
+                                      </a>
+                                    );
+                                  }
+                                })()}
+
+                              {/* Phone button — no icon */}
+                              {vet.phone && (
+                                <a
+                                  href={`tel:${vet.phone}`}
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    background: "#2d6a4f",
+                                    color: "#fff",
+                                    padding: "5px 10px",
+                                    borderRadius: "6px",
+                                    textDecoration: "none",
+                                    fontWeight: "600",
+                                    fontSize: "13px",
+                                    marginBottom: "12px",
+                                  }}
+                                >
+                                  {vet.phone}
+                                </a>
+                              )}
+
+                              {/* No prices? — row on desktop, stacked on mobile */}
+                              <div
+                                style={{
+                                  borderTop: "1px solid #f0f0f0",
+                                  paddingTop: "14px",
+                                  marginBottom: "16px",
+                                }}
+                              >
+                                <p
+                                  style={{
+                                    margin: "0 0 8px 0",
+                                    fontSize: "12px",
+                                    color: "#888",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  No prices?
+                                </p>
+                                <div className="call-no-prices-btns">
+                                  <button
+                                    className="adm-btn adm-btn-gray"
+                                    onClick={() =>
+                                      markCallStatus(vet, "call_for_quote")
+                                    }
+                                  >
+                                    📞 Call for quote
+                                  </button>
+                                  <button
+                                    className="adm-btn adm-btn-gray"
+                                    onClick={() =>
+                                      markCallStatus(vet, "call_back_later")
+                                    }
+                                  >
+                                    🕐 Call back later
+                                  </button>
+                                  <button
+                                    className="adm-btn adm-btn-gray"
+                                    onClick={() => markCallStatus(vet, "skip")}
+                                  >
+                                    Skip vet
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Price entry */}
+                              <div>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "10px",
+                                  }}
+                                >
+                                  <p
+                                    style={{
+                                      margin: 0,
+                                      fontSize: "13px",
+                                      fontWeight: "600",
+                                      color: "#111",
+                                    }}
+                                  >
+                                    Enter prices from call
+                                  </p>
+                                  <button
+                                    className="adm-btn adm-btn-outline"
+                                    onClick={addCallPriceRow}
+                                  >
+                                    + Add Price
+                                  </button>
+                                </div>
+                                {callPrices.length === 0 && (
+                                  <p
+                                    style={{
+                                      color: "#bbb",
+                                      fontSize: "13px",
+                                      fontStyle: "italic",
+                                      margin: "0 0 12px 0",
+                                    }}
+                                  >
+                                    No prices added yet — click "+ Add Price"
+                                    for each service they quote you.
+                                  </p>
+                                )}
+                                {callPrices.map((p, i) => (
+                                  <div
+                                    key={i}
+                                    className="row-edit-bg"
+                                    style={{ marginBottom: "12px" }}
+                                  >
+                                    {/* Row 1: Service + Price Type + Low + High */}
+                                    <div
+                                      className="form-grid-4"
+                                      style={{ marginBottom: "8px" }}
+                                    >
+                                      <div>
+                                        <label className="field-label">
+                                          Service
+                                        </label>
+                                        <select
+                                          className="adm-input"
+                                          value={p.service_id}
+                                          onChange={(e) =>
+                                            updateCallPrice(
+                                              i,
+                                              "service_id",
+                                              e.target.value,
+                                            )
+                                          }
                                         >
-                                          {svc?.name || "Unknown service"}
-                                        </p>
-                                        <p
-                                          style={{
-                                            margin: "0 0 4px 0",
-                                            fontSize: "13px",
-                                            color: "#555",
-                                          }}
-                                        >
-                                          {row.call_for_quote
-                                            ? "Call for quote"
-                                            : [
-                                                row.price_low &&
-                                                  `$${parseFloat(row.price_low).toFixed(0)}`,
-                                                row.price_high &&
-                                                  `– $${parseFloat(row.price_high).toFixed(0)}`,
-                                              ]
-                                                .filter(Boolean)
-                                                .join(" ")}
-                                          {row.price_type &&
-                                            row.price_type !== "exact" && (
-                                              <span
-                                                style={{
-                                                  fontSize: "11px",
-                                                  color: "#888",
-                                                  marginLeft: "6px",
-                                                }}
-                                              >
-                                                ({row.price_type})
-                                              </span>
-                                            )}
-                                        </p>
-                                        <div
-                                          style={{
-                                            display: "flex",
-                                            gap: "6px",
-                                            flexWrap: "wrap",
-                                          }}
-                                        >
-                                          {row.includes_bloodwork && (
-                                            <span
-                                              style={{
-                                                fontSize: "11px",
-                                                background: "#e8f5e9",
-                                                color: "#2d6a4f",
-                                                padding: "1px 6px",
-                                                borderRadius: "4px",
-                                              }}
-                                            >
-                                              + bloodwork
-                                            </span>
-                                          )}
-                                          {row.includes_xrays && (
-                                            <span
-                                              style={{
-                                                fontSize: "11px",
-                                                background: "#e8f5e9",
-                                                color: "#2d6a4f",
-                                                padding: "1px 6px",
-                                                borderRadius: "4px",
-                                              }}
-                                            >
-                                              + x-rays
-                                            </span>
-                                          )}
-                                          {row.includes_anesthesia && (
-                                            <span
-                                              style={{
-                                                fontSize: "11px",
-                                                background: "#e8f5e9",
-                                                color: "#2d6a4f",
-                                                padding: "1px 6px",
-                                                borderRadius: "4px",
-                                              }}
-                                            >
-                                              + anesthesia
-                                            </span>
-                                          )}
-                                        </div>
-                                        {row.notes && (
-                                          <p
-                                            style={{
-                                              margin: "4px 0 0 0",
-                                              fontSize: "12px",
-                                              color: "#888",
-                                              fontStyle: "italic",
-                                            }}
-                                          >
-                                            {row.notes}
-                                          </p>
-                                        )}
+                                          <option value="">— Select —</option>
+                                          {services.map((s) => (
+                                            <option key={s.id} value={s.id}>
+                                              {s.name}
+                                            </option>
+                                          ))}
+                                        </select>
                                       </div>
+                                      <div>
+                                        <label className="field-label">
+                                          Price Type
+                                        </label>
+                                        <select
+                                          className="adm-input"
+                                          value={p.price_type}
+                                          onChange={(e) =>
+                                            updateCallPrice(
+                                              i,
+                                              "price_type",
+                                              e.target.value,
+                                            )
+                                          }
+                                        >
+                                          {PRICE_TYPES.map((t) => (
+                                            <option key={t}>{t}</option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label className="field-label">
+                                          Price Low
+                                        </label>
+                                        <input
+                                          className="adm-input"
+                                          type="number"
+                                          value={p.price_low}
+                                          onChange={(e) =>
+                                            updateCallPrice(
+                                              i,
+                                              "price_low",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="e.g. 65"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="field-label">
+                                          Price High
+                                        </label>
+                                        <input
+                                          className="adm-input"
+                                          type="number"
+                                          value={p.price_high}
+                                          onChange={(e) =>
+                                            updateCallPrice(
+                                              i,
+                                              "price_high",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="range only"
+                                        />
+                                      </div>
+                                    </div>
+                                    {/* Row 2: Includes — toggle pills */}
+                                    <div style={{ marginBottom: "8px" }}>
+                                      <label
+                                        className="field-label"
+                                        style={{
+                                          display: "block",
+                                          marginBottom: "6px",
+                                        }}
+                                      >
+                                        Includes
+                                      </label>
                                       <div
                                         style={{
                                           display: "flex",
                                           gap: "6px",
-                                          flexShrink: 0,
+                                          flexWrap: "wrap",
                                         }}
                                       >
-                                        <button
-                                          className="adm-btn adm-btn-outline"
-                                          onClick={() =>
-                                            setCallReviewEditing(i)
-                                          }
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          className="adm-btn adm-btn-red"
-                                          onClick={() => deleteReviewPrice(i)}
-                                        >
-                                          Remove
-                                        </button>
+                                        {[
+                                          ["includes_bloodwork", "Bloodwork"],
+                                          ["includes_xrays", "X-rays"],
+                                          ["includes_anesthesia", "Anesthesia"],
+                                        ].map(([field, label]) => (
+                                          <button
+                                            key={field}
+                                            type="button"
+                                            onClick={() =>
+                                              updateCallPrice(
+                                                i,
+                                                field,
+                                                !p[field],
+                                              )
+                                            }
+                                            style={{
+                                              padding: "3px 8px",
+                                              borderRadius: "20px",
+                                              fontSize: "11px",
+                                              fontWeight: "600",
+                                              cursor: "pointer",
+                                              border: p[field]
+                                                ? "none"
+                                                : "1px solid #ddd",
+                                              background: p[field]
+                                                ? "#2d6a4f"
+                                                : "#f5f5f5",
+                                              color: p[field] ? "#fff" : "#555",
+                                              transition: "all 0.15s",
+                                            }}
+                                          >
+                                            {label}
+                                          </button>
+                                        ))}
                                       </div>
                                     </div>
-                                  ) : (
-                                    /* ── Inline edit form ── */
+                                    {/* Row 3: Notes full width */}
+                                    <div style={{ marginBottom: "8px" }}>
+                                      <input
+                                        className="adm-input"
+                                        style={{ width: "100%" }}
+                                        value={p.notes}
+                                        onChange={(e) =>
+                                          updateCallPrice(
+                                            i,
+                                            "notes",
+                                            e.target.value,
+                                          )
+                                        }
+                                        placeholder="Notes..."
+                                      />
+                                    </div>
+                                    {/* Row 4: Clear + Remove buttons — left aligned */}
                                     <div
                                       style={{
-                                        background: "#f9f9f9",
-                                        borderRadius: "8px",
-                                        padding: "12px",
+                                        display: "flex",
+                                        justifyContent: "flex-start",
+                                        gap: "8px",
+                                        alignItems: "center",
                                       }}
                                     >
-                                      <div
-                                        className="form-grid-4"
-                                        style={{ marginBottom: "8px" }}
+                                      <button
+                                        className="adm-btn adm-btn-gray"
+                                        onClick={() => {
+                                          const u = [...callPrices];
+                                          u[i] = {
+                                            ...u[i],
+                                            service_id: "",
+                                            price_low: "",
+                                            price_high: "",
+                                            price_type: "exact",
+                                            includes_bloodwork: false,
+                                            includes_xrays: false,
+                                            includes_anesthesia: false,
+                                            notes: "",
+                                          };
+                                          setCallPrices(u);
+                                        }}
                                       >
-                                        <div>
-                                          <label className="field-label">
-                                            Service
-                                          </label>
-                                          <select
-                                            className="adm-input"
-                                            value={row.service_id}
-                                            onChange={(e) => {
-                                              const u = [...callReviewPrices];
-                                              u[i] = {
-                                                ...u[i],
-                                                service_id: e.target.value,
-                                              };
-                                              setCallReviewPrices(u);
-                                            }}
-                                          >
-                                            <option value="">— Select —</option>
-                                            {services.map((s) => (
-                                              <option key={s.id} value={s.id}>
-                                                {s.name}
-                                              </option>
-                                            ))}
-                                          </select>
-                                        </div>
-                                        <div>
-                                          <label className="field-label">
-                                            Price Type
-                                          </label>
-                                          <select
-                                            className="adm-input"
-                                            value={row.price_type}
-                                            onChange={(e) => {
-                                              const u = [...callReviewPrices];
-                                              u[i] = {
-                                                ...u[i],
-                                                price_type: e.target.value,
-                                              };
-                                              setCallReviewPrices(u);
-                                            }}
-                                          >
-                                            {PRICE_TYPES.map((t) => (
-                                              <option key={t}>{t}</option>
-                                            ))}
-                                          </select>
-                                        </div>
-                                        <div>
-                                          <label className="field-label">
-                                            Price Low
-                                          </label>
-                                          <input
-                                            className="adm-input"
-                                            type="number"
-                                            value={row.price_low || ""}
-                                            onChange={(e) => {
-                                              const u = [...callReviewPrices];
-                                              u[i] = {
-                                                ...u[i],
-                                                price_low: e.target.value,
-                                              };
-                                              setCallReviewPrices(u);
-                                            }}
-                                          />
-                                        </div>
-                                        <div>
-                                          <label className="field-label">
-                                            Price High
-                                          </label>
-                                          <input
-                                            className="adm-input"
-                                            type="number"
-                                            value={row.price_high || ""}
-                                            onChange={(e) => {
-                                              const u = [...callReviewPrices];
-                                              u[i] = {
-                                                ...u[i],
-                                                price_high: e.target.value,
-                                              };
-                                              setCallReviewPrices(u);
-                                            }}
-                                          />
-                                        </div>
-                                      </div>
-                                      <div style={{ marginBottom: "8px" }}>
-                                        <label
-                                          className="field-label"
-                                          style={{
-                                            display: "block",
-                                            marginBottom: "6px",
-                                          }}
-                                        >
-                                          Includes
-                                        </label>
+                                        Clear
+                                      </button>
+                                      <button
+                                        className="adm-btn adm-btn-red"
+                                        onClick={() => removeCallPrice(i)}
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+
+                                {/* Save button */}
+                                {callPrices.length > 0 && (
+                                  <div style={{ marginTop: "8px" }}>
+                                    <button
+                                      className="adm-btn adm-btn-green"
+                                      style={{
+                                        padding: "10px 24px",
+                                        fontSize: "14px",
+                                        width: "100%",
+                                      }}
+                                      onClick={() => saveCallPrices(vet)}
+                                      disabled={callSaving}
+                                    >
+                                      {callSaving
+                                        ? "Saving..."
+                                        : "✅ Save Prices"}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* ── Review Panel — always visible once prices saved ── */}
+                            {callReviewPrices.length > 0 && (
+                              <div
+                                style={{
+                                  background: "#fff",
+                                  border: "2px solid #2d6a4f",
+                                  borderRadius: "12px",
+                                  padding: "20px",
+                                  marginTop: "16px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    marginBottom: "16px",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "10px",
+                                    }}
+                                  >
+                                    <span style={{ fontSize: "20px" }}>✅</span>
+                                    <div>
+                                      <p
+                                        style={{
+                                          margin: 0,
+                                          fontSize: "15px",
+                                          fontWeight: "700",
+                                          color: "#2d6a4f",
+                                        }}
+                                      >
+                                        Saved prices for {vet.name}
+                                      </p>
+                                      <p
+                                        style={{
+                                          margin: 0,
+                                          fontSize: "12px",
+                                          color: "#888",
+                                        }}
+                                      >
+                                        {callReviewPrices.length} price
+                                        {callReviewPrices.length !== 1
+                                          ? "s"
+                                          : ""}{" "}
+                                        — edit or remove before moving on
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {callReviewPrices.map((row, i) => {
+                                  const svc = services.find(
+                                    (s) =>
+                                      s.id === row.service_id ||
+                                      s.id === parseInt(row.service_id),
+                                  );
+                                  const isEditing = callReviewEditing === i;
+                                  return (
+                                    <div
+                                      key={row.id || i}
+                                      style={{
+                                        borderTop: "1px solid #f0f0f0",
+                                        paddingTop: "12px",
+                                        marginTop: "12px",
+                                      }}
+                                    >
+                                      {!isEditing ? (
+                                        /* ── Summary row ── */
                                         <div
                                           style={{
                                             display: "flex",
-                                            gap: "6px",
-                                            flexWrap: "wrap",
+                                            justifyContent: "space-between",
+                                            alignItems: "flex-start",
+                                            gap: "12px",
                                           }}
                                         >
-                                          {[
-                                            ["includes_bloodwork", "Bloodwork"],
-                                            ["includes_xrays", "X-rays"],
-                                            [
-                                              "includes_anesthesia",
-                                              "Anesthesia",
-                                            ],
-                                          ].map(([field, label]) => (
+                                          <div style={{ flex: 1 }}>
+                                            <p
+                                              style={{
+                                                margin: "0 0 3px 0",
+                                                fontSize: "14px",
+                                                fontWeight: "600",
+                                                color: "#111",
+                                              }}
+                                            >
+                                              {svc?.name || "Unknown service"}
+                                            </p>
+                                            <p
+                                              style={{
+                                                margin: "0 0 4px 0",
+                                                fontSize: "13px",
+                                                color: "#555",
+                                              }}
+                                            >
+                                              {row.call_for_quote
+                                                ? "Call for quote"
+                                                : [
+                                                    row.price_low &&
+                                                      `$${parseFloat(row.price_low).toFixed(0)}`,
+                                                    row.price_high &&
+                                                      `– $${parseFloat(row.price_high).toFixed(0)}`,
+                                                  ]
+                                                    .filter(Boolean)
+                                                    .join(" ")}
+                                              {row.price_type &&
+                                                row.price_type !== "exact" && (
+                                                  <span
+                                                    style={{
+                                                      fontSize: "11px",
+                                                      color: "#888",
+                                                      marginLeft: "6px",
+                                                    }}
+                                                  >
+                                                    ({row.price_type})
+                                                  </span>
+                                                )}
+                                            </p>
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                gap: "6px",
+                                                flexWrap: "wrap",
+                                              }}
+                                            >
+                                              {row.includes_bloodwork && (
+                                                <span
+                                                  style={{
+                                                    fontSize: "11px",
+                                                    background: "#e8f5e9",
+                                                    color: "#2d6a4f",
+                                                    padding: "1px 6px",
+                                                    borderRadius: "4px",
+                                                  }}
+                                                >
+                                                  + bloodwork
+                                                </span>
+                                              )}
+                                              {row.includes_xrays && (
+                                                <span
+                                                  style={{
+                                                    fontSize: "11px",
+                                                    background: "#e8f5e9",
+                                                    color: "#2d6a4f",
+                                                    padding: "1px 6px",
+                                                    borderRadius: "4px",
+                                                  }}
+                                                >
+                                                  + x-rays
+                                                </span>
+                                              )}
+                                              {row.includes_anesthesia && (
+                                                <span
+                                                  style={{
+                                                    fontSize: "11px",
+                                                    background: "#e8f5e9",
+                                                    color: "#2d6a4f",
+                                                    padding: "1px 6px",
+                                                    borderRadius: "4px",
+                                                  }}
+                                                >
+                                                  + anesthesia
+                                                </span>
+                                              )}
+                                            </div>
+                                            {row.notes && (
+                                              <p
+                                                style={{
+                                                  margin: "4px 0 0 0",
+                                                  fontSize: "12px",
+                                                  color: "#888",
+                                                  fontStyle: "italic",
+                                                }}
+                                              >
+                                                {row.notes}
+                                              </p>
+                                            )}
+                                          </div>
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              gap: "6px",
+                                              flexShrink: 0,
+                                            }}
+                                          >
                                             <button
-                                              key={field}
-                                              type="button"
-                                              onClick={() => {
+                                              className="adm-btn adm-btn-outline"
+                                              onClick={() =>
+                                                setCallReviewEditing(i)
+                                              }
+                                            >
+                                              Edit
+                                            </button>
+                                            <button
+                                              className="adm-btn adm-btn-red"
+                                              onClick={() =>
+                                                deleteReviewPrice(i)
+                                              }
+                                            >
+                                              Remove
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        /* ── Inline edit form ── */
+                                        <div
+                                          style={{
+                                            background: "#f9f9f9",
+                                            borderRadius: "8px",
+                                            padding: "12px",
+                                          }}
+                                        >
+                                          <div
+                                            className="form-grid-4"
+                                            style={{ marginBottom: "8px" }}
+                                          >
+                                            <div>
+                                              <label className="field-label">
+                                                Service
+                                              </label>
+                                              <select
+                                                className="adm-input"
+                                                value={row.service_id}
+                                                onChange={(e) => {
+                                                  const u = [
+                                                    ...callReviewPrices,
+                                                  ];
+                                                  u[i] = {
+                                                    ...u[i],
+                                                    service_id: e.target.value,
+                                                  };
+                                                  setCallReviewPrices(u);
+                                                }}
+                                              >
+                                                <option value="">
+                                                  — Select —
+                                                </option>
+                                                {services.map((s) => (
+                                                  <option
+                                                    key={s.id}
+                                                    value={s.id}
+                                                  >
+                                                    {s.name}
+                                                  </option>
+                                                ))}
+                                              </select>
+                                            </div>
+                                            <div>
+                                              <label className="field-label">
+                                                Price Type
+                                              </label>
+                                              <select
+                                                className="adm-input"
+                                                value={row.price_type}
+                                                onChange={(e) => {
+                                                  const u = [
+                                                    ...callReviewPrices,
+                                                  ];
+                                                  u[i] = {
+                                                    ...u[i],
+                                                    price_type: e.target.value,
+                                                  };
+                                                  setCallReviewPrices(u);
+                                                }}
+                                              >
+                                                {PRICE_TYPES.map((t) => (
+                                                  <option key={t}>{t}</option>
+                                                ))}
+                                              </select>
+                                            </div>
+                                            <div>
+                                              <label className="field-label">
+                                                Price Low
+                                              </label>
+                                              <input
+                                                className="adm-input"
+                                                type="number"
+                                                value={row.price_low || ""}
+                                                onChange={(e) => {
+                                                  const u = [
+                                                    ...callReviewPrices,
+                                                  ];
+                                                  u[i] = {
+                                                    ...u[i],
+                                                    price_low: e.target.value,
+                                                  };
+                                                  setCallReviewPrices(u);
+                                                }}
+                                              />
+                                            </div>
+                                            <div>
+                                              <label className="field-label">
+                                                Price High
+                                              </label>
+                                              <input
+                                                className="adm-input"
+                                                type="number"
+                                                value={row.price_high || ""}
+                                                onChange={(e) => {
+                                                  const u = [
+                                                    ...callReviewPrices,
+                                                  ];
+                                                  u[i] = {
+                                                    ...u[i],
+                                                    price_high: e.target.value,
+                                                  };
+                                                  setCallReviewPrices(u);
+                                                }}
+                                              />
+                                            </div>
+                                          </div>
+                                          <div style={{ marginBottom: "8px" }}>
+                                            <label
+                                              className="field-label"
+                                              style={{
+                                                display: "block",
+                                                marginBottom: "6px",
+                                              }}
+                                            >
+                                              Includes
+                                            </label>
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                gap: "6px",
+                                                flexWrap: "wrap",
+                                              }}
+                                            >
+                                              {[
+                                                [
+                                                  "includes_bloodwork",
+                                                  "Bloodwork",
+                                                ],
+                                                ["includes_xrays", "X-rays"],
+                                                [
+                                                  "includes_anesthesia",
+                                                  "Anesthesia",
+                                                ],
+                                              ].map(([field, label]) => (
+                                                <button
+                                                  key={field}
+                                                  type="button"
+                                                  onClick={() => {
+                                                    const u = [
+                                                      ...callReviewPrices,
+                                                    ];
+                                                    u[i] = {
+                                                      ...u[i],
+                                                      [field]: !u[i][field],
+                                                    };
+                                                    setCallReviewPrices(u);
+                                                  }}
+                                                  style={{
+                                                    padding: "3px 8px",
+                                                    borderRadius: "20px",
+                                                    fontSize: "11px",
+                                                    fontWeight: "600",
+                                                    cursor: "pointer",
+                                                    border: row[field]
+                                                      ? "none"
+                                                      : "1px solid #ddd",
+                                                    background: row[field]
+                                                      ? "#2d6a4f"
+                                                      : "#f5f5f5",
+                                                    color: row[field]
+                                                      ? "#fff"
+                                                      : "#555",
+                                                    transition: "all 0.15s",
+                                                  }}
+                                                >
+                                                  {label}
+                                                </button>
+                                              ))}
+                                            </div>
+                                          </div>
+                                          <div style={{ marginBottom: "8px" }}>
+                                            <input
+                                              className="adm-input"
+                                              style={{ width: "100%" }}
+                                              value={row.notes || ""}
+                                              onChange={(e) => {
                                                 const u = [...callReviewPrices];
                                                 u[i] = {
                                                   ...u[i],
-                                                  [field]: !u[i][field],
+                                                  notes: e.target.value,
                                                 };
                                                 setCallReviewPrices(u);
                                               }}
-                                              style={{
-                                                padding: "3px 8px",
-                                                borderRadius: "20px",
-                                                fontSize: "11px",
-                                                fontWeight: "600",
-                                                cursor: "pointer",
-                                                border: row[field]
-                                                  ? "none"
-                                                  : "1px solid #ddd",
-                                                background: row[field]
-                                                  ? "#2d6a4f"
-                                                  : "#f5f5f5",
-                                                color: row[field]
-                                                  ? "#fff"
-                                                  : "#555",
-                                                transition: "all 0.15s",
-                                              }}
+                                              placeholder="Notes..."
+                                            />
+                                          </div>
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              gap: "8px",
+                                              justifyContent: "flex-end",
+                                            }}
+                                          >
+                                            <button
+                                              className="adm-btn adm-btn-gray"
+                                              onClick={() =>
+                                                setCallReviewEditing(null)
+                                              }
                                             >
-                                              {label}
+                                              Cancel
                                             </button>
-                                          ))}
+                                            <button
+                                              className="adm-btn adm-btn-green"
+                                              onClick={() =>
+                                                updateReviewPrice(i, row)
+                                              }
+                                            >
+                                              Save changes
+                                            </button>
+                                          </div>
                                         </div>
-                                      </div>
-                                      <div style={{ marginBottom: "8px" }}>
-                                        <input
-                                          className="adm-input"
-                                          style={{ width: "100%" }}
-                                          value={row.notes || ""}
-                                          onChange={(e) => {
-                                            const u = [...callReviewPrices];
-                                            u[i] = {
-                                              ...u[i],
-                                              notes: e.target.value,
-                                            };
-                                            setCallReviewPrices(u);
-                                          }}
-                                          placeholder="Notes..."
-                                        />
-                                      </div>
-                                      <div
-                                        style={{
-                                          display: "flex",
-                                          gap: "8px",
-                                          justifyContent: "flex-end",
-                                        }}
-                                      >
-                                        <button
-                                          className="adm-btn adm-btn-gray"
-                                          onClick={() =>
-                                            setCallReviewEditing(null)
-                                          }
-                                        >
-                                          Cancel
-                                        </button>
-                                        <button
-                                          className="adm-btn adm-btn-green"
-                                          onClick={() =>
-                                            updateReviewPrice(i, row)
-                                          }
-                                        >
-                                          Save changes
-                                        </button>
-                                      </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
-                              );
-                            })}
+                                  );
+                                })}
 
-                            <div
-                              style={{
-                                marginTop: "20px",
-                                paddingTop: "16px",
-                                borderTop: "1px solid #f0f0f0",
-                              }}
-                            >
-                              <p
-                                style={{
-                                  margin: "0 0 8px 0",
-                                  fontSize: "12px",
-                                  color: "#888",
-                                }}
-                              >
-                                Add more prices above, or move on when ready.
-                              </p>
-                              <button
-                                className="adm-btn adm-btn-green"
-                                style={{
-                                  width: "100%",
-                                  padding: "12px",
-                                  fontSize: "14px",
-                                }}
-                                onClick={advanceFromReview}
-                              >
-                                Next Vet →
-                              </button>
-                            </div>
+                                <div
+                                  style={{
+                                    marginTop: "20px",
+                                    paddingTop: "16px",
+                                    borderTop: "1px solid #f0f0f0",
+                                  }}
+                                >
+                                  <p
+                                    style={{
+                                      margin: "0 0 8px 0",
+                                      fontSize: "12px",
+                                      color: "#888",
+                                    }}
+                                  >
+                                    Add more prices above, or move on when
+                                    ready.
+                                  </p>
+                                  <button
+                                    className="adm-btn adm-btn-green"
+                                    style={{
+                                      width: "100%",
+                                      padding: "12px",
+                                      fontSize: "14px",
+                                    }}
+                                    onClick={advanceFromReview}
+                                  >
+                                    Next Vet →
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-              </div>
-            )}
+                        );
+                      })()}
+                  </div>
+                );
+              })()}
 
             {/* ── USERS ────────────────────────────────────────────── */}
             {tab === "Users" && (
