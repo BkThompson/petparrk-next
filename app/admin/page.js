@@ -1057,6 +1057,8 @@ export default function AdminPage() {
           .call-sheet-header { flex-direction: column; align-items: flex-start; }
           .call-sheet-header > div:last-child { width: 100%; display: flex; gap: 6px; }
           .call-sheet-header > div:last-child .adm-btn { flex: 1; }
+          .form-grid-4 { grid-template-columns: 1fr 1fr; }
+          .form-grid-3 { grid-template-columns: 1fr 1fr; }
         }
         .adm-btn-gray { background: #f0f0f0; color: #444; border: 1px solid #ddd; }
         .adm-btn-gray:hover { background: #e5e5e5; }
@@ -1074,11 +1076,11 @@ export default function AdminPage() {
         .badge-rejected { background: #fce8e8; color: #c62828; }
         .badge-active { background: #e8f5e9; color: #2d6a4f; }
         .badge-inactive { background: #f0f0f0; color: #888; }
-        .row-edit-bg { background: #f9f9f9; border-radius: 8px; padding: 14px; margin: 4px 0 12px 0; border: 1px solid #e8e8e8; }
-        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
-        .field-label { display: block; font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+        .row-edit-bg { background: #f9f9f9; border-radius: 8px; padding: 18px; margin: 4px 0 14px 0; border: 1px solid #e8e8e8; }
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+        .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+        .field-label { display: block; font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
         .sub-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
         .pending-vet-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
         .vet-row { border-bottom: 1px solid #f0f0f0; padding: 10px 0; }
@@ -1235,7 +1237,11 @@ export default function AdminPage() {
               <button
                 key={t}
                 className={`tab-btn${tab === t ? " active" : ""}`}
-                onClick={() => setTab(t)}
+                onClick={() => {
+                  setTab(t);
+                  if (t === "Prices" && selectedVetId)
+                    fetchPricesForVet(selectedVetId);
+                }}
               >
                 {t}
                 {t === "Submissions" && stats.pendingSubs > 0 && (
@@ -3321,67 +3327,71 @@ export default function AdminPage() {
                                   {showAllVets ? "total" : "unpriced"} vets
                                 </p>
                               </div>
-                              {/* Two-option toggle: Unpriced Only | All Vets */}
+                              {/* Smooth sliding toggle */}
                               <div
+                                onClick={() => {
+                                  setShowAllVets((v) => !v);
+                                  setCallIndex(0);
+                                  setCallPrices([]);
+                                  setCallReviewPrices([]);
+                                  setCallReviewVetId(null);
+                                  setCallSaved(false);
+                                }}
                                 style={{
+                                  position: "relative",
                                   display: "flex",
-                                  borderRadius: "8px",
+                                  borderRadius: "20px",
                                   border: "1px solid #2d6a4f",
                                   overflow: "hidden",
                                   flexShrink: 0,
+                                  cursor: "pointer",
+                                  background: "#fff",
+                                  userSelect: "none",
                                 }}
                               >
-                                <button
-                                  onClick={() => {
-                                    setShowAllVets(false);
-                                    setCallIndex(0);
-                                    setCallPrices([]);
-                                    setCallReviewPrices([]);
-                                    setCallReviewVetId(null);
-                                    setCallSaved(false);
-                                  }}
+                                {/* Sliding background pill */}
+                                <div
                                   style={{
-                                    padding: "5px 10px",
+                                    position: "absolute",
+                                    top: 0,
+                                    bottom: 0,
+                                    width: "50%",
+                                    background: "#2d6a4f",
+                                    borderRadius: "20px",
+                                    transition: "transform 0.2s ease",
+                                    transform: showAllVets
+                                      ? "translateX(100%)"
+                                      : "translateX(0%)",
+                                  }}
+                                />
+                                <span
+                                  style={{
+                                    position: "relative",
+                                    padding: "5px 12px",
                                     fontSize: "12px",
                                     fontWeight: "600",
-                                    cursor: "pointer",
-                                    border: "none",
-                                    background: !showAllVets
-                                      ? "#2d6a4f"
-                                      : "#fff",
                                     color: !showAllVets ? "#fff" : "#2d6a4f",
-                                    transition: "all 0.15s",
+                                    transition: "color 0.2s ease",
                                     whiteSpace: "nowrap",
+                                    zIndex: 1,
                                   }}
                                 >
                                   Unpriced
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setShowAllVets(true);
-                                    setCallIndex(0);
-                                    setCallPrices([]);
-                                    setCallReviewPrices([]);
-                                    setCallReviewVetId(null);
-                                    setCallSaved(false);
-                                  }}
+                                </span>
+                                <span
                                   style={{
-                                    padding: "5px 10px",
+                                    position: "relative",
+                                    padding: "5px 12px",
                                     fontSize: "12px",
                                     fontWeight: "600",
-                                    cursor: "pointer",
-                                    border: "none",
-                                    borderLeft: "1px solid #2d6a4f",
-                                    background: showAllVets
-                                      ? "#2d6a4f"
-                                      : "#fff",
                                     color: showAllVets ? "#fff" : "#2d6a4f",
-                                    transition: "all 0.15s",
+                                    transition: "color 0.2s ease",
                                     whiteSpace: "nowrap",
+                                    zIndex: 1,
                                   }}
                                 >
                                   All Vets
-                                </button>
+                                </span>
                               </div>
                               <div style={{ display: "flex", gap: "8px" }}>
                                 <button
