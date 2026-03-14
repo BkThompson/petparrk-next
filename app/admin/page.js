@@ -747,7 +747,14 @@ export default function AdminPage() {
         "Save ran but 0 rows were updated.\n\nCheck Supabase RLS policies on the vet_prices table — the UPDATE policy may be blocking this.",
       );
     } else {
-      await fetchPricesForVet(selectedVetId);
+      // Update local state immediately so UI reflects the save without waiting for re-fetch
+      setVetPrices((prev) =>
+        prev.map((p) =>
+          p.id === editingPrice
+            ? { ...p, ...payload, services: p.services }
+            : p,
+        ),
+      );
       setEditingPrice(null);
     }
     setPriceSaving(false);
