@@ -1414,27 +1414,26 @@ export default function AdminPage() {
                             {vet.address}
                           </p>
                         )}
-                        {(vet.city || vet.neighborhood || vet.zip_code) && (
-                          <p
-                            style={{
-                              margin: "0 0 2px 0",
-                              fontSize: "12px",
-                              color: "#888",
-                            }}
-                          >
-                            {[
-                              (vet.city && vet.city.length > 2
-                                ? vet.city
-                                : null) ||
-                                (vet.neighborhood && vet.neighborhood.length > 2
-                                  ? vet.neighborhood
-                                  : null),
-                              vet.zip_code,
-                            ]
-                              .filter(Boolean)
-                              .join(", ")}
-                          </p>
-                        )}
+                        {(() => {
+                          const city =
+                            vet.city && vet.city.length > 2
+                              ? vet.city
+                              : vet.neighborhood && vet.neighborhood.length > 2
+                                ? vet.neighborhood
+                                : null;
+                          const parts = [city, vet.zip_code].filter(Boolean);
+                          return parts.length > 0 ? (
+                            <p
+                              style={{
+                                margin: "0 0 2px 0",
+                                fontSize: "12px",
+                                color: "#888",
+                              }}
+                            >
+                              {parts.join(", ")}
+                            </p>
+                          ) : null;
+                        })()}
                         {vet.phone && (
                           <p
                             style={{
