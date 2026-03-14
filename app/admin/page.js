@@ -1403,13 +1403,38 @@ export default function AdminPage() {
                             </span>
                           )}
                         </div>
-                        <p
-                          style={{ margin: 0, fontSize: "12px", color: "#888" }}
-                        >
-                          {[vet.address, vet.city, vet.zip_code]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </p>
+                        {vet.address && (
+                          <p
+                            style={{
+                              margin: "0 0 1px 0",
+                              fontSize: "12px",
+                              color: "#888",
+                            }}
+                          >
+                            {vet.address}
+                          </p>
+                        )}
+                        {(vet.city || vet.neighborhood || vet.zip_code) && (
+                          <p
+                            style={{
+                              margin: "0 0 2px 0",
+                              fontSize: "12px",
+                              color: "#888",
+                            }}
+                          >
+                            {[
+                              (vet.city && vet.city.length > 2
+                                ? vet.city
+                                : null) ||
+                                (vet.neighborhood && vet.neighborhood.length > 2
+                                  ? vet.neighborhood
+                                  : null),
+                              vet.zip_code,
+                            ]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </p>
+                        )}
                         {vet.phone && (
                           <p
                             style={{
@@ -3129,6 +3154,44 @@ export default function AdminPage() {
                       </button>
                     </div>
                   )}
+                {/* Recently processed — always visible when there's history */}
+                {callLog.length > 0 && (
+                  <div
+                    style={{
+                      background: "#f9f9f9",
+                      border: "1px solid #eee",
+                      borderRadius: "8px",
+                      padding: "8px 12px",
+                      marginBottom: "14px",
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: "0 0 4px 0",
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        color: "#aaa",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      Recently processed
+                    </p>
+                    {callLog.map((entry, i) => (
+                      <p
+                        key={i}
+                        style={{
+                          margin: "2px 0",
+                          fontSize: "12px",
+                          color: "#555",
+                        }}
+                      >
+                        ✅ <strong>{entry.name}</strong> — {entry.count} price
+                        {entry.count !== 1 ? "s" : ""} saved
+                      </p>
+                    ))}
+                  </div>
+                )}
                 {!callQueueLoading &&
                   callIndex < callQueue.length &&
                   (() => {
@@ -3173,6 +3236,7 @@ export default function AdminPage() {
                                 setCallReviewPrices([]);
                                 setCallReviewVetId(null);
                                 setCallSaved(false);
+                                setCallReviewEditing(null);
                               }}
                             >
                               ↺ Refresh
@@ -3197,43 +3261,6 @@ export default function AdminPage() {
                             </button>
                           </div>
                         </div>
-                        {callLog.length > 0 && (
-                          <div
-                            style={{
-                              background: "#f9f9f9",
-                              border: "1px solid #eee",
-                              borderRadius: "8px",
-                              padding: "8px 12px",
-                              marginBottom: "14px",
-                            }}
-                          >
-                            <p
-                              style={{
-                                margin: "0 0 4px 0",
-                                fontSize: "11px",
-                                fontWeight: "700",
-                                color: "#aaa",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.5px",
-                              }}
-                            >
-                              Recently processed
-                            </p>
-                            {callLog.map((entry, i) => (
-                              <p
-                                key={i}
-                                style={{
-                                  margin: "2px 0",
-                                  fontSize: "12px",
-                                  color: "#555",
-                                }}
-                              >
-                                ✅ <strong>{entry.name}</strong> — {entry.count}{" "}
-                                price{entry.count !== 1 ? "s" : ""} saved
-                              </p>
-                            ))}
-                          </div>
-                        )}
                         <div
                           style={{
                             height: "4px",
@@ -3306,7 +3333,8 @@ export default function AdminPage() {
                               {vet.address}
                             </p>
                           )}
-                          {vet.city || vet.neighborhood ? (
+                          {(vet.city && vet.city.length > 2) ||
+                          (vet.neighborhood && vet.neighborhood.length > 2) ? (
                             <p
                               style={{
                                 margin: "0 0 8px 0",
@@ -3314,7 +3342,16 @@ export default function AdminPage() {
                                 color: "#555",
                               }}
                             >
-                              {[vet.city || vet.neighborhood, vet.zip_code]
+                              {[
+                                (vet.city && vet.city.length > 2
+                                  ? vet.city
+                                  : null) ||
+                                  (vet.neighborhood &&
+                                  vet.neighborhood.length > 2
+                                    ? vet.neighborhood
+                                    : null),
+                                vet.zip_code,
+                              ]
                                 .filter(Boolean)
                                 .join(", ")}
                             </p>
