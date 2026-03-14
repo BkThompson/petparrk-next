@@ -357,44 +357,78 @@ export default function AdminPage() {
     // If we already created/found this vet in a previous save (add more prices flow), reuse that ID
     let savedVetId = callReviewVetId || vet.id;
     if (vet._source === "pending" && !callReviewVetId) {
-      const slug = (vet.slug || vet.name)
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
-      const { data: newVet, error: vetError } = await supabase
+      // Check if a vet with this name already exists — avoid duplicates
+      const { data: existingVet } = await supabase
         .from("vets")
-        .insert({
-          name: vet.name,
-          slug,
-          address: vet.address,
-          city: vet.city,
-          state: vet.state || null,
-          zip_code: vet.zip_code,
-          phone: vet.phone,
-          website: vet.website,
-          hours: vet.hours,
-          neighborhood: vet.neighborhood || vet.city,
-          vet_type: vet.vet_type
-            ? Array.isArray(vet.vet_type)
-              ? vet.vet_type
-              : [vet.vet_type]
-            : ["General Practice"],
-          accepting_new_patients: null,
-          carecredit: false,
-          status: "active",
-        })
-        .select()
-        .single();
-      if (vetError) {
-        alert("Error approving vet: " + vetError.message);
-        setCallSaving(false);
-        return;
+        .select("id")
+        .ilike("name", vet.name.trim())
+        .maybeSingle();
+
+      if (existingVet) {
+        // Vet already exists — reuse it, just mark pending as approved
+        savedVetId = existingVet.id;
+        await supabase
+          .from("pending_vets")
+          .update({ status: "approved" })
+          .eq("id", vet.id);
+      } else {
+        // Create new vet
+        const slug = (vet.slug || vet.name)
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "");
+        const { data: newVet, error: vetError } = await supabase
+          .from("vets")
+          .insert({
+            name: vet.name,
+            slug,
+            address: vet.address,
+            city: vet.city,
+            state: vet.state || null,
+            zip_code: vet.zip_code,
+            phone: vet.phone,
+            website: vet.website,
+            hours: vet.hours,
+            neighborhood: vet.neighborhood || vet.city,
+            vet_type: vet.vet_type
+              ? Array.isArray(vet.vet_type)
+                ? vet.vet_type
+                : [vet.vet_type]
+              : ["General Practice"],
+            accepting_new_patients: null,
+            carecredit: false,
+            status: "active",
+          })
+          .select()
+          .single();
+        if (vetError) {
+          alert("Error approving vet: " + vetError.message);
+          setCallSaving(false);
+          return;
+        }
+        await supabase
+          .from("pending_vets")
+          .update({ status: "approved" })
+          .eq("id", vet.id);
+        savedVetId = newVet.id;
       }
-      await supabase
-        .from("pending_vets")
-        .update({ status: "approved" })
-        .eq("id", vet.id);
-      savedVetId = newVet.id;
+      // Update the vet in both queues so it's treated as active on subsequent saves
+      const updatedVet = {
+        ...vet,
+        id: savedVetId,
+        _source: "active",
+        _hasPrices: true,
+      };
+      setCallQueue((prev) =>
+        prev.map((v) =>
+          v.id === vet.id && v._source === "pending" ? updatedVet : v,
+        ),
+      );
+      setFullCallQueue((prev) =>
+        prev.map((v) =>
+          v.id === vet.id && v._source === "pending" ? updatedVet : v,
+        ),
+      );
     }
 
     // Insert each price and capture the returned row with its DB id
@@ -419,6 +453,13 @@ export default function AdminPage() {
     setCallReviewVetId(savedVetId);
     setCallReviewEditing(null);
     setCallPrices([]);
+    // Mark vet as having prices in both queues so it doesn't re-appear in unpriced mode
+    setCallQueue((prev) =>
+      prev.map((v) => (v.id === savedVetId ? { ...v, _hasPrices: true } : v)),
+    );
+    setFullCallQueue((prev) =>
+      prev.map((v) => (v.id === savedVetId ? { ...v, _hasPrices: true } : v)),
+    );
     fetchStats();
     fetchVets();
   }
@@ -546,11 +587,13 @@ export default function AdminPage() {
   async function fetchPricesForVet(vetId) {
     if (!vetId) return;
     setPricesLoading(true);
+    // Use cache busting to always get fresh data from Supabase
     const { data } = await supabase
       .from("vet_prices")
       .select("*, services(name)")
       .eq("vet_id", vetId)
-      .order("created_at");
+      .order("created_at")
+      .limit(200);
     setVetPrices(data || []);
     setPricesLoading(false);
   }
