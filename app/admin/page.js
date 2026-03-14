@@ -75,6 +75,7 @@ export default function AdminPage() {
     slug: "",
     neighborhood: "",
     city: "Oakland",
+    state: "",
     address: "",
     zip_code: "",
     phone: "",
@@ -367,6 +368,7 @@ export default function AdminPage() {
           slug,
           address: vet.address,
           city: vet.city,
+          state: vet.state || null,
           zip_code: vet.zip_code,
           phone: vet.phone,
           website: vet.website,
@@ -574,6 +576,7 @@ export default function AdminPage() {
       slug,
       address: form.address,
       city: form.city,
+      state: form.state || null,
       zip_code: form.zip_code,
       phone: form.phone,
       website: form.website,
@@ -627,6 +630,7 @@ export default function AdminPage() {
         slug: vetForm.slug,
         neighborhood: vetForm.neighborhood,
         city: vetForm.city,
+        state: vetForm.state || null,
         address: vetForm.address,
         zip_code: vetForm.zip_code,
         phone: vetForm.phone,
@@ -906,6 +910,7 @@ export default function AdminPage() {
             ["name", "Name"],
             ["address", "Address"],
             ["city", "City"],
+            ["state", "State"],
             ["zip_code", "ZIP"],
             ["phone", "Phone"],
             ["website", "Website"],
@@ -1435,7 +1440,9 @@ export default function AdminPage() {
                               : vet.neighborhood && vet.neighborhood.length > 2
                                 ? vet.neighborhood
                                 : null;
-                          const parts = [city, vet.zip_code].filter(Boolean);
+                          const parts = [city, vet.state, vet.zip_code].filter(
+                            Boolean,
+                          );
                           return parts.length > 0 ? (
                             <p
                               style={{
@@ -1616,6 +1623,20 @@ export default function AdminPage() {
                               city: e.target.value,
                             })
                           }
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">State</label>
+                        <input
+                          className="adm-input"
+                          value={addVetForm.state || ""}
+                          onChange={(e) =>
+                            setAddVetForm({
+                              ...addVetForm,
+                              state: e.target.value,
+                            })
+                          }
+                          placeholder="e.g. CA"
                         />
                       </div>
                       <div>
@@ -2009,6 +2030,20 @@ export default function AdminPage() {
                                       city: e.target.value,
                                     })
                                   }
+                                />
+                              </div>
+                              <div>
+                                <label className="field-label">State</label>
+                                <input
+                                  className="adm-input"
+                                  value={vetForm.state || ""}
+                                  onChange={(e) =>
+                                    setVetForm({
+                                      ...vetForm,
+                                      state: e.target.value,
+                                    })
+                                  }
+                                  placeholder="e.g. CA"
                                 />
                               </div>
                               <div>
@@ -3421,6 +3456,7 @@ export default function AdminPage() {
                                       vet.neighborhood.length > 2
                                         ? vet.neighborhood
                                         : null),
+                                    vet.state,
                                     vet.zip_code,
                                   ]
                                     .filter(Boolean)
@@ -3428,7 +3464,7 @@ export default function AdminPage() {
                                 </p>
                               ) : (
                                 <div style={{ margin: "0 0 8px 0" }}>
-                                  {vet.zip_code && (
+                                  {(vet.state || vet.zip_code) && (
                                     <p
                                       style={{
                                         margin: "0 0 4px 0",
@@ -3436,7 +3472,9 @@ export default function AdminPage() {
                                         color: "#555",
                                       }}
                                     >
-                                      {vet.zip_code}
+                                      {[vet.state, vet.zip_code]
+                                        .filter(Boolean)
+                                        .join(", ")}
                                     </p>
                                   )}
                                   <div
