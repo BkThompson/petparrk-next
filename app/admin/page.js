@@ -3278,37 +3278,68 @@ export default function AdminPage() {
                                   {showAllVets ? "total" : "unpriced"} vets
                                 </p>
                               </div>
-                              {/* Show all toggle */}
-                              <button
-                                onClick={() => {
-                                  setShowAllVets((v) => !v);
-                                  setCallIndex(0);
-                                  setCallPrices([]);
-                                  setCallReviewPrices([]);
-                                  setCallReviewVetId(null);
-                                  setCallSaved(false);
-                                }}
+                              {/* Two-option toggle: Unpriced Only | All Vets */}
+                              <div
                                 style={{
                                   display: "flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  padding: "5px 10px",
-                                  borderRadius: "20px",
-                                  fontSize: "12px",
-                                  fontWeight: "600",
-                                  cursor: "pointer",
-                                  border: "1px solid",
-                                  background: showAllVets ? "#2d6a4f" : "#fff",
-                                  color: showAllVets ? "#fff" : "#2d6a4f",
-                                  borderColor: "#2d6a4f",
-                                  transition: "all 0.15s",
-                                  whiteSpace: "nowrap",
+                                  borderRadius: "8px",
+                                  border: "1px solid #2d6a4f",
+                                  overflow: "hidden",
+                                  flexShrink: 0,
                                 }}
                               >
-                                {showAllVets
-                                  ? "👁 All vets"
-                                  : "👁 Unpriced only"}
-                              </button>
+                                <button
+                                  onClick={() => {
+                                    setShowAllVets(false);
+                                    setCallIndex(0);
+                                    setCallPrices([]);
+                                    setCallReviewPrices([]);
+                                    setCallReviewVetId(null);
+                                    setCallSaved(false);
+                                  }}
+                                  style={{
+                                    padding: "5px 10px",
+                                    fontSize: "12px",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    border: "none",
+                                    background: !showAllVets
+                                      ? "#2d6a4f"
+                                      : "#fff",
+                                    color: !showAllVets ? "#fff" : "#2d6a4f",
+                                    transition: "all 0.15s",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  Unpriced
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowAllVets(true);
+                                    setCallIndex(0);
+                                    setCallPrices([]);
+                                    setCallReviewPrices([]);
+                                    setCallReviewVetId(null);
+                                    setCallSaved(false);
+                                  }}
+                                  style={{
+                                    padding: "5px 10px",
+                                    fontSize: "12px",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    border: "none",
+                                    borderLeft: "1px solid #2d6a4f",
+                                    background: showAllVets
+                                      ? "#2d6a4f"
+                                      : "#fff",
+                                    color: showAllVets ? "#fff" : "#2d6a4f",
+                                    transition: "all 0.15s",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  All Vets
+                                </button>
+                              </div>
                               <div style={{ display: "flex", gap: "8px" }}>
                                 <button
                                   className="adm-btn adm-btn-gray"
