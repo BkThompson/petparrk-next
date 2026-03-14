@@ -195,7 +195,6 @@ export default function Home() {
       setFormStatus("error");
       return;
     }
-    // Fire email notification (non-blocking)
     fetch("/api/notify-submission", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -430,8 +429,6 @@ export default function Home() {
         {/* Vet Cards */}
         {filtered.map((vet) => {
           const vetPrices = prices[vet.id] || [];
-
-          // Only show prices that have actual values — filter out skeleton rows
           const exam = vetPrices.find(
             (p) => p.services?.name === "Doctor Exam" && p.price_low
           );
@@ -447,9 +444,7 @@ export default function Home() {
           const lastUpdated = vet.last_verified
             ? new Date(vet.last_verified + "T12:00:00")
             : vetPrices.length > 0
-            ? new Date(
-                Math.max(...vetPrices.map((p) => new Date(p.created_at)))
-              )
+            ? new Date(Math.max(...vetPrices.map((p) => new Date(p.created_at))))
             : null;
           const isSaved = savedVetIds.has(vet.id);
           const isAnimating = animatingId === vet.id;
@@ -465,216 +460,98 @@ export default function Home() {
                 background: "#ffffff",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <h2 style={{ margin: "0 0 4px 0", fontSize: "1.1rem" }}>
-                    <Link
-                      href={`/vet/${vet.slug}`}
-                      style={{ color: "#111", textDecoration: "none" }}
-                      onMouseEnter={(e) => {
-                        e.target.style.color = "#2d6a4f";
-                        e.target.style.textDecoration = "underline";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.color = "#111";
-                        e.target.style.textDecoration = "none";
-                      }}
-                    >
-                      {vet.name}
-                    </Link>
-                  </h2>
-                  <p
-                    style={{
-                      margin: "0 0 2px 0",
-                      color: "#666",
-                      fontSize: "13px",
-                    }}
-                  >
-                    {vet.neighborhood}
-                  </p>
-                  <p style={{ margin: "0 0 2px 0", fontSize: "13px" }}>
-                    <a
-                      href={`tel:${vet.phone}`}
-                      style={{ color: "#666", textDecoration: "none" }}
-                    >
-                      {vet.phone}
-                    </a>
-                  </p>
-                  {vet.website && (
-                    <p style={{ margin: "0", fontSize: "13px" }}>
-                      <a
-                        href={`https://${vet.website}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: "#2d6a4f", textDecoration: "none" }}
-                        onMouseEnter={(e) =>
-                          (e.target.style.textDecoration = "underline")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.target.style.textDecoration = "none")
-                        }
-                      >
-                        Website ↗
-                      </a>
-                    </p>
-                  )}
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-end",
-                    gap: "4px",
+              {/* Vet name + badges */}
+              <h2 style={{ margin: "0 0 4px 0", fontSize: "1.1rem" }}>
+                <Link
+                  href={`/vet/${vet.slug}`}
+                  style={{ color: "#111", textDecoration: "none" }}
+                  onMouseEnter={(e) => {
+                    e.target.style.color = "#2d6a4f";
+                    e.target.style.textDecoration = "underline";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.color = "#111";
+                    e.target.style.textDecoration = "none";
                   }}
                 >
-                  {(Array.isArray(vet.vet_type) ? vet.vet_type : [vet.vet_type])
-                    .filter(Boolean)
-                    .map((t) => (
-                      <span
-                        key={t}
-                        style={{
-                          fontSize: "11px",
-                          background: "#e8f5e9",
-                          color: "#2d6a4f",
-                          padding: "2px 8px",
-                          borderRadius: "12px",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  {vet.accepting_new_patients === true && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        background: "#e8f0fe",
-                        color: "#3949ab",
-                        padding: "2px 8px",
-                        borderRadius: "12px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      ✅ Accepting patients
+                  {vet.name}
+                </Link>
+              </h2>
+
+              {/* Badges inline under name */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "6px" }}>
+                {(Array.isArray(vet.vet_type) ? vet.vet_type : [vet.vet_type])
+                  .filter(Boolean)
+                  .map((t) => (
+                    <span key={t} style={{ fontSize: "11px", background: "#e8f5e9", color: "#2d6a4f", padding: "2px 8px", borderRadius: "12px", whiteSpace: "nowrap" }}>
+                      {t}
                     </span>
-                  )}
-                  {vet.accepting_new_patients === false && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        background: "#fce8e8",
-                        color: "#c62828",
-                        padding: "2px 8px",
-                        borderRadius: "12px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      ❌ Not accepting
-                    </span>
-                  )}
-                </div>
+                  ))}
+                {vet.accepting_new_patients === true && (
+                  <span style={{ fontSize: "11px", background: "#e8f0fe", color: "#3949ab", padding: "2px 8px", borderRadius: "12px", whiteSpace: "nowrap" }}>
+                    ✅ Accepting patients
+                  </span>
+                )}
+                {vet.accepting_new_patients === false && (
+                  <span style={{ fontSize: "11px", background: "#fce8e8", color: "#c62828", padding: "2px 8px", borderRadius: "12px", whiteSpace: "nowrap" }}>
+                    ❌ Not accepting
+                  </span>
+                )}
               </div>
 
+              {/* Neighborhood / phone / website */}
+              <p style={{ margin: "0 0 2px 0", color: "#666", fontSize: "13px" }}>
+                {vet.neighborhood}
+              </p>
+              <p style={{ margin: "0 0 2px 0", fontSize: "13px" }}>
+                <a href={`tel:${vet.phone}`} style={{ color: "#666", textDecoration: "none" }}>
+                  {vet.phone}
+                </a>
+              </p>
+              {vet.website && (
+                <p style={{ margin: "0", fontSize: "13px" }}>
+                  <a
+                    href={`https://${vet.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#2d6a4f", textDecoration: "none" }}
+                    onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
+                    onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+                  >
+                    Website ↗
+                  </a>
+                </p>
+              )}
+
+              {/* Price chips */}
               {!exam && !dental && !spay && !neuter ? (
-                <p
-                  style={{
-                    margin: "12px 0 0 0",
-                    fontSize: "13px",
-                    color: "#999",
-                    fontStyle: "italic",
-                  }}
-                >
+                <p style={{ margin: "12px 0 0 0", fontSize: "13px", color: "#999", fontStyle: "italic" }}>
                   No pricing available
                 </p>
               ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    marginTop: "12px",
-                    flexWrap: "wrap",
-                  }}
-                >
+                <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
                   {exam && (
-                    <div
-                      style={{
-                        background: "#f0f0f0",
-                        borderRadius: "6px",
-                        padding: "6px 10px",
-                        fontSize: "13px",
-                      }}
-                    >
+                    <div style={{ background: "#f0f0f0", borderRadius: "6px", padding: "6px 10px", fontSize: "13px" }}>
                       <span style={{ color: "#666" }}>Exam </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(
-                          exam.price_low,
-                          exam.price_high,
-                          exam.price_type
-                        )}
-                      </span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>{formatPrice(exam.price_low, exam.price_high, exam.price_type)}</span>
                     </div>
                   )}
                   {dental && (
-                    <div
-                      style={{
-                        background: "#f0f0f0",
-                        borderRadius: "6px",
-                        padding: "6px 10px",
-                        fontSize: "13px",
-                      }}
-                    >
+                    <div style={{ background: "#f0f0f0", borderRadius: "6px", padding: "6px 10px", fontSize: "13px" }}>
                       <span style={{ color: "#666" }}>Dental </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(
-                          dental.price_low,
-                          dental.price_high,
-                          dental.price_type
-                        )}
-                      </span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>{formatPrice(dental.price_low, dental.price_high, dental.price_type)}</span>
                     </div>
                   )}
                   {spay && (
-                    <div
-                      style={{
-                        background: "#f0f0f0",
-                        borderRadius: "6px",
-                        padding: "6px 10px",
-                        fontSize: "13px",
-                      }}
-                    >
+                    <div style={{ background: "#f0f0f0", borderRadius: "6px", padding: "6px 10px", fontSize: "13px" }}>
                       <span style={{ color: "#666" }}>Spay </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(
-                          spay.price_low,
-                          spay.price_high,
-                          spay.price_type
-                        )}
-                      </span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>{formatPrice(spay.price_low, spay.price_high, spay.price_type)}</span>
                     </div>
                   )}
                   {neuter && (
-                    <div
-                      style={{
-                        background: "#f0f0f0",
-                        borderRadius: "6px",
-                        padding: "6px 10px",
-                        fontSize: "13px",
-                      }}
-                    >
+                    <div style={{ background: "#f0f0f0", borderRadius: "6px", padding: "6px 10px", fontSize: "13px" }}>
                       <span style={{ color: "#666" }}>Neuter </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(
-                          neuter.price_low,
-                          neuter.price_high,
-                          neuter.price_type
-                        )}
-                      </span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>{formatPrice(neuter.price_low, neuter.price_high, neuter.price_type)}</span>
                     </div>
                   )}
                 </div>
@@ -693,18 +570,13 @@ export default function Home() {
               >
                 <p style={{ margin: 0, color: "#aaa", fontSize: "11px" }}>
                   {lastUpdated
-                    ? `Verified ${lastUpdated.toLocaleDateString("en-US", {
-                        month: "short",
-                        year: "numeric",
-                      })}`
+                    ? `Verified ${lastUpdated.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`
                     : ""}
                 </p>
                 <button
                   onClick={(e) => toggleSave(e, vet.id)}
                   title={isSaved ? "Remove from saved" : "Save this vet"}
-                  className={`heart-btn${
-                    isAnimating ? " heart-animating" : ""
-                  }`}
+                  className={`heart-btn${isAnimating ? " heart-animating" : ""}`}
                 >
                   {isSaved ? "❤️" : "🤍"}
                 </button>
@@ -716,10 +588,7 @@ export default function Home() {
         {/* Submit a Price */}
         <div style={{ marginTop: "40px", textAlign: "center" }}>
           <button
-            onClick={() => {
-              setShowForm(!showForm);
-              setFormStatus(null);
-            }}
+            onClick={() => { setShowForm(!showForm); setFormStatus(null); }}
             style={{
               padding: "10px 24px",
               backgroundColor: "#2d6a4f",
@@ -745,80 +614,29 @@ export default function Home() {
                 margin: "20px auto 0",
               }}
             >
-              <h3 style={{ margin: "0 0 16px 0", color: "#111" }}>
-                Submit a Vet Price
-              </h3>
-              {[
-                "vet_name",
-                "service_name",
-                "price_paid",
-                "visit_date",
-                "submitter_note",
-              ].map((field) => (
+              <h3 style={{ margin: "0 0 16px 0", color: "#111" }}>Submit a Vet Price</h3>
+              {["vet_name", "service_name", "price_paid", "visit_date", "submitter_note"].map((field) => (
                 <div key={field} style={{ marginBottom: "12px" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "13px",
-                      color: "#555",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    {field === "vet_name"
-                      ? "Vet Name *"
-                      : field === "service_name"
-                      ? "Service (e.g. Exam, Dental) *"
-                      : field === "price_paid"
-                      ? "Price Paid ($) *"
-                      : field === "visit_date"
-                      ? "Date of Visit (optional)"
+                  <label style={{ display: "block", fontSize: "13px", color: "#555", marginBottom: "4px" }}>
+                    {field === "vet_name" ? "Vet Name *"
+                      : field === "service_name" ? "Service (e.g. Exam, Dental) *"
+                      : field === "price_paid" ? "Price Paid ($) *"
+                      : field === "visit_date" ? "Date of Visit (optional)"
                       : "Notes (optional)"}
                   </label>
                   <input
-                    type={
-                      field === "price_paid"
-                        ? "number"
-                        : field === "visit_date"
-                        ? "date"
-                        : "text"
-                    }
+                    type={field === "price_paid" ? "number" : field === "visit_date" ? "date" : "text"}
                     value={formData[field]}
-                    onChange={(e) =>
-                      setFormData({ ...formData, [field]: e.target.value })
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #ccc",
-                      fontSize: "14px",
-                      boxSizing: "border-box",
-                    }}
+                    onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "14px", boxSizing: "border-box" }}
                   />
                 </div>
               ))}
-              {formStatus === "error" && (
-                <p style={{ color: "red", fontSize: "13px" }}>
-                  Please fill in all required fields.
-                </p>
-              )}
-              {formStatus === "success" && (
-                <p style={{ color: "green", fontSize: "13px" }}>
-                  Thanks! Your submission is under review.
-                </p>
-              )}
+              {formStatus === "error" && <p style={{ color: "red", fontSize: "13px" }}>Please fill in all required fields.</p>}
+              {formStatus === "success" && <p style={{ color: "green", fontSize: "13px" }}>Thanks! Your submission is under review.</p>}
               <button
                 onClick={handleSubmit}
-                style={{
-                  padding: "10px 24px",
-                  backgroundColor: "#2d6a4f",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  marginTop: "4px",
-                }}
+                style={{ padding: "10px 24px", backgroundColor: "#2d6a4f", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", cursor: "pointer", marginTop: "4px" }}
               >
                 Submit
               </button>
@@ -838,29 +656,12 @@ export default function Home() {
             fontSize: "13px",
           }}
         >
-          <p
-            style={{
-              margin: "0 0 8px 0",
-              fontWeight: "bold",
-              color: "#2d6a4f",
-              fontSize: "15px",
-            }}
-          >
-            🐾 PetParrk
-          </p>
-          <p style={{ margin: "0 0 8px 0" }}>
-            Real prices. Real vets. No surprises.
-          </p>
-          <p style={{ margin: "0 0 8px 0" }}>
-            Pricing data is self-reported and verified by our team. Always call
-            to confirm before your visit.
-          </p>
+          <p style={{ margin: "0 0 8px 0", fontWeight: "bold", color: "#2d6a4f", fontSize: "15px" }}>🐾 PetParrk</p>
+          <p style={{ margin: "0 0 8px 0" }}>Real prices. Real vets. No surprises.</p>
+          <p style={{ margin: "0 0 8px 0" }}>Pricing data is self-reported and verified by our team. Always call to confirm before your visit.</p>
           <p style={{ margin: "0" }}>
             Questions or feedback?{" "}
-            <a
-              href="mailto:bkalthompson@gmail.com"
-              style={{ color: "#2d6a4f", textDecoration: "none" }}
-            >
+            <a href="mailto:bkalthompson@gmail.com" style={{ color: "#2d6a4f", textDecoration: "none" }}>
               bkalthompson@gmail.com
             </a>
           </p>
