@@ -507,6 +507,7 @@ export default function AdminPage() {
         includes_bloodwork: !!form.includes_bloodwork,
         includes_xrays: !!form.includes_xrays,
         includes_anesthesia: !!form.includes_anesthesia,
+        species: form.species || null,
         call_for_quote: !!form.call_for_quote,
         notes: form.notes || null,
       })
@@ -1131,7 +1132,7 @@ export default function AdminPage() {
         .badge-rejected { background: #fce8e8; color: #c62828; }
         .badge-active { background: #e8f5e9; color: #2d6a4f; border: 1px solid #c8e6c9; }
         .badge-inactive { background: #f0f0f0; color: #888; border: 1px solid #ddd; }
-        .row-edit-bg { background: #f9f9f9; border-radius: 10px; padding: 20px; margin: 6px 0 16px 0; border: 1px solid #e8e8e8; }
+        .row-edit-bg { background: #f9f9f9; border-radius: 10px; padding: 20px 20px 16px 20px; margin: 6px 0 20px 0; border: 1px solid #e8e8e8; }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
         .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
@@ -1202,10 +1203,6 @@ export default function AdminPage() {
         .vet-row-buttons { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
         /* Includes pills */
         .includes-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-        @media (max-width: 600px) {
-          .includes-pills { flex-direction: column; gap: 8px; }
-          .includes-pills button { width: 100%; padding: 10px 16px !important; font-size: 14px !important; border-radius: 8px !important; }
-        }
         /* Symptom stats grid */
         .symptom-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         /* Pending vet card */
@@ -1357,6 +1354,11 @@ export default function AdminPage() {
                 className={`tab-btn${tab === t ? " active" : ""}`}
                 onClick={() => {
                   setTab(t);
+                  setEditingVet(null);
+                  setEditingPendingVet(null);
+                  setEditingPrice(null);
+                  setShowAddPrice(false);
+                  setCallReviewEditing(null);
                   if (t === "Prices" && selectedVetId) {
                     setPricesLoading(true);
                     fetchPricesForVet(selectedVetId);
@@ -2744,7 +2746,7 @@ export default function AdminPage() {
                         </div>
                         <div
                           className="form-grid-2"
-                          style={{ marginBottom: "10px" }}
+                          style={{ marginBottom: "14px" }}
                         >
                           <div>
                             <label className="field-label">Species</label>
@@ -2784,7 +2786,7 @@ export default function AdminPage() {
                           <div>
                             <label
                               className="field-label"
-                              style={{ display: "block", marginBottom: "6px" }}
+                              style={{ display: "block", marginBottom: "8px" }}
                             >
                               Includes
                             </label>
@@ -2793,7 +2795,7 @@ export default function AdminPage() {
                                 display: "flex",
                                 gap: "6px",
                                 flexWrap: "nowrap",
-                                marginBottom: "8px",
+                                marginBottom: "10px",
                               }}
                             >
                               {[
@@ -3177,7 +3179,7 @@ export default function AdminPage() {
                                 </div>
                                 <div
                                   className="form-grid-2"
-                                  style={{ marginBottom: "10px" }}
+                                  style={{ marginBottom: "14px" }}
                                 >
                                   <div>
                                     <label className="field-label">
@@ -3206,7 +3208,7 @@ export default function AdminPage() {
                                       className="field-label"
                                       style={{
                                         display: "block",
-                                        marginBottom: "6px",
+                                        marginBottom: "8px",
                                       }}
                                     >
                                       Includes
@@ -3216,7 +3218,7 @@ export default function AdminPage() {
                                         display: "flex",
                                         gap: "6px",
                                         flexWrap: "nowrap",
-                                        marginBottom: "8px",
+                                        marginBottom: "10px",
                                       }}
                                     >
                                       {[
@@ -4106,20 +4108,21 @@ export default function AdminPage() {
                                                 )
                                               }
                                               style={{
-                                                padding: "3px 10px",
+                                                padding: "3px 8px",
                                                 borderRadius: "20px",
-                                                fontSize: "12px",
+                                                fontSize: "11px",
                                                 fontWeight: "600",
                                                 cursor: "pointer",
                                                 border: p[field]
                                                   ? "none"
-                                                  : "1px solid #ccc",
+                                                  : "1px solid #ddd",
                                                 background: p[field]
                                                   ? "#2d6a4f"
-                                                  : "#f0f0f0",
+                                                  : "#f5f5f5",
                                                 color: p[field]
                                                   ? "#fff"
                                                   : "#555",
+                                                whiteSpace: "nowrap",
                                               }}
                                             >
                                               {label}
@@ -4858,10 +4861,6 @@ export default function AdminPage() {
                               margin: "3px 0 0 0",
                               fontSize: "13px",
                               color: "#888",
-                              overflow: "hidden",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
                             }}
                           >
                             {u.bio}
@@ -5149,91 +5148,48 @@ export default function AdminPage() {
                         </span>
                         {/* Mobile labeled rows */}
                         <div className="log-mobile">
-                          <p style={{ margin: "0 0 4px 0" }}>
-                            <span
-                              style={{
-                                fontSize: "10px",
-                                color: "#aaa",
-                                fontWeight: "700",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.4px",
-                              }}
-                            >
-                              Pet:{" "}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "13px",
-                                fontWeight: "600",
-                                color: "#111",
-                              }}
-                            >
-                              {s.pets?.name || "Guest"}
-                            </span>
+                          <p
+                            style={{
+                              margin: "0 0 4px 0",
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              color: "#111",
+                            }}
+                          >
+                            {s.pets?.name || "Guest"}
                           </p>
-                          <p style={{ margin: "0 0 4px 0" }}>
-                            <span
-                              style={{
-                                fontSize: "10px",
-                                color: "#aaa",
-                                fontWeight: "700",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.4px",
-                              }}
-                            >
-                              Species:{" "}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "13px",
-                                color: "#666",
-                                textTransform: "capitalize",
-                              }}
-                            >
-                              {s.pets?.species || "—"}
-                            </span>
+                          <p
+                            style={{
+                              margin: "0 0 4px 0",
+                              fontSize: "13px",
+                              color: "#666",
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {s.pets?.species || "—"}
                           </p>
-                          <p style={{ margin: "0 0 4px 0" }}>
-                            <span
-                              style={{
-                                fontSize: "10px",
-                                color: "#aaa",
-                                fontWeight: "700",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.4px",
-                              }}
-                            >
-                              Result:{" "}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                color: cfg.color,
-                                background: cfg.bg,
-                                padding: "2px 12px",
-                                borderRadius: "20px",
-                                display: "inline-block",
-                              }}
-                            >
-                              {cfg.label || s.triage_result}
-                            </span>
-                          </p>
-                          <p style={{ margin: 0 }}>
-                            <span
-                              style={{
-                                fontSize: "10px",
-                                color: "#aaa",
-                                fontWeight: "700",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.4px",
-                              }}
-                            >
-                              Date:{" "}
-                            </span>
-                            <span style={{ fontSize: "13px", color: "#888" }}>
-                              {formatDateTime(s.created_at)}
-                            </span>
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              color: cfg.color,
+                              background: cfg.bg,
+                              padding: "2px 12px",
+                              borderRadius: "20px",
+                              display: "inline-block",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            {cfg.label || s.triage_result}
+                          </span>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: "13px",
+                              color: "#888",
+                            }}
+                          >
+                            {formatDateTime(s.created_at)}
                           </p>
                         </div>
                       </div>
