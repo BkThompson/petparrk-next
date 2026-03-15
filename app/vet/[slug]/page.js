@@ -256,7 +256,8 @@ export default function VetPage() {
                 rel="noopener noreferrer"
                 style={{ color: "#2d6a4f", textDecoration: "none" }}
               >
-                {vet.address}, {vet.city}, CA {vet.zip_code} ↗
+                <span style={{ display: "block" }}>{vet.address}</span>
+                <span style={{ display: "block" }}>{vet.city}, CA {vet.zip_code} ↗</span>
               </a>
             </div>
           )}
