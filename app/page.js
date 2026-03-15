@@ -501,11 +501,11 @@ export default function Home() {
 
               {/* Neighborhood / phone / website */}
               <p style={{ margin: "0 0 2px 0", color: "#666", fontSize: "13px" }}>
-                {vet.neighborhood}
+                {[vet.neighborhood, vet.city].filter(Boolean).join(" · ")}
               </p>
               <p style={{ margin: "0 0 2px 0", fontSize: "13px" }}>
                 <a href={`tel:${vet.phone}`} style={{ color: "#666", textDecoration: "none" }}>
-                  {vet.phone}
+                  {formatPhone(vet.phone)}
                 </a>
               </p>
               {vet.website && (
