@@ -587,14 +587,21 @@ export default function AdminPage() {
   async function fetchPricesForVet(vetId) {
     if (!vetId) return;
     setPricesLoading(true);
-    // Use cache busting to always get fresh data from Supabase
+    // Always fetch fresh — never read from cache
     const { data } = await supabase
       .from("vet_prices")
       .select("*, services(name)")
       .eq("vet_id", vetId)
       .order("created_at")
       .limit(200);
-    setVetPrices(data || []);
+    // Strip any stale includes from local state — source of truth is DB only
+    const clean = (data || []).map((p) => ({
+      ...p,
+      includes_bloodwork: p.includes_bloodwork === true,
+      includes_xrays: p.includes_xrays === true,
+      includes_anesthesia: p.includes_anesthesia === true,
+    }));
+    setVetPrices(clean);
     setPricesLoading(false);
   }
 
@@ -1066,16 +1073,16 @@ export default function AdminPage() {
         .adm-btn-outline:hover { background: #f0f7f4; }
         .adm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .stat-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px 18px; }
-        .tab-btn { padding: 10px 16px; border: none; background: none; font-size: 14px; font-weight: 600; cursor: pointer; color: #888; border-bottom: 2px solid transparent; font-family: system-ui, sans-serif; white-space: nowrap; }
+        .tab-btn { padding: 10px 16px; border: none; background: none; font-size: 14px; font-weight: 600; cursor: pointer; color: #888; border-bottom: 2px solid transparent; font-family: system-ui, sans-serif; white-space: nowrap; transition: color 0.2s ease, border-bottom-color 0.2s ease; }
         .tab-btn.active { color: #2d6a4f; border-bottom-color: #2d6a4f; }
-        .tab-btn:hover:not(.active) { color: #333; }
+        .tab-btn:hover:not(.active) { color: #555; }
         .tab-badge { display: inline-block; margin-left: 5px; background: #e65100; color: #fff; border-radius: 20px; padding: 1px 6px; font-size: 10px; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge { display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; }
         .badge-pending { background: #fff8e1; color: #e65100; }
         .badge-approved { background: #e8f5e9; color: #2d6a4f; }
         .badge-rejected { background: #fce8e8; color: #c62828; }
-        .badge-active { background: #e8f5e9; color: #2d6a4f; }
-        .badge-inactive { background: #f0f0f0; color: #888; }
+        .badge-active { background: #e8f5e9; color: #2d6a4f; border: 1px solid #c8e6c9; }
+        .badge-inactive { background: #f0f0f0; color: #888; border: 1px solid #ddd; }
         .row-edit-bg { background: #f9f9f9; border-radius: 10px; padding: 20px; margin: 6px 0 16px 0; border: 1px solid #e8e8e8; }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
@@ -1948,18 +1955,18 @@ export default function AdminPage() {
                             </div>
                             <div
                               style={{
-                                fontSize: "12px",
-                                color: "#888",
-                                marginTop: "2px",
+                                fontSize: "13px",
+                                color: "#666",
+                                marginTop: "3px",
                               }}
                             >
                               {vet.neighborhood}
                             </div>
                             <div
                               style={{
-                                fontSize: "12px",
-                                color: "#aaa",
-                                marginTop: "1px",
+                                fontSize: "13px",
+                                color: "#888",
+                                marginTop: "2px",
                               }}
                             >
                               {vet.phone}
@@ -1975,7 +1982,7 @@ export default function AdminPage() {
                             }}
                           >
                             <span className={`badge badge-${vet.status}`}>
-                              {vet.status}
+                              {vet.status === "active" ? "Active" : "Inactive"}
                             </span>
                             <button
                               className="adm-btn adm-btn-gray"
@@ -2811,9 +2818,9 @@ export default function AdminPage() {
                               <div
                                 style={{
                                   fontWeight: "600",
-                                  fontSize: "13px",
+                                  fontSize: "14px",
                                   color: "#111",
-                                  marginBottom: "3px",
+                                  marginBottom: "4px",
                                 }}
                               >
                                 {p.services?.name || "—"}
@@ -2821,7 +2828,7 @@ export default function AdminPage() {
                               <div>
                                 <span
                                   style={{
-                                    fontSize: "13px",
+                                    fontSize: "14px",
                                     color: "#2d6a4f",
                                     fontWeight: "600",
                                   }}
@@ -2834,8 +2841,8 @@ export default function AdminPage() {
                                 </span>
                                 <span
                                   style={{
-                                    marginLeft: "6px",
-                                    fontSize: "11px",
+                                    marginLeft: "8px",
+                                    fontSize: "12px",
                                     color: "#888",
                                   }}
                                 >
@@ -2853,10 +2860,10 @@ export default function AdminPage() {
                                 {p.species && (
                                   <span
                                     style={{
-                                      fontSize: "11px",
+                                      fontSize: "12px",
                                       background: "#f0f0f0",
                                       color: "#555",
-                                      padding: "1px 6px",
+                                      padding: "2px 8px",
                                       borderRadius: "4px",
                                       textTransform: "capitalize",
                                     }}
@@ -2867,10 +2874,10 @@ export default function AdminPage() {
                                 {p.includes_bloodwork && (
                                   <span
                                     style={{
-                                      fontSize: "11px",
+                                      fontSize: "12px",
                                       background: "#e8f5e9",
                                       color: "#2d6a4f",
-                                      padding: "1px 6px",
+                                      padding: "2px 8px",
                                       borderRadius: "4px",
                                     }}
                                   >
@@ -2880,10 +2887,10 @@ export default function AdminPage() {
                                 {p.includes_xrays && (
                                   <span
                                     style={{
-                                      fontSize: "11px",
+                                      fontSize: "12px",
                                       background: "#e8f5e9",
                                       color: "#2d6a4f",
-                                      padding: "1px 6px",
+                                      padding: "2px 8px",
                                       borderRadius: "4px",
                                     }}
                                   >
@@ -2893,10 +2900,10 @@ export default function AdminPage() {
                                 {p.includes_anesthesia && (
                                   <span
                                     style={{
-                                      fontSize: "11px",
+                                      fontSize: "12px",
                                       background: "#e8f5e9",
                                       color: "#2d6a4f",
-                                      padding: "1px 6px",
+                                      padding: "2px 8px",
                                       borderRadius: "4px",
                                     }}
                                   >
@@ -2906,10 +2913,10 @@ export default function AdminPage() {
                                 {p.call_for_quote && (
                                   <span
                                     style={{
-                                      fontSize: "11px",
+                                      fontSize: "12px",
                                       background: "#fff8e1",
                                       color: "#e65100",
-                                      padding: "1px 6px",
+                                      padding: "2px 8px",
                                       borderRadius: "4px",
                                     }}
                                   >
@@ -2919,7 +2926,7 @@ export default function AdminPage() {
                                 {p.notes && (
                                   <span
                                     style={{
-                                      fontSize: "11px",
+                                      fontSize: "12px",
                                       color: "#888",
                                       fontStyle: "italic",
                                     }}
@@ -3765,7 +3772,7 @@ export default function AdminPage() {
                                     {/* Row 1: Service + Price Type + Low + High */}
                                     <div
                                       className="form-grid-4"
-                                      style={{ marginBottom: "8px" }}
+                                      style={{ marginBottom: "14px" }}
                                     >
                                       <div>
                                         <label className="field-label">
@@ -3848,12 +3855,12 @@ export default function AdminPage() {
                                       </div>
                                     </div>
                                     {/* Row 2: Includes — toggle pills */}
-                                    <div style={{ marginBottom: "8px" }}>
+                                    <div style={{ marginBottom: "14px" }}>
                                       <label
                                         className="field-label"
                                         style={{
                                           display: "block",
-                                          marginBottom: "6px",
+                                          marginBottom: "8px",
                                         }}
                                       >
                                         Includes
@@ -3902,7 +3909,7 @@ export default function AdminPage() {
                                       </div>
                                     </div>
                                     {/* Row 3: Notes full width */}
-                                    <div style={{ marginBottom: "8px" }}>
+                                    <div style={{ marginBottom: "14px" }}>
                                       <input
                                         className="adm-input"
                                         style={{ width: "100%" }}
@@ -4107,7 +4114,8 @@ export default function AdminPage() {
                                                 flexWrap: "wrap",
                                               }}
                                             >
-                                              {row.includes_bloodwork && (
+                                              {row.includes_bloodwork ===
+                                                true && (
                                                 <span
                                                   style={{
                                                     fontSize: "11px",
@@ -4120,7 +4128,7 @@ export default function AdminPage() {
                                                   + bloodwork
                                                 </span>
                                               )}
-                                              {row.includes_xrays && (
+                                              {row.includes_xrays === true && (
                                                 <span
                                                   style={{
                                                     fontSize: "11px",
@@ -4133,7 +4141,8 @@ export default function AdminPage() {
                                                   + x-rays
                                                 </span>
                                               )}
-                                              {row.includes_anesthesia && (
+                                              {row.includes_anesthesia ===
+                                                true && (
                                                 <span
                                                   style={{
                                                     fontSize: "11px",
@@ -4196,7 +4205,7 @@ export default function AdminPage() {
                                         >
                                           <div
                                             className="form-grid-4"
-                                            style={{ marginBottom: "8px" }}
+                                            style={{ marginBottom: "14px" }}
                                           >
                                             <div>
                                               <label className="field-label">
