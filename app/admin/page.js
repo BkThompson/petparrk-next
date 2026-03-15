@@ -136,6 +136,7 @@ export default function AdminPage() {
     callPricesRef.current = callPrices;
   }, [callPrices]);
   const [callSaving, setCallSaving] = useState(false);
+  const [callSpeciesError, setCallSpeciesError] = useState(false);
   const [callLog, setCallLog] = useState([]); // recently processed vets
   const [showAllVets, setShowAllVets] = useState(false); // toggle: show all vets vs only unpriced
   const [fullCallQueue, setFullCallQueue] = useState([]); // all vets regardless of prices
@@ -342,8 +343,8 @@ export default function AdminPage() {
       (p) => p.service_id && p.species && (p.price_low || p.call_for_quote),
     );
     if (callPrices.length > 0 && validPrices.length < callPrices.length) {
-      alert("Please select a species for every price row.");
       setCallSaving(false);
+      setCallSpeciesError(true);
       return;
     }
 
@@ -1143,11 +1144,13 @@ export default function AdminPage() {
         .users-table-row:last-child { border-bottom: none; }
         .users-col { display: flex; flex-direction: column; gap: 2px; }
         .users-label { display: none; font-size: 11px; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+        .users-mobile-detail { display: none; }
         @media (max-width: 600px) {
           .users-table-header { display: none; }
-          .users-table-row { grid-template-columns: 1fr; gap: 6px; padding: 14px 16px; border-bottom: 1px solid #eee; }
-          .users-label { display: block; }
-          .users-col-name { margin-bottom: 4px; }
+          .users-table-row { grid-template-columns: 1fr; gap: 0; padding: 14px 16px; border-bottom: 1px solid #eee; }
+          .users-col { display: none; }
+          .users-col-name { margin-bottom: 6px; }
+          .users-mobile-detail { display: block; }
         }
         html { scrollbar-gutter: stable; }
         /* Price search dropdown — absolute so it doesn't push page content */
@@ -1172,11 +1175,7 @@ export default function AdminPage() {
         .vet-row-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         .vet-row-buttons { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
         /* Includes pills */
-        .includes-pills { display: flex; gap: 8px; flex-wrap: nowrap; }
-        @media (max-width: 600px) {
-          .includes-pills { flex-direction: column; gap: 6px; }
-          .includes-pills button { width: 100%; text-align: left; }
-        }
+        .includes-pills { display: flex; gap: 6px; flex-wrap: wrap; }
         /* Symptom stats grid */
         .symptom-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         /* Pending vet card */
@@ -1191,6 +1190,7 @@ export default function AdminPage() {
           .vet-row-buttons .badge { flex: 1; justify-content: center; }
           .vet-row-buttons .adm-btn { flex: 1; text-align: center; }
           .symptom-stats { grid-template-columns: repeat(2, 1fr); }
+          .symptom-stats button { text-align: center; }
           .log-row { grid-template-columns: 1fr; }
           .log-row span:nth-child(2) { display: none; }
           .pv-card-inner { flex-direction: column; }
@@ -1213,6 +1213,7 @@ export default function AdminPage() {
         @media (max-width: 480px) {
           .stat-grid { grid-template-columns: repeat(2, 1fr); }
           .symptom-stats { grid-template-columns: repeat(2, 1fr); }
+          .symptom-stats button { text-align: center; }
         }
       `}</style>
 
@@ -1991,7 +1992,7 @@ export default function AdminPage() {
                   className="adm-input"
                   value={vetSearch}
                   onChange={(e) => setVetSearch(e.target.value)}
-                  placeholder="Search vets by name or neighborhood..."
+                  placeholder="Search by name..."
                   style={{ marginBottom: "14px", maxWidth: "360px" }}
                 />
                 {vetsLoading && (
@@ -4023,23 +4024,22 @@ export default function AdminPage() {
                                                 )
                                               }
                                               style={{
-                                                padding: "5px 12px",
-                                                borderRadius: "6px",
-                                                fontSize: "13px",
+                                                padding: "3px 10px",
+                                                borderRadius: "20px",
+                                                fontSize: "12px",
                                                 fontWeight: "600",
                                                 cursor: "pointer",
                                                 border: p[field]
-                                                  ? "2px solid #2d6a4f"
-                                                  : "1px solid #ddd",
+                                                  ? "none"
+                                                  : "1px solid #ccc",
                                                 background: p[field]
-                                                  ? "#e8f5e9"
-                                                  : "#f5f5f5",
-                                                color: p[field]
                                                   ? "#2d6a4f"
+                                                  : "#f0f0f0",
+                                                color: p[field]
+                                                  ? "#fff"
                                                   : "#555",
                                               }}
                                             >
-                                              {p[field] ? "✓ " : ""}
                                               {label}
                                             </button>
                                           ))}
@@ -4118,6 +4118,19 @@ export default function AdminPage() {
                                 {/* Save button */}
                                 {callPrices.length > 0 && (
                                   <div style={{ marginTop: "8px" }}>
+                                    {callSpeciesError && (
+                                      <p
+                                        style={{
+                                          margin: "0 0 8px 0",
+                                          fontSize: "13px",
+                                          color: "#c62828",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        ⚠️ Please select a species for every
+                                        price row before saving.
+                                      </p>
+                                    )}
                                     <button
                                       className="adm-btn adm-btn-green"
                                       style={{
@@ -4125,7 +4138,10 @@ export default function AdminPage() {
                                         fontSize: "14px",
                                         width: "100%",
                                       }}
-                                      onClick={() => saveCallPrices(vet)}
+                                      onClick={() => {
+                                        setCallSpeciesError(false);
+                                        saveCallPrices(vet);
+                                      }}
                                       disabled={callSaving}
                                     >
                                       {callSaving
@@ -4392,25 +4408,36 @@ export default function AdminPage() {
                                             </div>
                                             <div>
                                               <label className="field-label">
-                                                Price Type
+                                                Species
                                               </label>
                                               <select
                                                 className="adm-input"
-                                                value={row.price_type}
+                                                value={row.species || ""}
                                                 onChange={(e) => {
                                                   const u = [
                                                     ...callReviewPrices,
                                                   ];
                                                   u[i] = {
                                                     ...u[i],
-                                                    price_type: e.target.value,
+                                                    species: e.target.value,
                                                   };
                                                   setCallReviewPrices(u);
                                                 }}
                                               >
-                                                {PRICE_TYPES.map((t) => (
-                                                  <option key={t}>{t}</option>
-                                                ))}
+                                                <option value="">
+                                                  — Select —
+                                                </option>
+                                                <option value="dog">Dog</option>
+                                                <option value="cat">Cat</option>
+                                                <option value="rabbit">
+                                                  Rabbit
+                                                </option>
+                                                <option value="bird">
+                                                  Bird
+                                                </option>
+                                                <option value="other">
+                                                  Other
+                                                </option>
                                               </select>
                                             </div>
                                             <div>
@@ -4711,19 +4738,61 @@ export default function AdminPage() {
                           {formatDate(u.created_at)}
                         </span>
                       </div>
-                      {/* Mobile-only compact meta line */}
-                      <p
-                        className="users-meta-mobile"
-                        style={{
-                          margin: "4px 0 0 0",
-                          fontSize: "12px",
-                          color: "#888",
-                        }}
-                      >
-                        {u.zip_code || "—"} ·{" "}
-                        {u.is_public ? "Public" : "Private"} ·{" "}
-                        {formatDate(u.created_at)}
-                      </p>
+                      {/* Mobile labeled rows */}
+                      <div className="users-mobile-detail">
+                        <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>
+                          <span
+                            style={{
+                              color: "#aaa",
+                              fontWeight: "700",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.4px",
+                              fontSize: "10px",
+                            }}
+                          >
+                            Zip Code:{" "}
+                          </span>
+                          <span style={{ color: "#666", fontSize: "13px" }}>
+                            {u.zip_code || "—"}
+                          </span>
+                        </p>
+                        <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>
+                          <span
+                            style={{
+                              color: "#aaa",
+                              fontWeight: "700",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.4px",
+                              fontSize: "10px",
+                            }}
+                          >
+                            Profile:{" "}
+                          </span>
+                          <span style={{ fontSize: "13px" }}>
+                            {u.is_public ? (
+                              <span style={{ color: "#2d6a4f" }}>Public</span>
+                            ) : (
+                              <span style={{ color: "#888" }}>Private</span>
+                            )}
+                          </span>
+                        </p>
+                        <p style={{ margin: 0, fontSize: "12px" }}>
+                          <span
+                            style={{
+                              color: "#aaa",
+                              fontWeight: "700",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.4px",
+                              fontSize: "10px",
+                            }}
+                          >
+                            Joined:{" "}
+                          </span>
+                          <span style={{ color: "#888", fontSize: "13px" }}>
+                            {formatDate(u.created_at)}
+                          </span>
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -4761,16 +4830,16 @@ export default function AdminPage() {
                           background: active ? cfg.color : cfg.bg,
                           border: `1px solid ${cfg.color}44`,
                           borderRadius: "10px",
-                          padding: "10px 14px",
+                          padding: "12px 8px",
                           cursor: "pointer",
-                          textAlign: "left",
-                          transition: "all 0.15s",
+                          textAlign: "center",
                         }}
                       >
                         <div
                           style={{
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "center",
                             gap: "6px",
                             marginBottom: "4px",
                           }}
@@ -4792,7 +4861,6 @@ export default function AdminPage() {
                             fontSize: "11px",
                             fontWeight: "600",
                             color: active ? "#fff" : cfg.color,
-                            whiteSpace: "nowrap",
                           }}
                         >
                           {cfg.label}
