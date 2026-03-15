@@ -1127,9 +1127,18 @@ export default function AdminPage() {
         .vet-row:last-child { border-bottom: none; }
         .price-row { border-bottom: 1px solid #f0f0f0; padding: 14px 0; display: flex; align-items: center; gap: 12px; }
         .price-row:last-child { border-bottom: none; }
+        .log-table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 10px 16px; background: #fafaf8; border-bottom: 1px solid #efefed; }
+        .log-table-header span { font-size: 12px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         .log-row { border-bottom: 1px solid #f5f5f3; padding: 12px 16px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; align-items: center; gap: 8px; }
         .log-row:last-child { border-bottom: none; }
         .log-row:hover { background: #fafaf8; }
+        .log-mobile { display: none; }
+        @media (max-width: 600px) {
+          .log-table-header { display: none; }
+          .log-row { grid-template-columns: 1fr; padding: 12px 16px; }
+          .log-col { display: none; }
+          .log-mobile { display: block; }
+        }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
         .stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
         .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -1174,9 +1183,12 @@ export default function AdminPage() {
         .price-search-item.selected { background: #e8f5e9; }
         .vet-row-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         .vet-row-buttons { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-        /* Includes pills — always column on mobile via media, wrap on desktop */
+        /* Includes pills */
         .includes-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-        @media (max-width: 600px) { .includes-pills { flex-direction: column; gap: 4px; } .includes-pills button { width: 100%; } }
+        @media (max-width: 600px) {
+          .includes-pills { flex-direction: column; gap: 8px; }
+          .includes-pills button { width: 100%; padding: 10px 16px !important; font-size: 14px !important; border-radius: 8px !important; }
+        }
         /* Symptom stats grid */
         .symptom-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         /* Pending vet card */
@@ -1328,8 +1340,10 @@ export default function AdminPage() {
                 className={`tab-btn${tab === t ? " active" : ""}`}
                 onClick={() => {
                   setTab(t);
-                  if (t === "Prices" && selectedVetId)
+                  if (t === "Prices" && selectedVetId) {
+                    setPricesLoading(true);
                     fetchPricesForVet(selectedVetId);
+                  }
                 }}
               >
                 {t}
@@ -4964,13 +4978,7 @@ export default function AdminPage() {
                     overflow: "hidden",
                   }}
                 >
-                  <div
-                    className="table-header"
-                    style={{
-                      gridTemplateColumns: "2fr 1fr 1fr 1fr",
-                      display: "grid",
-                    }}
-                  >
+                  <div className="log-table-header">
                     <span>Pet</span>
                     <span>Species</span>
                     <span>Result</span>
@@ -4996,7 +5004,9 @@ export default function AdminPage() {
                     };
                     return (
                       <div key={s.id} className="log-row">
+                        {/* Desktop columns */}
                         <span
+                          className="log-col"
                           style={{
                             fontSize: "13px",
                             fontWeight: "600",
@@ -5012,6 +5022,7 @@ export default function AdminPage() {
                           )}
                         </span>
                         <span
+                          className="log-col"
                           style={{
                             fontSize: "13px",
                             color: "#666",
@@ -5021,6 +5032,7 @@ export default function AdminPage() {
                           {s.pets?.species || "—"}
                         </span>
                         <span
+                          className="log-col"
                           style={{
                             fontSize: "11px",
                             fontWeight: "600",
@@ -5034,9 +5046,71 @@ export default function AdminPage() {
                         >
                           {cfg.label || s.triage_result}
                         </span>
-                        <span style={{ fontSize: "13px", color: "#aaa" }}>
+                        <span
+                          className="log-col"
+                          style={{ fontSize: "13px", color: "#aaa" }}
+                        >
                           {formatDateTime(s.created_at)}
                         </span>
+                        {/* Mobile card content */}
+                        <div className="log-mobile">
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                color: "#111",
+                              }}
+                            >
+                              {s.pets?.name || (
+                                <span
+                                  style={{ color: "#bbb", fontStyle: "italic" }}
+                                >
+                                  Guest
+                                </span>
+                              )}
+                            </span>
+                            <span style={{ fontSize: "11px", color: "#aaa" }}>
+                              {formatDateTime(s.created_at)}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                color: cfg.color,
+                                background: cfg.bg,
+                                padding: "2px 10px",
+                                borderRadius: "20px",
+                              }}
+                            >
+                              {cfg.label || s.triage_result}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "13px",
+                                color: "#888",
+                                textTransform: "capitalize",
+                              }}
+                            >
+                              {s.pets?.species || "—"}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
