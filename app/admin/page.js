@@ -618,20 +618,33 @@ export default function AdminPage() {
   async function fetchPricesForVet(vetId) {
     if (!vetId) return;
     setPricesLoading(true);
-    // Always fetch fresh — never read from cache
-    const { data } = await supabase
+    setVetPrices([]); // clear stale data immediately
+    // Add timestamp to bust any client-side caching
+    const ts = Date.now();
+    const { data, error } = await supabase
       .from("vet_prices")
-      .select("*, services(name)")
+      .select(`*, services(name), _ts:created_at`)
       .eq("vet_id", vetId)
       .order("created_at")
       .limit(200);
-    // Strip any stale includes from local state — source of truth is DB only
+    if (error) console.error("fetchPricesForVet error:", error);
     const clean = (data || []).map((p) => ({
       ...p,
       includes_bloodwork: p.includes_bloodwork === true,
       includes_xrays: p.includes_xrays === true,
       includes_anesthesia: p.includes_anesthesia === true,
     }));
+    console.log(
+      "fetchPricesForVet — fetched",
+      clean.length,
+      "prices for vet",
+      vetId,
+      clean.map((p) => ({
+        id: p.id,
+        bw: p.includes_bloodwork,
+        xr: p.includes_xrays,
+      })),
+    );
     setVetPrices(clean);
     setPricesLoading(false);
   }
@@ -2726,14 +2739,14 @@ export default function AdminPage() {
                           </div>
                         </div>
                         <div
-                          className="form-grid-3"
+                          className="form-grid-2"
                           style={{ marginBottom: "10px" }}
                         >
                           <div>
                             <label className="field-label">Species</label>
                             <select
                               className="adm-input"
-                              value={addPriceForm.species || "dog"}
+                              value={addPriceForm.species || ""}
                               onChange={(e) =>
                                 setAddPriceForm({
                                   ...addPriceForm,
@@ -2742,6 +2755,7 @@ export default function AdminPage() {
                                 })
                               }
                             >
+                              <option value="">— Select —</option>
                               <option value="dog">Dog</option>
                               <option value="cat">Cat</option>
                               <option value="rabbit">Rabbit</option>
@@ -2774,7 +2788,7 @@ export default function AdminPage() {
                               style={{
                                 display: "flex",
                                 gap: "6px",
-                                flexWrap: "wrap",
+                                flexWrap: "nowrap",
                                 marginBottom: "8px",
                               }}
                             >
@@ -2805,7 +2819,7 @@ export default function AdminPage() {
                                       ? "#2d6a4f"
                                       : "#f5f5f5",
                                     color: addPriceForm[f] ? "#fff" : "#555",
-                                    transition: "all 0.15s",
+                                    whiteSpace: "nowrap",
                                   }}
                                 >
                                   {l}
@@ -2834,20 +2848,20 @@ export default function AdminPage() {
                               Call for quote
                             </label>
                           </div>
-                          <div>
-                            <label className="field-label">Notes</label>
-                            <input
-                              className="adm-input"
-                              value={addPriceForm.notes}
-                              onChange={(e) =>
-                                setAddPriceForm({
-                                  ...addPriceForm,
-                                  notes: e.target.value,
-                                })
-                              }
-                              placeholder="Optional"
-                            />
-                          </div>
+                        </div>
+                        <div style={{ marginBottom: "10px" }}>
+                          <label className="field-label">Notes</label>
+                          <input
+                            className="adm-input"
+                            value={addPriceForm.notes}
+                            onChange={(e) =>
+                              setAddPriceForm({
+                                ...addPriceForm,
+                                notes: e.target.value,
+                              })
+                            }
+                            placeholder="Optional"
+                          />
                         </div>
                         <button
                           className="adm-btn adm-btn-green"
@@ -3151,7 +3165,7 @@ export default function AdminPage() {
                                   </div>
                                 </div>
                                 <div
-                                  className="form-grid-3"
+                                  className="form-grid-2"
                                   style={{ marginBottom: "10px" }}
                                 >
                                   <div>
@@ -3190,7 +3204,7 @@ export default function AdminPage() {
                                       style={{
                                         display: "flex",
                                         gap: "6px",
-                                        flexWrap: "wrap",
+                                        flexWrap: "nowrap",
                                         marginBottom: "8px",
                                       }}
                                     >
@@ -3223,7 +3237,7 @@ export default function AdminPage() {
                                             color: priceForm[f]
                                               ? "#fff"
                                               : "#555",
-                                            transition: "all 0.15s",
+                                            whiteSpace: "nowrap",
                                           }}
                                         >
                                           {l}
@@ -3252,19 +3266,19 @@ export default function AdminPage() {
                                       Call for quote
                                     </label>
                                   </div>
-                                  <div>
-                                    <label className="field-label">Notes</label>
-                                    <input
-                                      className="adm-input"
-                                      value={priceForm.notes || ""}
-                                      onChange={(e) =>
-                                        setPriceForm({
-                                          ...priceForm,
-                                          notes: e.target.value,
-                                        })
-                                      }
-                                    />
-                                  </div>
+                                </div>
+                                <div style={{ marginBottom: "10px" }}>
+                                  <label className="field-label">Notes</label>
+                                  <input
+                                    className="adm-input"
+                                    value={priceForm.notes || ""}
+                                    onChange={(e) =>
+                                      setPriceForm({
+                                        ...priceForm,
+                                        notes: e.target.value,
+                                      })
+                                    }
+                                  />
                                 </div>
                                 <div style={{ display: "flex", gap: "8px" }}>
                                   <button
@@ -4307,122 +4321,114 @@ export default function AdminPage() {
                                     >
                                       {!isEditing ? (
                                         /* ── Summary row ── */
-                                        <div
-                                          style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "flex-start",
-                                            gap: "12px",
-                                          }}
-                                        >
-                                          <div style={{ flex: 1 }}>
-                                            <p
-                                              style={{
-                                                margin: "0 0 3px 0",
-                                                fontSize: "14px",
-                                                fontWeight: "600",
-                                                color: "#111",
-                                              }}
-                                            >
-                                              {svc?.name || "Unknown service"}
-                                            </p>
-                                            <p
-                                              style={{
-                                                margin: "0 0 4px 0",
-                                                fontSize: "13px",
-                                                color: "#555",
-                                              }}
-                                            >
-                                              {row.call_for_quote
-                                                ? "Call for quote"
-                                                : [
-                                                    row.price_low &&
-                                                      `$${parseFloat(row.price_low).toFixed(0)}`,
-                                                    row.price_high &&
-                                                      `– $${parseFloat(row.price_high).toFixed(0)}`,
-                                                  ]
-                                                    .filter(Boolean)
-                                                    .join(" ")}
-                                              {row.price_type &&
-                                                row.price_type !== "exact" && (
-                                                  <span
-                                                    style={{
-                                                      fontSize: "11px",
-                                                      color: "#888",
-                                                      marginLeft: "6px",
-                                                    }}
-                                                  >
-                                                    ({row.price_type})
-                                                  </span>
-                                                )}
-                                            </p>
-                                            <div
-                                              style={{
-                                                display: "flex",
-                                                gap: "6px",
-                                                flexWrap: "wrap",
-                                              }}
-                                            >
-                                              {row.includes_bloodwork ===
-                                                true && (
+                                        <div>
+                                          <p
+                                            style={{
+                                              margin: "0 0 3px 0",
+                                              fontSize: "14px",
+                                              fontWeight: "600",
+                                              color: "#111",
+                                            }}
+                                          >
+                                            {svc?.name || "Unknown service"}
+                                          </p>
+                                          <p
+                                            style={{
+                                              margin: "0 0 4px 0",
+                                              fontSize: "13px",
+                                              color: "#555",
+                                            }}
+                                          >
+                                            {row.call_for_quote
+                                              ? "Call for quote"
+                                              : [
+                                                  row.price_low &&
+                                                    `$${parseFloat(row.price_low).toFixed(0)}`,
+                                                  row.price_high &&
+                                                    `– $${parseFloat(row.price_high).toFixed(0)}`,
+                                                ]
+                                                  .filter(Boolean)
+                                                  .join(" ")}
+                                            {row.price_type &&
+                                              row.price_type !== "exact" && (
                                                 <span
                                                   style={{
                                                     fontSize: "11px",
-                                                    background: "#e8f5e9",
-                                                    color: "#2d6a4f",
-                                                    padding: "1px 6px",
-                                                    borderRadius: "4px",
+                                                    color: "#888",
+                                                    marginLeft: "6px",
                                                   }}
                                                 >
-                                                  + bloodwork
+                                                  ({row.price_type})
                                                 </span>
                                               )}
-                                              {row.includes_xrays === true && (
-                                                <span
-                                                  style={{
-                                                    fontSize: "11px",
-                                                    background: "#e8f5e9",
-                                                    color: "#2d6a4f",
-                                                    padding: "1px 6px",
-                                                    borderRadius: "4px",
-                                                  }}
-                                                >
-                                                  + x-rays
-                                                </span>
-                                              )}
-                                              {row.includes_anesthesia ===
-                                                true && (
-                                                <span
-                                                  style={{
-                                                    fontSize: "11px",
-                                                    background: "#e8f5e9",
-                                                    color: "#2d6a4f",
-                                                    padding: "1px 6px",
-                                                    borderRadius: "4px",
-                                                  }}
-                                                >
-                                                  + anesthesia
-                                                </span>
-                                              )}
-                                            </div>
-                                            {row.notes && (
-                                              <p
-                                                style={{
-                                                  margin: "4px 0 0 0",
-                                                  fontSize: "12px",
-                                                  color: "#888",
-                                                  fontStyle: "italic",
-                                                }}
-                                              >
-                                                {row.notes}
-                                              </p>
-                                            )}
-                                          </div>
+                                          </p>
                                           <div
                                             style={{
                                               display: "flex",
                                               gap: "6px",
-                                              flexShrink: 0,
+                                              flexWrap: "wrap",
+                                              marginBottom: "4px",
+                                            }}
+                                          >
+                                            {row.includes_bloodwork ===
+                                              true && (
+                                              <span
+                                                style={{
+                                                  fontSize: "11px",
+                                                  background: "#e8f5e9",
+                                                  color: "#2d6a4f",
+                                                  padding: "1px 6px",
+                                                  borderRadius: "4px",
+                                                }}
+                                              >
+                                                + bloodwork
+                                              </span>
+                                            )}
+                                            {row.includes_xrays === true && (
+                                              <span
+                                                style={{
+                                                  fontSize: "11px",
+                                                  background: "#e8f5e9",
+                                                  color: "#2d6a4f",
+                                                  padding: "1px 6px",
+                                                  borderRadius: "4px",
+                                                }}
+                                              >
+                                                + x-rays
+                                              </span>
+                                            )}
+                                            {row.includes_anesthesia ===
+                                              true && (
+                                              <span
+                                                style={{
+                                                  fontSize: "11px",
+                                                  background: "#e8f5e9",
+                                                  color: "#2d6a4f",
+                                                  padding: "1px 6px",
+                                                  borderRadius: "4px",
+                                                }}
+                                              >
+                                                + anesthesia
+                                              </span>
+                                            )}
+                                          </div>
+                                          {row.notes && (
+                                            <p
+                                              style={{
+                                                margin: "0 0 10px 0",
+                                                fontSize: "12px",
+                                                color: "#888",
+                                                fontStyle: "italic",
+                                              }}
+                                            >
+                                              {row.notes}
+                                            </p>
+                                          )}
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              gap: "6px",
+                                              marginTop: "10px",
                                             }}
                                           >
                                             <button
@@ -5052,64 +5058,94 @@ export default function AdminPage() {
                         >
                           {formatDateTime(s.created_at)}
                         </span>
-                        {/* Mobile card content */}
+                        {/* Mobile labeled rows */}
                         <div className="log-mobile">
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              marginBottom: "4px",
-                            }}
-                          >
+                          <p style={{ margin: "0 0 4px 0" }}>
                             <span
                               style={{
-                                fontSize: "14px",
-                                fontWeight: "600",
-                                color: "#111",
+                                fontSize: "10px",
+                                color: "#aaa",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
                               }}
                             >
-                              {s.pets?.name || (
-                                <span
-                                  style={{ color: "#bbb", fontStyle: "italic" }}
-                                >
-                                  Guest
-                                </span>
-                              )}
-                            </span>
-                            <span style={{ fontSize: "11px", color: "#aaa" }}>
-                              {formatDateTime(s.created_at)}
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontSize: "11px",
-                                fontWeight: "600",
-                                color: cfg.color,
-                                background: cfg.bg,
-                                padding: "2px 10px",
-                                borderRadius: "20px",
-                              }}
-                            >
-                              {cfg.label || s.triage_result}
+                              Pet:{" "}
                             </span>
                             <span
                               style={{
                                 fontSize: "13px",
-                                color: "#888",
+                                fontWeight: "600",
+                                color: "#111",
+                              }}
+                            >
+                              {s.pets?.name || "Guest"}
+                            </span>
+                          </p>
+                          <p style={{ margin: "0 0 4px 0" }}>
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#aaa",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
+                              }}
+                            >
+                              Species:{" "}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "13px",
+                                color: "#666",
                                 textTransform: "capitalize",
                               }}
                             >
                               {s.pets?.species || "—"}
                             </span>
-                          </div>
+                          </p>
+                          <p style={{ margin: "0 0 4px 0" }}>
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#aaa",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
+                              }}
+                            >
+                              Result:{" "}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                color: cfg.color,
+                                background: cfg.bg,
+                                padding: "2px 12px",
+                                borderRadius: "20px",
+                                display: "inline-block",
+                              }}
+                            >
+                              {cfg.label || s.triage_result}
+                            </span>
+                          </p>
+                          <p style={{ margin: 0 }}>
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#aaa",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
+                              }}
+                            >
+                              Date:{" "}
+                            </span>
+                            <span style={{ fontSize: "13px", color: "#888" }}>
+                              {formatDateTime(s.created_at)}
+                            </span>
+                          </p>
                         </div>
                       </div>
                     );
