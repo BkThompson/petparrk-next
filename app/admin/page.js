@@ -628,11 +628,13 @@ export default function AdminPage() {
       .order("created_at")
       .limit(200);
     if (error) console.error("fetchPricesForVet error:", error);
+    // Handle both boolean and text columns (bloodwork/xrays stored as text in DB)
+    const toBool = (v) => v === true || v === "true" || v === 1 || v === "1";
     const clean = (data || []).map((p) => ({
       ...p,
-      includes_bloodwork: p.includes_bloodwork === true,
-      includes_xrays: p.includes_xrays === true,
-      includes_anesthesia: p.includes_anesthesia === true,
+      includes_bloodwork: toBool(p.includes_bloodwork),
+      includes_xrays: toBool(p.includes_xrays),
+      includes_anesthesia: toBool(p.includes_anesthesia),
     }));
     console.log(
       "fetchPricesForVet — fetched",
@@ -1138,7 +1140,7 @@ export default function AdminPage() {
         .pending-vet-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 18px 20px; margin-bottom: 12px; }
         .vet-row { border-bottom: 1px solid #f0f0f0; padding: 10px 0; }
         .vet-row:last-child { border-bottom: none; }
-        .price-row { border-bottom: 1px solid #f0f0f0; padding: 14px 0; display: flex; align-items: center; gap: 12px; }
+        .price-row { border-bottom: 1px solid #f0f0f0; padding: 18px 14px; display: flex; align-items: flex-start; gap: 12px; }
         .price-row:last-child { border-bottom: none; }
         .log-table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 10px 16px; background: #fafaf8; border-bottom: 1px solid #efefed; }
         .log-table-header span { font-size: 12px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -1149,7 +1151,7 @@ export default function AdminPage() {
         @media (max-width: 600px) {
           .log-table-header { display: none; }
           .log-row { grid-template-columns: 1fr; padding: 12px 16px; }
-          .log-col { display: none; }
+          .log-col { display: none !important; }
           .log-mobile { display: block; }
         }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
@@ -1167,6 +1169,8 @@ export default function AdminPage() {
         .users-col { display: flex; flex-direction: column; gap: 2px; }
         .users-label { display: none; font-size: 11px; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
         .users-mobile-detail { display: none; }
+        .bio-label { display: none; }
+        @media (min-width: 601px) { .bio-label { display: inline; } }
         @media (max-width: 600px) {
           .users-table-header { display: none; }
           .users-table-row { grid-template-columns: 1fr; gap: 0; padding: 14px 16px; border-bottom: 1px solid #eee; }
@@ -2863,12 +2867,19 @@ export default function AdminPage() {
                             placeholder="Optional"
                           />
                         </div>
-                        <button
-                          className="adm-btn adm-btn-green"
-                          onClick={addPrice}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                          }}
                         >
-                          Add Price
-                        </button>
+                          <button
+                            className="adm-btn adm-btn-green"
+                            onClick={addPrice}
+                          >
+                            Add Price
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -3267,10 +3278,16 @@ export default function AdminPage() {
                                     </label>
                                   </div>
                                 </div>
-                                <div style={{ marginBottom: "10px" }}>
+                                <div style={{ marginBottom: "14px" }}>
                                   <label className="field-label">Notes</label>
-                                  <input
+                                  <textarea
                                     className="adm-input"
+                                    rows={3}
+                                    style={{
+                                      width: "100%",
+                                      resize: "vertical",
+                                      height: "auto",
+                                    }}
                                     value={priceForm.notes || ""}
                                     onChange={(e) =>
                                       setPriceForm({
@@ -3278,21 +3295,28 @@ export default function AdminPage() {
                                         notes: e.target.value,
                                       })
                                     }
+                                    placeholder="Notes about this price..."
                                   />
                                 </div>
-                                <div style={{ display: "flex", gap: "8px" }}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    gap: "8px",
+                                    justifyContent: "flex-end",
+                                  }}
+                                >
+                                  <button
+                                    className="adm-btn adm-btn-gray"
+                                    onClick={() => setEditingPrice(null)}
+                                  >
+                                    Cancel
+                                  </button>
                                   <button
                                     className="adm-btn adm-btn-green"
                                     onClick={() => savePrice(priceForm)}
                                     disabled={priceSaving}
                                   >
                                     {priceSaving ? "Saving..." : "Save Changes"}
-                                  </button>
-                                  <button
-                                    className="adm-btn adm-btn-gray"
-                                    onClick={() => setEditingPrice(null)}
-                                  >
-                                    Cancel
                                   </button>
                                 </div>
                               </div>
@@ -3851,7 +3875,7 @@ export default function AdminPage() {
                                   <div
                                     key={i}
                                     className="row-edit-bg"
-                                    style={{ marginBottom: "12px" }}
+                                    style={{ marginBottom: "20px" }}
                                   >
                                     {/* Row 1: Service + Price Type + Low + High */}
                                     <div
@@ -4134,11 +4158,11 @@ export default function AdminPage() {
                                         placeholder="Notes about this price..."
                                       />
                                     </div>
-                                    {/* Row 4: Clear + Remove buttons — left aligned */}
+                                    {/* Row 4: Clear + Remove buttons — right aligned */}
                                     <div
                                       style={{
                                         display: "flex",
-                                        justifyContent: "flex-start",
+                                        justifyContent: "flex-end",
                                         gap: "8px",
                                         alignItems: "center",
                                       }}
@@ -4156,6 +4180,7 @@ export default function AdminPage() {
                                             includes_bloodwork: false,
                                             includes_xrays: false,
                                             includes_anesthesia: false,
+                                            species: "",
                                             notes: "",
                                           };
                                           setCallPrices(u);
@@ -4455,7 +4480,7 @@ export default function AdminPage() {
                                           style={{
                                             background: "#f9f9f9",
                                             borderRadius: "8px",
-                                            padding: "12px",
+                                            padding: "16px",
                                           }}
                                         >
                                           <div
@@ -4495,7 +4520,84 @@ export default function AdminPage() {
                                             </div>
                                             <div>
                                               <label className="field-label">
-                                                Species
+                                                Price Type
+                                              </label>
+                                              <select
+                                                className="adm-input"
+                                                value={
+                                                  row.price_type || "exact"
+                                                }
+                                                onChange={(e) => {
+                                                  const u = [
+                                                    ...callReviewPrices,
+                                                  ];
+                                                  u[i] = {
+                                                    ...u[i],
+                                                    price_type: e.target.value,
+                                                  };
+                                                  setCallReviewPrices(u);
+                                                }}
+                                              >
+                                                {[
+                                                  "exact",
+                                                  "range",
+                                                  "starting",
+                                                  "up to",
+                                                ].map((t) => (
+                                                  <option key={t}>{t}</option>
+                                                ))}
+                                              </select>
+                                            </div>
+                                            <div>
+                                              <label className="field-label">
+                                                Price Low
+                                              </label>
+                                              <input
+                                                className="adm-input"
+                                                type="number"
+                                                value={row.price_low || ""}
+                                                onChange={(e) => {
+                                                  const u = [
+                                                    ...callReviewPrices,
+                                                  ];
+                                                  u[i] = {
+                                                    ...u[i],
+                                                    price_low: e.target.value,
+                                                  };
+                                                  setCallReviewPrices(u);
+                                                }}
+                                                placeholder="e.g. 65"
+                                              />
+                                            </div>
+                                            <div>
+                                              <label className="field-label">
+                                                Price High
+                                              </label>
+                                              <input
+                                                className="adm-input"
+                                                type="number"
+                                                value={row.price_high || ""}
+                                                onChange={(e) => {
+                                                  const u = [
+                                                    ...callReviewPrices,
+                                                  ];
+                                                  u[i] = {
+                                                    ...u[i],
+                                                    price_high: e.target.value,
+                                                  };
+                                                  setCallReviewPrices(u);
+                                                }}
+                                                placeholder="range only"
+                                              />
+                                            </div>
+                                          </div>
+                                          <div
+                                            className="form-grid-2"
+                                            style={{ marginBottom: "14px" }}
+                                          >
+                                            <div>
+                                              <label className="field-label">
+                                                Species *
                                               </label>
                                               <select
                                                 className="adm-input"
@@ -4529,113 +4631,75 @@ export default function AdminPage() {
                                             </div>
                                             <div>
                                               <label className="field-label">
-                                                Price Low
+                                                Includes
                                               </label>
-                                              <input
-                                                className="adm-input"
-                                                type="number"
-                                                value={row.price_low || ""}
-                                                onChange={(e) => {
-                                                  const u = [
-                                                    ...callReviewPrices,
-                                                  ];
-                                                  u[i] = {
-                                                    ...u[i],
-                                                    price_low: e.target.value,
-                                                  };
-                                                  setCallReviewPrices(u);
+                                              <div
+                                                style={{
+                                                  display: "flex",
+                                                  gap: "6px",
+                                                  flexWrap: "wrap",
+                                                  paddingTop: "2px",
                                                 }}
-                                              />
-                                            </div>
-                                            <div>
-                                              <label className="field-label">
-                                                Price High
-                                              </label>
-                                              <input
-                                                className="adm-input"
-                                                type="number"
-                                                value={row.price_high || ""}
-                                                onChange={(e) => {
-                                                  const u = [
-                                                    ...callReviewPrices,
-                                                  ];
-                                                  u[i] = {
-                                                    ...u[i],
-                                                    price_high: e.target.value,
-                                                  };
-                                                  setCallReviewPrices(u);
-                                                }}
-                                              />
+                                              >
+                                                {[
+                                                  [
+                                                    "includes_bloodwork",
+                                                    "Bloodwork",
+                                                  ],
+                                                  ["includes_xrays", "X-rays"],
+                                                  [
+                                                    "includes_anesthesia",
+                                                    "Anesthesia",
+                                                  ],
+                                                ].map(([field, label]) => (
+                                                  <button
+                                                    key={field}
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const u = [
+                                                        ...callReviewPrices,
+                                                      ];
+                                                      u[i] = {
+                                                        ...u[i],
+                                                        [field]: !u[i][field],
+                                                      };
+                                                      setCallReviewPrices(u);
+                                                    }}
+                                                    style={{
+                                                      padding: "3px 10px",
+                                                      borderRadius: "20px",
+                                                      fontSize: "12px",
+                                                      fontWeight: "600",
+                                                      cursor: "pointer",
+                                                      border: row[field]
+                                                        ? "none"
+                                                        : "1px solid #ccc",
+                                                      background: row[field]
+                                                        ? "#2d6a4f"
+                                                        : "#f0f0f0",
+                                                      color: row[field]
+                                                        ? "#fff"
+                                                        : "#555",
+                                                    }}
+                                                  >
+                                                    {label}
+                                                  </button>
+                                                ))}
+                                              </div>
                                             </div>
                                           </div>
-                                          <div style={{ marginBottom: "8px" }}>
-                                            <label
-                                              className="field-label"
-                                              style={{
-                                                display: "block",
-                                                marginBottom: "6px",
-                                              }}
-                                            >
-                                              Includes
+                                          <div style={{ marginBottom: "14px" }}>
+                                            <label className="field-label">
+                                              Notes
                                             </label>
-                                            <div
-                                              style={{
-                                                display: "flex",
-                                                gap: "6px",
-                                                flexWrap: "wrap",
-                                              }}
-                                            >
-                                              {[
-                                                [
-                                                  "includes_bloodwork",
-                                                  "Bloodwork",
-                                                ],
-                                                ["includes_xrays", "X-rays"],
-                                                [
-                                                  "includes_anesthesia",
-                                                  "Anesthesia",
-                                                ],
-                                              ].map(([field, label]) => (
-                                                <button
-                                                  key={field}
-                                                  type="button"
-                                                  onClick={() => {
-                                                    const u = [
-                                                      ...callReviewPrices,
-                                                    ];
-                                                    u[i] = {
-                                                      ...u[i],
-                                                      [field]: !u[i][field],
-                                                    };
-                                                    setCallReviewPrices(u);
-                                                  }}
-                                                  style={{
-                                                    padding: "3px 8px",
-                                                    borderRadius: "20px",
-                                                    fontSize: "11px",
-                                                    fontWeight: "600",
-                                                    cursor: "pointer",
-                                                    border: row[field]
-                                                      ? "none"
-                                                      : "1px solid #ddd",
-                                                    background: row[field]
-                                                      ? "#2d6a4f"
-                                                      : "#f5f5f5",
-                                                    color: row[field]
-                                                      ? "#fff"
-                                                      : "#555",
-                                                    transition: "all 0.15s",
-                                                  }}
-                                                >
-                                                  {label}
-                                                </button>
-                                              ))}
-                                            </div>
-                                          </div>
-                                          <div style={{ marginBottom: "8px" }}>
-                                            <input
+                                            <textarea
                                               className="adm-input"
-                                              style={{ width: "100%" }}
+                                              rows={3}
+                                              style={{
+                                                width: "100%",
+                                                resize: "vertical",
+                                                height: "auto",
+                                              }}
                                               value={row.notes || ""}
                                               onChange={(e) => {
                                                 const u = [...callReviewPrices];
@@ -4645,7 +4709,7 @@ export default function AdminPage() {
                                                 };
                                                 setCallReviewPrices(u);
                                               }}
-                                              placeholder="Notes..."
+                                              placeholder="Notes about this price..."
                                             />
                                           </div>
                                           <div
@@ -4669,7 +4733,7 @@ export default function AdminPage() {
                                                 updateReviewPrice(i, row)
                                               }
                                             >
-                                              Save changes
+                                              Save Changes
                                             </button>
                                           </div>
                                         </div>
@@ -4799,6 +4863,7 @@ export default function AdminPage() {
                               WebkitBoxOrient: "vertical",
                             }}
                           >
+                            <span className="bio-label">Bio: </span>
                             {u.bio}
                           </p>
                         )}
@@ -4827,6 +4892,24 @@ export default function AdminPage() {
                       </div>
                       {/* Mobile labeled rows */}
                       <div className="users-mobile-detail">
+                        {u.bio && (
+                          <p style={{ margin: "0 0 6px 0" }}>
+                            <span
+                              style={{
+                                color: "#aaa",
+                                fontWeight: "700",
+                                fontSize: "11px",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
+                              }}
+                            >
+                              Bio:{" "}
+                            </span>
+                            <span style={{ fontSize: "13px", color: "#666" }}>
+                              {u.bio}
+                            </span>
+                          </p>
+                        )}
                         <p style={{ margin: "0 0 3px 0" }}>
                           <span
                             style={{
@@ -5047,7 +5130,6 @@ export default function AdminPage() {
                             padding: "2px 8px",
                             borderRadius: "20px",
                             whiteSpace: "nowrap",
-                            display: "inline-block",
                           }}
                         >
                           {cfg.label || s.triage_result}
