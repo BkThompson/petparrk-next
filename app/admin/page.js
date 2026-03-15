@@ -108,7 +108,7 @@ export default function AdminPage() {
     includes_bloodwork: false,
     includes_xrays: false,
     includes_anesthesia: false,
-    species: "",
+    species: "dog",
     species_other: "",
     call_for_quote: false,
     notes: "",
@@ -556,7 +556,7 @@ export default function AdminPage() {
         includes_bloodwork: false,
         includes_xrays: false,
         includes_anesthesia: false,
-        species: "",
+        species: "dog",
         call_for_quote: false,
         notes: "",
       },
@@ -867,7 +867,7 @@ export default function AdminPage() {
         includes_bloodwork: false,
         includes_xrays: false,
         includes_anesthesia: false,
-        species: "",
+        species: "dog",
         species_other: "",
         call_for_quote: false,
         notes: "",
@@ -1073,13 +1073,11 @@ export default function AdminPage() {
         .adm-btn-outline:hover { background: #f0f7f4; }
         .adm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .stat-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px 18px; }
-        .tab-btn { padding: 10px 16px; border: none; background: none; font-size: 14px; font-weight: 600; cursor: pointer; color: #888; border-bottom: 2px solid transparent; font-family: system-ui, sans-serif; white-space: nowrap; transition: color 0.25s ease, border-bottom-color 0.25s ease; }
+        .tab-btn { padding: 10px 16px; border: none; background: none; font-size: 14px; font-weight: 600; cursor: pointer; color: #888; border-bottom: 2px solid transparent; font-family: system-ui, sans-serif; white-space: nowrap; transition: color 0.2s ease, border-bottom-color 0.2s ease; }
         .tab-btn.active { color: #2d6a4f; border-bottom-color: #2d6a4f; }
         .tab-btn:hover:not(.active) { color: #555; }
-        .tabs-scroll { overflow-x: auto; display: flex; border-bottom: 1px solid #eee; scrollbar-width: none; }
-        .tabs-scroll::-webkit-scrollbar { display: none; }
         .tab-badge { display: inline-block; margin-left: 5px; background: #e65100; color: #fff; border-radius: 20px; padding: 1px 6px; font-size: 10px; }
-        .badge { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+        .badge { display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; }
         .badge-pending { background: #fff8e1; color: #e65100; }
         .badge-approved { background: #e8f5e9; color: #2d6a4f; }
         .badge-rejected { background: #fce8e8; color: #c62828; }
@@ -1104,8 +1102,8 @@ export default function AdminPage() {
         .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; }
         .tabs-scroll { display: flex; overflow-x: auto; border-bottom: 1px solid #e8e8e8; padding: 0 16px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .tabs-scroll::-webkit-scrollbar { display: none; }
-        .table-header { display: grid; padding: 10px 16px; background: #fafaf8; border-bottom: 1px solid #efefed; }
-        .table-header span { font-size: 12px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .table-header { display: grid; padding: 8px 14px; background: #fafaf8; border-bottom: 1px solid #efefed; }
+        .table-header span { font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         html { scrollbar-gutter: stable; }
         /* Price search dropdown — absolute so it doesn't push page content */
         .price-search-wrap { position: relative; }
@@ -1168,7 +1166,7 @@ export default function AdminPage() {
             >
               🐾 PetParrk Admin
             </h1>
-            <p style={{ margin: 0, fontSize: "13px", color: "#888" }}>
+            <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
               Signed in as {session?.user?.email}
             </p>
           </div>
@@ -1241,7 +1239,7 @@ export default function AdminPage() {
             border: "1px solid #e8e8e8",
           }}
         >
-          <div className="tabs-scroll" style={{ position: "relative" }}>
+          <div className="tabs-scroll">
             {TABS.map((t) => (
               <button
                 key={t}
@@ -1339,7 +1337,7 @@ export default function AdminPage() {
                           <p
                             style={{
                               margin: "4px 0 0 0",
-                              fontSize: "13px",
+                              fontSize: "12px",
                               color: "#666",
                               fontStyle: "italic",
                             }}
@@ -1350,7 +1348,7 @@ export default function AdminPage() {
                         <p
                           style={{
                             margin: "4px 0 0 0",
-                            fontSize: "12px",
+                            fontSize: "11px",
                             color: "#aaa",
                           }}
                         >
@@ -1419,7 +1417,7 @@ export default function AdminPage() {
                     >
                       Pending Vets
                     </h2>
-                    <p style={{ margin: 0, fontSize: "13px", color: "#888" }}>
+                    <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
                       Found by the AI agent — review before going live
                     </p>
                   </div>
@@ -1484,8 +1482,8 @@ export default function AdminPage() {
                           <p
                             style={{
                               margin: "0 0 1px 0",
-                              fontSize: "13px",
-                              color: "#666",
+                              fontSize: "12px",
+                              color: "#888",
                             }}
                           >
                             {vet.address}
@@ -1505,8 +1503,8 @@ export default function AdminPage() {
                             <p
                               style={{
                                 margin: "0 0 2px 0",
-                                fontSize: "13px",
-                                color: "#666",
+                                fontSize: "12px",
+                                color: "#888",
                               }}
                             >
                               {parts.join(", ")}
@@ -1517,8 +1515,8 @@ export default function AdminPage() {
                           <p
                             style={{
                               margin: "2px 0 0 0",
-                              fontSize: "13px",
-                              color: "#666",
+                              fontSize: "12px",
+                              color: "#888",
                             }}
                           >
                             {vet.phone}
@@ -1527,8 +1525,8 @@ export default function AdminPage() {
                         <p
                           style={{
                             margin: "4px 0 0 0",
-                            fontSize: "12px",
-                            color: "#aaa",
+                            fontSize: "11px",
+                            color: "#bbb",
                           }}
                         >
                           Found {formatDate(vet.created_at)}
@@ -2384,7 +2382,7 @@ export default function AdminPage() {
                           </span>
                         </h2>
                         <p
-                          style={{ margin: 0, fontSize: "13px", color: "#888" }}
+                          style={{ margin: 0, fontSize: "12px", color: "#888" }}
                         >
                           Found by the price scraper — verify before going live
                         </p>
@@ -2417,7 +2415,7 @@ export default function AdminPage() {
                             <div
                               style={{
                                 fontWeight: "600",
-                                fontSize: "14px",
+                                fontSize: "13px",
                                 color: "#111",
                               }}
                             >
@@ -2427,9 +2425,9 @@ export default function AdminPage() {
                             </div>
                             <div
                               style={{
-                                fontSize: "13px",
+                                fontSize: "12px",
                                 color: "#666",
-                                marginTop: "3px",
+                                marginTop: "2px",
                               }}
                             >
                               {p.services?.name || "Unknown service"} —{" "}
@@ -2446,10 +2444,10 @@ export default function AdminPage() {
                             {p.notes && (
                               <div
                                 style={{
-                                  fontSize: "13px",
+                                  fontSize: "11px",
                                   color: "#888",
                                   fontStyle: "italic",
-                                  marginTop: "3px",
+                                  marginTop: "2px",
                                 }}
                               >
                                 {p.notes}
@@ -2526,7 +2524,7 @@ export default function AdminPage() {
                           >
                             {v.name}
                             {v.city ? (
-                              <span style={{ color: "#888", fontSize: "13px" }}>
+                              <span style={{ color: "#888", fontSize: "12px" }}>
                                 {" "}
                                 — {v.city}
                               </span>
@@ -2542,7 +2540,7 @@ export default function AdminPage() {
                     <p
                       style={{
                         margin: "6px 0 0 0",
-                        fontSize: "13px",
+                        fontSize: "12px",
                         color: "#2d6a4f",
                       }}
                     >
@@ -2967,7 +2965,7 @@ export default function AdminPage() {
                                 >
                                   <span
                                     style={{
-                                      fontSize: "13px",
+                                      fontSize: "12px",
                                       color: "#c62828",
                                       fontWeight: "600",
                                     }}
@@ -3297,7 +3295,7 @@ export default function AdminPage() {
                             key={i}
                             style={{
                               margin: "2px 0",
-                              fontSize: "13px",
+                              fontSize: "12px",
                               color: "#555",
                             }}
                           >
@@ -3314,15 +3312,12 @@ export default function AdminPage() {
                         return (
                           <div>
                             {/* Header: title + toggle + nav buttons */}
-                            <div
-                              className="call-sheet-header"
-                              style={{ marginBottom: "16px" }}
-                            >
+                            <div className="call-sheet-header">
                               <div>
                                 <h2
                                   style={{
-                                    margin: "0 0 4px 0",
-                                    fontSize: "1.1rem",
+                                    margin: "0 0 2px 0",
+                                    fontSize: "1rem",
                                     color: "#111",
                                   }}
                                 >
@@ -3331,7 +3326,7 @@ export default function AdminPage() {
                                 <p
                                   style={{
                                     margin: 0,
-                                    fontSize: "13px",
+                                    fontSize: "12px",
                                     color: "#888",
                                   }}
                                 >
@@ -3369,7 +3364,7 @@ export default function AdminPage() {
                                     bottom: 0,
                                     width: "50%",
                                     background: "#2d6a4f",
-                                    borderRadius: "18px",
+                                    borderRadius: "20px",
                                     transition: "transform 0.25s ease",
                                     transform: showAllVets
                                       ? "translateX(100%)"
@@ -3447,7 +3442,7 @@ export default function AdminPage() {
                                 height: "4px",
                                 background: "#f0f0f0",
                                 borderRadius: "4px",
-                                marginBottom: "24px",
+                                marginBottom: "20px",
                               }}
                             >
                               <div
@@ -3859,41 +3854,6 @@ export default function AdminPage() {
                                         />
                                       </div>
                                     </div>
-                                    {/* Row 1b: Species */}
-                                    <div style={{ marginBottom: "14px" }}>
-                                      <label
-                                        className="field-label"
-                                        style={{
-                                          display: "block",
-                                          marginBottom: "8px",
-                                        }}
-                                      >
-                                        Species
-                                      </label>
-                                      <select
-                                        className="adm-input"
-                                        value={p.species || ""}
-                                        onChange={(e) =>
-                                          setCallPrices((prev) =>
-                                            prev.map((row, idx) =>
-                                              idx === i
-                                                ? {
-                                                    ...row,
-                                                    species: e.target.value,
-                                                  }
-                                                : row,
-                                            ),
-                                          )
-                                        }
-                                      >
-                                        <option value="">— Select —</option>
-                                        <option value="dog">Dog</option>
-                                        <option value="cat">Cat</option>
-                                        <option value="rabbit">Rabbit</option>
-                                        <option value="bird">Bird</option>
-                                        <option value="other">Other</option>
-                                      </select>
-                                    </div>
                                     {/* Row 2: Includes — toggle pills */}
                                     <div style={{ marginBottom: "14px" }}>
                                       <label
@@ -3921,15 +3881,10 @@ export default function AdminPage() {
                                             key={field}
                                             type="button"
                                             onClick={() =>
-                                              setCallPrices((prev) =>
-                                                prev.map((row, idx) =>
-                                                  idx === i
-                                                    ? {
-                                                        ...row,
-                                                        [field]: !row[field],
-                                                      }
-                                                    : row,
-                                                ),
+                                              updateCallPrice(
+                                                i,
+                                                field,
+                                                !p[field],
                                               )
                                             }
                                             style={{
@@ -4071,7 +4026,7 @@ export default function AdminPage() {
                                       <p
                                         style={{
                                           margin: 0,
-                                          fontSize: "13px",
+                                          fontSize: "12px",
                                           color: "#888",
                                         }}
                                       >
@@ -4467,7 +4422,7 @@ export default function AdminPage() {
                                   <p
                                     style={{
                                       margin: "0 0 8px 0",
-                                      fontSize: "13px",
+                                      fontSize: "12px",
                                       color: "#888",
                                     }}
                                   >
@@ -4560,7 +4515,7 @@ export default function AdminPage() {
                       style={{
                         display: "grid",
                         gridTemplateColumns: "2fr 1fr 1fr 1fr",
-                        padding: "14px 16px",
+                        padding: "10px 14px",
                         borderBottom: "1px solid #f5f5f3",
                         alignItems: "center",
                         gap: "8px",
@@ -4569,7 +4524,7 @@ export default function AdminPage() {
                       <div>
                         <span
                           style={{
-                            fontSize: "14px",
+                            fontSize: "13px",
                             fontWeight: "600",
                             color: "#111",
                           }}
@@ -4585,30 +4540,29 @@ export default function AdminPage() {
                         {u.bio && (
                           <p
                             style={{
-                              margin: "3px 0 0 0",
-                              fontSize: "13px",
-                              color: "#888",
+                              margin: "2px 0 0 0",
+                              fontSize: "11px",
+                              color: "#aaa",
                               overflow: "hidden",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
                             }}
                           >
                             {u.bio}
                           </p>
                         )}
                       </div>
-                      <span style={{ fontSize: "14px", color: "#666" }}>
+                      <span style={{ fontSize: "13px", color: "#666" }}>
                         {u.zip_code || "—"}
                       </span>
-                      <span style={{ fontSize: "13px" }}>
+                      <span style={{ fontSize: "12px" }}>
                         {u.is_public ? (
                           <span style={{ color: "#2d6a4f" }}>✅ Public</span>
                         ) : (
                           <span style={{ color: "#bbb" }}>Private</span>
                         )}
                       </span>
-                      <span style={{ fontSize: "13px", color: "#888" }}>
+                      <span style={{ fontSize: "12px", color: "#bbb" }}>
                         {formatDate(u.created_at)}
                       </span>
                     </div>
@@ -4787,7 +4741,7 @@ export default function AdminPage() {
                         >
                           {cfg.label || s.triage_result}
                         </span>
-                        <span style={{ fontSize: "13px", color: "#aaa" }}>
+                        <span style={{ fontSize: "12px", color: "#bbb" }}>
                           {formatDateTime(s.created_at)}
                         </span>
                       </div>
