@@ -1141,8 +1141,15 @@ export default function AdminPage() {
         .pending-vet-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 18px 20px; margin-bottom: 12px; }
         .vet-row { border-bottom: 1px solid #f0f0f0; padding: 10px 0; }
         .vet-row:last-child { border-bottom: none; }
-        .price-row { border-bottom: 1px solid #f0f0f0; padding: 18px 14px; display: flex; align-items: flex-start; gap: 12px; }
-        .price-row:last-child { border-bottom: none; }
+        .price-row-wrap { border-bottom: 1px solid #f0f0f0; padding: 14px 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+        .price-row-wrap:last-child { border-bottom: none; }
+        .price-row-info { flex: 1; min-width: 0; }
+        .price-row-btns { display: flex; gap: 6px; flex-shrink: 0; align-self: flex-start; }
+        @media (max-width: 600px) {
+          .price-row-wrap { flex-direction: column; gap: 10px; }
+          .price-row-btns { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+          .price-row-btns .adm-btn { flex: 1; text-align: center; }
+        }
         .log-table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 10px 16px; background: #fafaf8; border-bottom: 1px solid #efefed; }
         .log-table-header span { font-size: 12px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         .log-row { border-bottom: 1px solid #f5f5f3; padding: 12px 16px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; align-items: center; gap: 8px; }
@@ -2912,11 +2919,8 @@ export default function AdminPage() {
                     >
                       {vetPrices.map((p) => (
                         <div key={p.id}>
-                          <div
-                            className="price-row"
-                            style={{ padding: "10px 14px" }}
-                          >
-                            <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="price-row-wrap">
+                            <div className="price-row-info">
                               <div
                                 style={{
                                   fontWeight: "600",
@@ -2927,7 +2931,7 @@ export default function AdminPage() {
                               >
                                 {p.services?.name || "—"}
                               </div>
-                              <div>
+                              <div style={{ marginBottom: "6px" }}>
                                 <span
                                   style={{
                                     fontSize: "14px",
@@ -2951,15 +2955,8 @@ export default function AdminPage() {
                                   ({p.price_type})
                                 </span>
                               </div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  flexWrap: "wrap",
-                                  gap: "4px",
-                                  marginTop: "4px",
-                                }}
-                              >
-                                {p.species && (
+                              {p.species && (
+                                <div style={{ marginBottom: "4px" }}>
                                   <span
                                     style={{
                                       fontSize: "12px",
@@ -2972,80 +2969,91 @@ export default function AdminPage() {
                                   >
                                     {p.species}
                                   </span>
-                                )}
-                                {p.includes_bloodwork && (
-                                  <span
-                                    style={{
-                                      fontSize: "12px",
-                                      background: "#e8f5e9",
-                                      color: "#2d6a4f",
-                                      padding: "2px 8px",
-                                      borderRadius: "4px",
-                                    }}
-                                  >
-                                    + bloodwork
-                                  </span>
-                                )}
-                                {p.includes_xrays && (
-                                  <span
-                                    style={{
-                                      fontSize: "12px",
-                                      background: "#e8f5e9",
-                                      color: "#2d6a4f",
-                                      padding: "2px 8px",
-                                      borderRadius: "4px",
-                                    }}
-                                  >
-                                    + x-rays
-                                  </span>
-                                )}
-                                {p.includes_anesthesia && (
-                                  <span
-                                    style={{
-                                      fontSize: "12px",
-                                      background: "#e8f5e9",
-                                      color: "#2d6a4f",
-                                      padding: "2px 8px",
-                                      borderRadius: "4px",
-                                    }}
-                                  >
-                                    + anesthesia
-                                  </span>
-                                )}
-                                {p.call_for_quote && (
-                                  <span
-                                    style={{
-                                      fontSize: "12px",
-                                      background: "#fff8e1",
-                                      color: "#e65100",
-                                      padding: "2px 8px",
-                                      borderRadius: "4px",
-                                    }}
-                                  >
-                                    call for quote
-                                  </span>
-                                )}
-                                {p.notes && (
-                                  <span
-                                    style={{
-                                      fontSize: "12px",
-                                      color: "#888",
-                                      fontStyle: "italic",
-                                    }}
-                                  >
-                                    {p.notes}
-                                  </span>
-                                )}
-                              </div>
+                                </div>
+                              )}
+                              {(p.includes_bloodwork ||
+                                p.includes_xrays ||
+                                p.includes_anesthesia ||
+                                p.call_for_quote) && (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: "4px",
+                                    marginBottom: "4px",
+                                  }}
+                                >
+                                  {p.includes_bloodwork && (
+                                    <span
+                                      style={{
+                                        fontSize: "12px",
+                                        background: "#e8f5e9",
+                                        color: "#2d6a4f",
+                                        padding: "2px 8px",
+                                        borderRadius: "4px",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      + bloodwork
+                                    </span>
+                                  )}
+                                  {p.includes_xrays && (
+                                    <span
+                                      style={{
+                                        fontSize: "12px",
+                                        background: "#e8f5e9",
+                                        color: "#2d6a4f",
+                                        padding: "2px 8px",
+                                        borderRadius: "4px",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      + x-rays
+                                    </span>
+                                  )}
+                                  {p.includes_anesthesia && (
+                                    <span
+                                      style={{
+                                        fontSize: "12px",
+                                        background: "#e8f5e9",
+                                        color: "#2d6a4f",
+                                        padding: "2px 8px",
+                                        borderRadius: "4px",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      + anesthesia
+                                    </span>
+                                  )}
+                                  {p.call_for_quote && (
+                                    <span
+                                      style={{
+                                        fontSize: "12px",
+                                        background: "#fff8e1",
+                                        color: "#e65100",
+                                        padding: "2px 8px",
+                                        borderRadius: "4px",
+                                      }}
+                                    >
+                                      call for quote
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {p.notes && (
+                                <p
+                                  style={{
+                                    margin: "4px 0 0 0",
+                                    fontSize: "12px",
+                                    color: "#888",
+                                    fontStyle: "italic",
+                                  }}
+                                >
+                                  {p.notes}
+                                </p>
+                              )}
                             </div>
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: "6px",
-                                flexShrink: 0,
-                                alignSelf: "flex-start",
-                              }}
-                            >
+                            <div className="price-row-btns">
                               <button
                                 className="adm-btn adm-btn-outline"
                                 onClick={() => {
@@ -3058,7 +3066,7 @@ export default function AdminPage() {
                                 {editingPrice === p.id ? "Cancel" : "Edit"}
                               </button>
                               {deletePriceConfirm === p.id ? (
-                                <span
+                                <div
                                   style={{
                                     display: "flex",
                                     alignItems: "center",
@@ -3086,7 +3094,7 @@ export default function AdminPage() {
                                   >
                                     No
                                   </button>
-                                </span>
+                                </div>
                               ) : (
                                 <button
                                   className="adm-btn adm-btn-red"
@@ -3280,7 +3288,12 @@ export default function AdminPage() {
                                     </label>
                                   </div>
                                 </div>
-                                <div style={{ marginBottom: "14px" }}>
+                                <div
+                                  style={{
+                                    marginBottom: "14px",
+                                    marginTop: "6px",
+                                  }}
+                                >
                                   <label className="field-label">Notes</label>
                                   <textarea
                                     className="adm-input"
@@ -4083,7 +4096,13 @@ export default function AdminPage() {
                                         >
                                           Includes
                                         </label>
-                                        <div className="includes-pills">
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            gap: "6px",
+                                            flexWrap: "nowrap",
+                                          }}
+                                        >
                                           {[
                                             ["includes_bloodwork", "Bloodwork"],
                                             ["includes_xrays", "X-rays"],
@@ -4132,7 +4151,12 @@ export default function AdminPage() {
                                       </div>
                                     </div>
                                     {/* Row 3: Notes full width — larger textarea */}
-                                    <div style={{ marginBottom: "14px" }}>
+                                    <div
+                                      style={{
+                                        marginBottom: "14px",
+                                        marginTop: "6px",
+                                      }}
+                                    >
                                       <label
                                         className="field-label"
                                         style={{
@@ -4903,7 +4927,7 @@ export default function AdminPage() {
                                 letterSpacing: "0.4px",
                               }}
                             >
-                              Bio
+                              Bio:
                             </p>
                             <p
                               style={{
@@ -5148,48 +5172,98 @@ export default function AdminPage() {
                         </span>
                         {/* Mobile labeled rows */}
                         <div className="log-mobile">
-                          <p
-                            style={{
-                              margin: "0 0 4px 0",
-                              fontSize: "13px",
-                              fontWeight: "600",
-                              color: "#111",
-                            }}
-                          >
-                            {s.pets?.name || "Guest"}
+                          <p style={{ margin: "0 0 5px 0" }}>
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#aaa",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
+                              }}
+                            >
+                              Pet:{" "}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "13px",
+                                fontWeight: "600",
+                                color: "#111",
+                              }}
+                            >
+                              {s.pets?.name || "Guest"}
+                            </span>
+                          </p>
+                          <p style={{ margin: "0 0 5px 0" }}>
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#aaa",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
+                              }}
+                            >
+                              Species:{" "}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "13px",
+                                color: "#666",
+                                textTransform: "capitalize",
+                              }}
+                            >
+                              {s.pets?.species || "—"}
+                            </span>
                           </p>
                           <p
                             style={{
-                              margin: "0 0 4px 0",
-                              fontSize: "13px",
-                              color: "#666",
-                              textTransform: "capitalize",
+                              margin: "0 0 5px 0",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
                             }}
                           >
-                            {s.pets?.species || "—"}
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#aaa",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
+                              }}
+                            >
+                              Result:{" "}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                color: cfg.color,
+                                background: cfg.bg,
+                                padding: "2px 10px",
+                                borderRadius: "20px",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {cfg.label || s.triage_result}
+                            </span>
                           </p>
-                          <span
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: "600",
-                              color: cfg.color,
-                              background: cfg.bg,
-                              padding: "2px 12px",
-                              borderRadius: "20px",
-                              display: "inline-block",
-                              marginBottom: "4px",
-                            }}
-                          >
-                            {cfg.label || s.triage_result}
-                          </span>
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: "13px",
-                              color: "#888",
-                            }}
-                          >
-                            {formatDateTime(s.created_at)}
+                          <p style={{ margin: 0 }}>
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#aaa",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
+                              }}
+                            >
+                              Date:{" "}
+                            </span>
+                            <span style={{ fontSize: "13px", color: "#888" }}>
+                              {formatDateTime(s.created_at)}
+                            </span>
                           </p>
                         </div>
                       </div>
