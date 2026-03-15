@@ -1040,10 +1040,10 @@ export default function AdminPage() {
     <>
       <style>{`
         * { box-sizing: border-box; }
-        .adm-input { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: system-ui, sans-serif; outline: none; background: #fff; }
+        .adm-input { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: system-ui, sans-serif; outline: none; background: #fff; }
         .adm-input:focus { border-color: #2d6a4f; }
         select.adm-input { cursor: pointer; padding-right: 28px; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
-        .adm-btn { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: system-ui, sans-serif; white-space: nowrap; }
+        .adm-btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: system-ui, sans-serif; white-space: nowrap; }
         .adm-btn-green { background: #2d6a4f; color: #fff; }
         .adm-btn-green:hover { background: #245a42; }
         .adm-btn-red { background: #fce8e8; color: #c62828; border: 1px solid #f5c6c6; }
@@ -1066,7 +1066,7 @@ export default function AdminPage() {
         .adm-btn-outline:hover { background: #f0f7f4; }
         .adm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .stat-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px 18px; }
-        .tab-btn { padding: 8px 14px; border: none; background: none; font-size: 13px; font-weight: 600; cursor: pointer; color: #888; border-bottom: 2px solid transparent; font-family: system-ui, sans-serif; white-space: nowrap; }
+        .tab-btn { padding: 10px 16px; border: none; background: none; font-size: 14px; font-weight: 600; cursor: pointer; color: #888; border-bottom: 2px solid transparent; font-family: system-ui, sans-serif; white-space: nowrap; }
         .tab-btn.active { color: #2d6a4f; border-bottom-color: #2d6a4f; }
         .tab-btn:hover:not(.active) { color: #333; }
         .tab-badge { display: inline-block; margin-left: 5px; background: #e65100; color: #fff; border-radius: 20px; padding: 1px 6px; font-size: 10px; }
@@ -1076,16 +1076,16 @@ export default function AdminPage() {
         .badge-rejected { background: #fce8e8; color: #c62828; }
         .badge-active { background: #e8f5e9; color: #2d6a4f; }
         .badge-inactive { background: #f0f0f0; color: #888; }
-        .row-edit-bg { background: #f9f9f9; border-radius: 8px; padding: 18px; margin: 4px 0 14px 0; border: 1px solid #e8e8e8; }
-        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-        .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
-        .field-label { display: block; font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
-        .sub-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
-        .pending-vet-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+        .row-edit-bg { background: #f9f9f9; border-radius: 10px; padding: 20px; margin: 6px 0 16px 0; border: 1px solid #e8e8e8; }
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+        .field-label { display: block; font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .sub-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 18px 20px; margin-bottom: 12px; }
+        .pending-vet-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 18px 20px; margin-bottom: 12px; }
         .vet-row { border-bottom: 1px solid #f0f0f0; padding: 10px 0; }
         .vet-row:last-child { border-bottom: none; }
-        .price-row { border-bottom: 1px solid #f0f0f0; padding: 8px 0; display: flex; align-items: center; gap: 12px; }
+        .price-row { border-bottom: 1px solid #f0f0f0; padding: 14px 0; display: flex; align-items: center; gap: 12px; }
         .price-row:last-child { border-bottom: none; }
         .log-row { border-bottom: 1px solid #f5f5f3; padding: 10px 14px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; align-items: center; gap: 8px; }
         .log-row:last-child { border-bottom: none; }
@@ -3327,7 +3327,7 @@ export default function AdminPage() {
                                   {showAllVets ? "total" : "unpriced"} vets
                                 </p>
                               </div>
-                              {/* Smooth sliding toggle */}
+                              {/* Smooth sliding toggle — fixed width prevents layout jump */}
                               <div
                                 onClick={() => {
                                   setShowAllVets((v) => !v);
@@ -3347,9 +3347,9 @@ export default function AdminPage() {
                                   cursor: "pointer",
                                   background: "#fff",
                                   userSelect: "none",
+                                  width: "160px",
                                 }}
                               >
-                                {/* Sliding background pill */}
                                 <div
                                   style={{
                                     position: "absolute",
@@ -3358,7 +3358,7 @@ export default function AdminPage() {
                                     width: "50%",
                                     background: "#2d6a4f",
                                     borderRadius: "20px",
-                                    transition: "transform 0.2s ease",
+                                    transition: "transform 0.25s ease",
                                     transform: showAllVets
                                       ? "translateX(100%)"
                                       : "translateX(0%)",
@@ -3367,12 +3367,13 @@ export default function AdminPage() {
                                 <span
                                   style={{
                                     position: "relative",
-                                    padding: "5px 12px",
+                                    flex: 1,
+                                    textAlign: "center",
+                                    padding: "6px 0",
                                     fontSize: "12px",
                                     fontWeight: "600",
                                     color: !showAllVets ? "#fff" : "#2d6a4f",
-                                    transition: "color 0.2s ease",
-                                    whiteSpace: "nowrap",
+                                    transition: "color 0.25s ease",
                                     zIndex: 1,
                                   }}
                                 >
@@ -3381,12 +3382,13 @@ export default function AdminPage() {
                                 <span
                                   style={{
                                     position: "relative",
-                                    padding: "5px 12px",
+                                    flex: 1,
+                                    textAlign: "center",
+                                    padding: "6px 0",
                                     fontSize: "12px",
                                     fontWeight: "600",
                                     color: showAllVets ? "#fff" : "#2d6a4f",
-                                    transition: "color 0.2s ease",
-                                    whiteSpace: "nowrap",
+                                    transition: "color 0.25s ease",
                                     zIndex: 1,
                                   }}
                                 >
