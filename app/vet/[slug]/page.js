@@ -421,14 +421,13 @@ export default function VetPage() {
                     {accordionCopy && (
                       <div className={`accordion-wrap${isExpanded ? " open" : ""}`}>
                         <div className="accordion-inner">
-                          <div style={{ background: "#f9f9f7", borderRadius: "8px", padding: "16px", marginBottom: "8px", display: "flex", flexDirection: "column", gap: "24px" }}>
+                          <div style={{ background: "#f9f9f7", borderRadius: "8px", padding: "16px", marginBottom: "8px", display: "flex", flexDirection: "column", gap: "16px" }}>
                             {noteLines.length > 0 && (
                               <div>
                                 <p style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: "700", color: "#555", textTransform: "uppercase", letterSpacing: "0.05em" }}>What's included</p>
                                 {noteLines.map((note, j) => (
                                   <p key={j} style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#444", lineHeight: "1.6" }}>{note}</p>
                                 ))}
-                                <div style={{ height: "1px", background: "#e8e8e8", marginTop: "16px" }} />
                               </div>
                             )}
                             <div>
