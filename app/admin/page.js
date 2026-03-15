@@ -357,7 +357,8 @@ export default function AdminPage() {
         includes_bloodwork: !!p.includes_bloodwork,
         includes_xrays: !!p.includes_xrays,
         includes_anesthesia: !!p.includes_anesthesia,
-        species: p.species || null,
+        species:
+          p.species === "other" ? p.speciesOther || "other" : p.species || null,
         call_for_quote: !!p.call_for_quote,
         notes: p.notes || null,
         is_verified: true,
@@ -443,11 +444,29 @@ export default function AdminPage() {
     }
 
     // Insert each price and capture the returned row with its DB id
+    console.log(
+      "saveCallPrices — saving",
+      validPrices.length,
+      "prices:",
+      validPrices.map((p) => ({
+        service: p.service_id,
+        bloodwork: p.includes_bloodwork,
+        xrays: p.includes_xrays,
+        anesthesia: p.includes_anesthesia,
+        species: p.species,
+      })),
+    );
     const savedRows = [];
     for (const p of validPrices) {
+      const payload = cleanPrice(p, savedVetId);
+      console.log("inserting price:", {
+        bloodwork: payload.includes_bloodwork,
+        xrays: payload.includes_xrays,
+        anesthesia: payload.includes_anesthesia,
+      });
       const { data, error } = await supabase
         .from("vet_prices")
-        .insert(cleanPrice(p, savedVetId))
+        .insert(payload)
         .select()
         .single();
       if (error) {
@@ -1107,7 +1126,7 @@ export default function AdminPage() {
         .vet-row:last-child { border-bottom: none; }
         .price-row { border-bottom: 1px solid #f0f0f0; padding: 14px 0; display: flex; align-items: center; gap: 12px; }
         .price-row:last-child { border-bottom: none; }
-        .log-row { border-bottom: 1px solid #f5f5f3; padding: 10px 14px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; align-items: center; gap: 8px; }
+        .log-row { border-bottom: 1px solid #f5f5f3; padding: 12px 16px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; align-items: center; gap: 8px; }
         .log-row:last-child { border-bottom: none; }
         .log-row:hover { background: #fafaf8; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
@@ -1152,6 +1171,17 @@ export default function AdminPage() {
         .price-search-item.selected { background: #e8f5e9; }
         .vet-row-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         .vet-row-buttons { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+        /* Includes pills */
+        .includes-pills { display: flex; gap: 8px; flex-wrap: nowrap; }
+        @media (max-width: 600px) {
+          .includes-pills { flex-direction: column; gap: 6px; }
+          .includes-pills button { width: 100%; text-align: left; }
+        }
+        /* Symptom stats grid */
+        .symptom-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        /* Pending vet card */
+        .pv-card-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .pv-buttons { display: flex; gap: 6px; flex-shrink: 0; }
         @media (max-width: 700px) {
           .stat-grid { grid-template-columns: repeat(3, 1fr); }
           .form-grid-2, .form-grid-3, .form-grid-4 { grid-template-columns: 1fr; }
@@ -1160,13 +1190,29 @@ export default function AdminPage() {
           .vet-row-buttons { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; gap: 8px; }
           .vet-row-buttons .badge { flex: 1; justify-content: center; }
           .vet-row-buttons .adm-btn { flex: 1; text-align: center; }
-          .log-row { grid-template-columns: 1fr 1fr; }
-          .users-row { grid-template-columns: 1fr !important; }
-          .users-row > span, .users-row > div { display: block; }
-          .users-row::before { content: none; }
+          .symptom-stats { grid-template-columns: repeat(2, 1fr); }
+          .log-row { grid-template-columns: 1fr; }
+          .log-row span:nth-child(2) { display: none; }
+          .pv-card-inner { flex-direction: column; }
+          .pv-buttons { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+          .pv-buttons .adm-btn { flex: 1; font-size: 12px; padding: 6px 8px; }
+          .filter-bar .adm-btn { padding: 5px 10px; font-size: 12px; }
+        }
+        @media (max-width: 600px) {
+          .users-table-header { display: none; }
+          .users-table-row { grid-template-columns: 1fr; gap: 4px; padding: 12px 16px; border-bottom: 1px solid #eee; }
+          .users-label { display: block; }
+          .users-col-name { margin-bottom: 4px; }
+          /* Show compact meta line, hide individual cols */
+          .users-col { display: none; }
+          .users-meta-mobile { display: block !important; }
+        }
+        @media (min-width: 601px) {
+          .users-meta-mobile { display: none !important; }
         }
         @media (max-width: 480px) {
           .stat-grid { grid-template-columns: repeat(2, 1fr); }
+          .symptom-stats { grid-template-columns: repeat(2, 1fr); }
         }
       `}</style>
 
@@ -1470,12 +1516,8 @@ export default function AdminPage() {
                 {pendingVets.map((vet) => (
                   <div key={vet.id} className="pending-vet-card">
                     <div
+                      className="pv-card-inner"
                       style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        flexWrap: "wrap",
-                        gap: "8px",
                         marginBottom:
                           editingPendingVet === vet.id ? "4px" : "0",
                       }}
@@ -1566,9 +1608,7 @@ export default function AdminPage() {
                           Found {formatDate(vet.created_at)}
                         </p>
                       </div>
-                      <div
-                        style={{ display: "flex", gap: "6px", flexShrink: 0 }}
-                      >
+                      <div className="pv-buttons">
                         <button
                           className="adm-btn adm-btn-green"
                           onClick={() => approvePendingVet(vet)}
@@ -3359,11 +3399,11 @@ export default function AdminPage() {
                               {/* Smooth sliding toggle — fixed width prevents layout jump */}
                               <div
                                 style={{
-                                  display: "flex",
+                                  display: "inline-flex",
                                   borderRadius: "6px",
                                   border: "1px solid #2d6a4f",
-                                  flexShrink: 0,
                                   overflow: "hidden",
+                                  flexShrink: 0,
                                 }}
                               >
                                 <button
@@ -3386,8 +3426,6 @@ export default function AdminPage() {
                                       ? "#2d6a4f"
                                       : "#fff",
                                     color: !showAllVets ? "#fff" : "#2d6a4f",
-                                    transition: "background 0.2s, color 0.2s",
-                                    whiteSpace: "nowrap",
                                   }}
                                 >
                                   Unpriced
@@ -3413,8 +3451,6 @@ export default function AdminPage() {
                                       ? "#2d6a4f"
                                       : "#fff",
                                     color: showAllVets ? "#fff" : "#2d6a4f",
-                                    transition: "background 0.2s, color 0.2s",
-                                    whiteSpace: "nowrap",
                                   }}
                                 >
                                   All Vets
@@ -3889,7 +3925,20 @@ export default function AdminPage() {
                                         </label>
                                         <select
                                           className="adm-input"
-                                          value={p.species || ""}
+                                          value={
+                                            p.species === "other" ||
+                                            (p.species &&
+                                              ![
+                                                "dog",
+                                                "cat",
+                                                "rabbit",
+                                                "bird",
+                                                "other",
+                                                "",
+                                              ].includes(p.species))
+                                              ? "other"
+                                              : p.species || ""
+                                          }
                                           onChange={(e) =>
                                             setCallPrices((prev) =>
                                               prev.map((row, idx) =>
@@ -3897,6 +3946,11 @@ export default function AdminPage() {
                                                   ? {
                                                       ...row,
                                                       species: e.target.value,
+                                                      speciesOther:
+                                                        e.target.value !==
+                                                        "other"
+                                                          ? ""
+                                                          : row.speciesOther,
                                                     }
                                                   : row,
                                               ),
@@ -3908,8 +3962,31 @@ export default function AdminPage() {
                                           <option value="cat">Cat</option>
                                           <option value="rabbit">Rabbit</option>
                                           <option value="bird">Bird</option>
-                                          <option value="other">Other</option>
+                                          <option value="other">
+                                            Other...
+                                          </option>
                                         </select>
+                                        {p.species === "other" && (
+                                          <input
+                                            className="adm-input"
+                                            style={{ marginTop: "8px" }}
+                                            value={p.speciesOther || ""}
+                                            onChange={(e) =>
+                                              setCallPrices((prev) =>
+                                                prev.map((row, idx) =>
+                                                  idx === i
+                                                    ? {
+                                                        ...row,
+                                                        speciesOther:
+                                                          e.target.value,
+                                                      }
+                                                    : row,
+                                                ),
+                                              )
+                                            }
+                                            placeholder="e.g. Guinea pig, bird..."
+                                          />
+                                        )}
                                       </div>
                                       <div>
                                         <label
@@ -3921,14 +3998,7 @@ export default function AdminPage() {
                                         >
                                           Includes
                                         </label>
-                                        <div
-                                          style={{
-                                            display: "flex",
-                                            gap: "6px",
-                                            flexWrap: "wrap",
-                                            paddingTop: "2px",
-                                          }}
-                                        >
+                                        <div className="includes-pills">
                                           {[
                                             ["includes_bloodwork", "Bloodwork"],
                                             ["includes_xrays", "X-rays"],
@@ -3953,23 +4023,23 @@ export default function AdminPage() {
                                                 )
                                               }
                                               style={{
-                                                padding: "3px 8px",
-                                                borderRadius: "20px",
-                                                fontSize: "11px",
+                                                padding: "5px 12px",
+                                                borderRadius: "6px",
+                                                fontSize: "13px",
                                                 fontWeight: "600",
                                                 cursor: "pointer",
                                                 border: p[field]
-                                                  ? "none"
+                                                  ? "2px solid #2d6a4f"
                                                   : "1px solid #ddd",
                                                 background: p[field]
-                                                  ? "#2d6a4f"
+                                                  ? "#e8f5e9"
                                                   : "#f5f5f5",
                                                 color: p[field]
-                                                  ? "#fff"
+                                                  ? "#2d6a4f"
                                                   : "#555",
-                                                transition: "all 0.15s",
                                               }}
                                             >
+                                              {p[field] ? "✓ " : ""}
                                               {label}
                                             </button>
                                           ))}
@@ -4641,6 +4711,19 @@ export default function AdminPage() {
                           {formatDate(u.created_at)}
                         </span>
                       </div>
+                      {/* Mobile-only compact meta line */}
+                      <p
+                        className="users-meta-mobile"
+                        style={{
+                          margin: "4px 0 0 0",
+                          fontSize: "12px",
+                          color: "#888",
+                        }}
+                      >
+                        {u.zip_code || "—"} ·{" "}
+                        {u.is_public ? "Public" : "Private"} ·{" "}
+                        {formatDate(u.created_at)}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -4664,14 +4747,7 @@ export default function AdminPage() {
                     </span>
                   </h2>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    flexWrap: "wrap",
-                    marginBottom: "16px",
-                  }}
-                >
+                <div className="symptom-stats" style={{ marginBottom: "16px" }}>
                   {Object.entries(TRIAGE_CONFIG).map(([key, cfg]) => {
                     const count = symptomLogs.filter(
                       (s) => s.triage_result === key,
