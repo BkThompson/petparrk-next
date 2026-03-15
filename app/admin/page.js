@@ -1174,8 +1174,9 @@ export default function AdminPage() {
         .price-search-item.selected { background: #e8f5e9; }
         .vet-row-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         .vet-row-buttons { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-        /* Includes pills */
+        /* Includes pills — always column on mobile via media, wrap on desktop */
         .includes-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+        @media (max-width: 600px) { .includes-pills { flex-direction: column; gap: 4px; } .includes-pills button { width: 100%; } }
         /* Symptom stats grid */
         .symptom-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         /* Pending vet card */
@@ -3835,14 +3836,23 @@ export default function AdminPage() {
                                         </label>
                                         <select
                                           className="adm-input"
+                                          style={
+                                            callSpeciesError && !p.service_id
+                                              ? {
+                                                  borderColor: "#c62828",
+                                                  borderWidth: "2px",
+                                                }
+                                              : {}
+                                          }
                                           value={p.service_id}
-                                          onChange={(e) =>
+                                          onChange={(e) => {
+                                            setCallSpeciesError(false);
                                             updateCallPrice(
                                               i,
                                               "service_id",
                                               e.target.value,
-                                            )
-                                          }
+                                            );
+                                          }}
                                         >
                                           <option value="">— Select —</option>
                                           {services.map((s) => (
@@ -3878,15 +3888,26 @@ export default function AdminPage() {
                                         </label>
                                         <input
                                           className="adm-input"
+                                          style={
+                                            callSpeciesError &&
+                                            !p.price_low &&
+                                            !p.call_for_quote
+                                              ? {
+                                                  borderColor: "#c62828",
+                                                  borderWidth: "2px",
+                                                }
+                                              : {}
+                                          }
                                           type="number"
                                           value={p.price_low}
-                                          onChange={(e) =>
+                                          onChange={(e) => {
+                                            setCallSpeciesError(false);
                                             updateCallPrice(
                                               i,
                                               "price_low",
                                               e.target.value,
-                                            )
-                                          }
+                                            );
+                                          }}
                                           placeholder="e.g. 65"
                                         />
                                       </div>
@@ -3926,6 +3947,14 @@ export default function AdminPage() {
                                         </label>
                                         <select
                                           className="adm-input"
+                                          style={
+                                            callSpeciesError && !p.species
+                                              ? {
+                                                  borderColor: "#c62828",
+                                                  borderWidth: "2px",
+                                                }
+                                              : {}
+                                          }
                                           value={
                                             p.species === "other" ||
                                             (p.species &&
@@ -3940,7 +3969,8 @@ export default function AdminPage() {
                                               ? "other"
                                               : p.species || ""
                                           }
-                                          onChange={(e) =>
+                                          onChange={(e) => {
+                                            setCallSpeciesError(false);
                                             setCallPrices((prev) =>
                                               prev.map((row, idx) =>
                                                 idx === i
@@ -3955,8 +3985,8 @@ export default function AdminPage() {
                                                     }
                                                   : row,
                                               ),
-                                            )
-                                          }
+                                            );
+                                          }}
                                         >
                                           <option value="">— Select —</option>
                                           <option value="dog">Dog</option>
@@ -4119,17 +4149,54 @@ export default function AdminPage() {
                                 {callPrices.length > 0 && (
                                   <div style={{ marginTop: "8px" }}>
                                     {callSpeciesError && (
-                                      <p
+                                      <div
                                         style={{
-                                          margin: "0 0 8px 0",
-                                          fontSize: "13px",
-                                          color: "#c62828",
-                                          fontWeight: "600",
+                                          background: "#fff0f0",
+                                          border: "1px solid #ffcdd2",
+                                          borderRadius: "8px",
+                                          padding: "10px 14px",
+                                          marginBottom: "10px",
                                         }}
                                       >
-                                        ⚠️ Please select a species for every
-                                        price row before saving.
-                                      </p>
+                                        <p
+                                          style={{
+                                            margin: 0,
+                                            fontSize: "13px",
+                                            color: "#c62828",
+                                            fontWeight: "600",
+                                          }}
+                                        >
+                                          ⚠️ Complete all required fields before
+                                          saving:
+                                        </p>
+                                        <ul
+                                          style={{
+                                            margin: "6px 0 0 0",
+                                            paddingLeft: "18px",
+                                            fontSize: "13px",
+                                            color: "#c62828",
+                                          }}
+                                        >
+                                          {callPrices.map((p, idx) => {
+                                            const missing = [];
+                                            if (!p.service_id)
+                                              missing.push("Service");
+                                            if (!p.species)
+                                              missing.push("Species");
+                                            if (
+                                              !p.price_low &&
+                                              !p.call_for_quote
+                                            )
+                                              missing.push("Price");
+                                            return missing.length > 0 ? (
+                                              <li key={idx}>
+                                                Row {idx + 1}:{" "}
+                                                {missing.join(", ")}
+                                              </li>
+                                            ) : null;
+                                          })}
+                                        </ul>
+                                      </div>
                                     )}
                                     <button
                                       className="adm-btn adm-btn-green"
@@ -4740,14 +4807,14 @@ export default function AdminPage() {
                       </div>
                       {/* Mobile labeled rows */}
                       <div className="users-mobile-detail">
-                        <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>
+                        <p style={{ margin: "0 0 3px 0" }}>
                           <span
                             style={{
                               color: "#aaa",
                               fontWeight: "700",
+                              fontSize: "11px",
                               textTransform: "uppercase",
                               letterSpacing: "0.4px",
-                              fontSize: "10px",
                             }}
                           >
                             Zip Code:{" "}
@@ -4756,14 +4823,14 @@ export default function AdminPage() {
                             {u.zip_code || "—"}
                           </span>
                         </p>
-                        <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>
+                        <p style={{ margin: "0 0 3px 0" }}>
                           <span
                             style={{
                               color: "#aaa",
                               fontWeight: "700",
+                              fontSize: "11px",
                               textTransform: "uppercase",
                               letterSpacing: "0.4px",
-                              fontSize: "10px",
                             }}
                           >
                             Profile:{" "}
@@ -4776,14 +4843,14 @@ export default function AdminPage() {
                             )}
                           </span>
                         </p>
-                        <p style={{ margin: 0, fontSize: "12px" }}>
+                        <p style={{ margin: 0 }}>
                           <span
                             style={{
                               color: "#aaa",
                               fontWeight: "700",
+                              fontSize: "11px",
                               textTransform: "uppercase",
                               letterSpacing: "0.4px",
-                              fontSize: "10px",
                             }}
                           >
                             Joined:{" "}
