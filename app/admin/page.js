@@ -141,6 +141,8 @@ export default function AdminPage() {
   const [showAllVets, setShowAllVets] = useState(false); // toggle: show all vets vs only unpriced
   const [fullCallQueue, setFullCallQueue] = useState([]); // all vets regardless of prices
   const [deletePriceConfirm, setDeletePriceConfirm] = useState(null); // price id pending delete
+  const [addPriceError, setAddPriceError] = useState(false);
+  const [editPriceError, setEditPriceError] = useState(false);
   const [callSaved, setCallSaved] = useState(false);
   const [callReviewPrices, setCallReviewPrices] = useState([]); // saved prices shown in review
   const [callReviewVetId, setCallReviewVetId] = useState(null); // vet id for editing saved prices
@@ -841,6 +843,11 @@ export default function AdminPage() {
   async function savePrice(formData) {
     // Accept explicit formData so we never read stale closure state
     const f = formData || priceForm;
+    if (!f.service_id || !f.species || (!f.price_low && !f.call_for_quote)) {
+      setEditPriceError(true);
+      return;
+    }
+    setEditPriceError(false);
     setPriceSaving(true);
     const payload = {
       service_id: f.service_id,
@@ -898,10 +905,15 @@ export default function AdminPage() {
   }
 
   async function addPrice() {
-    if (!addPriceForm.service_id || !addPriceForm.price_low) {
-      alert("Service and low price are required.");
+    if (
+      !addPriceForm.service_id ||
+      !addPriceForm.species ||
+      (!addPriceForm.price_low && !addPriceForm.call_for_quote)
+    ) {
+      setAddPriceError(true);
       return;
     }
+    setAddPriceError(false);
     const { data, error } = await supabase
       .from("vet_prices")
       .insert({
@@ -938,6 +950,7 @@ export default function AdminPage() {
         call_for_quote: false,
         notes: "",
       });
+      setAddPriceError(false);
       fetchStats();
       if (callReviewVetId === selectedVetId) fetchReviewPrices(callReviewVetId);
     } else {
@@ -2732,13 +2745,22 @@ export default function AdminPage() {
                             <label className="field-label">Service *</label>
                             <select
                               className="adm-input"
+                              style={
+                                addPriceError && !addPriceForm.service_id
+                                  ? {
+                                      borderColor: "#c62828",
+                                      borderWidth: "2px",
+                                    }
+                                  : {}
+                              }
                               value={addPriceForm.service_id}
-                              onChange={(e) =>
+                              onChange={(e) => {
+                                setAddPriceError(false);
                                 setAddPriceForm({
                                   ...addPriceForm,
                                   service_id: e.target.value,
-                                })
-                              }
+                                });
+                              }}
                             >
                               <option value="">— Select —</option>
                               {services.map((s) => (
@@ -2769,14 +2791,25 @@ export default function AdminPage() {
                             <label className="field-label">Price Low *</label>
                             <input
                               className="adm-input"
+                              style={
+                                addPriceError &&
+                                !addPriceForm.price_low &&
+                                !addPriceForm.call_for_quote
+                                  ? {
+                                      borderColor: "#c62828",
+                                      borderWidth: "2px",
+                                    }
+                                  : {}
+                              }
                               type="number"
                               value={addPriceForm.price_low}
-                              onChange={(e) =>
+                              onChange={(e) => {
+                                setAddPriceError(false);
                                 setAddPriceForm({
                                   ...addPriceForm,
                                   price_low: e.target.value,
-                                })
-                              }
+                                });
+                              }}
                               placeholder="e.g. 65"
                             />
                           </div>
@@ -2804,34 +2837,43 @@ export default function AdminPage() {
                             <label className="field-label">Species</label>
                             <select
                               className="adm-input"
+                              style={
+                                addPriceError && !addPriceForm.species
+                                  ? {
+                                      borderColor: "#c62828",
+                                      borderWidth: "2px",
+                                    }
+                                  : {}
+                              }
                               value={addPriceForm.species || ""}
-                              onChange={(e) =>
+                              onChange={(e) => {
+                                setAddPriceError(false);
                                 setAddPriceForm({
                                   ...addPriceForm,
                                   species: e.target.value,
                                   species_other: "",
-                                })
-                              }
+                                });
+                              }}
                             >
                               <option value="">— Select —</option>
                               <option value="dog">Dog</option>
                               <option value="cat">Cat</option>
                               <option value="rabbit">Rabbit</option>
                               <option value="bird">Bird</option>
-                              <option value="other">Other</option>
+                              <option value="other">Other...</option>
                             </select>
                             {addPriceForm.species === "other" && (
                               <input
                                 className="adm-input"
-                                style={{ marginTop: "6px" }}
-                                value={addPriceForm.species_other}
+                                style={{ marginTop: "8px" }}
+                                value={addPriceForm.species_other || ""}
                                 onChange={(e) =>
                                   setAddPriceForm({
                                     ...addPriceForm,
                                     species_other: e.target.value,
                                   })
                                 }
-                                placeholder="e.g. Guinea Pig..."
+                                placeholder="e.g. Guinea pig, snake..."
                               />
                             )}
                           </div>
@@ -2921,6 +2963,47 @@ export default function AdminPage() {
                             placeholder="Optional"
                           />
                         </div>
+                        {addPriceError && (
+                          <div
+                            style={{
+                              background: "#fff0f0",
+                              border: "1px solid #ffcdd2",
+                              borderRadius: "8px",
+                              padding: "10px 14px",
+                              marginBottom: "10px",
+                            }}
+                          >
+                            <p
+                              style={{
+                                margin: 0,
+                                fontSize: "13px",
+                                color: "#c62828",
+                                fontWeight: "600",
+                              }}
+                            >
+                              ⚠️ Please fill in all required fields:
+                            </p>
+                            <ul
+                              style={{
+                                margin: "6px 0 0 0",
+                                paddingLeft: "18px",
+                                fontSize: "13px",
+                                color: "#c62828",
+                              }}
+                            >
+                              {!addPriceForm.service_id && (
+                                <li>Service is required</li>
+                              )}
+                              {!addPriceForm.species && (
+                                <li>Species is required</li>
+                              )}
+                              {!addPriceForm.price_low &&
+                                !addPriceForm.call_for_quote && (
+                                  <li>Price or "Call for quote" is required</li>
+                                )}
+                            </ul>
+                          </div>
+                        )}
                         <div
                           style={{
                             display: "flex",
@@ -3243,21 +3326,45 @@ export default function AdminPage() {
                                     </label>
                                     <select
                                       className="adm-input"
-                                      value={priceForm.species || "dog"}
-                                      onChange={(e) =>
+                                      style={
+                                        editPriceError && !priceForm.species
+                                          ? {
+                                              borderColor: "#c62828",
+                                              borderWidth: "2px",
+                                            }
+                                          : {}
+                                      }
+                                      value={priceForm.species || ""}
+                                      onChange={(e) => {
+                                        setEditPriceError(false);
                                         setPriceForm({
                                           ...priceForm,
                                           species: e.target.value,
                                           species_other: "",
-                                        })
-                                      }
+                                        });
+                                      }}
                                     >
+                                      <option value="">— Select —</option>
                                       <option value="dog">Dog</option>
                                       <option value="cat">Cat</option>
                                       <option value="rabbit">Rabbit</option>
                                       <option value="bird">Bird</option>
-                                      <option value="other">Other</option>
+                                      <option value="other">Other...</option>
                                     </select>
+                                    {priceForm.species === "other" && (
+                                      <input
+                                        className="adm-input"
+                                        style={{ marginTop: "8px" }}
+                                        value={priceForm.species_other || ""}
+                                        onChange={(e) =>
+                                          setPriceForm({
+                                            ...priceForm,
+                                            species_other: e.target.value,
+                                          })
+                                        }
+                                        placeholder="e.g. Guinea pig, snake..."
+                                      />
+                                    )}
                                   </div>
                                   <div>
                                     <label
@@ -3357,6 +3464,50 @@ export default function AdminPage() {
                                     placeholder="Notes about this price..."
                                   />
                                 </div>
+                                {editPriceError && (
+                                  <div
+                                    style={{
+                                      background: "#fff0f0",
+                                      border: "1px solid #ffcdd2",
+                                      borderRadius: "8px",
+                                      padding: "10px 14px",
+                                      marginBottom: "10px",
+                                    }}
+                                  >
+                                    <p
+                                      style={{
+                                        margin: 0,
+                                        fontSize: "13px",
+                                        color: "#c62828",
+                                        fontWeight: "600",
+                                      }}
+                                    >
+                                      ⚠️ Please fill in all required fields:
+                                    </p>
+                                    <ul
+                                      style={{
+                                        margin: "6px 0 0 0",
+                                        paddingLeft: "18px",
+                                        fontSize: "13px",
+                                        color: "#c62828",
+                                      }}
+                                    >
+                                      {!priceForm.service_id && (
+                                        <li>Service is required</li>
+                                      )}
+                                      {!priceForm.species && (
+                                        <li>Species is required</li>
+                                      )}
+                                      {!priceForm.price_low &&
+                                        !priceForm.call_for_quote && (
+                                          <li>
+                                            Price or "Call for quote" is
+                                            required
+                                          </li>
+                                        )}
+                                    </ul>
+                                  </div>
+                                )}
                                 <div
                                   style={{
                                     display: "flex",
@@ -3366,7 +3517,10 @@ export default function AdminPage() {
                                 >
                                   <button
                                     className="adm-btn adm-btn-gray"
-                                    onClick={() => setEditingPrice(null)}
+                                    onClick={() => {
+                                      setEditingPrice(null);
+                                      setEditPriceError(false);
+                                    }}
                                   >
                                     Cancel
                                   </button>
