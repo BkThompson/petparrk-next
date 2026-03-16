@@ -479,12 +479,12 @@ export default function AdminPage() {
 
     setCallSaving(false);
     setCallSaved(true);
-    // Append to existing review list so "Add More Prices" flow accumulates
-    setCallReviewPrices((prev) => [...prev, ...savedRows]);
     setCallReviewVetId(savedVetId);
     setCallReviewEditing(null);
     setCallPrices([]);
-    // Mark vet as having prices in both queues so it doesn't re-appear in unpriced mode
+    // Fetch fresh from DB — single source of truth
+    await fetchReviewPrices(savedVetId);
+    // Mark vet as having prices in both queues
     setCallQueue((prev) =>
       prev.map((v) => (v.id === savedVetId ? { ...v, _hasPrices: true } : v)),
     );
@@ -516,11 +516,10 @@ export default function AdminPage() {
       alert("Update error: " + error.message);
       return;
     }
-    const updated = [...callReviewPrices];
-    updated[index] = { ...row, ...form };
-    setCallReviewPrices(updated);
     setCallReviewEditing(null);
-    // price updated
+    await fetchReviewPrices(callReviewVetId);
+    // Also refresh Prices tab if it has this vet selected
+    if (selectedVetId === callReviewVetId) fetchPricesForVet(selectedVetId);
   }
 
   async function deleteReviewPrice(index) {
@@ -533,8 +532,9 @@ export default function AdminPage() {
       alert("Delete error: " + error.message);
       return;
     }
-    setCallReviewPrices((prev) => prev.filter((_, i) => i !== index));
-    // price removed
+    await fetchReviewPrices(callReviewVetId);
+    // Also refresh Prices tab if it has this vet selected
+    if (selectedVetId === callReviewVetId) fetchPricesForVet(selectedVetId);
   }
 
   function advanceFromReview() {
@@ -603,6 +603,23 @@ export default function AdminPage() {
 
   function removeCallPrice(index) {
     setCallPrices((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function fetchReviewPrices(vetId) {
+    if (!vetId) return;
+    const toBool = (v) => v === true || v === "true" || v === 1 || v === "1";
+    const { data } = await supabase
+      .from("vet_prices")
+      .select("*, services(name)")
+      .eq("vet_id", vetId)
+      .order("created_at");
+    const clean = (data || []).map((p) => ({
+      ...p,
+      includes_bloodwork: toBool(p.includes_bloodwork),
+      includes_xrays: toBool(p.includes_xrays),
+      includes_anesthesia: toBool(p.includes_anesthesia),
+    }));
+    setCallReviewPrices(clean);
   }
 
   async function fetchSymptomLogs() {
@@ -867,6 +884,7 @@ export default function AdminPage() {
         ),
       );
       setEditingPrice(null);
+      if (callReviewVetId === selectedVetId) fetchReviewPrices(callReviewVetId);
     }
     setPriceSaving(false);
   }
@@ -876,6 +894,7 @@ export default function AdminPage() {
     setVetPrices((prev) => prev.filter((p) => p.id !== id));
     setDeletePriceConfirm(null);
     fetchStats();
+    if (callReviewVetId === selectedVetId) fetchReviewPrices(callReviewVetId);
   }
 
   async function addPrice() {
@@ -920,6 +939,7 @@ export default function AdminPage() {
         notes: "",
       });
       fetchStats();
+      if (callReviewVetId === selectedVetId) fetchReviewPrices(callReviewVetId);
     } else {
       alert("Error: " + error.message);
     }
@@ -1391,6 +1411,9 @@ export default function AdminPage() {
                   if (t === "Prices" && selectedVetId) {
                     setPricesLoading(true);
                     fetchPricesForVet(selectedVetId);
+                  }
+                  if (t === "Call Sheet" && callReviewVetId) {
+                    fetchReviewPrices(callReviewVetId);
                   }
                 }}
               >
