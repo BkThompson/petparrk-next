@@ -404,7 +404,10 @@ export default function AdminPage() {
             phone: vet.phone,
             website: vet.website,
             hours: vet.hours,
-            neighborhood: vet.neighborhood || vet.city,
+            neighborhood:
+              vet.neighborhood && vet.neighborhood !== vet.city
+                ? vet.neighborhood
+                : null,
             vet_type: vet.vet_type
               ? Array.isArray(vet.vet_type)
                 ? vet.vet_type
@@ -412,7 +415,7 @@ export default function AdminPage() {
               : ["General Practice"],
             accepting_new_patients: null,
             carecredit: false,
-            status: "active",
+            status: "inactive",
           })
           .select()
           .single();
@@ -700,7 +703,10 @@ export default function AdminPage() {
       phone: form.phone,
       website: form.website,
       hours: form.hours,
-      neighborhood: form.neighborhood || form.city,
+      neighborhood:
+        form.neighborhood && form.neighborhood !== form.city
+          ? form.neighborhood
+          : null,
       vet_type: form.vet_type
         ? Array.isArray(form.vet_type)
           ? form.vet_type
@@ -708,7 +714,7 @@ export default function AdminPage() {
         : ["General Practice"],
       accepting_new_patients: form.accepting_new_patients ?? null,
       carecredit: form.carecredit ?? false,
-      status: "active",
+      status: "inactive",
       internal_notes: form.notes || form.internal_notes || null,
     });
     if (error) {
