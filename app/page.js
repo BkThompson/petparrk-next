@@ -18,10 +18,19 @@ function formatPrice(low, high, type) {
 function formatPhone(phone) {
   if (!phone) return null;
   const d = phone.replace(/\D/g, "");
-  if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
-  if (d.length === 11 && d[0] === "1") return `+1 (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
+  if (d.length === 10)
+    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  if (d.length === 11 && d[0] === "1")
+    return `+1 (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
   return phone;
 }
+
+const PRICE_RANGES = [
+  { label: "All", value: "all" },
+  { label: "Under $75", value: "under75" },
+  { label: "$75–$125", value: "75to125" },
+  { label: "$125+", value: "over125" },
+];
 
 export default function Home() {
   const router = useRouter();
@@ -39,6 +48,9 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [ownership, setOwnership] = useState("All");
   const [sortBy, setSortBy] = useState("price");
+  const [vetTypeFilter, setVetTypeFilter] = useState("All");
+  const [acceptingFilter, setAcceptingFilter] = useState("All"); // "All" | "Yes" | "No"
+  const [priceRange, setPriceRange] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     vet_name: "",
@@ -156,26 +168,62 @@ export default function Home() {
     (!avatarError &&
       (profileAvatarUrl || session?.user?.user_metadata?.avatar_url)) ||
     null;
+
   const neighborhoods = [
     "All",
     ...new Set(
       vets
         .map((v) => v.neighborhood)
         .filter(Boolean)
-        .sort()
+        .sort(),
     ),
   ];
+
+  // Build dynamic vet type list from data
+  const vetTypes = [
+    "All",
+    ...new Set(
+      vets
+        .flatMap((v) => (Array.isArray(v.vet_type) ? v.vet_type : [v.vet_type]))
+        .filter(Boolean)
+        .sort(),
+    ),
+  ];
+
   const filtered = vets
     .filter((v) => neighborhood === "All" || v.neighborhood === neighborhood)
     .filter((v) => ownership === "All" || v.ownership === ownership)
+    .filter((v) => {
+      if (vetTypeFilter === "All") return true;
+      const types = Array.isArray(v.vet_type) ? v.vet_type : [v.vet_type];
+      return types.includes(vetTypeFilter);
+    })
+    .filter((v) => {
+      if (acceptingFilter === "All") return true;
+      if (acceptingFilter === "Yes") return v.accepting_new_patients === true;
+      if (acceptingFilter === "No") return v.accepting_new_patients === false;
+      return true;
+    })
+    .filter((v) => {
+      if (priceRange === "all") return true;
+      const exam = prices[v.id]?.find(
+        (p) => p.services?.name === "Doctor Exam",
+      );
+      const examPrice = exam?.price_low ?? null;
+      if (examPrice === null) return false;
+      if (priceRange === "under75") return examPrice < 75;
+      if (priceRange === "75to125") return examPrice >= 75 && examPrice <= 125;
+      if (priceRange === "over125") return examPrice > 125;
+      return true;
+    })
     .filter((v) => v.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       if (sortBy === "az") return a.name.localeCompare(b.name);
       const aExam = prices[a.id]?.find(
-        (p) => p.services?.name === "Doctor Exam"
+        (p) => p.services?.name === "Doctor Exam",
       );
       const bExam = prices[b.id]?.find(
-        (p) => p.services?.name === "Doctor Exam"
+        (p) => p.services?.name === "Doctor Exam",
       );
       const aPrice = aExam?.price_low ?? null;
       const bPrice = bExam?.price_low ?? null;
@@ -322,99 +370,8 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Neighborhood Filter */}
-        <div style={{ marginBottom: "20px" }}>
-          <label
-            style={{ fontWeight: "bold", marginRight: "8px", color: "#333" }}
-          >
-            Neighborhood:
-          </label>
-          <select
-            value={neighborhood}
-            onChange={(e) => setNeighborhood(e.target.value)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-          >
-            {neighborhoods.map((n) => (
-              <option key={n}>{n}</option>
-            ))}
-          </select>
-          <span style={{ marginLeft: "12px", color: "#888", fontSize: "14px" }}>
-            {filtered.length} vets
-          </span>
-        </div>
-
-        {/* Ownership Filter */}
-        <div style={{ marginBottom: "20px" }}>
-          <label
-            style={{ fontWeight: "bold", marginRight: "8px", color: "#333" }}
-          >
-            Ownership:
-          </label>
-          <div
-            style={{
-              display: "inline-flex",
-              flexWrap: "wrap",
-              gap: "8px",
-              marginTop: "4px",
-            }}
-          >
-            {["All", "Independent", "Corporate"].map((o) => (
-              <button
-                key={o}
-                onClick={() => setOwnership(o)}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "20px",
-                  border: "1px solid #ccc",
-                  background: ownership === o ? "#2d6a4f" : "#fff",
-                  color: ownership === o ? "#fff" : "#333",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                }}
-              >
-                {o}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Sort */}
-        <div style={{ marginBottom: "20px" }}>
-          <label
-            style={{ fontWeight: "bold", marginRight: "8px", color: "#333" }}
-          >
-            Sort:
-          </label>
-          {[
-            ["price", "💰 Cheapest First"],
-            ["az", "A–Z"],
-          ].map(([val, label]) => (
-            <button
-              key={val}
-              onClick={() => setSortBy(val)}
-              style={{
-                marginRight: "8px",
-                padding: "6px 12px",
-                borderRadius: "20px",
-                border: "1px solid #ccc",
-                background: sortBy === val ? "#2d6a4f" : "#fff",
-                color: sortBy === val ? "#fff" : "#333",
-                cursor: "pointer",
-                fontSize: "13px",
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
         {/* Search */}
-        <div style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "16px" }}>
           <input
             type="text"
             placeholder="Search vets..."
@@ -432,28 +389,248 @@ export default function Home() {
           />
         </div>
 
-        {loading && <p>Loading vets...</p>}
+        {/* Neighborhood Filter */}
+        <div style={{ marginBottom: "16px" }}>
+          <label
+            style={{
+              fontWeight: "bold",
+              marginRight: "8px",
+              color: "#333",
+              fontSize: "13px",
+            }}
+          >
+            Neighborhood
+          </label>
+          <select
+            value={neighborhood}
+            onChange={(e) => setNeighborhood(e.target.value)}
+            style={{
+              padding: "6px 12px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+            }}
+          >
+            {neighborhoods.map((n) => (
+              <option key={n}>{n}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Vet Type Filter — only renders if there are multiple types in the data */}
+        {vetTypes.length > 2 && (
+          <div style={{ marginBottom: "16px" }}>
+            <div
+              style={{
+                fontWeight: "bold",
+                marginBottom: "8px",
+                color: "#333",
+                fontSize: "13px",
+              }}
+            >
+              Type
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {vetTypes.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setVetTypeFilter(t)}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "20px",
+                    border: `1px solid ${vetTypeFilter === t ? "#2d6a4f" : "#ccc"}`,
+                    background: vetTypeFilter === t ? "#2d6a4f" : "#fff",
+                    color: vetTypeFilter === t ? "#fff" : "#333",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Ownership Filter */}
+        <div style={{ marginBottom: "16px" }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              marginBottom: "8px",
+              color: "#333",
+              fontSize: "13px",
+            }}
+          >
+            Ownership
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {["All", "Independent", "Corporate"].map((o) => (
+              <button
+                key={o}
+                onClick={() => setOwnership(o)}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "20px",
+                  border: `1px solid ${ownership === o ? "#2d6a4f" : "#ccc"}`,
+                  background: ownership === o ? "#2d6a4f" : "#fff",
+                  color: ownership === o ? "#fff" : "#333",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                }}
+              >
+                {o}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Accepting New Patients Filter */}
+        <div style={{ marginBottom: "16px" }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              marginBottom: "8px",
+              color: "#333",
+              fontSize: "13px",
+            }}
+          >
+            Accepting New Patients
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {[
+              { label: "All", value: "All" },
+              { label: "✅ Accepting", value: "Yes" },
+              { label: "❌ Not accepting", value: "No" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setAcceptingFilter(opt.value)}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "20px",
+                  border: `1px solid ${acceptingFilter === opt.value ? "#2d6a4f" : "#ccc"}`,
+                  background:
+                    acceptingFilter === opt.value ? "#2d6a4f" : "#fff",
+                  color: acceptingFilter === opt.value ? "#fff" : "#333",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Exam Price Range Filter */}
+        <div style={{ marginBottom: "16px" }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              marginBottom: "8px",
+              color: "#333",
+              fontSize: "13px",
+            }}
+          >
+            Exam Price
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {PRICE_RANGES.map((r) => (
+              <button
+                key={r.value}
+                onClick={() => setPriceRange(r.value)}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "20px",
+                  border: `1px solid ${priceRange === r.value ? "#2d6a4f" : "#ccc"}`,
+                  background: priceRange === r.value ? "#2d6a4f" : "#fff",
+                  color: priceRange === r.value ? "#fff" : "#333",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sort */}
+        <div style={{ marginBottom: "16px" }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              marginBottom: "8px",
+              color: "#333",
+              fontSize: "13px",
+            }}
+          >
+            Sort
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {[
+              ["price", "💰 Cheapest First"],
+              ["az", "A–Z"],
+            ].map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setSortBy(val)}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "20px",
+                  border: `1px solid ${sortBy === val ? "#2d6a4f" : "#ccc"}`,
+                  background: sortBy === val ? "#2d6a4f" : "#fff",
+                  color: sortBy === val ? "#fff" : "#333",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Result count */}
+        <p
+          style={{
+            color: "#888",
+            fontSize: "13px",
+            marginBottom: "16px",
+            marginTop: "0",
+          }}
+        >
+          {loading
+            ? "Loading…"
+            : `${filtered.length} vet${filtered.length !== 1 ? "s" : ""} found`}
+        </p>
 
         {/* Vet Cards */}
         {filtered.map((vet) => {
           const vetPrices = prices[vet.id] || [];
           const exam = vetPrices.find(
-            (p) => p.services?.name === "Doctor Exam" && p.price_low
+            (p) => p.services?.name === "Doctor Exam" && p.price_low,
           );
           const dental = vetPrices.find(
-            (p) => p.services?.name === "Dental Cleaning" && p.price_low
+            (p) => p.services?.name === "Dental Cleaning" && p.price_low,
           );
           const spay = vetPrices.find(
-            (p) => p.services?.name === "Spay (~40lb dog)" && p.price_low
+            (p) => p.services?.name === "Spay (~40lb dog)" && p.price_low,
           );
           const neuter = vetPrices.find(
-            (p) => p.services?.name === "Neuter (~40lb dog)" && p.price_low
+            (p) => p.services?.name === "Neuter (~40lb dog)" && p.price_low,
           );
           const lastUpdated = vet.last_verified
             ? new Date(vet.last_verified + "T12:00:00")
             : vetPrices.length > 0
-            ? new Date(Math.max(...vetPrices.map((p) => new Date(p.created_at))))
-            : null;
+              ? new Date(
+                  Math.max(...vetPrices.map((p) => new Date(p.created_at))),
+                )
+              : null;
           const isSaved = savedVetIds.has(vet.id);
           const isAnimating = animatingId === vet.id;
 
@@ -487,32 +664,72 @@ export default function Home() {
               </h2>
 
               {/* Badges inline under name */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "6px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "4px",
+                  marginBottom: "6px",
+                }}
+              >
                 {(Array.isArray(vet.vet_type) ? vet.vet_type : [vet.vet_type])
                   .filter(Boolean)
                   .map((t) => (
-                    <span key={t} style={{ fontSize: "11px", background: "#e8f5e9", color: "#2d6a4f", padding: "2px 8px", borderRadius: "12px", whiteSpace: "nowrap" }}>
+                    <span
+                      key={t}
+                      style={{
+                        fontSize: "11px",
+                        background: "#e8f5e9",
+                        color: "#2d6a4f",
+                        padding: "2px 8px",
+                        borderRadius: "12px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       {t}
                     </span>
                   ))}
                 {vet.accepting_new_patients === true && (
-                  <span style={{ fontSize: "11px", background: "#e8f0fe", color: "#3949ab", padding: "2px 8px", borderRadius: "12px", whiteSpace: "nowrap" }}>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      background: "#e8f0fe",
+                      color: "#3949ab",
+                      padding: "2px 8px",
+                      borderRadius: "12px",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     ✅ Accepting patients
                   </span>
                 )}
                 {vet.accepting_new_patients === false && (
-                  <span style={{ fontSize: "11px", background: "#fce8e8", color: "#c62828", padding: "2px 8px", borderRadius: "12px", whiteSpace: "nowrap" }}>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      background: "#fce8e8",
+                      color: "#c62828",
+                      padding: "2px 8px",
+                      borderRadius: "12px",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     ❌ Not accepting
                   </span>
                 )}
               </div>
 
               {/* Neighborhood / phone / website */}
-              <p style={{ margin: "0 0 2px 0", color: "#666", fontSize: "13px" }}>
+              <p
+                style={{ margin: "0 0 2px 0", color: "#666", fontSize: "13px" }}
+              >
                 {[vet.neighborhood, vet.city].filter(Boolean).join(" · ")}
               </p>
               <p style={{ margin: "0 0 2px 0", fontSize: "13px" }}>
-                <a href={`tel:${vet.phone}`} style={{ color: "#666", textDecoration: "none" }}>
+                <a
+                  href={`tel:${vet.phone}`}
+                  style={{ color: "#666", textDecoration: "none" }}
+                >
                   {formatPhone(vet.phone)}
                 </a>
               </p>
@@ -523,8 +740,12 @@ export default function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: "#2d6a4f", textDecoration: "none" }}
-                    onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
-                    onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+                    onMouseEnter={(e) =>
+                      (e.target.style.textDecoration = "underline")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.textDecoration = "none")
+                    }
                   >
                     Website ↗
                   </a>
@@ -533,33 +754,99 @@ export default function Home() {
 
               {/* Price chips */}
               {!exam && !dental && !spay && !neuter ? (
-                <p style={{ margin: "12px 0 0 0", fontSize: "13px", color: "#999", fontStyle: "italic" }}>
+                <p
+                  style={{
+                    margin: "12px 0 0 0",
+                    fontSize: "13px",
+                    color: "#999",
+                    fontStyle: "italic",
+                  }}
+                >
                   No pricing available
                 </p>
               ) : (
-                <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    marginTop: "12px",
+                    flexWrap: "wrap",
+                  }}
+                >
                   {exam && (
-                    <div style={{ background: "#f0f0f0", borderRadius: "6px", padding: "6px 10px", fontSize: "13px" }}>
+                    <div
+                      style={{
+                        background: "#f0f0f0",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontSize: "13px",
+                      }}
+                    >
                       <span style={{ color: "#666" }}>Exam </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>{formatPrice(exam.price_low, exam.price_high, exam.price_type)}</span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>
+                        {formatPrice(
+                          exam.price_low,
+                          exam.price_high,
+                          exam.price_type,
+                        )}
+                      </span>
                     </div>
                   )}
                   {dental && (
-                    <div style={{ background: "#f0f0f0", borderRadius: "6px", padding: "6px 10px", fontSize: "13px" }}>
+                    <div
+                      style={{
+                        background: "#f0f0f0",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontSize: "13px",
+                      }}
+                    >
                       <span style={{ color: "#666" }}>Dental </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>{formatPrice(dental.price_low, dental.price_high, dental.price_type)}</span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>
+                        {formatPrice(
+                          dental.price_low,
+                          dental.price_high,
+                          dental.price_type,
+                        )}
+                      </span>
                     </div>
                   )}
                   {spay && (
-                    <div style={{ background: "#f0f0f0", borderRadius: "6px", padding: "6px 10px", fontSize: "13px" }}>
+                    <div
+                      style={{
+                        background: "#f0f0f0",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontSize: "13px",
+                      }}
+                    >
                       <span style={{ color: "#666" }}>Spay </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>{formatPrice(spay.price_low, spay.price_high, spay.price_type)}</span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>
+                        {formatPrice(
+                          spay.price_low,
+                          spay.price_high,
+                          spay.price_type,
+                        )}
+                      </span>
                     </div>
                   )}
                   {neuter && (
-                    <div style={{ background: "#f0f0f0", borderRadius: "6px", padding: "6px 10px", fontSize: "13px" }}>
+                    <div
+                      style={{
+                        background: "#f0f0f0",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontSize: "13px",
+                      }}
+                    >
                       <span style={{ color: "#666" }}>Neuter </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>{formatPrice(neuter.price_low, neuter.price_high, neuter.price_type)}</span>
+                      <span style={{ fontWeight: "bold", color: "#111" }}>
+                        {formatPrice(
+                          neuter.price_low,
+                          neuter.price_high,
+                          neuter.price_type,
+                        )}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -593,10 +880,35 @@ export default function Home() {
           );
         })}
 
+        {/* No results state */}
+        {!loading && filtered.length === 0 && (
+          <div
+            style={{ textAlign: "center", padding: "40px 20px", color: "#888" }}
+          >
+            <p style={{ fontSize: "32px", margin: "0 0 12px 0" }}>🔍</p>
+            <p
+              style={{
+                fontSize: "15px",
+                fontWeight: "600",
+                color: "#555",
+                margin: "0 0 8px 0",
+              }}
+            >
+              No vets found
+            </p>
+            <p style={{ fontSize: "13px", margin: "0" }}>
+              Try adjusting your filters
+            </p>
+          </div>
+        )}
+
         {/* Submit a Price */}
         <div style={{ marginTop: "40px", textAlign: "center" }}>
           <button
-            onClick={() => { setShowForm(!showForm); setFormStatus(null); }}
+            onClick={() => {
+              setShowForm(!showForm);
+              setFormStatus(null);
+            }}
             style={{
               padding: "10px 24px",
               backgroundColor: "#2d6a4f",
@@ -622,29 +934,80 @@ export default function Home() {
                 margin: "20px auto 0",
               }}
             >
-              <h3 style={{ margin: "0 0 16px 0", color: "#111" }}>Submit a Vet Price</h3>
-              {["vet_name", "service_name", "price_paid", "visit_date", "submitter_note"].map((field) => (
+              <h3 style={{ margin: "0 0 16px 0", color: "#111" }}>
+                Submit a Vet Price
+              </h3>
+              {[
+                "vet_name",
+                "service_name",
+                "price_paid",
+                "visit_date",
+                "submitter_note",
+              ].map((field) => (
                 <div key={field} style={{ marginBottom: "12px" }}>
-                  <label style={{ display: "block", fontSize: "13px", color: "#555", marginBottom: "4px" }}>
-                    {field === "vet_name" ? "Vet Name *"
-                      : field === "service_name" ? "Service (e.g. Exam, Dental) *"
-                      : field === "price_paid" ? "Price Paid ($) *"
-                      : field === "visit_date" ? "Date of Visit (optional)"
-                      : "Notes (optional)"}
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      color: "#555",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    {field === "vet_name"
+                      ? "Vet Name *"
+                      : field === "service_name"
+                        ? "Service (e.g. Exam, Dental) *"
+                        : field === "price_paid"
+                          ? "Price Paid ($) *"
+                          : field === "visit_date"
+                            ? "Date of Visit (optional)"
+                            : "Notes (optional)"}
                   </label>
                   <input
-                    type={field === "price_paid" ? "number" : field === "visit_date" ? "date" : "text"}
+                    type={
+                      field === "price_paid"
+                        ? "number"
+                        : field === "visit_date"
+                          ? "date"
+                          : "text"
+                    }
                     value={formData[field]}
-                    onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "14px", boxSizing: "border-box" }}
+                    onChange={(e) =>
+                      setFormData({ ...formData, [field]: e.target.value })
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #ccc",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                    }}
                   />
                 </div>
               ))}
-              {formStatus === "error" && <p style={{ color: "red", fontSize: "13px" }}>Please fill in all required fields.</p>}
-              {formStatus === "success" && <p style={{ color: "green", fontSize: "13px" }}>Thanks! Your submission is under review.</p>}
+              {formStatus === "error" && (
+                <p style={{ color: "red", fontSize: "13px" }}>
+                  Please fill in all required fields.
+                </p>
+              )}
+              {formStatus === "success" && (
+                <p style={{ color: "green", fontSize: "13px" }}>
+                  Thanks! Your submission is under review.
+                </p>
+              )}
               <button
                 onClick={handleSubmit}
-                style={{ padding: "10px 24px", backgroundColor: "#2d6a4f", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", cursor: "pointer", marginTop: "4px" }}
+                style={{
+                  padding: "10px 24px",
+                  backgroundColor: "#2d6a4f",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  marginTop: "4px",
+                }}
               >
                 Submit
               </button>
@@ -664,12 +1027,29 @@ export default function Home() {
             fontSize: "13px",
           }}
         >
-          <p style={{ margin: "0 0 8px 0", fontWeight: "bold", color: "#2d6a4f", fontSize: "15px" }}>🐾 PetParrk</p>
-          <p style={{ margin: "0 0 8px 0" }}>Real prices. Real vets. No surprises.</p>
-          <p style={{ margin: "0 0 8px 0" }}>Pricing data is self-reported and verified by our team. Always call to confirm before your visit.</p>
+          <p
+            style={{
+              margin: "0 0 8px 0",
+              fontWeight: "bold",
+              color: "#2d6a4f",
+              fontSize: "15px",
+            }}
+          >
+            🐾 PetParrk
+          </p>
+          <p style={{ margin: "0 0 8px 0" }}>
+            Real prices. Real vets. No surprises.
+          </p>
+          <p style={{ margin: "0 0 8px 0" }}>
+            Pricing data is self-reported and verified by our team. Always call
+            to confirm before your visit.
+          </p>
           <p style={{ margin: "0" }}>
             Questions or feedback?{" "}
-            <a href="mailto:bkalthompson@gmail.com" style={{ color: "#2d6a4f", textDecoration: "none" }}>
+            <a
+              href="mailto:bkalthompson@gmail.com"
+              style={{ color: "#2d6a4f", textDecoration: "none" }}
+            >
               bkalthompson@gmail.com
             </a>
           </p>
