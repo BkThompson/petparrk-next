@@ -179,13 +179,14 @@ export default function Home() {
     ),
   ];
 
-  // Build dynamic vet type list from data
+  // Build dynamic vet type list from data — trim to avoid duplicate whitespace issues
   const vetTypes = [
     "All",
     ...new Set(
       vets
         .flatMap((v) => (Array.isArray(v.vet_type) ? v.vet_type : [v.vet_type]))
         .filter(Boolean)
+        .map((t) => t.trim())
         .sort(),
     ),
   ];
@@ -195,7 +196,9 @@ export default function Home() {
     .filter((v) => ownership === "All" || v.ownership === ownership)
     .filter((v) => {
       if (vetTypeFilter === "All") return true;
-      const types = Array.isArray(v.vet_type) ? v.vet_type : [v.vet_type];
+      const types = (Array.isArray(v.vet_type) ? v.vet_type : [v.vet_type])
+        .filter(Boolean)
+        .map((t) => t.trim());
       return types.includes(vetTypeFilter);
     })
     .filter((v) => {
@@ -417,39 +420,35 @@ export default function Home() {
           </select>
         </div>
 
-        {/* Vet Type Filter — only renders if there are multiple types in the data */}
+        {/* Vet Type Filter */}
         {vetTypes.length > 2 && (
           <div style={{ marginBottom: "16px" }}>
-            <div
+            <label
               style={{
                 fontWeight: "bold",
-                marginBottom: "8px",
+                marginRight: "8px",
                 color: "#333",
                 fontSize: "13px",
               }}
             >
               Type
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            </label>
+            <select
+              value={vetTypeFilter}
+              onChange={(e) => setVetTypeFilter(e.target.value)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+              }}
+            >
               {vetTypes.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setVetTypeFilter(t)}
-                  style={{
-                    padding: "6px 12px",
-                    borderRadius: "20px",
-                    border: `1px solid ${vetTypeFilter === t ? "#2d6a4f" : "#ccc"}`,
-                    background: vetTypeFilter === t ? "#2d6a4f" : "#fff",
-                    color: vetTypeFilter === t ? "#fff" : "#333",
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                <option key={t} value={t}>
                   {t}
-                </button>
+                </option>
               ))}
-            </div>
+            </select>
           </div>
         )}
 
