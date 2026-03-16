@@ -509,7 +509,10 @@ export default function AdminPage() {
         includes_bloodwork: !!form.includes_bloodwork,
         includes_xrays: !!form.includes_xrays,
         includes_anesthesia: !!form.includes_anesthesia,
-        species: form.species || null,
+        species:
+          form.species === "other"
+            ? form.speciesOther || "other"
+            : form.species || null,
         call_for_quote: !!form.call_for_quote,
         notes: form.notes || null,
       })
@@ -4855,7 +4858,20 @@ export default function AdminPage() {
                                               </label>
                                               <select
                                                 className="adm-input"
-                                                value={row.species || ""}
+                                                value={
+                                                  row.species === "other" ||
+                                                  (row.species &&
+                                                    ![
+                                                      "dog",
+                                                      "cat",
+                                                      "rabbit",
+                                                      "bird",
+                                                      "other",
+                                                      "",
+                                                    ].includes(row.species))
+                                                    ? "other"
+                                                    : row.species || ""
+                                                }
                                                 onChange={(e) => {
                                                   const u = [
                                                     ...callReviewPrices,
@@ -4863,6 +4879,7 @@ export default function AdminPage() {
                                                   u[i] = {
                                                     ...u[i],
                                                     species: e.target.value,
+                                                    speciesOther: "",
                                                   };
                                                   setCallReviewPrices(u);
                                                 }}
@@ -4879,9 +4896,28 @@ export default function AdminPage() {
                                                   Bird
                                                 </option>
                                                 <option value="other">
-                                                  Other
+                                                  Other...
                                                 </option>
                                               </select>
+                                              {row.species === "other" && (
+                                                <input
+                                                  className="adm-input"
+                                                  style={{ marginTop: "8px" }}
+                                                  value={row.speciesOther || ""}
+                                                  onChange={(e) => {
+                                                    const u = [
+                                                      ...callReviewPrices,
+                                                    ];
+                                                    u[i] = {
+                                                      ...u[i],
+                                                      speciesOther:
+                                                        e.target.value,
+                                                    };
+                                                    setCallReviewPrices(u);
+                                                  }}
+                                                  placeholder="e.g. Guinea pig, snake..."
+                                                />
+                                              )}
                                             </div>
                                             <div>
                                               <label className="field-label">
