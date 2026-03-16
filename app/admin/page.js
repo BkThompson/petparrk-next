@@ -580,6 +580,11 @@ export default function AdminPage() {
           .from("pending_vets")
           .update({ status: "rejected" })
           .eq("id", vet.id);
+      } else if (status === "declined") {
+        await supabase
+          .from("pending_vets")
+          .update({ notes: "declined_to_share" })
+          .eq("id", vet.id);
       } else {
         await supabase
           .from("pending_vets")
@@ -587,11 +592,25 @@ export default function AdminPage() {
           .eq("id", vet.id);
       }
     } else {
-      await supabase
-        .from("vets")
-        .update({ internal_notes: status })
-        .eq("id", vet.id);
+      if (status === "declined") {
+        await supabase
+          .from("vets")
+          .update({ internal_notes: "declined_to_share" })
+          .eq("id", vet.id);
+      } else {
+        await supabase
+          .from("vets")
+          .update({ internal_notes: status })
+          .eq("id", vet.id);
+      }
     }
+    // Update queue so declined badge shows
+    setCallQueue((prev) =>
+      prev.map((v, idx) => (idx === callIndex ? { ...v, _status: status } : v)),
+    );
+    setFullCallQueue((prev) =>
+      prev.map((v, idx) => (idx === callIndex ? { ...v, _status: status } : v)),
+    );
     setCallIndex((i) => i + 1);
   }
 
@@ -1200,8 +1219,11 @@ export default function AdminPage() {
           </div>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
-          <button className="adm-btn adm-btn-green" onClick={onApprove}>
-            ✅ Approve & Add to Site
+          <button
+            className="adm-btn adm-btn-green pv-approve-btn"
+            onClick={onApprove}
+          >
+            Approve & Add to Site
           </button>
           <button className="adm-btn adm-btn-gray" onClick={onCancel}>
             Cancel
@@ -1254,6 +1276,8 @@ export default function AdminPage() {
         .badge-active { background: #e8f5e9; color: #2d6a4f; border: 1px solid #c8e6c9; }
         .badge-inactive { background: #f0f0f0; color: #888; border: 1px solid #ddd; }
         .row-edit-bg { background: #f9f9f9; border-radius: 10px; padding: 20px 20px 16px 20px; margin: 6px 0 20px 0; border: 1px solid #e8e8e8; }
+        .pv-approve-btn { font-size: 12px; padding: 5px 10px; }
+        @media (min-width: 601px) { .pv-approve-btn { font-size: 13px; padding: 7px 14px; } }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
         .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
@@ -1738,24 +1762,8 @@ export default function AdminPage() {
                         }}
                       >
                         <div>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              marginBottom: "2px",
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontWeight: "700",
-                                fontSize: "14px",
-                                color: "#111",
-                              }}
-                            >
-                              {vet.name}
-                            </span>
-                            {vet.source && (
+                          {vet.source && (
+                            <div style={{ marginBottom: "4px" }}>
                               <span
                                 style={{
                                   fontSize: "11px",
@@ -1767,7 +1775,18 @@ export default function AdminPage() {
                               >
                                 via {vet.source}
                               </span>
-                            )}
+                            </div>
+                          )}
+                          <div style={{ marginBottom: "2px" }}>
+                            <span
+                              style={{
+                                fontWeight: "700",
+                                fontSize: "14px",
+                                color: "#111",
+                              }}
+                            >
+                              {vet.name}
+                            </span>
                           </div>
                           {vet.address && (
                             <p
@@ -2728,128 +2747,6 @@ export default function AdminPage() {
                   )}
                 </div>
 
-                {unverifiedLoading && (
-                  <p style={{ color: "#888", fontSize: "14px" }}>
-                    Loading unverified prices...
-                  </p>
-                )}
-                {unverifiedPrices.length > 0 && (
-                  <div style={{ marginBottom: "24px" }}>
-                    <div
-                      className="section-header"
-                      style={{ marginBottom: "12px" }}
-                    >
-                      <div>
-                        <h2
-                          style={{ margin: 0, fontSize: "1rem", color: "#111" }}
-                        >
-                          🤖 AI-Found Prices
-                          <span
-                            style={{
-                              marginLeft: "8px",
-                              fontSize: "12px",
-                              background: "#fff8e1",
-                              color: "#e65100",
-                              padding: "2px 8px",
-                              borderRadius: "20px",
-                              fontWeight: "600",
-                            }}
-                          >
-                            {unverifiedPrices.length} to review
-                          </span>
-                        </h2>
-                        <p
-                          style={{ margin: 0, fontSize: "13px", color: "#888" }}
-                        >
-                          Found by the price scraper — verify before going live
-                        </p>
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        background: "#fff",
-                        border: "1px solid #e8e8e8",
-                        borderRadius: "8px",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {unverifiedPrices.map((p, i) => (
-                        <div
-                          key={p.id}
-                          style={{
-                            padding: "12px 16px",
-                            borderBottom:
-                              i < unverifiedPrices.length - 1
-                                ? "1px solid #f0f0f0"
-                                : "none",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <div style={{ flex: 1, minWidth: "200px" }}>
-                            <div
-                              style={{
-                                fontWeight: "600",
-                                fontSize: "14px",
-                                color: "#111",
-                              }}
-                            >
-                              {p.vets?.name ||
-                                p.pending_vets?.name ||
-                                "Unknown vet"}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "13px",
-                                color: "#666",
-                                marginTop: "3px",
-                              }}
-                            >
-                              {p.services?.name || "Unknown service"} —{" "}
-                              <span
-                                style={{ color: "#2d6a4f", fontWeight: "600" }}
-                              >
-                                {formatPrice(
-                                  p.price_low,
-                                  p.price_high,
-                                  p.price_type,
-                                )}
-                              </span>
-                            </div>
-                            {p.notes && (
-                              <div
-                                style={{
-                                  fontSize: "13px",
-                                  color: "#888",
-                                  fontStyle: "italic",
-                                  marginTop: "3px",
-                                }}
-                              >
-                                {p.notes}
-                              </div>
-                            )}
-                          </div>
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <button
-                              className="adm-btn adm-btn-green"
-                              onClick={() => approveUnverifiedPrice(p.id)}
-                            >
-                              ✓ Approve
-                            </button>
-                            <button
-                              className="adm-btn adm-btn-red"
-                              onClick={() => rejectUnverifiedPrice(p.id)}
-                            >
-                              ✕ Reject
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 {selectedVetId && (
                   <>
                     <div className="section-header">
@@ -3754,6 +3651,128 @@ export default function AdminPage() {
                     </div>
                   </>
                 )}
+                {unverifiedLoading && (
+                  <p style={{ color: "#888", fontSize: "14px" }}>
+                    Loading unverified prices...
+                  </p>
+                )}
+                {unverifiedPrices.length > 0 && (
+                  <div style={{ marginTop: "24px" }}>
+                    <div
+                      className="section-header"
+                      style={{ marginBottom: "12px" }}
+                    >
+                      <div>
+                        <h2
+                          style={{ margin: 0, fontSize: "1rem", color: "#111" }}
+                        >
+                          🤖 AI-Found Prices
+                          <span
+                            style={{
+                              marginLeft: "8px",
+                              fontSize: "12px",
+                              background: "#fff8e1",
+                              color: "#e65100",
+                              padding: "2px 8px",
+                              borderRadius: "20px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            {unverifiedPrices.length} to review
+                          </span>
+                        </h2>
+                        <p
+                          style={{ margin: 0, fontSize: "13px", color: "#888" }}
+                        >
+                          Found by the price scraper — verify before going live
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        background: "#fff",
+                        border: "1px solid #e8e8e8",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {unverifiedPrices.map((p, i) => (
+                        <div
+                          key={p.id}
+                          style={{
+                            padding: "12px 16px",
+                            borderBottom:
+                              i < unverifiedPrices.length - 1
+                                ? "1px solid #f0f0f0"
+                                : "none",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <div style={{ flex: 1, minWidth: "200px" }}>
+                            <div
+                              style={{
+                                fontWeight: "600",
+                                fontSize: "14px",
+                                color: "#111",
+                              }}
+                            >
+                              {p.vets?.name ||
+                                p.pending_vets?.name ||
+                                "Unknown vet"}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "13px",
+                                color: "#666",
+                                marginTop: "3px",
+                              }}
+                            >
+                              {p.services?.name || "Unknown service"} —{" "}
+                              <span
+                                style={{ color: "#2d6a4f", fontWeight: "600" }}
+                              >
+                                {formatPrice(
+                                  p.price_low,
+                                  p.price_high,
+                                  p.price_type,
+                                )}
+                              </span>
+                            </div>
+                            {p.notes && (
+                              <div
+                                style={{
+                                  fontSize: "13px",
+                                  color: "#888",
+                                  fontStyle: "italic",
+                                  marginTop: "3px",
+                                }}
+                              >
+                                {p.notes}
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <button
+                              className="adm-btn adm-btn-green"
+                              onClick={() => approveUnverifiedPrice(p.id)}
+                            >
+                              ✓ Approve
+                            </button>
+                            <button
+                              className="adm-btn adm-btn-red"
+                              onClick={() => rejectUnverifiedPrice(p.id)}
+                            >
+                              ✕ Reject
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -4361,51 +4380,52 @@ export default function AdminPage() {
                                       padding: "16px",
                                     }}
                                   >
+                                    {/* Header */}
                                     <div
                                       style={{
                                         display: "flex",
                                         justifyContent: "space-between",
-                                        alignItems: "center",
-                                        marginBottom: "12px",
+                                        alignItems: "flex-start",
+                                        marginBottom: "14px",
                                       }}
                                     >
                                       <p
                                         style={{
                                           margin: 0,
-                                          fontSize: "13px",
+                                          fontSize: "14px",
                                           fontWeight: "700",
                                           color: "#111",
                                         }}
                                       >
-                                        📋 Notes for {vet.name}
+                                        Notes for {vet.name}
                                       </p>
                                       <button
-                                        className="adm-btn adm-btn-gray"
-                                        style={{
-                                          fontSize: "11px",
-                                          padding: "3px 8px",
-                                        }}
                                         onClick={() =>
                                           setShowCallbackNotes(false)
                                         }
+                                        style={{
+                                          background: "none",
+                                          border: "none",
+                                          cursor: "pointer",
+                                          fontSize: "18px",
+                                          color: "#888",
+                                          lineHeight: 1,
+                                          padding: "0 2px",
+                                        }}
                                       >
-                                        Close
+                                        ✕
                                       </button>
                                     </div>
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        gap: "8px",
-                                        marginBottom: "12px",
-                                      }}
-                                    >
+                                    {/* Add new note */}
+                                    <div style={{ marginBottom: "16px" }}>
                                       <textarea
                                         className="adm-input"
-                                        rows={2}
+                                        rows={3}
                                         style={{
-                                          flex: 1,
+                                          width: "100%",
                                           resize: "vertical",
                                           height: "auto",
+                                          marginBottom: "8px",
                                         }}
                                         value={callbackNoteText}
                                         onChange={(e) =>
@@ -4413,20 +4433,27 @@ export default function AdminPage() {
                                         }
                                         placeholder="Add a note about this vet..."
                                       />
-                                      <button
-                                        className="adm-btn adm-btn-green"
-                                        style={{ alignSelf: "flex-end" }}
-                                        onClick={() =>
-                                          saveCallNote(
-                                            vet.id,
-                                            vet.name,
-                                            callbackNoteText,
-                                          )
-                                        }
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          justifyContent: "flex-end",
+                                        }}
                                       >
-                                        Save
-                                      </button>
+                                        <button
+                                          className="adm-btn adm-btn-green"
+                                          onClick={() =>
+                                            saveCallNote(
+                                              vet.id,
+                                              vet.name,
+                                              callbackNoteText,
+                                            )
+                                          }
+                                        >
+                                          Save Note
+                                        </button>
+                                      </div>
                                     </div>
+                                    {/* Notes list — latest first */}
                                     {callNotes.length === 0 && (
                                       <p
                                         style={{
@@ -4443,25 +4470,21 @@ export default function AdminPage() {
                                       <div
                                         key={n.id}
                                         style={{
-                                          borderTop: "1px solid #f0f0f0",
-                                          paddingTop: "10px",
-                                          marginTop: "10px",
+                                          borderTop: "1px solid #ebebeb",
+                                          paddingTop: "12px",
+                                          marginTop: "12px",
                                         }}
                                       >
                                         {editingNoteId === n.id ? (
-                                          <div
-                                            style={{
-                                              display: "flex",
-                                              gap: "8px",
-                                            }}
-                                          >
+                                          <div>
                                             <textarea
                                               className="adm-input"
-                                              rows={2}
+                                              rows={3}
                                               style={{
-                                                flex: 1,
+                                                width: "100%",
                                                 resize: "vertical",
                                                 height: "auto",
+                                                marginBottom: "8px",
                                               }}
                                               value={editingNoteText}
                                               onChange={(e) =>
@@ -4473,21 +4496,10 @@ export default function AdminPage() {
                                             <div
                                               style={{
                                                 display: "flex",
-                                                flexDirection: "column",
-                                                gap: "4px",
+                                                justifyContent: "flex-end",
+                                                gap: "8px",
                                               }}
                                             >
-                                              <button
-                                                className="adm-btn adm-btn-green"
-                                                onClick={() =>
-                                                  updateCallNote(
-                                                    n.id,
-                                                    editingNoteText,
-                                                  )
-                                                }
-                                              >
-                                                Save
-                                              </button>
                                               <button
                                                 className="adm-btn adm-btn-gray"
                                                 onClick={() => {
@@ -4497,6 +4509,17 @@ export default function AdminPage() {
                                               >
                                                 Cancel
                                               </button>
+                                              <button
+                                                className="adm-btn adm-btn-green"
+                                                onClick={() =>
+                                                  updateCallNote(
+                                                    n.id,
+                                                    editingNoteText,
+                                                  )
+                                                }
+                                              >
+                                                Save Changes
+                                              </button>
                                             </div>
                                           </div>
                                         ) : deletingNoteId === n.id ? (
@@ -4505,12 +4528,12 @@ export default function AdminPage() {
                                               background: "#fff0f0",
                                               border: "1px solid #ffcdd2",
                                               borderRadius: "6px",
-                                              padding: "10px 12px",
+                                              padding: "12px",
                                             }}
                                           >
                                             <p
                                               style={{
-                                                margin: "0 0 8px 0",
+                                                margin: "0 0 10px 0",
                                                 fontSize: "13px",
                                                 color: "#c62828",
                                                 fontWeight: "600",
@@ -4521,17 +4544,10 @@ export default function AdminPage() {
                                             <div
                                               style={{
                                                 display: "flex",
-                                                gap: "6px",
+                                                justifyContent: "flex-end",
+                                                gap: "8px",
                                               }}
                                             >
-                                              <button
-                                                className="adm-btn adm-btn-red"
-                                                onClick={() =>
-                                                  deleteCallNote(n.id)
-                                                }
-                                              >
-                                                Yes, delete
-                                              </button>
                                               <button
                                                 className="adm-btn adm-btn-gray"
                                                 onClick={() =>
@@ -4540,6 +4556,14 @@ export default function AdminPage() {
                                               >
                                                 Cancel
                                               </button>
+                                              <button
+                                                className="adm-btn adm-btn-red"
+                                                onClick={() =>
+                                                  deleteCallNote(n.id)
+                                                }
+                                              >
+                                                Yes, Delete
+                                              </button>
                                             </div>
                                           </div>
                                         ) : (
@@ -4547,8 +4571,21 @@ export default function AdminPage() {
                                             <p
                                               style={{
                                                 margin: "0 0 6px 0",
+                                                fontSize: "11px",
+                                                color: "#aaa",
+                                              }}
+                                            >
+                                              {formatLogDate(n.created_at)}
+                                              {n.updated_at !== n.created_at
+                                                ? " · edited"
+                                                : ""}
+                                            </p>
+                                            <p
+                                              style={{
+                                                margin: "0 0 10px 0",
                                                 fontSize: "13px",
                                                 color: "#333",
+                                                lineHeight: "1.5",
                                               }}
                                             >
                                               {n.note}
@@ -4556,53 +4593,27 @@ export default function AdminPage() {
                                             <div
                                               style={{
                                                 display: "flex",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
+                                                justifyContent: "flex-end",
+                                                gap: "8px",
                                               }}
                                             >
-                                              <span
-                                                style={{
-                                                  fontSize: "11px",
-                                                  color: "#aaa",
+                                              <button
+                                                className="adm-btn adm-btn-outline"
+                                                onClick={() => {
+                                                  setEditingNoteId(n.id);
+                                                  setEditingNoteText(n.note);
                                                 }}
                                               >
-                                                {formatLogDate(n.created_at)}
-                                                {n.updated_at !== n.created_at
-                                                  ? " (edited)"
-                                                  : ""}
-                                              </span>
-                                              <div
-                                                style={{
-                                                  display: "flex",
-                                                  gap: "6px",
-                                                }}
+                                                Edit
+                                              </button>
+                                              <button
+                                                className="adm-btn adm-btn-red"
+                                                onClick={() =>
+                                                  setDeletingNoteId(n.id)
+                                                }
                                               >
-                                                <button
-                                                  className="adm-btn adm-btn-outline"
-                                                  style={{
-                                                    fontSize: "11px",
-                                                    padding: "2px 8px",
-                                                  }}
-                                                  onClick={() => {
-                                                    setEditingNoteId(n.id);
-                                                    setEditingNoteText(n.note);
-                                                  }}
-                                                >
-                                                  Edit
-                                                </button>
-                                                <button
-                                                  className="adm-btn adm-btn-red"
-                                                  style={{
-                                                    fontSize: "11px",
-                                                    padding: "2px 8px",
-                                                  }}
-                                                  onClick={() =>
-                                                    setDeletingNoteId(n.id)
-                                                  }
-                                                >
-                                                  Delete
-                                                </button>
-                                              </div>
+                                                Delete
+                                              </button>
                                             </div>
                                           </div>
                                         )}
