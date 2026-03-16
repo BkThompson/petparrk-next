@@ -1230,8 +1230,7 @@ export default function AdminPage() {
           .symptom-stats { grid-template-columns: repeat(2, 1fr); }
           .symptom-stats button { text-align: center; }
           .symptom-stat-label { font-size: 11px; }
-          .log-row { grid-template-columns: 1fr; }
-          .log-row span:nth-child(2) { display: none; }
+
           .pv-card-inner { flex-direction: column; }
           .pv-buttons { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; }
           .pv-buttons .adm-btn { flex: 1; font-size: 12px; padding: 6px 8px; }
