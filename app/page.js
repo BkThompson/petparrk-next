@@ -185,7 +185,7 @@ export default function Home() {
     ...new Set(
       vets
         .flatMap((v) => (Array.isArray(v.vet_type) ? v.vet_type : [v.vet_type]))
-        .filter(Boolean)
+        .filter((t) => t && typeof t === "string")
         .map((t) => t.trim())
         .sort(),
     ),
@@ -197,7 +197,7 @@ export default function Home() {
     .filter((v) => {
       if (vetTypeFilter === "All") return true;
       const types = (Array.isArray(v.vet_type) ? v.vet_type : [v.vet_type])
-        .filter(Boolean)
+        .filter((t) => t && typeof t === "string")
         .map((t) => t.trim());
       return types.includes(vetTypeFilter);
     })
