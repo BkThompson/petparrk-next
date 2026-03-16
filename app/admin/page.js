@@ -961,11 +961,28 @@ export default function AdminPage() {
       year: "numeric",
     });
   }
+  function formatLogDate(iso) {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+  function formatLogTime(iso) {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short",
+    });
+  }
   function formatDateTime(iso) {
     if (!iso) return "—";
     return new Date(iso).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
+      year: "numeric",
       hour: "numeric",
       minute: "2-digit",
     });
@@ -1152,9 +1169,9 @@ export default function AdminPage() {
           .price-row-btns { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; }
           .price-row-btns .adm-btn { flex: 1; text-align: center; }
         }
-        .log-table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 10px 16px; background: #fafaf8; border-bottom: 1px solid #efefed; }
+        .log-table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 10px 16px; background: #fafaf8; border-bottom: 1px solid #efefed; }
         .log-table-header span { font-size: 13px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-        .log-row { border-bottom: 1px solid #f5f5f3; padding: 14px 16px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; align-items: center; gap: 8px; }
+        .log-row { border-bottom: 1px solid #f5f5f3; padding: 14px 16px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; align-items: center; gap: 8px; }
         .log-row:last-child { border-bottom: none; }
         .log-row:hover { background: #fafaf8; }
         .log-mobile { display: none; }
@@ -1212,7 +1229,7 @@ export default function AdminPage() {
         .vet-row-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         .vet-row-buttons { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
         /* Includes pills */
-        .includes-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+        .includes-pills { display: flex; gap: 6px; flex-wrap: nowrap; }
         /* Symptom stats grid */
         .symptom-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .symptom-stat-label { font-size: 13px; }
@@ -4697,7 +4714,7 @@ export default function AdminPage() {
                                                 style={{
                                                   display: "flex",
                                                   gap: "6px",
-                                                  flexWrap: "wrap",
+                                                  flexWrap: "nowrap",
                                                   paddingTop: "2px",
                                                 }}
                                               >
@@ -4726,20 +4743,21 @@ export default function AdminPage() {
                                                       setCallReviewPrices(u);
                                                     }}
                                                     style={{
-                                                      padding: "3px 10px",
+                                                      padding: "3px 8px",
                                                       borderRadius: "20px",
-                                                      fontSize: "12px",
+                                                      fontSize: "11px",
                                                       fontWeight: "600",
                                                       cursor: "pointer",
                                                       border: row[field]
                                                         ? "none"
-                                                        : "1px solid #ccc",
+                                                        : "1px solid #ddd",
                                                       background: row[field]
                                                         ? "#2d6a4f"
-                                                        : "#f0f0f0",
+                                                        : "#f5f5f5",
                                                       color: row[field]
                                                         ? "#fff"
                                                         : "#555",
+                                                      whiteSpace: "nowrap",
                                                     }}
                                                   >
                                                     {label}
@@ -5135,6 +5153,7 @@ export default function AdminPage() {
                     <span>Species</span>
                     <span>Result</span>
                     <span>Date</span>
+                    <span>Time</span>
                   </div>
                   {filteredLogs.length === 0 && (
                     <p
@@ -5201,9 +5220,15 @@ export default function AdminPage() {
                         </span>
                         <span
                           className="log-col"
+                          style={{ fontSize: "13px", color: "#555" }}
+                        >
+                          {formatLogDate(s.created_at)}
+                        </span>
+                        <span
+                          className="log-col"
                           style={{ fontSize: "13px", color: "#888" }}
                         >
-                          {formatDateTime(s.created_at)}
+                          {formatLogTime(s.created_at)}
                         </span>
                         {/* Mobile labeled rows */}
                         <div className="log-mobile">
@@ -5317,8 +5342,31 @@ export default function AdminPage() {
                             >
                               Date:
                             </span>
+                            <span style={{ fontSize: "13px", color: "#555" }}>
+                              {formatLogDate(s.created_at)}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "baseline",
+                              gap: "6px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#aaa",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
+                                flexShrink: 0,
+                              }}
+                            >
+                              Time:
+                            </span>
                             <span style={{ fontSize: "13px", color: "#888" }}>
-                              {formatDateTime(s.created_at)}
+                              {formatLogTime(s.created_at)}
                             </span>
                           </div>
                         </div>
