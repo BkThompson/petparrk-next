@@ -4376,11 +4376,11 @@ export default function AdminPage() {
                                       }}
                                     >
                                       {!isEditing ? (
-                                        /* ── Summary row ── */
+                                        /* ── Summary row — matches Prices tab display ── */
                                         <div>
                                           <p
                                             style={{
-                                              margin: "0 0 3px 0",
+                                              margin: "0 0 6px 0",
                                               fontSize: "14px",
                                               fontWeight: "600",
                                               color: "#111",
@@ -4390,9 +4390,10 @@ export default function AdminPage() {
                                           </p>
                                           <p
                                             style={{
-                                              margin: "0 0 4px 0",
-                                              fontSize: "13px",
-                                              color: "#555",
+                                              margin: "0 0 8px 0",
+                                              fontSize: "14px",
+                                              color: "#2d6a4f",
+                                              fontWeight: "600",
                                             }}
                                           >
                                             {row.call_for_quote
@@ -4409,7 +4410,7 @@ export default function AdminPage() {
                                               row.price_type !== "exact" && (
                                                 <span
                                                   style={{
-                                                    fontSize: "11px",
+                                                    fontSize: "12px",
                                                     color: "#888",
                                                     marginLeft: "6px",
                                                   }}
@@ -4418,61 +4419,87 @@ export default function AdminPage() {
                                                 </span>
                                               )}
                                           </p>
-                                          <div
-                                            style={{
-                                              display: "flex",
-                                              gap: "6px",
-                                              flexWrap: "wrap",
-                                              marginBottom: "4px",
-                                            }}
-                                          >
-                                            {row.includes_bloodwork ===
-                                              true && (
+                                          {row.species && (
+                                            <div
+                                              style={{ marginBottom: "6px" }}
+                                            >
                                               <span
                                                 style={{
-                                                  fontSize: "11px",
-                                                  background: "#e8f5e9",
-                                                  color: "#2d6a4f",
-                                                  padding: "1px 6px",
+                                                  fontSize: "12px",
+                                                  background: "#f0f0f0",
+                                                  color: "#555",
+                                                  padding: "2px 8px",
                                                   borderRadius: "4px",
+                                                  textTransform: "capitalize",
                                                 }}
                                               >
-                                                + bloodwork
+                                                {row.species}
                                               </span>
-                                            )}
-                                            {row.includes_xrays === true && (
-                                              <span
-                                                style={{
-                                                  fontSize: "11px",
-                                                  background: "#e8f5e9",
-                                                  color: "#2d6a4f",
-                                                  padding: "1px 6px",
-                                                  borderRadius: "4px",
-                                                }}
-                                              >
-                                                + x-rays
-                                              </span>
-                                            )}
-                                            {row.includes_anesthesia ===
-                                              true && (
-                                              <span
-                                                style={{
-                                                  fontSize: "11px",
-                                                  background: "#e8f5e9",
-                                                  color: "#2d6a4f",
-                                                  padding: "1px 6px",
-                                                  borderRadius: "4px",
-                                                }}
-                                              >
-                                                + anesthesia
-                                              </span>
-                                            )}
-                                          </div>
+                                            </div>
+                                          )}
+                                          {(row.includes_bloodwork === true ||
+                                            row.includes_xrays === true ||
+                                            row.includes_anesthesia ===
+                                              true) && (
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                gap: "6px",
+                                                flexWrap: "wrap",
+                                                marginBottom: "8px",
+                                              }}
+                                            >
+                                              {row.includes_bloodwork ===
+                                                true && (
+                                                <span
+                                                  style={{
+                                                    fontSize: "12px",
+                                                    background: "#e8f5e9",
+                                                    color: "#2d6a4f",
+                                                    padding: "2px 8px",
+                                                    borderRadius: "4px",
+                                                    whiteSpace: "nowrap",
+                                                  }}
+                                                >
+                                                  + bloodwork
+                                                </span>
+                                              )}
+                                              {row.includes_xrays === true && (
+                                                <span
+                                                  style={{
+                                                    fontSize: "12px",
+                                                    background: "#e8f5e9",
+                                                    color: "#2d6a4f",
+                                                    padding: "2px 8px",
+                                                    borderRadius: "4px",
+                                                    whiteSpace: "nowrap",
+                                                  }}
+                                                >
+                                                  + x-rays
+                                                </span>
+                                              )}
+                                              {row.includes_anesthesia ===
+                                                true && (
+                                                <span
+                                                  style={{
+                                                    fontSize: "12px",
+                                                    background: "#e8f5e9",
+                                                    color: "#2d6a4f",
+                                                    padding: "2px 8px",
+                                                    borderRadius: "4px",
+                                                    whiteSpace: "nowrap",
+                                                  }}
+                                                >
+                                                  + anesthesia
+                                                </span>
+                                              )}
+                                            </div>
+                                          )}
                                           {row.notes && (
                                             <p
                                               style={{
-                                                margin: "0 0 10px 0",
-                                                fontSize: "12px",
+                                                margin: "0 0 8px 0",
+                                                fontSize: "13px",
                                                 color: "#888",
                                                 fontStyle: "italic",
                                               }}
@@ -4484,7 +4511,9 @@ export default function AdminPage() {
                                             style={{
                                               display: "flex",
                                               gap: "6px",
-                                              marginTop: "10px",
+                                              marginTop: "12px",
+                                              paddingTop: "10px",
+                                              borderTop: "1px solid #f0f0f0",
                                             }}
                                           >
                                             <button
