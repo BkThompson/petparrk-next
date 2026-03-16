@@ -137,6 +137,16 @@ export default function AdminPage() {
   }, [callPrices]);
   const [callSaving, setCallSaving] = useState(false);
   const [callSpeciesError, setCallSpeciesError] = useState(false);
+  const [pendingVetSearch, setPendingVetSearch] = useState("");
+  const [callSheetSearch, setCallSheetSearch] = useState("");
+  const [showCallbackNotes, setShowCallbackNotes] = useState(false);
+  const [callbackNoteText, setCallbackNoteText] = useState("");
+  const [callNotes, setCallNotes] = useState([]);
+  const [editingNoteId, setEditingNoteId] = useState(null);
+  const [editingNoteText, setEditingNoteText] = useState("");
+  const [deletingNoteId, setDeletingNoteId] = useState(null);
+  const [notesVetId, setNotesVetId] = useState(null);
+  const [notesVetName, setNotesVetName] = useState("");
   const [callLog, setCallLog] = useState([]); // recently processed vets
   const [showAllVets, setShowAllVets] = useState(false); // toggle: show all vets vs only unpriced
   const [fullCallQueue, setFullCallQueue] = useState([]); // all vets regardless of prices
@@ -628,6 +638,58 @@ export default function AdminPage() {
       includes_anesthesia: toBool(p.includes_anesthesia),
     }));
     setCallReviewPrices(clean);
+  }
+
+  async function fetchCallNotes(vetId) {
+    if (!vetId) return;
+    const { data } = await supabase
+      .from("call_notes")
+      .select("*")
+      .eq("vet_id", vetId)
+      .order("created_at", { ascending: false });
+    setCallNotes(data || []);
+  }
+
+  async function saveCallNote(vetId, vetName, text) {
+    if (!text.trim()) return;
+    const { data, error } = await supabase
+      .from("call_notes")
+      .insert({ vet_id: vetId, vet_name: vetName, note: text.trim() })
+      .select()
+      .single();
+    if (error) {
+      alert("Error saving note: " + error.message);
+      return;
+    }
+    setCallNotes((prev) => [data, ...prev]);
+    setCallbackNoteText("");
+  }
+
+  async function updateCallNote(id, text) {
+    if (!text.trim()) return;
+    const { error } = await supabase
+      .from("call_notes")
+      .update({ note: text.trim(), updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) {
+      alert("Error updating note: " + error.message);
+      return;
+    }
+    setCallNotes((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, note: text.trim() } : n)),
+    );
+    setEditingNoteId(null);
+    setEditingNoteText("");
+  }
+
+  async function deleteCallNote(id) {
+    const { error } = await supabase.from("call_notes").delete().eq("id", id);
+    if (error) {
+      alert("Error deleting note: " + error.message);
+      return;
+    }
+    setCallNotes((prev) => prev.filter((n) => n.id !== id));
+    setDeletingNoteId(null);
   }
 
   async function fetchSymptomLogs() {
@@ -1249,6 +1311,9 @@ export default function AdminPage() {
           .users-mobile-detail { display: block; }
         }
         html { scrollbar-gutter: stable; }
+        .scroll-arrows { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 200; }
+        .scroll-arrow-btn { width: 40px; height: 40px; border-radius: "50%"; background: "#2d6a4f"; color: "#fff"; border: none; cursor: pointer; font-size: "18px"; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border-radius: 50%; }
+        .scroll-arrow-btn:hover { background: #245a42; }
         /* Price search dropdown — absolute so it doesn't push page content */
         .price-search-wrap { position: relative; }
         .price-search-dropdown {
@@ -1611,6 +1676,13 @@ export default function AdminPage() {
                     </p>
                   </div>
                 </div>
+                <input
+                  className="adm-input"
+                  value={pendingVetSearch}
+                  onChange={(e) => setPendingVetSearch(e.target.value)}
+                  placeholder="Search by name..."
+                  style={{ marginBottom: "14px", maxWidth: "360px" }}
+                />
                 {pendingVetsLoading && (
                   <p style={{ color: "#888", fontSize: "14px" }}>Loading...</p>
                 )}
@@ -1622,139 +1694,178 @@ export default function AdminPage() {
                     </p>
                   </div>
                 )}
-                {pendingVets.map((vet) => (
-                  <div key={vet.id} className="pending-vet-card">
-                    <div
-                      className="pv-card-inner"
-                      style={{
-                        marginBottom:
-                          editingPendingVet === vet.id ? "4px" : "0",
-                      }}
+                {/* Scroll arrows */}
+                {pendingVets.length > 5 && (
+                  <div className="scroll-arrows">
+                    <button
+                      className="scroll-arrow-btn"
+                      onClick={() =>
+                        window.scrollTo({ top: 0, behavior: "smooth" })
+                      }
+                      title="Scroll to top"
                     >
-                      <div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            marginBottom: "2px",
-                          }}
-                        >
-                          <span
+                      ↑
+                    </button>
+                    <button
+                      className="scroll-arrow-btn"
+                      onClick={() =>
+                        window.scrollTo({
+                          top: document.body.scrollHeight,
+                          behavior: "smooth",
+                        })
+                      }
+                      title="Scroll to bottom"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                )}
+                {pendingVets
+                  .filter(
+                    (v) =>
+                      !pendingVetSearch.trim() ||
+                      v.name
+                        .toLowerCase()
+                        .includes(pendingVetSearch.toLowerCase()),
+                  )
+                  .map((vet) => (
+                    <div key={vet.id} className="pending-vet-card">
+                      <div
+                        className="pv-card-inner"
+                        style={{
+                          marginBottom:
+                            editingPendingVet === vet.id ? "4px" : "0",
+                        }}
+                      >
+                        <div>
+                          <div
                             style={{
-                              fontWeight: "700",
-                              fontSize: "14px",
-                              color: "#111",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              marginBottom: "2px",
                             }}
                           >
-                            {vet.name}
-                          </span>
-                          {vet.source && (
                             <span
                               style={{
-                                fontSize: "11px",
-                                background: "#f0f0f0",
-                                color: "#666",
-                                padding: "1px 7px",
-                                borderRadius: "4px",
+                                fontWeight: "700",
+                                fontSize: "14px",
+                                color: "#111",
                               }}
                             >
-                              via {vet.source}
+                              {vet.name}
                             </span>
-                          )}
-                        </div>
-                        {vet.address && (
-                          <p
-                            style={{
-                              margin: "0 0 1px 0",
-                              fontSize: "13px",
-                              color: "#666",
-                            }}
-                          >
-                            {vet.address}
-                          </p>
-                        )}
-                        {(() => {
-                          const city =
-                            vet.city && vet.city.length > 2
-                              ? vet.city
-                              : vet.neighborhood && vet.neighborhood.length > 2
-                                ? vet.neighborhood
-                                : null;
-                          const parts = [city, vet.state, vet.zip_code].filter(
-                            Boolean,
-                          );
-                          return parts.length > 0 ? (
+                            {vet.source && (
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  background: "#f0f0f0",
+                                  color: "#666",
+                                  padding: "1px 7px",
+                                  borderRadius: "4px",
+                                }}
+                              >
+                                via {vet.source}
+                              </span>
+                            )}
+                          </div>
+                          {vet.address && (
                             <p
                               style={{
-                                margin: "0 0 2px 0",
+                                margin: "0 0 1px 0",
                                 fontSize: "13px",
                                 color: "#666",
                               }}
                             >
-                              {parts.join(", ")}
+                              {vet.address}
                             </p>
-                          ) : null;
-                        })()}
-                        {vet.phone && (
+                          )}
+                          {(() => {
+                            const city =
+                              vet.city && vet.city.length > 2
+                                ? vet.city
+                                : vet.neighborhood &&
+                                    vet.neighborhood.length > 2
+                                  ? vet.neighborhood
+                                  : null;
+                            const parts = [
+                              city,
+                              vet.state,
+                              vet.zip_code,
+                            ].filter(Boolean);
+                            return parts.length > 0 ? (
+                              <p
+                                style={{
+                                  margin: "0 0 2px 0",
+                                  fontSize: "13px",
+                                  color: "#666",
+                                }}
+                              >
+                                {parts.join(", ")}
+                              </p>
+                            ) : null;
+                          })()}
+                          {vet.phone && (
+                            <p
+                              style={{
+                                margin: "2px 0 0 0",
+                                fontSize: "13px",
+                                color: "#666",
+                              }}
+                            >
+                              {vet.phone}
+                            </p>
+                          )}
                           <p
                             style={{
-                              margin: "2px 0 0 0",
-                              fontSize: "13px",
-                              color: "#666",
+                              margin: "4px 0 0 0",
+                              fontSize: "12px",
+                              color: "#aaa",
                             }}
                           >
-                            {vet.phone}
+                            Found {formatDate(vet.created_at)}
                           </p>
-                        )}
-                        <p
-                          style={{
-                            margin: "4px 0 0 0",
-                            fontSize: "12px",
-                            color: "#aaa",
-                          }}
-                        >
-                          Found {formatDate(vet.created_at)}
-                        </p>
+                        </div>
+                        <div className="pv-buttons">
+                          <button
+                            className="adm-btn adm-btn-green"
+                            onClick={() => approvePendingVet(vet)}
+                          >
+                            ✅ Approve
+                          </button>
+                          <button
+                            className="adm-btn adm-btn-outline"
+                            onClick={() => {
+                              if (editingPendingVet === vet.id) {
+                                setEditingPendingVet(null);
+                              } else {
+                                setEditingPendingVet(vet.id);
+                                setPendingVetForm({ ...vet });
+                              }
+                            }}
+                          >
+                            {editingPendingVet === vet.id
+                              ? "Cancel"
+                              : "✏️ Edit"}
+                          </button>
+                          <button
+                            className="adm-btn adm-btn-red"
+                            onClick={() => rejectPendingVet(vet.id)}
+                          >
+                            ✕ Reject
+                          </button>
+                        </div>
                       </div>
-                      <div className="pv-buttons">
-                        <button
-                          className="adm-btn adm-btn-green"
-                          onClick={() => approvePendingVet(vet)}
-                        >
-                          ✅ Approve
-                        </button>
-                        <button
-                          className="adm-btn adm-btn-outline"
-                          onClick={() => {
-                            if (editingPendingVet === vet.id) {
-                              setEditingPendingVet(null);
-                            } else {
-                              setEditingPendingVet(vet.id);
-                              setPendingVetForm({ ...vet });
-                            }
-                          }}
-                        >
-                          {editingPendingVet === vet.id ? "Cancel" : "✏️ Edit"}
-                        </button>
-                        <button
-                          className="adm-btn adm-btn-red"
-                          onClick={() => rejectPendingVet(vet.id)}
-                        >
-                          ✕ Reject
-                        </button>
-                      </div>
+                      {editingPendingVet === vet.id && (
+                        <PendingVetEditForm
+                          form={pendingVetForm}
+                          setForm={setPendingVetForm}
+                          onApprove={() => approvePendingVet(vet)}
+                          onCancel={() => setEditingPendingVet(null)}
+                        />
+                      )}
                     </div>
-                    {editingPendingVet === vet.id && (
-                      <PendingVetEditForm
-                        form={pendingVetForm}
-                        setForm={setPendingVetForm}
-                        onApprove={() => approvePendingVet(vet)}
-                        onCancel={() => setEditingPendingVet(null)}
-                      />
-                    )}
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
 
@@ -2103,6 +2214,31 @@ export default function AdminPage() {
                   placeholder="Search by name..."
                   style={{ marginBottom: "14px", maxWidth: "360px" }}
                 />
+                {vets.length > 5 && (
+                  <div className="scroll-arrows">
+                    <button
+                      className="scroll-arrow-btn"
+                      onClick={() =>
+                        window.scrollTo({ top: 0, behavior: "smooth" })
+                      }
+                      title="Scroll to top"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      className="scroll-arrow-btn"
+                      onClick={() =>
+                        window.scrollTo({
+                          top: document.body.scrollHeight,
+                          behavior: "smooth",
+                        })
+                      }
+                      title="Scroll to bottom"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                )}
                 {vetsLoading && (
                   <p style={{ color: "#888", fontSize: "14px" }}>Loading...</p>
                 )}
@@ -2523,7 +2659,80 @@ export default function AdminPage() {
             {/* ── PRICES ───────────────────────────────────────────── */}
             {tab === "Prices" && (
               <div>
-                {/* Unverified AI prices */}
+                {/* ── Vet search FIRST — above everything ── */}
+                <div className="section-header">
+                  <h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>
+                    Prices
+                  </h2>
+                </div>
+                <div style={{ marginBottom: "20px", maxWidth: "400px" }}>
+                  <label className="field-label">Search Vet</label>
+                  <div className="price-search-wrap">
+                    <input
+                      ref={priceSearchRef}
+                      className="adm-input"
+                      value={vetPriceSearch}
+                      onChange={handlePriceSearchChange}
+                      onFocus={() => setShowVetDropdown(true)}
+                      onBlur={() => {
+                        // Delay so onMouseDown on items fires first
+                        setTimeout(() => setShowVetDropdown(false), 150);
+                      }}
+                      placeholder="Click to browse or type to filter..."
+                      autoComplete="off"
+                    />
+                    {showVetDropdown && (
+                      <div className="price-search-dropdown">
+                        {filteredPriceVets.length === 0 && (
+                          <div
+                            style={{
+                              padding: "10px 12px",
+                              fontSize: "13px",
+                              color: "#888",
+                            }}
+                          >
+                            No vets found
+                          </div>
+                        )}
+                        {filteredPriceVets.slice(0, 50).map((v) => (
+                          <div
+                            key={v.id}
+                            className={`price-search-item${selectedVetId === v.id ? " selected" : ""}`}
+                            // onMouseDown fires BEFORE onBlur — this is the key fix
+                            onMouseDown={() => selectPriceVet(v)}
+                          >
+                            {v.name}
+                            {v.city ? (
+                              <span style={{ color: "#888", fontSize: "13px" }}>
+                                {" "}
+                                — {v.city}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {selectedVetId && (
+                    <p
+                      style={{
+                        margin: "6px 0 0 0",
+                        fontSize: "13px",
+                        color: "#2d6a4f",
+                      }}
+                    >
+                      ✓ Showing prices for <strong>{vetPriceSearch}</strong>
+                    </p>
+                  )}
+                </div>
+
+                {unverifiedLoading && (
+                  <p style={{ color: "#888", fontSize: "14px" }}>
+                    Loading unverified prices...
+                  </p>
+                )}
                 {unverifiedPrices.length > 0 && (
                   <div style={{ marginBottom: "24px" }}>
                     <div
@@ -2641,82 +2850,6 @@ export default function AdminPage() {
                     </div>
                   </div>
                 )}
-                {unverifiedLoading && (
-                  <p style={{ color: "#888", fontSize: "14px" }}>
-                    Loading unverified prices...
-                  </p>
-                )}
-
-                <div className="section-header">
-                  <h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>
-                    Prices
-                  </h2>
-                </div>
-
-                {/* ── Vet search with absolute dropdown ── */}
-                <div style={{ marginBottom: "16px", maxWidth: "400px" }}>
-                  <label className="field-label">Search Vet</label>
-                  <div className="price-search-wrap">
-                    <input
-                      ref={priceSearchRef}
-                      className="adm-input"
-                      value={vetPriceSearch}
-                      onChange={handlePriceSearchChange}
-                      onFocus={() => setShowVetDropdown(true)}
-                      onBlur={() => {
-                        // Delay so onMouseDown on items fires first
-                        setTimeout(() => setShowVetDropdown(false), 150);
-                      }}
-                      placeholder="Click to browse or type to filter..."
-                      autoComplete="off"
-                    />
-                    {showVetDropdown && (
-                      <div className="price-search-dropdown">
-                        {filteredPriceVets.length === 0 && (
-                          <div
-                            style={{
-                              padding: "10px 12px",
-                              fontSize: "13px",
-                              color: "#888",
-                            }}
-                          >
-                            No vets found
-                          </div>
-                        )}
-                        {filteredPriceVets.slice(0, 50).map((v) => (
-                          <div
-                            key={v.id}
-                            className={`price-search-item${selectedVetId === v.id ? " selected" : ""}`}
-                            // onMouseDown fires BEFORE onBlur — this is the key fix
-                            onMouseDown={() => selectPriceVet(v)}
-                          >
-                            {v.name}
-                            {v.city ? (
-                              <span style={{ color: "#888", fontSize: "13px" }}>
-                                {" "}
-                                — {v.city}
-                              </span>
-                            ) : (
-                              ""
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {selectedVetId && (
-                    <p
-                      style={{
-                        margin: "6px 0 0 0",
-                        fontSize: "13px",
-                        color: "#2d6a4f",
-                      }}
-                    >
-                      ✓ Showing prices for <strong>{vetPriceSearch}</strong>
-                    </p>
-                  )}
-                </div>
-
                 {selectedVetId && (
                   <>
                     <div className="section-header">
@@ -3839,6 +3972,99 @@ export default function AdminPage() {
                                 </button>
                               </div>
                             </div>
+                            {/* Call sheet vet search */}
+                            <div
+                              style={{
+                                marginBottom: "14px",
+                                position: "relative",
+                                maxWidth: "400px",
+                              }}
+                            >
+                              <input
+                                className="adm-input"
+                                value={callSheetSearch}
+                                onChange={(e) =>
+                                  setCallSheetSearch(e.target.value)
+                                }
+                                placeholder="Search vet by name to jump to them..."
+                              />
+                              {callSheetSearch.trim() && (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    top: "calc(100% + 4px)",
+                                    left: 0,
+                                    right: 0,
+                                    background: "#fff",
+                                    border: "1px solid #e8e8e8",
+                                    borderRadius: "8px",
+                                    maxHeight: "200px",
+                                    overflowY: "auto",
+                                    zIndex: 100,
+                                    boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+                                  }}
+                                >
+                                  {activeQueue
+                                    .filter((v) =>
+                                      v.name
+                                        .toLowerCase()
+                                        .includes(
+                                          callSheetSearch.toLowerCase(),
+                                        ),
+                                    )
+                                    .slice(0, 8)
+                                    .map((v, idx) => {
+                                      const realIdx = activeQueue.findIndex(
+                                        (q) =>
+                                          q.id === v.id &&
+                                          q._source === v._source,
+                                      );
+                                      return (
+                                        <div
+                                          key={v.id + v._source}
+                                          style={{
+                                            padding: "9px 12px",
+                                            cursor: "pointer",
+                                            fontSize: "13px",
+                                            borderBottom: "1px solid #f5f5f5",
+                                          }}
+                                          onMouseDown={() => {
+                                            setCallIndex(realIdx);
+                                            setCallPrices([]);
+                                            setCallSheetSearch("");
+                                          }}
+                                        >
+                                          {v.name}
+                                          <span
+                                            style={{
+                                              fontSize: "11px",
+                                              color: "#aaa",
+                                              marginLeft: "8px",
+                                            }}
+                                          >
+                                            #{realIdx + 1}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  {activeQueue.filter((v) =>
+                                    v.name
+                                      .toLowerCase()
+                                      .includes(callSheetSearch.toLowerCase()),
+                                  ).length === 0 && (
+                                    <div
+                                      style={{
+                                        padding: "9px 12px",
+                                        fontSize: "13px",
+                                        color: "#aaa",
+                                      }}
+                                    >
+                                      No vets found
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                             <div
                               style={{
                                 height: "4px",
@@ -4103,26 +4329,287 @@ export default function AdminPage() {
                                   <button
                                     className="adm-btn adm-btn-gray"
                                     onClick={() =>
-                                      markCallStatus(vet, "call_for_quote")
+                                      markCallStatus(vet, "declined")
                                     }
                                   >
-                                    📞 Call for quote
+                                    🚫 Declined to share
                                   </button>
                                   <button
                                     className="adm-btn adm-btn-gray"
-                                    onClick={() =>
-                                      markCallStatus(vet, "call_back_later")
-                                    }
+                                    onClick={() => {
+                                      setNotesVetId(
+                                        vet._source === "pending"
+                                          ? vet.id
+                                          : vet.id,
+                                      );
+                                      setNotesVetName(vet.name);
+                                      fetchCallNotes(vet.id);
+                                      setShowCallbackNotes(true);
+                                    }}
                                   >
                                     🕐 Call back later
                                   </button>
-                                  <button
-                                    className="adm-btn adm-btn-gray"
-                                    onClick={() => markCallStatus(vet, "skip")}
-                                  >
-                                    Skip vet
-                                  </button>
                                 </div>
+                                {/* Call back later notes panel */}
+                                {showCallbackNotes && notesVetId === vet.id && (
+                                  <div
+                                    style={{
+                                      marginTop: "14px",
+                                      background: "#f9f9f9",
+                                      border: "1px solid #e8e8e8",
+                                      borderRadius: "10px",
+                                      padding: "16px",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        marginBottom: "12px",
+                                      }}
+                                    >
+                                      <p
+                                        style={{
+                                          margin: 0,
+                                          fontSize: "13px",
+                                          fontWeight: "700",
+                                          color: "#111",
+                                        }}
+                                      >
+                                        📋 Notes for {vet.name}
+                                      </p>
+                                      <button
+                                        className="adm-btn adm-btn-gray"
+                                        style={{
+                                          fontSize: "11px",
+                                          padding: "3px 8px",
+                                        }}
+                                        onClick={() =>
+                                          setShowCallbackNotes(false)
+                                        }
+                                      >
+                                        Close
+                                      </button>
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: "8px",
+                                        marginBottom: "12px",
+                                      }}
+                                    >
+                                      <textarea
+                                        className="adm-input"
+                                        rows={2}
+                                        style={{
+                                          flex: 1,
+                                          resize: "vertical",
+                                          height: "auto",
+                                        }}
+                                        value={callbackNoteText}
+                                        onChange={(e) =>
+                                          setCallbackNoteText(e.target.value)
+                                        }
+                                        placeholder="Add a note about this vet..."
+                                      />
+                                      <button
+                                        className="adm-btn adm-btn-green"
+                                        style={{ alignSelf: "flex-end" }}
+                                        onClick={() =>
+                                          saveCallNote(
+                                            vet.id,
+                                            vet.name,
+                                            callbackNoteText,
+                                          )
+                                        }
+                                      >
+                                        Save
+                                      </button>
+                                    </div>
+                                    {callNotes.length === 0 && (
+                                      <p
+                                        style={{
+                                          fontSize: "13px",
+                                          color: "#aaa",
+                                          fontStyle: "italic",
+                                          margin: 0,
+                                        }}
+                                      >
+                                        No notes yet.
+                                      </p>
+                                    )}
+                                    {callNotes.map((n) => (
+                                      <div
+                                        key={n.id}
+                                        style={{
+                                          borderTop: "1px solid #f0f0f0",
+                                          paddingTop: "10px",
+                                          marginTop: "10px",
+                                        }}
+                                      >
+                                        {editingNoteId === n.id ? (
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              gap: "8px",
+                                            }}
+                                          >
+                                            <textarea
+                                              className="adm-input"
+                                              rows={2}
+                                              style={{
+                                                flex: 1,
+                                                resize: "vertical",
+                                                height: "auto",
+                                              }}
+                                              value={editingNoteText}
+                                              onChange={(e) =>
+                                                setEditingNoteText(
+                                                  e.target.value,
+                                                )
+                                              }
+                                            />
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: "4px",
+                                              }}
+                                            >
+                                              <button
+                                                className="adm-btn adm-btn-green"
+                                                onClick={() =>
+                                                  updateCallNote(
+                                                    n.id,
+                                                    editingNoteText,
+                                                  )
+                                                }
+                                              >
+                                                Save
+                                              </button>
+                                              <button
+                                                className="adm-btn adm-btn-gray"
+                                                onClick={() => {
+                                                  setEditingNoteId(null);
+                                                  setEditingNoteText("");
+                                                }}
+                                              >
+                                                Cancel
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ) : deletingNoteId === n.id ? (
+                                          <div
+                                            style={{
+                                              background: "#fff0f0",
+                                              border: "1px solid #ffcdd2",
+                                              borderRadius: "6px",
+                                              padding: "10px 12px",
+                                            }}
+                                          >
+                                            <p
+                                              style={{
+                                                margin: "0 0 8px 0",
+                                                fontSize: "13px",
+                                                color: "#c62828",
+                                                fontWeight: "600",
+                                              }}
+                                            >
+                                              Delete this note?
+                                            </p>
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                gap: "6px",
+                                              }}
+                                            >
+                                              <button
+                                                className="adm-btn adm-btn-red"
+                                                onClick={() =>
+                                                  deleteCallNote(n.id)
+                                                }
+                                              >
+                                                Yes, delete
+                                              </button>
+                                              <button
+                                                className="adm-btn adm-btn-gray"
+                                                onClick={() =>
+                                                  setDeletingNoteId(null)
+                                                }
+                                              >
+                                                Cancel
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div>
+                                            <p
+                                              style={{
+                                                margin: "0 0 6px 0",
+                                                fontSize: "13px",
+                                                color: "#333",
+                                              }}
+                                            >
+                                              {n.note}
+                                            </p>
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                alignItems: "center",
+                                              }}
+                                            >
+                                              <span
+                                                style={{
+                                                  fontSize: "11px",
+                                                  color: "#aaa",
+                                                }}
+                                              >
+                                                {formatLogDate(n.created_at)}
+                                                {n.updated_at !== n.created_at
+                                                  ? " (edited)"
+                                                  : ""}
+                                              </span>
+                                              <div
+                                                style={{
+                                                  display: "flex",
+                                                  gap: "6px",
+                                                }}
+                                              >
+                                                <button
+                                                  className="adm-btn adm-btn-outline"
+                                                  style={{
+                                                    fontSize: "11px",
+                                                    padding: "2px 8px",
+                                                  }}
+                                                  onClick={() => {
+                                                    setEditingNoteId(n.id);
+                                                    setEditingNoteText(n.note);
+                                                  }}
+                                                >
+                                                  Edit
+                                                </button>
+                                                <button
+                                                  className="adm-btn adm-btn-red"
+                                                  style={{
+                                                    fontSize: "11px",
+                                                    padding: "2px 8px",
+                                                  }}
+                                                  onClick={() =>
+                                                    setDeletingNoteId(n.id)
+                                                  }
+                                                >
+                                                  Delete
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
 
                               {/* Price entry */}
