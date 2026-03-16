@@ -1381,7 +1381,7 @@ export default function AdminPage() {
 
           .pv-card-inner { flex-direction: column; }
           .pv-buttons { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; }
-          .pv-buttons .adm-btn { flex: 1; font-size: 12px; padding: 6px 8px; }
+          .pv-buttons .adm-btn { flex: 1; font-size: 11px; padding: 4px 6px; }
           .filter-bar .adm-btn { padding: 5px 10px; font-size: 12px; }
         }
         @media (max-width: 600px) {
@@ -2687,19 +2687,51 @@ export default function AdminPage() {
                 <div style={{ marginBottom: "20px", maxWidth: "400px" }}>
                   <label className="field-label">Search Vet</label>
                   <div className="price-search-wrap">
-                    <input
-                      ref={priceSearchRef}
-                      className="adm-input"
-                      value={vetPriceSearch}
-                      onChange={handlePriceSearchChange}
-                      onFocus={() => setShowVetDropdown(true)}
-                      onBlur={() => {
-                        // Delay so onMouseDown on items fires first
-                        setTimeout(() => setShowVetDropdown(false), 150);
-                      }}
-                      placeholder="Click to browse or type to filter..."
-                      autoComplete="off"
-                    />
+                    <div style={{ position: "relative" }}>
+                      <input
+                        ref={priceSearchRef}
+                        className="adm-input"
+                        style={{
+                          paddingRight: vetPriceSearch ? "32px" : "12px",
+                        }}
+                        value={vetPriceSearch}
+                        onChange={handlePriceSearchChange}
+                        onFocus={() => setShowVetDropdown(true)}
+                        onBlur={() => {
+                          setTimeout(() => setShowVetDropdown(false), 150);
+                        }}
+                        placeholder="Click to browse or type to filter..."
+                        autoComplete="off"
+                      />
+                      {vetPriceSearch && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVetPriceSearch("");
+                            setSelectedVetId("");
+                            setVetPrices([]);
+                            setShowVetDropdown(false);
+                            setEditingPrice(null);
+                            setShowAddPrice(false);
+                          }}
+                          style={{
+                            position: "absolute",
+                            right: "10px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "16px",
+                            color: "#aaa",
+                            lineHeight: 1,
+                            padding: 0,
+                          }}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
                     {showVetDropdown && (
                       <div className="price-search-dropdown">
                         {filteredPriceVets.length === 0 && (
@@ -4378,15 +4410,34 @@ export default function AdminPage() {
                                       border: "1px solid #e8e8e8",
                                       borderRadius: "10px",
                                       padding: "16px",
+                                      position: "relative",
                                     }}
                                   >
-                                    {/* Header */}
+                                    {/* X — absolute top-right */}
+                                    <button
+                                      onClick={() =>
+                                        setShowCallbackNotes(false)
+                                      }
+                                      style={{
+                                        position: "absolute",
+                                        top: "12px",
+                                        right: "12px",
+                                        background: "none",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        fontSize: "18px",
+                                        color: "#aaa",
+                                        lineHeight: 1,
+                                        padding: "0 2px",
+                                      }}
+                                    >
+                                      ✕
+                                    </button>
+                                    {/* Title — full width, no wrap issue */}
                                     <div
                                       style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "flex-start",
                                         marginBottom: "14px",
+                                        paddingRight: "28px",
                                       }}
                                     >
                                       <p
@@ -4399,22 +4450,6 @@ export default function AdminPage() {
                                       >
                                         Notes for {vet.name}
                                       </p>
-                                      <button
-                                        onClick={() =>
-                                          setShowCallbackNotes(false)
-                                        }
-                                        style={{
-                                          background: "none",
-                                          border: "none",
-                                          cursor: "pointer",
-                                          fontSize: "18px",
-                                          color: "#888",
-                                          lineHeight: 1,
-                                          padding: "0 2px",
-                                        }}
-                                      >
-                                        ✕
-                                      </button>
                                     </div>
                                     {/* Add new note */}
                                     <div style={{ marginBottom: "16px" }}>
