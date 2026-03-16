@@ -1141,6 +1141,8 @@ export default function AdminPage() {
         .pending-vet-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 18px 20px; margin-bottom: 12px; }
         .vet-row { border-bottom: 1px solid #f0f0f0; padding: 10px 0; }
         .vet-row:last-child { border-bottom: none; }
+        .price-edit-pills { display: flex; gap: 6px; flex-wrap: nowrap; }
+        @media (max-width: 600px) { .price-edit-pills { flex-wrap: wrap; gap: 4px; } }
         .price-row-wrap { border-bottom: 1px solid #f0f0f0; padding: 14px 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
         .price-row-wrap:last-child { border-bottom: none; }
         .price-row-info { flex: 1; min-width: 0; }
@@ -1151,16 +1153,17 @@ export default function AdminPage() {
           .price-row-btns .adm-btn { flex: 1; text-align: center; }
         }
         .log-table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 10px 16px; background: #fafaf8; border-bottom: 1px solid #efefed; }
-        .log-table-header span { font-size: 12px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-        .log-row { border-bottom: 1px solid #f5f5f3; padding: 12px 16px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; align-items: center; gap: 8px; }
+        .log-table-header span { font-size: 13px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .log-row { border-bottom: 1px solid #f5f5f3; padding: 14px 16px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; align-items: center; gap: 8px; }
         .log-row:last-child { border-bottom: none; }
         .log-row:hover { background: #fafaf8; }
         .log-mobile { display: none; }
-        @media (max-width: 600px) {
+        .log-col { display: block; }
+        @media (max-width: 700px) {
           .log-table-header { display: none; }
-          .log-row { display: block; padding: 12px 16px; }
+          .log-row { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; }
           .log-col { display: none !important; }
-          .log-mobile { display: block !important; }
+          .log-mobile { display: flex !important; flex-direction: column; gap: 6px; width: 100%; }
         }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
         .stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
@@ -1212,6 +1215,7 @@ export default function AdminPage() {
         .includes-pills { display: flex; gap: 6px; flex-wrap: wrap; }
         /* Symptom stats grid */
         .symptom-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .symptom-stat-label { font-size: 13px; }
         /* Pending vet card */
         .pv-card-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
         .pv-buttons { display: flex; gap: 6px; flex-shrink: 0; }
@@ -1225,6 +1229,7 @@ export default function AdminPage() {
           .vet-row-buttons .adm-btn { flex: 1; text-align: center; }
           .symptom-stats { grid-template-columns: repeat(2, 1fr); }
           .symptom-stats button { text-align: center; }
+          .symptom-stat-label { font-size: 11px; }
           .log-row { grid-template-columns: 1fr; }
           .log-row span:nth-child(2) { display: none; }
           .pv-card-inner { flex-direction: column; }
@@ -1248,6 +1253,7 @@ export default function AdminPage() {
           .stat-grid { grid-template-columns: repeat(2, 1fr); }
           .symptom-stats { grid-template-columns: repeat(2, 1fr); }
           .symptom-stats button { text-align: center; }
+          .symptom-stat-label { font-size: 11px; }
         }
       `}</style>
 
@@ -3106,8 +3112,11 @@ export default function AdminPage() {
                             </div>
                           </div>
                           {editingPrice === p.id && (
-                            <div style={{ padding: "0 14px 14px 14px" }}>
-                              <div className="row-edit-bg">
+                            <div style={{ padding: "0 12px 14px 12px" }}>
+                              <div
+                                className="row-edit-bg"
+                                style={{ margin: 0 }}
+                              >
                                 <div
                                   className="form-grid-4"
                                   style={{ marginBottom: "10px" }}
@@ -3222,12 +3231,8 @@ export default function AdminPage() {
                                       Includes
                                     </label>
                                     <div
-                                      style={{
-                                        display: "flex",
-                                        gap: "6px",
-                                        flexWrap: "nowrap",
-                                        marginBottom: "10px",
-                                      }}
+                                      className="price-edit-pills"
+                                      style={{ marginBottom: "10px" }}
                                     >
                                       {[
                                         ["includes_bloodwork", "Bloodwork"],
@@ -5056,9 +5061,9 @@ export default function AdminPage() {
                           </span>
                         </div>
                         <p
+                          className="symptom-stat-label"
                           style={{
                             margin: 0,
-                            fontSize: "11px",
                             fontWeight: "600",
                             color: active ? "#fff" : cfg.color,
                           }}
@@ -5127,7 +5132,7 @@ export default function AdminPage() {
                         <span
                           className="log-col"
                           style={{
-                            fontSize: "13px",
+                            fontSize: "14px",
                             fontWeight: "600",
                             color: "#111",
                           }}
@@ -5143,36 +5148,44 @@ export default function AdminPage() {
                         <span
                           className="log-col"
                           style={{
-                            fontSize: "13px",
+                            fontSize: "14px",
                             color: "#666",
                             textTransform: "capitalize",
                           }}
                         >
                           {s.pets?.species || "—"}
                         </span>
-                        <span
-                          className="log-col"
-                          style={{
-                            fontSize: "11px",
-                            fontWeight: "600",
-                            color: cfg.color,
-                            background: cfg.bg,
-                            padding: "2px 8px",
-                            borderRadius: "20px",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {cfg.label || s.triage_result}
+                        <span className="log-col">
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              color: cfg.color,
+                              background: cfg.bg,
+                              padding: "3px 10px",
+                              borderRadius: "20px",
+                              whiteSpace: "nowrap",
+                              display: "inline-block",
+                            }}
+                          >
+                            {cfg.label || s.triage_result}
+                          </span>
                         </span>
                         <span
                           className="log-col"
-                          style={{ fontSize: "13px", color: "#aaa" }}
+                          style={{ fontSize: "13px", color: "#888" }}
                         >
                           {formatDateTime(s.created_at)}
                         </span>
                         {/* Mobile labeled rows */}
                         <div className="log-mobile">
-                          <p style={{ margin: "0 0 5px 0" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "baseline",
+                              gap: "6px",
+                            }}
+                          >
                             <span
                               style={{
                                 fontSize: "10px",
@@ -5180,9 +5193,10 @@ export default function AdminPage() {
                                 fontWeight: "700",
                                 textTransform: "uppercase",
                                 letterSpacing: "0.4px",
+                                flexShrink: 0,
                               }}
                             >
-                              Pet:{" "}
+                              Pet:
                             </span>
                             <span
                               style={{
@@ -5193,8 +5207,14 @@ export default function AdminPage() {
                             >
                               {s.pets?.name || "Guest"}
                             </span>
-                          </p>
-                          <p style={{ margin: "0 0 5px 0" }}>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "baseline",
+                              gap: "6px",
+                            }}
+                          >
                             <span
                               style={{
                                 fontSize: "10px",
@@ -5202,9 +5222,10 @@ export default function AdminPage() {
                                 fontWeight: "700",
                                 textTransform: "uppercase",
                                 letterSpacing: "0.4px",
+                                flexShrink: 0,
                               }}
                             >
-                              Species:{" "}
+                              Species:
                             </span>
                             <span
                               style={{
@@ -5215,10 +5236,9 @@ export default function AdminPage() {
                             >
                               {s.pets?.species || "—"}
                             </span>
-                          </p>
-                          <p
+                          </div>
+                          <div
                             style={{
-                              margin: "0 0 5px 0",
                               display: "flex",
                               alignItems: "center",
                               gap: "6px",
@@ -5231,9 +5251,10 @@ export default function AdminPage() {
                                 fontWeight: "700",
                                 textTransform: "uppercase",
                                 letterSpacing: "0.4px",
+                                flexShrink: 0,
                               }}
                             >
-                              Result:{" "}
+                              Result:
                             </span>
                             <span
                               style={{
@@ -5248,8 +5269,14 @@ export default function AdminPage() {
                             >
                               {cfg.label || s.triage_result}
                             </span>
-                          </p>
-                          <p style={{ margin: 0 }}>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "baseline",
+                              gap: "6px",
+                            }}
+                          >
                             <span
                               style={{
                                 fontSize: "10px",
@@ -5257,14 +5284,15 @@ export default function AdminPage() {
                                 fontWeight: "700",
                                 textTransform: "uppercase",
                                 letterSpacing: "0.4px",
+                                flexShrink: 0,
                               }}
                             >
-                              Date:{" "}
+                              Date:
                             </span>
                             <span style={{ fontSize: "13px", color: "#888" }}>
                               {formatDateTime(s.created_at)}
                             </span>
-                          </p>
+                          </div>
                         </div>
                       </div>
                     );
