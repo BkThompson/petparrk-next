@@ -1196,7 +1196,7 @@ export default function AdminPage() {
         .vet-row:last-child { border-bottom: none; }
         .price-edit-pills { display: flex; gap: 6px; flex-wrap: nowrap; }
         @media (max-width: 600px) { .price-edit-pills { flex-wrap: wrap; gap: 4px; } }
-        .price-row-wrap { border-bottom: 1px solid #f0f0f0; padding: 14px 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+        .price-row-wrap { border-bottom: 1px solid #f0f0f0; padding: 18px 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
         .price-row-wrap:last-child { border-bottom: none; }
         .price-row-info { flex: 1; min-width: 0; }
         .price-row-btns { display: flex; gap: 6px; flex-shrink: 0; align-self: flex-start; }
@@ -2848,7 +2848,20 @@ export default function AdminPage() {
                                     }
                                   : {}
                               }
-                              value={addPriceForm.species || ""}
+                              value={
+                                addPriceForm.species === "other" ||
+                                (addPriceForm.species &&
+                                  ![
+                                    "dog",
+                                    "cat",
+                                    "rabbit",
+                                    "bird",
+                                    "other",
+                                    "",
+                                  ].includes(addPriceForm.species))
+                                  ? "other"
+                                  : addPriceForm.species || ""
+                              }
                               onChange={(e) => {
                                 setAddPriceError(false);
                                 setAddPriceForm({
@@ -2865,14 +2878,37 @@ export default function AdminPage() {
                               <option value="bird">Bird</option>
                               <option value="other">Other...</option>
                             </select>
-                            {addPriceForm.species === "other" && (
+                            {(addPriceForm.species === "other" ||
+                              (addPriceForm.species &&
+                                ![
+                                  "dog",
+                                  "cat",
+                                  "rabbit",
+                                  "bird",
+                                  "other",
+                                  "",
+                                ].includes(addPriceForm.species))) && (
                               <input
                                 className="adm-input"
                                 style={{ marginTop: "8px" }}
-                                value={addPriceForm.species_other || ""}
+                                value={
+                                  addPriceForm.species_other ||
+                                  (addPriceForm.species &&
+                                  ![
+                                    "dog",
+                                    "cat",
+                                    "rabbit",
+                                    "bird",
+                                    "other",
+                                    "",
+                                  ].includes(addPriceForm.species)
+                                    ? addPriceForm.species
+                                    : "")
+                                }
                                 onChange={(e) =>
                                   setAddPriceForm({
                                     ...addPriceForm,
+                                    species: "other",
                                     species_other: e.target.value,
                                   })
                                 }
@@ -3057,12 +3093,12 @@ export default function AdminPage() {
                                   fontWeight: "600",
                                   fontSize: "14px",
                                   color: "#111",
-                                  marginBottom: "4px",
+                                  marginBottom: "6px",
                                 }}
                               >
                                 {p.services?.name || "—"}
                               </div>
-                              <div style={{ marginBottom: "6px" }}>
+                              <div style={{ marginBottom: "8px" }}>
                                 <span
                                   style={{
                                     fontSize: "14px",
@@ -3087,7 +3123,7 @@ export default function AdminPage() {
                                 </span>
                               </div>
                               {p.species && (
-                                <div style={{ marginBottom: "4px" }}>
+                                <div style={{ marginBottom: "6px" }}>
                                   <span
                                     style={{
                                       fontSize: "12px",
@@ -3110,8 +3146,8 @@ export default function AdminPage() {
                                   style={{
                                     display: "flex",
                                     flexWrap: "wrap",
-                                    gap: "4px",
-                                    marginBottom: "4px",
+                                    gap: "6px",
+                                    marginBottom: "6px",
                                   }}
                                 >
                                   {p.includes_bloodwork && (
@@ -3174,7 +3210,7 @@ export default function AdminPage() {
                               {p.notes && (
                                 <p
                                   style={{
-                                    margin: "4px 0 0 0",
+                                    margin: "6px 0 0 0",
                                     fontSize: "12px",
                                     color: "#888",
                                     fontStyle: "italic",
@@ -3337,7 +3373,20 @@ export default function AdminPage() {
                                             }
                                           : {}
                                       }
-                                      value={priceForm.species || ""}
+                                      value={
+                                        priceForm.species === "other" ||
+                                        (priceForm.species &&
+                                          ![
+                                            "dog",
+                                            "cat",
+                                            "rabbit",
+                                            "bird",
+                                            "other",
+                                            "",
+                                          ].includes(priceForm.species))
+                                          ? "other"
+                                          : priceForm.species || ""
+                                      }
                                       onChange={(e) => {
                                         setEditPriceError(false);
                                         setPriceForm({
@@ -3354,14 +3403,37 @@ export default function AdminPage() {
                                       <option value="bird">Bird</option>
                                       <option value="other">Other...</option>
                                     </select>
-                                    {priceForm.species === "other" && (
+                                    {(priceForm.species === "other" ||
+                                      (priceForm.species &&
+                                        ![
+                                          "dog",
+                                          "cat",
+                                          "rabbit",
+                                          "bird",
+                                          "other",
+                                          "",
+                                        ].includes(priceForm.species))) && (
                                       <input
                                         className="adm-input"
                                         style={{ marginTop: "8px" }}
-                                        value={priceForm.species_other || ""}
+                                        value={
+                                          priceForm.species_other ||
+                                          (priceForm.species &&
+                                          ![
+                                            "dog",
+                                            "cat",
+                                            "rabbit",
+                                            "bird",
+                                            "other",
+                                            "",
+                                          ].includes(priceForm.species)
+                                            ? priceForm.species
+                                            : "")
+                                        }
                                         onChange={(e) =>
                                           setPriceForm({
                                             ...priceForm,
+                                            species: "other",
                                             species_other: e.target.value,
                                           })
                                         }
@@ -4265,17 +4337,40 @@ export default function AdminPage() {
                                             Other...
                                           </option>
                                         </select>
-                                        {p.species === "other" && (
+                                        {(p.species === "other" ||
+                                          (p.species &&
+                                            ![
+                                              "dog",
+                                              "cat",
+                                              "rabbit",
+                                              "bird",
+                                              "other",
+                                              "",
+                                            ].includes(p.species))) && (
                                           <input
                                             className="adm-input"
                                             style={{ marginTop: "8px" }}
-                                            value={p.speciesOther || ""}
+                                            value={
+                                              p.speciesOther ||
+                                              (p.species &&
+                                              ![
+                                                "dog",
+                                                "cat",
+                                                "rabbit",
+                                                "bird",
+                                                "other",
+                                                "",
+                                              ].includes(p.species)
+                                                ? p.species
+                                                : "")
+                                            }
                                             onChange={(e) =>
                                               setCallPrices((prev) =>
                                                 prev.map((row, idx) =>
                                                   idx === i
                                                     ? {
                                                         ...row,
+                                                        species: "other",
                                                         speciesOther:
                                                           e.target.value,
                                                       }
@@ -4618,7 +4713,7 @@ export default function AdminPage() {
                                           </p>
                                           {row.species && (
                                             <div
-                                              style={{ marginBottom: "6px" }}
+                                              style={{ marginBottom: "8px" }}
                                             >
                                               <span
                                                 style={{
@@ -4695,7 +4790,7 @@ export default function AdminPage() {
                                           {row.notes && (
                                             <p
                                               style={{
-                                                margin: "0 0 8px 0",
+                                                margin: "0 0 10px 0",
                                                 fontSize: "13px",
                                                 color: "#888",
                                                 fontStyle: "italic",
@@ -4899,17 +4994,40 @@ export default function AdminPage() {
                                                   Other...
                                                 </option>
                                               </select>
-                                              {row.species === "other" && (
+                                              {(row.species === "other" ||
+                                                (row.species &&
+                                                  ![
+                                                    "dog",
+                                                    "cat",
+                                                    "rabbit",
+                                                    "bird",
+                                                    "other",
+                                                    "",
+                                                  ].includes(row.species))) && (
                                                 <input
                                                   className="adm-input"
                                                   style={{ marginTop: "8px" }}
-                                                  value={row.speciesOther || ""}
+                                                  value={
+                                                    row.speciesOther ||
+                                                    (row.species &&
+                                                    ![
+                                                      "dog",
+                                                      "cat",
+                                                      "rabbit",
+                                                      "bird",
+                                                      "other",
+                                                      "",
+                                                    ].includes(row.species)
+                                                      ? row.species
+                                                      : "")
+                                                  }
                                                   onChange={(e) => {
                                                     const u = [
                                                       ...callReviewPrices,
                                                     ];
                                                     u[i] = {
                                                       ...u[i],
+                                                      species: "other",
                                                       speciesOther:
                                                         e.target.value,
                                                     };
