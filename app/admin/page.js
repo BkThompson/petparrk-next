@@ -1218,11 +1218,8 @@ export default function AdminPage() {
             />
           </div>
         </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            className="adm-btn adm-btn-green pv-approve-btn"
-            onClick={onApprove}
-          >
+        <div className="pv-edit-btns" style={{ display: "flex", gap: "8px" }}>
+          <button className="adm-btn adm-btn-green" onClick={onApprove}>
             Approve & Add to Site
           </button>
           <button className="adm-btn adm-btn-gray" onClick={onCancel}>
@@ -1276,8 +1273,8 @@ export default function AdminPage() {
         .badge-active { background: #e8f5e9; color: #2d6a4f; border: 1px solid #c8e6c9; }
         .badge-inactive { background: #f0f0f0; color: #888; border: 1px solid #ddd; }
         .row-edit-bg { background: #f9f9f9; border-radius: 10px; padding: 20px 20px 16px 20px; margin: 6px 0 20px 0; border: 1px solid #e8e8e8; }
-        .pv-approve-btn { font-size: 12px; padding: 5px 10px; }
-        @media (min-width: 601px) { .pv-approve-btn { font-size: 13px; padding: 7px 14px; } }
+        .pv-edit-btns .adm-btn { font-size: 11px; padding: 4px 8px; }
+        @media (min-width: 701px) { .pv-edit-btns .adm-btn { font-size: 13px; padding: 7px 14px; } }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
         .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
@@ -1381,7 +1378,7 @@ export default function AdminPage() {
 
           .pv-card-inner { flex-direction: column; }
           .pv-buttons { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; }
-          .pv-buttons .adm-btn { flex: 1; font-size: 11px; padding: 4px 6px; }
+          .pv-buttons .adm-btn { flex: 1; }
           .filter-bar .adm-btn { padding: 5px 10px; font-size: 12px; }
         }
         @media (max-width: 600px) {
@@ -4410,36 +4407,35 @@ export default function AdminPage() {
                                       border: "1px solid #e8e8e8",
                                       borderRadius: "10px",
                                       padding: "16px",
-                                      position: "relative",
                                     }}
                                   >
-                                    {/* X — absolute top-right */}
-                                    <button
-                                      onClick={() =>
-                                        setShowCallbackNotes(false)
-                                      }
-                                      style={{
-                                        position: "absolute",
-                                        top: "12px",
-                                        right: "12px",
-                                        background: "none",
-                                        border: "none",
-                                        cursor: "pointer",
-                                        fontSize: "18px",
-                                        color: "#aaa",
-                                        lineHeight: 1,
-                                        padding: "0 2px",
-                                      }}
-                                    >
-                                      ✕
-                                    </button>
-                                    {/* Title — full width, no wrap issue */}
+                                    {/* X on its own line, right-aligned */}
                                     <div
                                       style={{
-                                        marginBottom: "14px",
-                                        paddingRight: "28px",
+                                        display: "flex",
+                                        justifyContent: "flex-end",
+                                        marginBottom: "6px",
                                       }}
                                     >
+                                      <button
+                                        onClick={() =>
+                                          setShowCallbackNotes(false)
+                                        }
+                                        style={{
+                                          background: "none",
+                                          border: "none",
+                                          cursor: "pointer",
+                                          fontSize: "18px",
+                                          color: "#aaa",
+                                          lineHeight: 1,
+                                          padding: "0 2px",
+                                        }}
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                    {/* Title on its own full-width line below X */}
+                                    <div style={{ marginBottom: "14px" }}>
                                       <p
                                         style={{
                                           margin: 0,
