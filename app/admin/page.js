@@ -1464,28 +1464,36 @@ export default function AdminPage() {
           .notes-panel-desktop.notes-panel-open { transform: translateY(0); }
         }
         /* Team tab */
+        /* Team tab */
+        /* Edit name row — desktop: inline, mobile: stacked */
         .team-edit-name-row { display: flex; gap: 8px; align-items: center; }
-        .team-edit-name-input { flex: 1; }
+        .team-edit-name-input { flex: 1; min-width: 0; }
         .team-edit-name-btns { display: flex; gap: 8px; flex-shrink: 0; }
         .team-edit-btn { font-size: 13px; padding: 7px 14px; }
+        /* Member row — desktop: info left, actions right */
+        .team-member-row { display: flex; flex-direction: column; gap: 0; padding: 16px; }
+        .team-member-row-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+        .team-member-info { flex: 1; min-width: 0; }
+        .team-member-actions { flex-shrink: 0; margin-top: 2px; }
+        /* Perms grid — always equal columns so labels align */
+        .team-perms-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 12px; }
+        /* Invite perms grid */
+        .invite-perms-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .invite-perm-label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; background: #f5f5f5; padding: 5px 10px; border-radius: 6px; }
+        @media (max-width: 700px) {
+          .team-member-row-top { flex-direction: column; gap: 12px; }
+          .team-member-actions { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+          .team-member-actions .adm-btn { width: 100%; text-align: center; }
+          .team-perms-grid { grid-template-columns: repeat(2, 1fr); }
+          .invite-perms-grid { grid-template-columns: repeat(2, 1fr); }
+        }
         @media (max-width: 425px) {
           .team-edit-name-row { flex-direction: column; align-items: stretch; }
           .team-edit-name-input { width: 100%; }
           .team-edit-name-btns { justify-content: flex-end; margin-top: 8px; }
           .team-edit-btn { font-size: 11px; padding: 6px 10px; }
-        }
-        .team-member-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 16px; }
-        .team-member-info { flex: 1; min-width: 0; }
-        .team-member-actions { flex-shrink: 0; }
-        .team-perms-grid { display: grid; grid-template-columns: repeat(3, auto); gap: 6px 16px; }
-        @media (max-width: 700px) {
-          .team-member-row { flex-direction: column; gap: 12px; }
-          .team-member-actions { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; }
-          .team-member-actions .adm-btn { width: 100%; text-align: center; }
-          .team-perms-grid { grid-template-columns: repeat(2, auto); }
-        }
-        @media (max-width: 480px) {
-          .team-perms-grid { grid-template-columns: 1fr 1fr; }
+          .team-perms-grid { grid-template-columns: repeat(2, 1fr); }
+          .invite-perms-grid { grid-template-columns: repeat(2, 1fr); }
         }
         .scroll-arrow-btn { width: 40px; height: 40px; border-radius: 50%; background: #2d6a4f; color: #fff; border: none; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-family: system-ui, sans-serif; }
         .scroll-arrow-btn:hover { background: #245a42; }
@@ -6153,12 +6161,8 @@ export default function AdminPage() {
                       inviting.
                     </p>
                     <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "8px",
-                        marginBottom: "14px",
-                      }}
+                      className="invite-perms-grid"
+                      style={{ marginBottom: "14px" }}
                     >
                       {[
                         ["can_view_call_sheet", "Call Sheet"],
@@ -6167,19 +6171,7 @@ export default function AdminPage() {
                         ["can_manage_users", "Manage Users"],
                         ["can_manage_team", "Manage Team"],
                       ].map(([field, label]) => (
-                        <label
-                          key={field}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            fontSize: "13px",
-                            cursor: "pointer",
-                            background: "#f5f5f5",
-                            padding: "5px 10px",
-                            borderRadius: "6px",
-                          }}
-                        >
+                        <label key={field} className="invite-perm-label">
                           <input
                             type="checkbox"
                             checked={!!inviteForm[field]}
@@ -6274,266 +6266,272 @@ export default function AdminPage() {
                       >
                         {/* Member row */}
                         <div className="team-member-row">
-                          <div className="team-member-info">
-                            {/* Name + badges + edit */}
-                            {teamEditingId === u.id ? (
-                              <div
-                                className="team-edit-name-row"
-                                style={{ marginBottom: "6px" }}
-                              >
-                                <input
-                                  className="adm-input team-edit-name-input"
-                                  value={teamEditName}
-                                  onChange={(e) =>
-                                    setTeamEditName(e.target.value)
-                                  }
-                                  placeholder="Full name..."
-                                />
-                                <div className="team-edit-name-btns">
-                                  <button
-                                    className="adm-btn adm-btn-gray team-edit-btn"
-                                    onClick={() => {
-                                      setTeamEditingId(null);
-                                      setTeamEditName("");
-                                    }}
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    className="adm-btn adm-btn-green team-edit-btn"
-                                    onClick={() =>
-                                      updateAdminName(u.id, teamEditName)
-                                    }
-                                  >
-                                    Save
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  flexWrap: "wrap",
-                                  marginBottom: "2px",
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontWeight: "600",
-                                    fontSize: "14px",
-                                    color: "#111",
-                                  }}
+                          <div className="team-member-row-top">
+                            <div className="team-member-info">
+                              {/* Name + badges + edit */}
+                              {teamEditingId === u.id ? (
+                                <div
+                                  className="team-edit-name-row"
+                                  style={{ marginBottom: "6px" }}
                                 >
-                                  {u.full_name || (
-                                    <span
-                                      style={{
-                                        color: "#bbb",
-                                        fontStyle: "italic",
+                                  <input
+                                    className="adm-input team-edit-name-input"
+                                    value={teamEditName}
+                                    onChange={(e) =>
+                                      setTeamEditName(e.target.value)
+                                    }
+                                    placeholder="Full name..."
+                                  />
+                                  <div className="team-edit-name-btns">
+                                    <button
+                                      className="adm-btn adm-btn-gray team-edit-btn"
+                                      onClick={() => {
+                                        setTeamEditingId(null);
+                                        setTeamEditName("");
                                       }}
                                     >
-                                      No name
+                                      Cancel
+                                    </button>
+                                    <button
+                                      className="adm-btn adm-btn-green team-edit-btn"
+                                      onClick={() =>
+                                        updateAdminName(u.id, teamEditName)
+                                      }
+                                    >
+                                      Save
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    flexWrap: "wrap",
+                                    marginBottom: "2px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontWeight: "600",
+                                      fontSize: "14px",
+                                      color: "#111",
+                                    }}
+                                  >
+                                    {u.full_name || (
+                                      <span
+                                        style={{
+                                          color: "#bbb",
+                                          fontStyle: "italic",
+                                        }}
+                                      >
+                                        No name
+                                      </span>
+                                    )}
+                                  </span>
+                                  {isMe && (
+                                    <span
+                                      style={{
+                                        fontSize: "10px",
+                                        background: "#e3f2fd",
+                                        color: "#1565c0",
+                                        padding: "1px 7px",
+                                        borderRadius: "20px",
+                                        fontWeight: "700",
+                                        letterSpacing: "0.3px",
+                                      }}
+                                    >
+                                      YOU
                                     </span>
                                   )}
-                                </span>
-                                {isMe && (
                                   <span
                                     style={{
                                       fontSize: "10px",
-                                      background: "#e3f2fd",
-                                      color: "#1565c0",
+                                      background:
+                                        u.status === "active"
+                                          ? "#e8f5e9"
+                                          : "#f5f5f5",
+                                      color:
+                                        u.status === "active"
+                                          ? "#2d6a4f"
+                                          : "#888",
                                       padding: "1px 7px",
                                       borderRadius: "20px",
-                                      fontWeight: "700",
-                                      letterSpacing: "0.3px",
+                                      fontWeight: "600",
                                     }}
                                   >
-                                    YOU
+                                    {u.status === "active"
+                                      ? "Active"
+                                      : "Inactive"}
                                   </span>
-                                )}
-                                <span
-                                  style={{
-                                    fontSize: "10px",
-                                    background:
-                                      u.status === "active"
-                                        ? "#e8f5e9"
-                                        : "#f5f5f5",
-                                    color:
-                                      u.status === "active"
-                                        ? "#2d6a4f"
-                                        : "#888",
-                                    padding: "1px 7px",
-                                    borderRadius: "20px",
-                                    fontWeight: "600",
-                                  }}
-                                >
-                                  {u.status === "active"
-                                    ? "Active"
-                                    : "Inactive"}
-                                </span>
-                                <button
-                                  className="adm-btn adm-btn-outline"
-                                  style={{
-                                    fontSize: "11px",
-                                    padding: "2px 8px",
-                                  }}
-                                  onClick={() => {
-                                    setTeamEditingId(u.id);
-                                    setTeamEditName(u.full_name || "");
-                                  }}
-                                >
-                                  Edit Name
-                                </button>
-                              </div>
-                            )}
-                            <p
-                              style={{
-                                margin: "0 0 4px 0",
-                                fontSize: "12px",
-                                color: "#888",
-                              }}
-                            >
-                              {u.email}
-                            </p>
-                            {u.invited_by && u.invited_by !== "system" && (
+                                  <button
+                                    className="adm-btn adm-btn-outline"
+                                    style={{
+                                      fontSize: "11px",
+                                      padding: "2px 8px",
+                                    }}
+                                    onClick={() => {
+                                      setTeamEditingId(u.id);
+                                      setTeamEditName(u.full_name || "");
+                                    }}
+                                  >
+                                    Edit Name
+                                  </button>
+                                </div>
+                              )}
                               <p
                                 style={{
-                                  margin: "0 0 8px 0",
-                                  fontSize: "11px",
-                                  color: "#aaa",
+                                  margin: "0 0 4px 0",
+                                  fontSize: "12px",
+                                  color: "#888",
                                 }}
                               >
-                                Invited by {u.invited_by}
+                                {u.email}
                               </p>
-                            )}
-                            {/* Permissions label + toggles */}
-                            <p
-                              style={{
-                                margin: "14px 0 6px 0",
-                                fontSize: "11px",
-                                fontWeight: "700",
-                                color: "#aaa",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.4px",
-                              }}
-                            >
-                              Permissions
-                            </p>
-                            <div className="team-perms-grid">
-                              {[
-                                ["can_view_call_sheet", "Call Sheet"],
-                                ["can_edit_prices", "Edit Prices"],
-                                ["can_approve_vets", "Approve Vets"],
-                                ["can_manage_users", "Manage Users"],
-                                ["can_manage_team", "Manage Team"],
-                              ].map(([field, label]) => {
-                                const locked =
-                                  isMe && field === "can_manage_team";
-                                const canEdit = adminUsers.find(
-                                  (a) => a.email === currentUserEmail,
-                                )?.can_manage_team;
-                                return (
-                                  <label
-                                    key={field}
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "5px",
-                                      fontSize: "12px",
-                                      cursor:
-                                        locked || !canEdit
-                                          ? "not-allowed"
-                                          : "pointer",
-                                      opacity: locked ? 0.4 : 1,
-                                    }}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={!!u[field]}
-                                      disabled={locked || !canEdit}
-                                      onChange={(e) =>
-                                        updateAdminPermission(
-                                          u.id,
-                                          field,
-                                          e.target.checked,
-                                        )
-                                      }
-                                    />
-                                    {label}
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          {/* Actions — only visible to team managers, not on own row */}
-                          {!isMe &&
-                            adminUsers.find((a) => a.email === currentUserEmail)
-                              ?.can_manage_team && (
-                              <div className="team-member-actions">
-                                {isDeactivating ? (
-                                  <div
-                                    style={{
-                                      background: "#fff0f0",
-                                      border: "1px solid #ffcdd2",
-                                      borderRadius: "6px",
-                                      padding: "10px 12px",
-                                    }}
-                                  >
-                                    <p
-                                      style={{
-                                        margin: "0 0 8px 0",
-                                        fontSize: "13px",
-                                        color: "#c62828",
-                                        fontWeight: "600",
-                                      }}
-                                    >
-                                      {u.status === "active"
-                                        ? "Deactivate"
-                                        : "Reactivate"}{" "}
-                                      {u.full_name || u.email}?
-                                    </p>
-                                    <div
+                              {u.invited_by && u.invited_by !== "system" && (
+                                <p
+                                  style={{
+                                    margin: "0 0 8px 0",
+                                    fontSize: "11px",
+                                    color: "#aaa",
+                                  }}
+                                >
+                                  Invited by {u.invited_by}
+                                </p>
+                              )}
+                              {/* Permissions label + toggles */}
+                              <p
+                                style={{
+                                  margin: "14px 0 6px 0",
+                                  fontSize: "11px",
+                                  fontWeight: "700",
+                                  color: "#aaa",
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.4px",
+                                }}
+                              >
+                                Permissions
+                              </p>
+                              <div className="team-perms-grid">
+                                {[
+                                  ["can_view_call_sheet", "Call Sheet"],
+                                  ["can_edit_prices", "Edit Prices"],
+                                  ["can_approve_vets", "Approve Vets"],
+                                  ["can_manage_users", "Manage Users"],
+                                  ["can_manage_team", "Manage Team"],
+                                ].map(([field, label]) => {
+                                  const locked =
+                                    isMe && field === "can_manage_team";
+                                  const canEdit = adminUsers.find(
+                                    (a) => a.email === currentUserEmail,
+                                  )?.can_manage_team;
+                                  return (
+                                    <label
+                                      key={field}
                                       style={{
                                         display: "flex",
-                                        justifyContent: "flex-end",
-                                        gap: "6px",
+                                        alignItems: "center",
+                                        gap: "5px",
+                                        fontSize: "12px",
+                                        cursor:
+                                          locked || !canEdit
+                                            ? "not-allowed"
+                                            : "pointer",
+                                        opacity: locked ? 0.4 : 1,
                                       }}
                                     >
-                                      <button
-                                        className="adm-btn adm-btn-gray"
-                                        onClick={() =>
-                                          setTeamDeactivatingId(null)
+                                      <input
+                                        type="checkbox"
+                                        checked={!!u[field]}
+                                        disabled={locked || !canEdit}
+                                        onChange={(e) =>
+                                          updateAdminPermission(
+                                            u.id,
+                                            field,
+                                            e.target.checked,
+                                          )
                                         }
-                                      >
-                                        Cancel
-                                      </button>
-                                      <button
-                                        className={`adm-btn ${u.status === "active" ? "adm-btn-red" : "adm-btn-green"}`}
-                                        onClick={() => toggleAdminStatus(u)}
+                                      />
+                                      {label}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                            {/* Actions — only visible to team managers, not on own row */}
+                            {!isMe &&
+                              adminUsers.find(
+                                (a) => a.email === currentUserEmail,
+                              )?.can_manage_team && (
+                                <div className="team-member-actions">
+                                  {isDeactivating ? (
+                                    <div
+                                      style={{
+                                        background: "#fff0f0",
+                                        border: "1px solid #ffcdd2",
+                                        borderRadius: "6px",
+                                        padding: "10px 12px",
+                                      }}
+                                    >
+                                      <p
+                                        style={{
+                                          margin: "0 0 8px 0",
+                                          fontSize: "13px",
+                                          color: "#c62828",
+                                          fontWeight: "600",
+                                        }}
                                       >
                                         {u.status === "active"
                                           ? "Deactivate"
-                                          : "Reactivate"}
-                                      </button>
+                                          : "Reactivate"}{" "}
+                                        {u.full_name || u.email}?
+                                      </p>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          justifyContent: "flex-end",
+                                          gap: "6px",
+                                        }}
+                                      >
+                                        <button
+                                          className="adm-btn adm-btn-gray"
+                                          onClick={() =>
+                                            setTeamDeactivatingId(null)
+                                          }
+                                        >
+                                          Cancel
+                                        </button>
+                                        <button
+                                          className={`adm-btn ${u.status === "active" ? "adm-btn-red" : "adm-btn-green"}`}
+                                          onClick={() => toggleAdminStatus(u)}
+                                        >
+                                          {u.status === "active"
+                                            ? "Deactivate"
+                                            : "Reactivate"}
+                                        </button>
+                                      </div>
                                     </div>
-                                  </div>
-                                ) : (
-                                  <button
-                                    className={`adm-btn ${u.status === "active" ? "adm-btn-gray" : "adm-btn-green"}`}
-                                    style={{
-                                      fontSize: "12px",
-                                      padding: "5px 10px",
-                                    }}
-                                    onClick={() => setTeamDeactivatingId(u.id)}
-                                  >
-                                    {u.status === "active"
-                                      ? "Deactivate"
-                                      : "Reactivate"}
-                                  </button>
-                                )}
-                              </div>
-                            )}
+                                  ) : (
+                                    <button
+                                      className={`adm-btn ${u.status === "active" ? "adm-btn-gray" : "adm-btn-green"}`}
+                                      style={{
+                                        fontSize: "12px",
+                                        padding: "5px 10px",
+                                      }}
+                                      onClick={() =>
+                                        setTeamDeactivatingId(u.id)
+                                      }
+                                    >
+                                      {u.status === "active"
+                                        ? "Deactivate"
+                                        : "Reactivate"}
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                          </div>
+                          {/* end team-member-row-top */}
                         </div>
                       </div>
                     );
