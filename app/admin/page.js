@@ -1357,6 +1357,13 @@ export default function AdminPage() {
         }
         html { scrollbar-gutter: stable; }
         .scroll-arrows { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 200; }
+        /* Notes panel — desktop: slides from right, mobile: slides from bottom */
+        .notes-panel-desktop { top: 0; right: 0; bottom: 0; width: 380px; transform: translateX(100%); }
+        .notes-panel-desktop.notes-panel-open { transform: translateX(0); }
+        @media (max-width: 600px) {
+          .notes-panel-desktop { top: auto; left: 0; right: 0; bottom: 0; width: 100%; height: 70vh; border-radius: 16px 16px 0 0; transform: translateY(100%); }
+          .notes-panel-desktop.notes-panel-open { transform: translateY(0); }
+        }
         .scroll-arrow-btn { width: 40px; height: 40px; border-radius: "50%"; background: "#2d6a4f"; color: "#fff"; border: none; cursor: pointer; font-size: "18px"; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border-radius: 50%; }
         .scroll-arrow-btn:hover { background: #245a42; }
         /* Price search dropdown — absolute so it doesn't push page content */
@@ -3880,264 +3887,7 @@ export default function AdminPage() {
                           </button>
                         </div>
                       )}
-                    {/* ── All Call Notes — collapsible panel ── */}
-                    <div style={{ marginBottom: "14px" }}>
-                      <button
-                        className="adm-btn adm-btn-gray"
-                        style={{
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                        onClick={() => {
-                          setShowAllNotes((v) => !v);
-                          if (!showAllNotes) fetchAllCallNotes();
-                        }}
-                      >
-                        <span>
-                          📋 All Call Notes{" "}
-                          {allCallNotes.length > 0
-                            ? `(${allCallNotes.length})`
-                            : ""}
-                        </span>
-                        <span style={{ fontSize: "12px" }}>
-                          {showAllNotes ? "▲ Hide" : "▼ Show"}
-                        </span>
-                      </button>
-                      {showAllNotes && (
-                        <div
-                          style={{
-                            background: "#fff",
-                            border: "1px solid #e8e8e8",
-                            borderRadius: "0 0 8px 8px",
-                            borderTop: "none",
-                          }}
-                        >
-                          {allNotesLoading && (
-                            <p
-                              style={{
-                                padding: "16px",
-                                color: "#888",
-                                fontSize: "13px",
-                                margin: 0,
-                              }}
-                            >
-                              Loading notes...
-                            </p>
-                          )}
-                          {!allNotesLoading && allCallNotes.length === 0 && (
-                            <p
-                              style={{
-                                padding: "16px",
-                                color: "#aaa",
-                                fontSize: "13px",
-                                fontStyle: "italic",
-                                margin: 0,
-                              }}
-                            >
-                              No notes saved yet.
-                            </p>
-                          )}
-                          {!allNotesLoading &&
-                            allCallNotes.map((n, i) => (
-                              <div
-                                key={n.id}
-                                style={{
-                                  padding: "14px 16px",
-                                  borderBottom:
-                                    i < allCallNotes.length - 1
-                                      ? "1px solid #f0f0f0"
-                                      : "none",
-                                }}
-                              >
-                                {allNotesEditingId === n.id ? (
-                                  /* Edit mode */
-                                  <div>
-                                    <p
-                                      style={{
-                                        margin: "0 0 6px 0",
-                                        fontSize: "12px",
-                                        fontWeight: "600",
-                                        color: "#2d6a4f",
-                                      }}
-                                    >
-                                      {n.vet_name}
-                                    </p>
-                                    <textarea
-                                      className="adm-input"
-                                      rows={3}
-                                      style={{
-                                        width: "100%",
-                                        resize: "vertical",
-                                        height: "auto",
-                                        marginBottom: "8px",
-                                      }}
-                                      value={allNotesEditingText}
-                                      onChange={(e) =>
-                                        setAllNotesEditingText(e.target.value)
-                                      }
-                                    />
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        justifyContent: "flex-end",
-                                        gap: "8px",
-                                      }}
-                                    >
-                                      <button
-                                        className="adm-btn adm-btn-gray"
-                                        onClick={() => {
-                                          setAllNotesEditingId(null);
-                                          setAllNotesEditingText("");
-                                        }}
-                                      >
-                                        Cancel
-                                      </button>
-                                      <button
-                                        className="adm-btn adm-btn-green"
-                                        onClick={() =>
-                                          updateCallNote(
-                                            n.id,
-                                            allNotesEditingText,
-                                          )
-                                        }
-                                      >
-                                        Save Changes
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : allNotesDeletingId === n.id ? (
-                                  /* Delete confirm */
-                                  <div
-                                    style={{
-                                      background: "#fff0f0",
-                                      border: "1px solid #ffcdd2",
-                                      borderRadius: "6px",
-                                      padding: "12px",
-                                    }}
-                                  >
-                                    <p
-                                      style={{
-                                        margin: "0 0 4px 0",
-                                        fontSize: "12px",
-                                        fontWeight: "600",
-                                        color: "#111",
-                                      }}
-                                    >
-                                      {n.vet_name}
-                                    </p>
-                                    <p
-                                      style={{
-                                        margin: "0 0 10px 0",
-                                        fontSize: "13px",
-                                        color: "#c62828",
-                                        fontWeight: "600",
-                                      }}
-                                    >
-                                      Delete this note?
-                                    </p>
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        justifyContent: "flex-end",
-                                        gap: "8px",
-                                      }}
-                                    >
-                                      <button
-                                        className="adm-btn adm-btn-gray"
-                                        onClick={() =>
-                                          setAllNotesDeletingId(null)
-                                        }
-                                      >
-                                        Cancel
-                                      </button>
-                                      <button
-                                        className="adm-btn adm-btn-red"
-                                        onClick={() => deleteCallNote(n.id)}
-                                      >
-                                        Yes, Delete
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  /* View mode */
-                                  <div>
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "flex-start",
-                                        gap: "8px",
-                                        marginBottom: "4px",
-                                      }}
-                                    >
-                                      <span
-                                        style={{
-                                          fontSize: "13px",
-                                          fontWeight: "600",
-                                          color: "#111",
-                                        }}
-                                      >
-                                        {n.vet_name}
-                                      </span>
-                                      <span
-                                        style={{
-                                          fontSize: "11px",
-                                          color: "#aaa",
-                                          flexShrink: 0,
-                                        }}
-                                      >
-                                        {formatLogDate(n.created_at)}
-                                        {n.updated_at !== n.created_at
-                                          ? " · edited"
-                                          : ""}
-                                      </span>
-                                    </div>
-                                    <p
-                                      style={{
-                                        margin: "0 0 10px 0",
-                                        fontSize: "13px",
-                                        color: "#555",
-                                        lineHeight: "1.5",
-                                      }}
-                                    >
-                                      {n.note}
-                                    </p>
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        justifyContent: "flex-end",
-                                        gap: "8px",
-                                      }}
-                                    >
-                                      <button
-                                        className="adm-btn adm-btn-outline"
-                                        onClick={() => {
-                                          setAllNotesEditingId(n.id);
-                                          setAllNotesEditingText(n.note);
-                                          setAllNotesDeletingId(null);
-                                        }}
-                                      >
-                                        Edit
-                                      </button>
-                                      <button
-                                        className="adm-btn adm-btn-red"
-                                        onClick={() => {
-                                          setAllNotesDeletingId(n.id);
-                                          setAllNotesEditingId(null);
-                                        }}
-                                      >
-                                        Delete
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                    </div>
+
                     {/* Recently processed — always visible when there's history */}
                     {callLog.length > 0 && (
                       <div
@@ -6003,6 +5753,314 @@ export default function AdminPage() {
                           </div>
                         );
                       })()}
+                    {/* ── Floating Notes Button + Panel — only on Call Sheet tab ── */}
+                    <>
+                      {/* Floating notepad button */}
+                      <button
+                        onClick={() => {
+                          setShowAllNotes((v) => !v);
+                          if (!showAllNotes) fetchAllCallNotes();
+                        }}
+                        style={{
+                          position: "fixed",
+                          bottom: "80px",
+                          right: "24px",
+                          zIndex: 300,
+                          width: "48px",
+                          height: "48px",
+                          borderRadius: "50%",
+                          background: "#e65100",
+                          color: "#fff",
+                          border: "none",
+                          cursor: "pointer",
+                          fontSize: "20px",
+                          boxShadow: "0 3px 12px rgba(230,81,0,0.4)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontFamily: "system-ui, sans-serif",
+                        }}
+                        title="Call Notes"
+                      >
+                        📋
+                      </button>
+
+                      {/* Overlay — click to close */}
+                      {showAllNotes && (
+                        <div
+                          onClick={() => setShowAllNotes(false)}
+                          style={{
+                            position: "fixed",
+                            inset: 0,
+                            background: "rgba(0,0,0,0.3)",
+                            zIndex: 400,
+                          }}
+                        />
+                      )}
+
+                      {/* Panel — slides from right on desktop, up from bottom on mobile */}
+                      <div
+                        className={`notes-panel-desktop${showAllNotes ? " notes-panel-open" : ""}`}
+                        style={{
+                          position: "fixed",
+                          zIndex: 500,
+                          background: "#fff",
+                          boxShadow: "0 0 32px rgba(0,0,0,0.18)",
+                          transition: "transform 0.3s ease",
+                          overflowY: "auto",
+                          fontFamily: "system-ui, sans-serif",
+                        }}
+                      >
+                        {/* Panel header */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "16px 20px",
+                            borderBottom: "1px solid #ffe0b2",
+                            background: "#fff8e1",
+                            position: "sticky",
+                            top: 0,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: "700",
+                              color: "#e65100",
+                            }}
+                          >
+                            📋 All Call Notes{" "}
+                            {allCallNotes.length > 0
+                              ? `(${allCallNotes.length})`
+                              : ""}
+                          </span>
+                          <button
+                            onClick={() => setShowAllNotes(false)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              fontSize: "20px",
+                              color: "#aaa",
+                              lineHeight: 1,
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        {/* Panel content */}
+                        <div style={{ padding: "0" }}>
+                          {allNotesLoading && (
+                            <p
+                              style={{
+                                padding: "16px",
+                                color: "#888",
+                                fontSize: "13px",
+                                margin: 0,
+                              }}
+                            >
+                              Loading notes...
+                            </p>
+                          )}
+                          {!allNotesLoading && allCallNotes.length === 0 && (
+                            <p
+                              style={{
+                                padding: "16px",
+                                color: "#aaa",
+                                fontSize: "13px",
+                                fontStyle: "italic",
+                                margin: 0,
+                              }}
+                            >
+                              No notes saved yet.
+                            </p>
+                          )}
+                          {!allNotesLoading &&
+                            allCallNotes.map((n, i) => (
+                              <div
+                                key={n.id}
+                                style={{
+                                  padding: "14px 20px",
+                                  borderBottom: "1px solid #f0f0f0",
+                                }}
+                              >
+                                {allNotesEditingId === n.id ? (
+                                  <div>
+                                    <p
+                                      style={{
+                                        margin: "0 0 6px 0",
+                                        fontSize: "12px",
+                                        fontWeight: "600",
+                                        color: "#2d6a4f",
+                                      }}
+                                    >
+                                      {n.vet_name}
+                                    </p>
+                                    <textarea
+                                      className="adm-input"
+                                      rows={3}
+                                      style={{
+                                        width: "100%",
+                                        resize: "vertical",
+                                        height: "auto",
+                                        marginBottom: "8px",
+                                      }}
+                                      value={allNotesEditingText}
+                                      onChange={(e) =>
+                                        setAllNotesEditingText(e.target.value)
+                                      }
+                                    />
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "flex-end",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      <button
+                                        className="adm-btn adm-btn-gray"
+                                        onClick={() => {
+                                          setAllNotesEditingId(null);
+                                          setAllNotesEditingText("");
+                                        }}
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        className="adm-btn adm-btn-green"
+                                        onClick={() =>
+                                          updateCallNote(
+                                            n.id,
+                                            allNotesEditingText,
+                                          )
+                                        }
+                                      >
+                                        Save Changes
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : allNotesDeletingId === n.id ? (
+                                  <div
+                                    style={{
+                                      background: "#fff0f0",
+                                      border: "1px solid #ffcdd2",
+                                      borderRadius: "6px",
+                                      padding: "12px",
+                                    }}
+                                  >
+                                    <p
+                                      style={{
+                                        margin: "0 0 4px 0",
+                                        fontSize: "12px",
+                                        fontWeight: "600",
+                                        color: "#111",
+                                      }}
+                                    >
+                                      {n.vet_name}
+                                    </p>
+                                    <p
+                                      style={{
+                                        margin: "0 0 10px 0",
+                                        fontSize: "13px",
+                                        color: "#c62828",
+                                        fontWeight: "600",
+                                      }}
+                                    >
+                                      Delete this note?
+                                    </p>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "flex-end",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      <button
+                                        className="adm-btn adm-btn-gray"
+                                        onClick={() =>
+                                          setAllNotesDeletingId(null)
+                                        }
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        className="adm-btn adm-btn-red"
+                                        onClick={() => deleteCallNote(n.id)}
+                                      >
+                                        Yes, Delete
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <p
+                                      style={{
+                                        margin: "0 0 2px 0",
+                                        fontSize: "13px",
+                                        fontWeight: "600",
+                                        color: "#111",
+                                      }}
+                                    >
+                                      {n.vet_name}
+                                    </p>
+                                    <p
+                                      style={{
+                                        margin: "0 0 6px 0",
+                                        fontSize: "11px",
+                                        color: "#aaa",
+                                      }}
+                                    >
+                                      {formatLogDate(n.created_at)}
+                                      {n.updated_at !== n.created_at
+                                        ? " · edited"
+                                        : ""}
+                                    </p>
+                                    <p
+                                      style={{
+                                        margin: "0 0 10px 0",
+                                        fontSize: "13px",
+                                        color: "#555",
+                                        lineHeight: "1.5",
+                                      }}
+                                    >
+                                      {n.note}
+                                    </p>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "flex-end",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      <button
+                                        className="adm-btn adm-btn-outline"
+                                        onClick={() => {
+                                          setAllNotesEditingId(n.id);
+                                          setAllNotesEditingText(n.note);
+                                          setAllNotesDeletingId(null);
+                                        }}
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        className="adm-btn adm-btn-red"
+                                        onClick={() => {
+                                          setAllNotesDeletingId(n.id);
+                                          setAllNotesEditingId(null);
+                                        }}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    </>
                   </div>
                 );
               })()}
