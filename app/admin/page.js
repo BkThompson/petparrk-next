@@ -6472,13 +6472,7 @@ export default function AdminPage() {
                           {!isMe &&
                             adminUsers.find((a) => a.email === currentUserEmail)
                               ?.can_manage_team && (
-                              <div
-                                style={{
-                                  marginTop: "14px",
-                                  paddingTop: "12px",
-                                  borderTop: "1px solid #f0f0f0",
-                                }}
-                              >
+                              <div style={{ marginTop: "10px" }}>
                                 {isDeactivating ? (
                                   <div
                                     style={{
