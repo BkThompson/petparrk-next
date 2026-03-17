@@ -1464,6 +1464,16 @@ export default function AdminPage() {
           .notes-panel-desktop.notes-panel-open { transform: translateY(0); }
         }
         /* Team tab */
+        .team-edit-name-row { display: flex; gap: 8px; align-items: center; }
+        .team-edit-name-input { flex: 1; }
+        .team-edit-name-btns { display: flex; gap: 8px; flex-shrink: 0; }
+        .team-edit-btn { font-size: 13px; padding: 7px 14px; }
+        @media (max-width: 425px) {
+          .team-edit-name-row { flex-direction: column; align-items: stretch; }
+          .team-edit-name-input { width: 100%; }
+          .team-edit-name-btns { justify-content: flex-end; margin-top: 8px; }
+          .team-edit-btn { font-size: 11px; padding: 6px 10px; }
+        }
         .team-member-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 16px; }
         .team-member-info { flex: 1; min-width: 0; }
         .team-member-actions { flex-shrink: 0; }
@@ -6268,40 +6278,36 @@ export default function AdminPage() {
                             {/* Name + badges + edit */}
                             {teamEditingId === u.id ? (
                               <div
-                                style={{
-                                  display: "flex",
-                                  gap: "8px",
-                                  alignItems: "center",
-                                  marginBottom: "6px",
-                                  flexWrap: "wrap",
-                                }}
+                                className="team-edit-name-row"
+                                style={{ marginBottom: "6px" }}
                               >
                                 <input
-                                  className="adm-input"
-                                  style={{ flex: 1, minWidth: "140px" }}
+                                  className="adm-input team-edit-name-input"
                                   value={teamEditName}
                                   onChange={(e) =>
                                     setTeamEditName(e.target.value)
                                   }
                                   placeholder="Full name..."
                                 />
-                                <button
-                                  className="adm-btn adm-btn-green"
-                                  onClick={() =>
-                                    updateAdminName(u.id, teamEditName)
-                                  }
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  className="adm-btn adm-btn-gray"
-                                  onClick={() => {
-                                    setTeamEditingId(null);
-                                    setTeamEditName("");
-                                  }}
-                                >
-                                  Cancel
-                                </button>
+                                <div className="team-edit-name-btns">
+                                  <button
+                                    className="adm-btn adm-btn-gray team-edit-btn"
+                                    onClick={() => {
+                                      setTeamEditingId(null);
+                                      setTeamEditName("");
+                                    }}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    className="adm-btn adm-btn-green team-edit-btn"
+                                    onClick={() =>
+                                      updateAdminName(u.id, teamEditName)
+                                    }
+                                  >
+                                    Save
+                                  </button>
+                                </div>
                               </div>
                             ) : (
                               <div
@@ -6404,7 +6410,7 @@ export default function AdminPage() {
                             {/* Permissions label + toggles */}
                             <p
                               style={{
-                                margin: "6px 0 5px 0",
+                                margin: "14px 0 6px 0",
                                 fontSize: "11px",
                                 fontWeight: "700",
                                 color: "#aaa",
