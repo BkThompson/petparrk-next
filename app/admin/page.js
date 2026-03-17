@@ -340,13 +340,17 @@ export default function AdminPage() {
       ...v,
       _source: "pending",
       _hasPrices: false,
+      _declined: v.notes === "declined_to_share",
     }));
     const activeAll = (activeVets || []).map((v) => ({
       ...v,
       _source: "active",
       _hasPrices: vetsWithPrices.has(v.id),
+      _declined: v.internal_notes === "declined_to_share",
     }));
-    const activeMissing = activeAll.filter((v) => !v._hasPrices);
+    const activeMissing = activeAll.filter(
+      (v) => !v._hasPrices && !v._declined,
+    );
     // Full queue = all pending + all active (for "show all" mode)
     setFullCallQueue([...pending, ...activeAll]);
     // Filtered queue = pending + active missing prices (normal mode)
@@ -610,13 +614,19 @@ export default function AdminPage() {
           .eq("id", vet.id);
       }
     }
-    // Update queue so declined badge shows
-    setCallQueue((prev) =>
-      prev.map((v, idx) => (idx === callIndex ? { ...v, _status: status } : v)),
-    );
-    setFullCallQueue((prev) =>
-      prev.map((v, idx) => (idx === callIndex ? { ...v, _status: status } : v)),
-    );
+    // Tag vet in queue so badge shows immediately
+    if (status === "declined") {
+      setCallQueue((prev) =>
+        prev.map((v, idx) =>
+          idx === callIndex ? { ...v, _declined: true } : v,
+        ),
+      );
+      setFullCallQueue((prev) =>
+        prev.map((v, idx) =>
+          idx === callIndex ? { ...v, _declined: true } : v,
+        ),
+      );
+    }
     setCallIndex((i) => i + 1);
   }
 
@@ -2256,12 +2266,36 @@ export default function AdminPage() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div
                               style={{
-                                fontWeight: "600",
-                                fontSize: "14px",
-                                color: "#111",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                flexWrap: "wrap",
                               }}
                             >
-                              {vet.name}
+                              <span
+                                style={{
+                                  fontWeight: "600",
+                                  fontSize: "14px",
+                                  color: "#111",
+                                }}
+                              >
+                                {vet.name}
+                              </span>
+                              {vet.internal_notes === "declined_to_share" && (
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    background: "#fce4ec",
+                                    color: "#c62828",
+                                    padding: "1px 7px",
+                                    borderRadius: "20px",
+                                    fontWeight: "600",
+                                    border: "1px solid #ef9a9a",
+                                  }}
+                                >
+                                  🚫 Declined
+                                </span>
+                              )}
                             </div>
                             <div
                               style={{
@@ -4164,6 +4198,21 @@ export default function AdminPage() {
                                     }}
                                   >
                                     ✓ Priced
+                                  </span>
+                                )}
+                                {vet._declined && (
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      background: "#fce4ec",
+                                      color: "#c62828",
+                                      padding: "2px 8px",
+                                      borderRadius: "20px",
+                                      fontWeight: "600",
+                                      border: "1px solid #ef9a9a",
+                                    }}
+                                  >
+                                    🚫 Declined
                                   </span>
                                 )}
                               </div>
