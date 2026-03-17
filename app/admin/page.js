@@ -142,6 +142,12 @@ export default function AdminPage() {
   const [showCallbackNotes, setShowCallbackNotes] = useState(false);
   const [callbackNoteText, setCallbackNoteText] = useState("");
   const [callNotes, setCallNotes] = useState([]);
+  const [allCallNotes, setAllCallNotes] = useState([]);
+  const [showAllNotes, setShowAllNotes] = useState(false);
+  const [allNotesLoading, setAllNotesLoading] = useState(false);
+  const [allNotesEditingId, setAllNotesEditingId] = useState(null);
+  const [allNotesEditingText, setAllNotesEditingText] = useState("");
+  const [allNotesDeletingId, setAllNotesDeletingId] = useState(null);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingNoteText, setEditingNoteText] = useState("");
   const [deletingNoteId, setDeletingNoteId] = useState(null);
@@ -659,6 +665,16 @@ export default function AdminPage() {
     setCallReviewPrices(clean);
   }
 
+  async function fetchAllCallNotes() {
+    setAllNotesLoading(true);
+    const { data } = await supabase
+      .from("call_notes")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setAllCallNotes(data || []);
+    setAllNotesLoading(false);
+  }
+
   async function fetchCallNotes(vetId) {
     if (!vetId) return;
     const { data } = await supabase
@@ -682,6 +698,7 @@ export default function AdminPage() {
     }
     setCallNotes((prev) => [data, ...prev]);
     setCallbackNoteText("");
+    setAllCallNotes((prev) => [data, ...prev]);
   }
 
   async function updateCallNote(id, text) {
@@ -697,8 +714,13 @@ export default function AdminPage() {
     setCallNotes((prev) =>
       prev.map((n) => (n.id === id ? { ...n, note: text.trim() } : n)),
     );
+    setAllCallNotes((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, note: text.trim() } : n)),
+    );
     setEditingNoteId(null);
     setEditingNoteText("");
+    setAllNotesEditingId(null);
+    setAllNotesEditingText("");
   }
 
   async function deleteCallNote(id) {
@@ -708,7 +730,9 @@ export default function AdminPage() {
       return;
     }
     setCallNotes((prev) => prev.filter((n) => n.id !== id));
+    setAllCallNotes((prev) => prev.filter((n) => n.id !== id));
     setDeletingNoteId(null);
+    setAllNotesDeletingId(null);
   }
 
   async function fetchSymptomLogs() {
@@ -1520,8 +1544,9 @@ export default function AdminPage() {
                     setPricesLoading(true);
                     fetchPricesForVet(selectedVetId);
                   }
-                  if (t === "Call Sheet" && callReviewVetId) {
-                    fetchReviewPrices(callReviewVetId);
+                  if (t === "Call Sheet") {
+                    fetchAllCallNotes();
+                    if (callReviewVetId) fetchReviewPrices(callReviewVetId);
                   }
                 }}
               >
@@ -3855,6 +3880,264 @@ export default function AdminPage() {
                           </button>
                         </div>
                       )}
+                    {/* ── All Call Notes — collapsible panel ── */}
+                    <div style={{ marginBottom: "14px" }}>
+                      <button
+                        className="adm-btn adm-btn-gray"
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                        onClick={() => {
+                          setShowAllNotes((v) => !v);
+                          if (!showAllNotes) fetchAllCallNotes();
+                        }}
+                      >
+                        <span>
+                          📋 All Call Notes{" "}
+                          {allCallNotes.length > 0
+                            ? `(${allCallNotes.length})`
+                            : ""}
+                        </span>
+                        <span style={{ fontSize: "12px" }}>
+                          {showAllNotes ? "▲ Hide" : "▼ Show"}
+                        </span>
+                      </button>
+                      {showAllNotes && (
+                        <div
+                          style={{
+                            background: "#fff",
+                            border: "1px solid #e8e8e8",
+                            borderRadius: "0 0 8px 8px",
+                            borderTop: "none",
+                          }}
+                        >
+                          {allNotesLoading && (
+                            <p
+                              style={{
+                                padding: "16px",
+                                color: "#888",
+                                fontSize: "13px",
+                                margin: 0,
+                              }}
+                            >
+                              Loading notes...
+                            </p>
+                          )}
+                          {!allNotesLoading && allCallNotes.length === 0 && (
+                            <p
+                              style={{
+                                padding: "16px",
+                                color: "#aaa",
+                                fontSize: "13px",
+                                fontStyle: "italic",
+                                margin: 0,
+                              }}
+                            >
+                              No notes saved yet.
+                            </p>
+                          )}
+                          {!allNotesLoading &&
+                            allCallNotes.map((n, i) => (
+                              <div
+                                key={n.id}
+                                style={{
+                                  padding: "14px 16px",
+                                  borderBottom:
+                                    i < allCallNotes.length - 1
+                                      ? "1px solid #f0f0f0"
+                                      : "none",
+                                }}
+                              >
+                                {allNotesEditingId === n.id ? (
+                                  /* Edit mode */
+                                  <div>
+                                    <p
+                                      style={{
+                                        margin: "0 0 6px 0",
+                                        fontSize: "12px",
+                                        fontWeight: "600",
+                                        color: "#2d6a4f",
+                                      }}
+                                    >
+                                      {n.vet_name}
+                                    </p>
+                                    <textarea
+                                      className="adm-input"
+                                      rows={3}
+                                      style={{
+                                        width: "100%",
+                                        resize: "vertical",
+                                        height: "auto",
+                                        marginBottom: "8px",
+                                      }}
+                                      value={allNotesEditingText}
+                                      onChange={(e) =>
+                                        setAllNotesEditingText(e.target.value)
+                                      }
+                                    />
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "flex-end",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      <button
+                                        className="adm-btn adm-btn-gray"
+                                        onClick={() => {
+                                          setAllNotesEditingId(null);
+                                          setAllNotesEditingText("");
+                                        }}
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        className="adm-btn adm-btn-green"
+                                        onClick={() =>
+                                          updateCallNote(
+                                            n.id,
+                                            allNotesEditingText,
+                                          )
+                                        }
+                                      >
+                                        Save Changes
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : allNotesDeletingId === n.id ? (
+                                  /* Delete confirm */
+                                  <div
+                                    style={{
+                                      background: "#fff0f0",
+                                      border: "1px solid #ffcdd2",
+                                      borderRadius: "6px",
+                                      padding: "12px",
+                                    }}
+                                  >
+                                    <p
+                                      style={{
+                                        margin: "0 0 4px 0",
+                                        fontSize: "12px",
+                                        fontWeight: "600",
+                                        color: "#111",
+                                      }}
+                                    >
+                                      {n.vet_name}
+                                    </p>
+                                    <p
+                                      style={{
+                                        margin: "0 0 10px 0",
+                                        fontSize: "13px",
+                                        color: "#c62828",
+                                        fontWeight: "600",
+                                      }}
+                                    >
+                                      Delete this note?
+                                    </p>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "flex-end",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      <button
+                                        className="adm-btn adm-btn-gray"
+                                        onClick={() =>
+                                          setAllNotesDeletingId(null)
+                                        }
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        className="adm-btn adm-btn-red"
+                                        onClick={() => deleteCallNote(n.id)}
+                                      >
+                                        Yes, Delete
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  /* View mode */
+                                  <div>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "flex-start",
+                                        gap: "8px",
+                                        marginBottom: "4px",
+                                      }}
+                                    >
+                                      <span
+                                        style={{
+                                          fontSize: "13px",
+                                          fontWeight: "600",
+                                          color: "#111",
+                                        }}
+                                      >
+                                        {n.vet_name}
+                                      </span>
+                                      <span
+                                        style={{
+                                          fontSize: "11px",
+                                          color: "#aaa",
+                                          flexShrink: 0,
+                                        }}
+                                      >
+                                        {formatLogDate(n.created_at)}
+                                        {n.updated_at !== n.created_at
+                                          ? " · edited"
+                                          : ""}
+                                      </span>
+                                    </div>
+                                    <p
+                                      style={{
+                                        margin: "0 0 10px 0",
+                                        fontSize: "13px",
+                                        color: "#555",
+                                        lineHeight: "1.5",
+                                      }}
+                                    >
+                                      {n.note}
+                                    </p>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "flex-end",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      <button
+                                        className="adm-btn adm-btn-outline"
+                                        onClick={() => {
+                                          setAllNotesEditingId(n.id);
+                                          setAllNotesEditingText(n.note);
+                                          setAllNotesDeletingId(null);
+                                        }}
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        className="adm-btn adm-btn-red"
+                                        onClick={() => {
+                                          setAllNotesDeletingId(n.id);
+                                          setAllNotesEditingId(null);
+                                        }}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </div>
                     {/* Recently processed — always visible when there's history */}
                     {callLog.length > 0 && (
                       <div
