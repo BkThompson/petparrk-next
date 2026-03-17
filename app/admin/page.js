@@ -1356,7 +1356,7 @@ export default function AdminPage() {
           .users-mobile-detail { display: block; }
         }
         html { scrollbar-gutter: stable; }
-        .scroll-arrows { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 200; }
+        .scroll-arrows { display: contents; }
         /* Notes panel — desktop: slides from right, mobile: slides from bottom */
         .notes-panel-desktop { top: 0; right: 0; bottom: 0; width: 380px; transform: translateX(100%); }
         .notes-panel-desktop.notes-panel-open { transform: translateX(0); }
@@ -1364,7 +1364,7 @@ export default function AdminPage() {
           .notes-panel-desktop { top: auto; left: 0; right: 0; bottom: 0; width: 100%; height: 70vh; border-radius: 16px 16px 0 0; transform: translateY(100%); }
           .notes-panel-desktop.notes-panel-open { transform: translateY(0); }
         }
-        .scroll-arrow-btn { width: 40px; height: 40px; border-radius: "50%"; background: "#2d6a4f"; color: "#fff"; border: none; cursor: pointer; font-size: "18px"; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border-radius: 50%; }
+        .scroll-arrow-btn { width: 40px; height: 40px; border-radius: 50%; background: #2d6a4f; color: #fff; border: none; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-family: system-ui, sans-serif; }
         .scroll-arrow-btn:hover { background: #245a42; }
         /* Price search dropdown — absolute so it doesn't push page content */
         .price-search-wrap { position: relative; }
@@ -1746,32 +1746,7 @@ export default function AdminPage() {
                     </p>
                   </div>
                 )}
-                {/* Scroll arrows */}
-                {pendingVets.length > 5 && (
-                  <div className="scroll-arrows">
-                    <button
-                      className="scroll-arrow-btn"
-                      onClick={() =>
-                        window.scrollTo({ top: 0, behavior: "smooth" })
-                      }
-                      title="Scroll to top"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      className="scroll-arrow-btn"
-                      onClick={() =>
-                        window.scrollTo({
-                          top: document.body.scrollHeight,
-                          behavior: "smooth",
-                        })
-                      }
-                      title="Scroll to bottom"
-                    >
-                      ↓
-                    </button>
-                  </div>
-                )}
+
                 {pendingVets
                   .filter(
                     (v) =>
@@ -2261,31 +2236,7 @@ export default function AdminPage() {
                   placeholder="Search by name..."
                   style={{ marginBottom: "14px", maxWidth: "360px" }}
                 />
-                {vets.length > 5 && (
-                  <div className="scroll-arrows">
-                    <button
-                      className="scroll-arrow-btn"
-                      onClick={() =>
-                        window.scrollTo({ top: 0, behavior: "smooth" })
-                      }
-                      title="Scroll to top"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      className="scroll-arrow-btn"
-                      onClick={() =>
-                        window.scrollTo({
-                          top: document.body.scrollHeight,
-                          behavior: "smooth",
-                        })
-                      }
-                      title="Scroll to bottom"
-                    >
-                      ↓
-                    </button>
-                  </div>
-                )}
+
                 {vetsLoading && (
                   <p style={{ color: "#888", fontSize: "14px" }}>Loading...</p>
                 )}
@@ -6527,34 +6478,63 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <button
-        onClick={() => {
-          setShowAllNotes((v) => !v);
-          if (!showAllNotes) fetchAllCallNotes();
-        }}
+      {/* Unified floating action buttons — Notes (top) + ↑ + ↓, right: 29px (5px right of old 24px) */}
+      <div
         style={{
           position: "fixed",
-          bottom: "80px",
-          right: "24px",
+          bottom: "24px",
+          right: "19px",
           zIndex: 300,
-          width: "48px",
-          height: "48px",
-          borderRadius: "50%",
-          background: "#e65100",
-          color: "#fff",
-          border: "none",
-          cursor: "pointer",
-          fontSize: "20px",
-          boxShadow: "0 3px 12px rgba(230,81,0,0.4)",
           display: "flex",
+          flexDirection: "column",
+          gap: "8px",
           alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "system-ui, sans-serif",
         }}
-        title="Call Notes"
       >
-        📋
-      </button>
+        <button
+          onClick={() => {
+            setShowAllNotes((v) => !v);
+            if (!showAllNotes) fetchAllCallNotes();
+          }}
+          style={{
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
+            background: "#e65100",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "18px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 2px 8px rgba(230,81,0,0.35)",
+            fontFamily: "system-ui, sans-serif",
+          }}
+          title="Call Notes"
+        >
+          📋
+        </button>
+        <button
+          className="scroll-arrow-btn"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          title="Scroll to top"
+        >
+          ↑
+        </button>
+        <button
+          className="scroll-arrow-btn"
+          onClick={() =>
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: "smooth",
+            })
+          }
+          title="Scroll to bottom"
+        >
+          ↓
+        </button>
+      </div>
       {showAllNotes && (
         <div
           onClick={() => setShowAllNotes(false)}
