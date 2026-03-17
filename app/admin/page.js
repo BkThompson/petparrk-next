@@ -173,6 +173,8 @@ export default function AdminPage() {
   const [inviteError, setInviteError] = useState("");
   const [inviteSaving, setInviteSaving] = useState(false);
   const [teamDeactivatingId, setTeamDeactivatingId] = useState(null);
+  const [teamEditingId, setTeamEditingId] = useState(null);
+  const [teamEditName, setTeamEditName] = useState("");
 
   // Unverified prices
   const [unverifiedPrices, setUnverifiedPrices] = useState([]);
@@ -804,6 +806,20 @@ export default function AdminPage() {
     setAdminUsers((prev) =>
       prev.map((u) => (u.id === id ? { ...u, [field]: value } : u)),
     );
+  }
+
+  async function updateAdminName(id, name) {
+    await supabase
+      .from("admin_users")
+      .update({ full_name: name.trim() || null })
+      .eq("id", id);
+    setAdminUsers((prev) =>
+      prev.map((u) =>
+        u.id === id ? { ...u, full_name: name.trim() || null } : u,
+      ),
+    );
+    setTeamEditingId(null);
+    setTeamEditName("");
   }
 
   async function toggleAdminStatus(user) {
@@ -6054,15 +6070,18 @@ export default function AdminPage() {
                       Manage admin access and permissions
                     </p>
                   </div>
-                  <button
-                    className="adm-btn adm-btn-green"
-                    onClick={() => {
-                      setShowInviteForm((v) => !v);
-                      setInviteError("");
-                    }}
-                  >
-                    {showInviteForm ? "Cancel" : "+ Invite Person"}
-                  </button>
+                  {adminUsers.find((a) => a.email === currentUserEmail)
+                    ?.can_manage_team && (
+                    <button
+                      className="adm-btn adm-btn-green"
+                      onClick={() => {
+                        setShowInviteForm((v) => !v);
+                        setInviteError("");
+                      }}
+                    >
+                      {showInviteForm ? "Cancel" : "+ Invite Person"}
+                    </button>
+                  )}
                 </div>
 
                 {/* Invite form */}
@@ -6246,53 +6265,131 @@ export default function AdminPage() {
                         {/* Member row */}
                         <div className="team-member-row">
                           <div className="team-member-info">
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                flexWrap: "wrap",
-                                marginBottom: "2px",
-                              }}
-                            >
-                              <span
+                            {/* Name + badges + edit */}
+                            {teamEditingId === u.id ? (
+                              <div
                                 style={{
-                                  fontWeight: "600",
-                                  fontSize: "14px",
-                                  color: "#111",
+                                  display: "flex",
+                                  gap: "8px",
+                                  alignItems: "center",
+                                  marginBottom: "6px",
+                                  flexWrap: "wrap",
                                 }}
                               >
-                                {u.full_name || u.email}
-                              </span>
-                              {isMe && (
+                                <input
+                                  className="adm-input"
+                                  style={{ flex: 1, minWidth: "140px" }}
+                                  value={teamEditName}
+                                  onChange={(e) =>
+                                    setTeamEditName(e.target.value)
+                                  }
+                                  placeholder="Full name..."
+                                />
+                                <button
+                                  className="adm-btn adm-btn-green"
+                                  onClick={() =>
+                                    updateAdminName(u.id, teamEditName)
+                                  }
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  className="adm-btn adm-btn-gray"
+                                  onClick={() => {
+                                    setTeamEditingId(null);
+                                    setTeamEditName("");
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  flexWrap: "wrap",
+                                  marginBottom: "2px",
+                                }}
+                              >
                                 <span
                                   style={{
-                                    fontSize: "11px",
-                                    background: "#e8f5e9",
-                                    color: "#2d6a4f",
+                                    fontWeight: "600",
+                                    fontSize: "14px",
+                                    color: "#111",
+                                  }}
+                                >
+                                  {u.full_name || (
+                                    <span
+                                      style={{
+                                        color: "#bbb",
+                                        fontStyle: "italic",
+                                      }}
+                                    >
+                                      No name
+                                    </span>
+                                  )}
+                                </span>
+                                {isMe && (
+                                  <span
+                                    style={{
+                                      fontSize: "10px",
+                                      background: "#e3f2fd",
+                                      color: "#1565c0",
+                                      padding: "1px 7px",
+                                      borderRadius: "20px",
+                                      fontWeight: "700",
+                                      letterSpacing: "0.3px",
+                                    }}
+                                  >
+                                    YOU
+                                  </span>
+                                )}
+                                <span
+                                  style={{
+                                    fontSize: "10px",
+                                    background:
+                                      u.status === "active"
+                                        ? "#e8f5e9"
+                                        : "#f5f5f5",
+                                    color:
+                                      u.status === "active"
+                                        ? "#2d6a4f"
+                                        : "#888",
                                     padding: "1px 7px",
                                     borderRadius: "20px",
                                     fontWeight: "600",
                                   }}
                                 >
-                                  You
+                                  {u.status === "active"
+                                    ? "Active"
+                                    : "Inactive"}
                                 </span>
-                              )}
-                              <span className={`badge badge-${u.status}`}>
-                                {u.status === "active" ? "Active" : "Inactive"}
-                              </span>
-                            </div>
-                            {u.full_name && (
-                              <p
-                                style={{
-                                  margin: "0 0 6px 0",
-                                  fontSize: "12px",
-                                  color: "#888",
-                                }}
-                              >
-                                {u.email}
-                              </p>
+                                <button
+                                  className="adm-btn adm-btn-outline"
+                                  style={{
+                                    fontSize: "11px",
+                                    padding: "2px 8px",
+                                  }}
+                                  onClick={() => {
+                                    setTeamEditingId(u.id);
+                                    setTeamEditName(u.full_name || "");
+                                  }}
+                                >
+                                  Edit Name
+                                </button>
+                              </div>
                             )}
+                            <p
+                              style={{
+                                margin: "0 0 4px 0",
+                                fontSize: "12px",
+                                color: "#888",
+                              }}
+                            >
+                              {u.email}
+                            </p>
                             {u.invited_by && u.invited_by !== "system" && (
                               <p
                                 style={{
@@ -6304,7 +6401,19 @@ export default function AdminPage() {
                                 Invited by {u.invited_by}
                               </p>
                             )}
-                            {/* Permission toggles */}
+                            {/* Permissions label + toggles */}
+                            <p
+                              style={{
+                                margin: "6px 0 5px 0",
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                color: "#aaa",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.4px",
+                              }}
+                            >
+                              Permissions
+                            </p>
                             <div className="team-perms-grid">
                               {[
                                 ["can_view_call_sheet", "Call Sheet"],
@@ -6312,105 +6421,113 @@ export default function AdminPage() {
                                 ["can_approve_vets", "Approve Vets"],
                                 ["can_manage_users", "Manage Users"],
                                 ["can_manage_team", "Manage Team"],
-                              ].map(([field, label]) => (
-                                <label
-                                  key={field}
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "5px",
-                                    fontSize: "12px",
-                                    cursor:
-                                      isMe && field === "can_manage_team"
-                                        ? "not-allowed"
-                                        : "pointer",
-                                    opacity:
-                                      isMe && field === "can_manage_team"
-                                        ? 0.5
-                                        : 1,
-                                  }}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={!!u[field]}
-                                    disabled={
-                                      isMe && field === "can_manage_team"
-                                    }
-                                    onChange={(e) =>
-                                      updateAdminPermission(
-                                        u.id,
-                                        field,
-                                        e.target.checked,
-                                      )
-                                    }
-                                  />
-                                  {label}
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                          {/* Actions */}
-                          {!isMe && (
-                            <div className="team-member-actions">
-                              {isDeactivating ? (
-                                <div
-                                  style={{
-                                    background: "#fff0f0",
-                                    border: "1px solid #ffcdd2",
-                                    borderRadius: "6px",
-                                    padding: "10px 12px",
-                                  }}
-                                >
-                                  <p
-                                    style={{
-                                      margin: "0 0 8px 0",
-                                      fontSize: "13px",
-                                      color: "#c62828",
-                                      fontWeight: "600",
-                                    }}
-                                  >
-                                    {u.status === "active"
-                                      ? "Deactivate"
-                                      : "Reactivate"}{" "}
-                                    {u.full_name || u.email}?
-                                  </p>
-                                  <div
+                              ].map(([field, label]) => {
+                                const locked =
+                                  isMe && field === "can_manage_team";
+                                const canEdit = adminUsers.find(
+                                  (a) => a.email === currentUserEmail,
+                                )?.can_manage_team;
+                                return (
+                                  <label
+                                    key={field}
                                     style={{
                                       display: "flex",
-                                      justifyContent: "flex-end",
-                                      gap: "6px",
+                                      alignItems: "center",
+                                      gap: "5px",
+                                      fontSize: "12px",
+                                      cursor:
+                                        locked || !canEdit
+                                          ? "not-allowed"
+                                          : "pointer",
+                                      opacity: locked ? 0.4 : 1,
                                     }}
                                   >
-                                    <button
-                                      className="adm-btn adm-btn-gray"
-                                      onClick={() =>
-                                        setTeamDeactivatingId(null)
+                                    <input
+                                      type="checkbox"
+                                      checked={!!u[field]}
+                                      disabled={locked || !canEdit}
+                                      onChange={(e) =>
+                                        updateAdminPermission(
+                                          u.id,
+                                          field,
+                                          e.target.checked,
+                                        )
                                       }
-                                    >
-                                      Cancel
-                                    </button>
-                                    <button
-                                      className={`adm-btn ${u.status === "active" ? "adm-btn-red" : "adm-btn-green"}`}
-                                      onClick={() => toggleAdminStatus(u)}
+                                    />
+                                    {label}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          {/* Actions — only visible to team managers, not on own row */}
+                          {!isMe &&
+                            adminUsers.find((a) => a.email === currentUserEmail)
+                              ?.can_manage_team && (
+                              <div className="team-member-actions">
+                                {isDeactivating ? (
+                                  <div
+                                    style={{
+                                      background: "#fff0f0",
+                                      border: "1px solid #ffcdd2",
+                                      borderRadius: "6px",
+                                      padding: "10px 12px",
+                                    }}
+                                  >
+                                    <p
+                                      style={{
+                                        margin: "0 0 8px 0",
+                                        fontSize: "13px",
+                                        color: "#c62828",
+                                        fontWeight: "600",
+                                      }}
                                     >
                                       {u.status === "active"
                                         ? "Deactivate"
-                                        : "Reactivate"}
-                                    </button>
+                                        : "Reactivate"}{" "}
+                                      {u.full_name || u.email}?
+                                    </p>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "flex-end",
+                                        gap: "6px",
+                                      }}
+                                    >
+                                      <button
+                                        className="adm-btn adm-btn-gray"
+                                        onClick={() =>
+                                          setTeamDeactivatingId(null)
+                                        }
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        className={`adm-btn ${u.status === "active" ? "adm-btn-red" : "adm-btn-green"}`}
+                                        onClick={() => toggleAdminStatus(u)}
+                                      >
+                                        {u.status === "active"
+                                          ? "Deactivate"
+                                          : "Reactivate"}
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
-                              ) : (
-                                <button
-                                  className={`adm-btn ${u.status === "active" ? "adm-btn-gray" : "adm-btn-green"}`}
-                                  onClick={() => setTeamDeactivatingId(u.id)}
-                                >
-                                  {u.status === "active"
-                                    ? "Deactivate"
-                                    : "Reactivate"}
-                                </button>
-                              )}
-                            </div>
-                          )}
+                                ) : (
+                                  <button
+                                    className={`adm-btn ${u.status === "active" ? "adm-btn-gray" : "adm-btn-green"}`}
+                                    style={{
+                                      fontSize: "12px",
+                                      padding: "5px 10px",
+                                    }}
+                                    onClick={() => setTeamDeactivatingId(u.id)}
+                                  >
+                                    {u.status === "active"
+                                      ? "Deactivate"
+                                      : "Reactivate"}
+                                  </button>
+                                )}
+                              </div>
+                            )}
                         </div>
                       </div>
                     );
