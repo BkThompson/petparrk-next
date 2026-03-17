@@ -1,9 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
 
+// ⚠️ This route uses the service role key intentionally.
+// It bypasses RLS to read vets/services and write vet_prices during AI price scraping.
+// It is protected by AGENT_SECRET and should never be called from the client.
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -11,7 +14,6 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 // Fetch a webpage and return its text content
 async function fetchWebpage(url) {
   try {
-    // Normalize URL
     if (!url.startsWith("http")) url = "https://" + url;
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; PetParrk/1.0)" },
@@ -19,14 +21,13 @@ async function fetchWebpage(url) {
     });
     if (!res.ok) return null;
     const html = await res.text();
-    // Strip HTML tags and collapse whitespace
     const text = html
       .replace(/<script[\s\S]*?<\/script>/gi, "")
       .replace(/<style[\s\S]*?<\/style>/gi, "")
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
       .trim()
-      .slice(0, 8000); // Limit to 8k chars for Claude
+      .slice(0, 8000);
     return text;
   } catch {
     return null;
@@ -37,18 +38,27 @@ async function fetchWebpage(url) {
 async function findPricingText(baseUrl) {
   if (!baseUrl) return null;
   const base = baseUrl.replace(/\/$/, "");
-  const paths = ["", "/services", "/pricing", "/fees", "/prices", "/services-fees", "/our-services"];
+  const paths = [
+    "",
+    "/services",
+    "/pricing",
+    "/fees",
+    "/prices",
+    "/services-fees",
+    "/our-services",
+  ];
   for (const path of paths) {
     const text = await fetchWebpage(base + path);
-    if (text && (
-      text.toLowerCase().includes("exam") ||
-      text.toLowerCase().includes("vaccine") ||
-      text.toLowerCase().includes("spay") ||
-      text.toLowerCase().includes("dental") ||
-      text.toLowerCase().includes("price") ||
-      text.toLowerCase().includes("fee") ||
-      text.toLowerCase().includes("cost")
-    )) {
+    if (
+      text &&
+      (text.toLowerCase().includes("exam") ||
+        text.toLowerCase().includes("vaccine") ||
+        text.toLowerCase().includes("spay") ||
+        text.toLowerCase().includes("dental") ||
+        text.toLowerCase().includes("price") ||
+        text.toLowerCase().includes("fee") ||
+        text.toLowerCase().includes("cost"))
+    ) {
       return text;
     }
   }
@@ -60,7 +70,7 @@ async function extractPrices(vetName, pageText, servicesList) {
   const prompt = `You are extracting veterinary pricing from a clinic's website.
 
 Clinic: ${vetName}
-Services to look for: ${servicesList.map(s => s.name).join(", ")}
+Services to look for: ${servicesList.map((s) => s.name).join(", ")}
 
 Website text:
 ${pageText}
@@ -112,45 +122,72 @@ export async function GET(request) {
   const maxVets = parseInt(url.searchParams.get("maxVets")) || 10;
   const offset = parseInt(url.searchParams.get("offset")) || 0;
 
-  const results = { processed: 0, pricesFound: 0, pricesAdded: 0, skipped: 0, errors: [] };
+  const results = {
+    processed: 0,
+    pricesFound: 0,
+    pricesAdded: 0,
+    skipped: 0,
+    errors: [],
+  };
 
   try {
     // Get services list
-    const { data: servicesList } = await supabase.from("services").select("id, name");
-    if (!servicesList?.length) return Response.json({ error: "No services found" }, { status: 500 });
+    const { data: servicesList } = await supabase
+      .from("services")
+      .select("id, name");
+    if (!servicesList?.length)
+      return Response.json({ error: "No services found" }, { status: 500 });
 
     // Get vets with websites that don't have prices yet
-    const { data: allVets } = await supabase.from("vets").select("id, name, website").eq("status", "active").not("website", "is", null);
-    const { data: existingPrices } = await supabase.from("vet_prices").select("vet_id");
-    const vetsWithPrices = new Set((existingPrices || []).map(p => p.vet_id));
+    const { data: allVets } = await supabase
+      .from("vets")
+      .select("id, name, website")
+      .eq("status", "active")
+      .not("website", "is", null);
+    const { data: existingPrices } = await supabase
+      .from("vet_prices")
+      .select("vet_id");
+    const vetsWithPrices = new Set((existingPrices || []).map((p) => p.vet_id));
 
     // Also check pending_vets with websites
-    const { data: pendingWithSites } = await supabase.from("pending_vets").select("id, name, website").eq("status", "pending").not("website", "is", null);
+    const { data: pendingWithSites } = await supabase
+      .from("pending_vets")
+      .select("id, name, website")
+      .eq("status", "pending")
+      .not("website", "is", null);
 
     const vetsToProcess = [
-      ...(allVets || []).filter(v => !vetsWithPrices.has(v.id)).map(v => ({ ...v, _source: "active" })),
-      ...(pendingWithSites || []).map(v => ({ ...v, _source: "pending" })),
+      ...(allVets || [])
+        .filter((v) => !vetsWithPrices.has(v.id))
+        .map((v) => ({ ...v, _source: "active" })),
+      ...(pendingWithSites || []).map((v) => ({ ...v, _source: "pending" })),
     ].slice(offset, offset + maxVets);
 
     for (const vet of vetsToProcess) {
       results.processed++;
       try {
-        // Find pricing text on their website
         const pageText = await findPricingText(vet.website);
-        if (!pageText) { results.skipped++; continue; }
+        if (!pageText) {
+          results.skipped++;
+          continue;
+        }
 
-        // Extract prices with Claude
         const prices = await extractPrices(vet.name, pageText, servicesList);
-        if (!prices?.length) { results.skipped++; continue; }
+        if (!prices?.length) {
+          results.skipped++;
+          continue;
+        }
 
         results.pricesFound += prices.length;
 
-        // Match service names to IDs and insert
         for (const price of prices) {
-          const service = servicesList.find(s =>
-            s.name.toLowerCase() === price.service_name?.toLowerCase() ||
-            s.name.toLowerCase().includes(price.service_name?.toLowerCase()) ||
-            price.service_name?.toLowerCase().includes(s.name.toLowerCase())
+          const service = servicesList.find(
+            (s) =>
+              s.name.toLowerCase() === price.service_name?.toLowerCase() ||
+              s.name
+                .toLowerCase()
+                .includes(price.service_name?.toLowerCase()) ||
+              price.service_name?.toLowerCase().includes(s.name.toLowerCase()),
           );
           if (!service) continue;
 
@@ -173,9 +210,7 @@ export async function GET(request) {
           else results.errors.push(`${vet.name}: ${error.message}`);
         }
 
-        // Delay between vets
-        await new Promise(r => setTimeout(r, 500));
-
+        await new Promise((r) => setTimeout(r, 500));
       } catch (vetError) {
         results.errors.push(`${vet.name}: ${vetError.message}`);
       }
@@ -190,7 +225,6 @@ export async function GET(request) {
       errors: results.errors,
       nextOffset: offset + maxVets,
     });
-
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }

@@ -49,7 +49,7 @@ export default function Home() {
   const [ownership, setOwnership] = useState("All");
   const [sortBy, setSortBy] = useState("price");
   const [vetTypeFilter, setVetTypeFilter] = useState("All");
-  const [acceptingFilter, setAcceptingFilter] = useState("All"); // "All" | "Yes" | "No"
+  const [acceptingFilter, setAcceptingFilter] = useState("All");
   const [priceRange, setPriceRange] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -179,7 +179,6 @@ export default function Home() {
     ),
   ];
 
-  // Build dynamic vet type list from data — trim to avoid duplicate whitespace issues
   const vetTypes = [
     "All",
     ...new Set(
@@ -254,17 +253,28 @@ export default function Home() {
       setFormStatus("error");
       return;
     }
-    fetch("/api/notify-submission", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        vet_name: formData.vet_name,
-        service_name: formData.service_name,
-        price_paid: parseFloat(formData.price_paid),
-        visit_date: formData.visit_date || null,
-        submitter_note: formData.submitter_note || null,
-      }),
-    }).catch(() => {});
+
+    // Only send notification email if user is logged in (route requires auth)
+    const {
+      data: { session: currentSession },
+    } = await supabase.auth.getSession();
+    if (currentSession) {
+      fetch("/api/notify-submission", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${currentSession.access_token}`,
+        },
+        body: JSON.stringify({
+          vet_name: formData.vet_name,
+          service_name: formData.service_name,
+          price_paid: parseFloat(formData.price_paid),
+          visit_date: formData.visit_date || null,
+          submitter_note: formData.submitter_note || null,
+        }),
+      }).catch(() => {});
+    }
+
     setFormStatus("success");
     setFormData({
       vet_name: "",
@@ -644,7 +654,6 @@ export default function Home() {
                 background: "#ffffff",
               }}
             >
-              {/* Vet name + badges */}
               <h2 style={{ margin: "0 0 4px 0", fontSize: "1.1rem" }}>
                 <Link
                   href={`/vet/${vet.slug}`}
@@ -662,7 +671,6 @@ export default function Home() {
                 </Link>
               </h2>
 
-              {/* Badges inline under name */}
               <div
                 style={{
                   display: "flex",
@@ -718,7 +726,6 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Neighborhood / phone / website */}
               <p
                 style={{ margin: "0 0 2px 0", color: "#666", fontSize: "13px" }}
               >
@@ -751,7 +758,6 @@ export default function Home() {
                 </p>
               )}
 
-              {/* Price chips */}
               {!exam && !dental && !spay && !neuter ? (
                 <p
                   style={{
@@ -851,7 +857,6 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Bottom row — verified + heart */}
               <div
                 style={{
                   display: "flex",
@@ -879,7 +884,6 @@ export default function Home() {
           );
         })}
 
-        {/* No results state */}
         {!loading && filtered.length === 0 && (
           <div
             style={{ textAlign: "center", padding: "40px 20px", color: "#888" }}

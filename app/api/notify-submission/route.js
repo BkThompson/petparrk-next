@@ -1,17 +1,38 @@
 // app/api/notify-submission/route.js
 import { Resend } from "resend";
+import { createClient } from "@supabase/supabase-js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request) {
   try {
+    // Verify the user is logged in before sending notification
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    );
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+
+    if (authError || !user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { vet_name, service_name, price_paid, visit_date, submitter_note } =
       body;
 
     const { data, error } = await resend.emails.send({
       from: "PetParrk <onboarding@resend.dev>",
-      to: ["bkalthompson@gmail.com"],
+      to: [process.env.NOTIFY_EMAIL],
       subject: `💰 New price submission: ${vet_name} — ${service_name}`,
       html: `
         <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
@@ -28,9 +49,7 @@ export async function POST(request) {
             </tr>
             <tr style="border-top: 1px solid #f0f0f0;">
               <td style="padding: 8px 0; color: #888; font-size: 13px;">Price Paid</td>
-              <td style="padding: 8px 0; font-size: 14px; font-weight: 700; color: #2d6a4f;">$${Number(
-                price_paid
-              ).toLocaleString()}</td>
+              <td style="padding: 8px 0; font-size: 14px; font-weight: 700; color: #2d6a4f;">$${Number(price_paid).toLocaleString()}</td>
             </tr>
             ${
               visit_date

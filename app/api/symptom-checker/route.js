@@ -1,3 +1,7 @@
+// app/api/symptom-checker/route.js
+// NOTE: This route intentionally allows unauthenticated access to support guest mode.
+// Guest users get one free check. Logged-in users get unlimited checks.
+// If you want to restrict to logged-in users only in the future, add a session check here.
 import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -7,7 +11,7 @@ export async function POST(req) {
     const { messages, pet } = await req.json();
 
     const assistantTurns = messages.filter(
-      (m) => m.role === "assistant"
+      (m) => m.role === "assistant",
     ).length;
 
     const systemPrompt = `You are PetParrk's veterinary triage assistant — a warm, knowledgeable companion helping pet owners understand when their pet needs care.
@@ -96,7 +100,7 @@ PERSONALITY:
     console.error("Symptom checker API error:", error);
     return Response.json(
       { error: "Something went wrong. Please try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

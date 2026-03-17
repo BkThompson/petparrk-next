@@ -12,6 +12,7 @@ export default function PetCardPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [emailRevealed, setEmailRevealed] = useState(false);
 
   useEffect(() => {
     if (!petId) return;
@@ -128,7 +129,6 @@ export default function PetCardPage() {
   const vetGpsUrl = vetGpsQuery
     ? `https://maps.google.com/?q=${encodeURIComponent(vetGpsQuery)}`
     : null;
-  // If address is present, link the address (not the name). If no address, link the name.
   const vetHasAddress = !!(pet.vet_address || pet.vet_city);
 
   return (
@@ -161,6 +161,18 @@ export default function PetCardPage() {
         .sections-container > div + div {
           border-top: 1px solid #f0f0f0;
         }
+        .reveal-btn {
+          background: none;
+          border: 1px solid #2d6a4f;
+          color: #2d6a4f;
+          border-radius: 6px;
+          padding: 3px 10px;
+          font-size: 12px;
+          cursor: pointer;
+          font-family: system-ui, sans-serif;
+          font-weight: 600;
+        }
+        .reveal-btn:hover { background: #f0f7f4; }
       `}</style>
 
       <div
@@ -311,7 +323,7 @@ export default function PetCardPage() {
 
           <div style={{ padding: "20px 24px" }}>
             <div className="sections-container">
-              {/* ── Section 1: Medical Info ── */}
+              {/* Section 1: Medical Info */}
               {(pet.allergies ||
                 pet.medications ||
                 pet.microchip_number ||
@@ -410,7 +422,7 @@ export default function PetCardPage() {
                 </div>
               )}
 
-              {/* ── Section 2: My Vet ── */}
+              {/* Section 2: My Vet */}
               {(pet.vet_name || pet.vet_phone) && (
                 <div>
                   <p className="section-title">🩺 My Vet</p>
@@ -496,7 +508,7 @@ export default function PetCardPage() {
                 </div>
               )}
 
-              {/* ── Section 3: Owner Contact ── */}
+              {/* Section 3: Owner Contact */}
               {(pet.owner_name || pet.owner_phone || pet.owner_email) && (
                 <div>
                   <p className="section-title">👤 Owner Contact</p>
@@ -533,12 +545,24 @@ export default function PetCardPage() {
                       <div className="info-row">
                         <span className="info-label">Email</span>
                         <span className="info-value">
-                          <a
-                            href={`mailto:${pet.owner_email}`}
-                            style={{ color: "#2d6a4f", textDecoration: "none" }}
-                          >
-                            {pet.owner_email}
-                          </a>
+                          {emailRevealed ? (
+                            <a
+                              href={`mailto:${pet.owner_email}`}
+                              style={{
+                                color: "#2d6a4f",
+                                textDecoration: "none",
+                              }}
+                            >
+                              {pet.owner_email}
+                            </a>
+                          ) : (
+                            <button
+                              className="reveal-btn"
+                              onClick={() => setEmailRevealed(true)}
+                            >
+                              Tap to reveal email
+                            </button>
+                          )}
                         </span>
                       </div>
                     )}
@@ -546,7 +570,7 @@ export default function PetCardPage() {
                 </div>
               )}
 
-              {/* ── Section 4: Emergency Contacts ── */}
+              {/* Section 4: Emergency Contacts */}
               {contacts.length > 0 && (
                 <div>
                   <p className="section-title">🚨 Emergency Contacts</p>
