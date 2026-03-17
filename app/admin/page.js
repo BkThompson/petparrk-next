@@ -1467,19 +1467,19 @@ export default function AdminPage() {
         /* Team tab */
         /* Edit name row — desktop: inline, mobile: stacked */
         .team-edit-name-row { display: flex; gap: 8px; align-items: center; }
-        .team-edit-name-input { flex: 1; min-width: 0; }
+        .team-edit-name-input { flex: 1; min-width: 0; width: 100%; box-sizing: border-box; }
         .team-edit-name-btns { display: flex; gap: 8px; flex-shrink: 0; }
         .team-edit-btn { font-size: 13px; padding: 7px 14px; }
         /* Member row — desktop: info left, actions right */
         .team-member-row { display: flex; flex-direction: column; gap: 0; padding: 16px; }
         .team-member-row-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-        .team-member-info { flex: 1; min-width: 0; }
+        .team-member-info { flex: 1; min-width: 0; overflow: visible; }
         .team-member-actions { flex-shrink: 0; margin-top: 2px; }
         /* Perms grid — always equal columns so labels align */
         .team-perms-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 12px; }
         /* Invite perms grid */
         .invite-perms-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .invite-perm-label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; background: #f5f5f5; padding: 5px 10px; border-radius: 6px; }
+        .invite-perm-label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
         @media (max-width: 700px) {
           .team-member-row-top { flex-direction: column; gap: 12px; }
           .team-member-actions { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; }
@@ -6150,16 +6150,23 @@ export default function AdminPage() {
                         />
                       </div>
                     </div>
-                    <p
-                      style={{
-                        margin: "0 0 8px 0",
-                        fontSize: "12px",
-                        color: "#888",
-                      }}
-                    >
-                      Permissions — you can change these at any time after
-                      inviting.
-                    </p>
+                    <div style={{ marginTop: "16px", marginBottom: "10px" }}>
+                      <p
+                        style={{
+                          margin: "0 0 3px 0",
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "#aaa",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.4px",
+                        }}
+                      >
+                        Permissions
+                      </p>
+                      <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
+                        You can change these at any time after inviting.
+                      </p>
+                    </div>
                     <div
                       className="invite-perms-grid"
                       style={{ marginBottom: "14px" }}
