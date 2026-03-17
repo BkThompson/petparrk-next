@@ -1,8 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
+// ⚠️ This route uses the service role key intentionally.
+// It bypasses RLS to write to pending_vets during the vet scraping process.
+// It is protected by AGENT_SECRET and should never be called from the client.
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
 const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
@@ -308,7 +311,7 @@ export async function GET(request) {
   if (!GOOGLE_API_KEY) {
     return Response.json(
       { error: "GOOGLE_PLACES_API_KEY not set" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
