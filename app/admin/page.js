@@ -15,6 +15,7 @@ const TABS = [
   "Call Sheet",
   "Users",
   "Symptom Logs",
+  "Team",
 ];
 
 const VET_TYPES = [
@@ -164,6 +165,15 @@ export default function AdminPage() {
   const [callReviewVetId, setCallReviewVetId] = useState(null); // vet id for editing saved prices
   const [callReviewEditing, setCallReviewEditing] = useState(null); // index of row being edited in review
 
+  // Team / admin users
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [adminUsersLoading, setAdminUsersLoading] = useState(false);
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ email: "", full_name: "" });
+  const [inviteError, setInviteError] = useState("");
+  const [inviteSaving, setInviteSaving] = useState(false);
+  const [teamDeactivatingId, setTeamDeactivatingId] = useState(null);
+
   // Unverified prices
   const [unverifiedPrices, setUnverifiedPrices] = useState([]);
   const [unverifiedLoading, setUnverifiedLoading] = useState(true);
@@ -179,6 +189,7 @@ export default function AdminPage() {
   });
 
   // ── Auth ──────────────────────────────────────────────────────────
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -186,6 +197,7 @@ export default function AdminPage() {
         router.push("/");
       } else {
         setAuthorized(true);
+        setCurrentUserEmail(data.session.user.email);
       }
     });
     const {
@@ -743,6 +755,67 @@ export default function AdminPage() {
     setAllCallNotes((prev) => prev.filter((n) => n.id !== id));
     setDeletingNoteId(null);
     setAllNotesDeletingId(null);
+  }
+
+  async function fetchAdminUsers() {
+    setAdminUsersLoading(true);
+    const { data } = await supabase
+      .from("admin_users")
+      .select("*")
+      .order("created_at");
+    setAdminUsers(data || []);
+    setAdminUsersLoading(false);
+  }
+
+  async function inviteAdminUser() {
+    if (!inviteForm.email.trim()) {
+      setInviteError("Email is required.");
+      return;
+    }
+    setInviteSaving(true);
+    setInviteError("");
+    const { error } = await supabase.from("admin_users").insert({
+      email: inviteForm.email.trim().toLowerCase(),
+      full_name: inviteForm.full_name.trim() || null,
+      status: "active",
+      can_view_call_sheet: false,
+      can_edit_prices: false,
+      can_approve_vets: false,
+      can_manage_users: false,
+      can_manage_team: false,
+      invited_by: currentUserEmail,
+    });
+    if (error) {
+      setInviteError(error.message);
+      setInviteSaving(false);
+      return;
+    }
+    setInviteForm({ email: "", full_name: "" });
+    setShowInviteForm(false);
+    setInviteSaving(false);
+    fetchAdminUsers();
+  }
+
+  async function updateAdminPermission(id, field, value) {
+    await supabase
+      .from("admin_users")
+      .update({ [field]: value })
+      .eq("id", id);
+    setAdminUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, [field]: value } : u)),
+    );
+  }
+
+  async function toggleAdminStatus(user) {
+    const newStatus = user.status === "active" ? "inactive" : "active";
+    await supabase
+      .from("admin_users")
+      .update({ status: newStatus })
+      .eq("id", user.id);
+    setAdminUsers((prev) =>
+      prev.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u)),
+    );
+    setTeamDeactivatingId(null);
   }
 
   async function fetchSymptomLogs() {
@@ -1374,6 +1447,20 @@ export default function AdminPage() {
           .notes-panel-desktop { top: auto; left: 0; right: 0; bottom: 0; width: 100%; height: 70vh; border-radius: 16px 16px 0 0; transform: translateY(100%); }
           .notes-panel-desktop.notes-panel-open { transform: translateY(0); }
         }
+        /* Team tab */
+        .team-member-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 16px; }
+        .team-member-info { flex: 1; min-width: 0; }
+        .team-member-actions { flex-shrink: 0; }
+        .team-perms-grid { display: grid; grid-template-columns: repeat(3, auto); gap: 6px 16px; }
+        @media (max-width: 700px) {
+          .team-member-row { flex-direction: column; gap: 12px; }
+          .team-member-actions { width: 100%; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+          .team-member-actions .adm-btn { width: 100%; text-align: center; }
+          .team-perms-grid { grid-template-columns: repeat(2, auto); }
+        }
+        @media (max-width: 480px) {
+          .team-perms-grid { grid-template-columns: 1fr 1fr; }
+        }
         .scroll-arrow-btn { width: 40px; height: 40px; border-radius: 50%; background: #2d6a4f; color: #fff; border: none; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-family: system-ui, sans-serif; }
         .scroll-arrow-btn:hover { background: #245a42; }
         /* Price search dropdown — absolute so it doesn't push page content */
@@ -1564,6 +1651,7 @@ export default function AdminPage() {
                   fetchAllCallNotes();
                   if (t === "Call Sheet" && callReviewVetId)
                     fetchReviewPrices(callReviewVetId);
+                  if (t === "Team") fetchAdminUsers();
                 }}
               >
                 {t}
@@ -5944,6 +6032,389 @@ export default function AdminPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── TEAM ────────────────────────────────────────────── */}
+            {tab === "Team" && (
+              <div>
+                <div className="section-header">
+                  <div>
+                    <h2
+                      style={{
+                        margin: "0 0 2px 0",
+                        fontSize: "1rem",
+                        color: "#111",
+                      }}
+                    >
+                      Team
+                    </h2>
+                    <p style={{ margin: 0, fontSize: "13px", color: "#888" }}>
+                      Manage admin access and permissions
+                    </p>
+                  </div>
+                  <button
+                    className="adm-btn adm-btn-green"
+                    onClick={() => {
+                      setShowInviteForm((v) => !v);
+                      setInviteError("");
+                    }}
+                  >
+                    {showInviteForm ? "Cancel" : "+ Invite Person"}
+                  </button>
+                </div>
+
+                {/* Invite form */}
+                {showInviteForm && (
+                  <div className="row-edit-bg" style={{ marginBottom: "16px" }}>
+                    <p
+                      style={{
+                        margin: "0 0 12px 0",
+                        fontWeight: "600",
+                        fontSize: "13px",
+                        color: "#111",
+                      }}
+                    >
+                      Invite Admin
+                    </p>
+                    <div
+                      className="form-grid-2"
+                      style={{ marginBottom: "12px" }}
+                    >
+                      <div>
+                        <label className="field-label">Email *</label>
+                        <input
+                          className="adm-input"
+                          type="email"
+                          value={inviteForm.email}
+                          onChange={(e) => {
+                            setInviteForm((p) => ({
+                              ...p,
+                              email: e.target.value,
+                            }));
+                            setInviteError("");
+                          }}
+                          placeholder="email@example.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">Full Name</label>
+                        <input
+                          className="adm-input"
+                          value={inviteForm.full_name}
+                          onChange={(e) =>
+                            setInviteForm((p) => ({
+                              ...p,
+                              full_name: e.target.value,
+                            }))
+                          }
+                          placeholder="Optional"
+                        />
+                      </div>
+                    </div>
+                    <p
+                      style={{
+                        margin: "0 0 8px 0",
+                        fontSize: "12px",
+                        color: "#888",
+                      }}
+                    >
+                      Permissions — you can change these at any time after
+                      inviting.
+                    </p>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "8px",
+                        marginBottom: "14px",
+                      }}
+                    >
+                      {[
+                        ["can_view_call_sheet", "Call Sheet"],
+                        ["can_edit_prices", "Edit Prices"],
+                        ["can_approve_vets", "Approve Vets"],
+                        ["can_manage_users", "Manage Users"],
+                        ["can_manage_team", "Manage Team"],
+                      ].map(([field, label]) => (
+                        <label
+                          key={field}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            background: "#f5f5f5",
+                            padding: "5px 10px",
+                            borderRadius: "6px",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={!!inviteForm[field]}
+                            onChange={(e) =>
+                              setInviteForm((p) => ({
+                                ...p,
+                                [field]: e.target.checked,
+                              }))
+                            }
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                    {inviteError && (
+                      <p
+                        style={{
+                          margin: "0 0 10px 0",
+                          fontSize: "13px",
+                          color: "#c62828",
+                          fontWeight: "600",
+                        }}
+                      >
+                        ⚠️ {inviteError}
+                      </p>
+                    )}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: "8px",
+                      }}
+                    >
+                      <button
+                        className="adm-btn adm-btn-gray"
+                        onClick={() => {
+                          setShowInviteForm(false);
+                          setInviteError("");
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="adm-btn adm-btn-green"
+                        onClick={inviteAdminUser}
+                        disabled={inviteSaving}
+                      >
+                        {inviteSaving ? "Saving..." : "Add to Team"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {adminUsersLoading && (
+                  <p style={{ color: "#888", fontSize: "14px" }}>
+                    Loading team...
+                  </p>
+                )}
+                <div
+                  style={{
+                    background: "#fff",
+                    border: "1px solid #e8e8e8",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  {adminUsers.length === 0 && !adminUsersLoading && (
+                    <p
+                      style={{
+                        color: "#bbb",
+                        fontSize: "14px",
+                        padding: "20px",
+                        textAlign: "center",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      No team members yet.
+                    </p>
+                  )}
+                  {adminUsers.map((u, idx) => {
+                    const isMe = u.email === currentUserEmail;
+                    const isDeactivating = teamDeactivatingId === u.id;
+                    return (
+                      <div
+                        key={u.id}
+                        style={{
+                          borderBottom:
+                            idx < adminUsers.length - 1
+                              ? "1px solid #f0f0f0"
+                              : "none",
+                        }}
+                      >
+                        {/* Member row */}
+                        <div className="team-member-row">
+                          <div className="team-member-info">
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                flexWrap: "wrap",
+                                marginBottom: "2px",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontWeight: "600",
+                                  fontSize: "14px",
+                                  color: "#111",
+                                }}
+                              >
+                                {u.full_name || u.email}
+                              </span>
+                              {isMe && (
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    background: "#e8f5e9",
+                                    color: "#2d6a4f",
+                                    padding: "1px 7px",
+                                    borderRadius: "20px",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  You
+                                </span>
+                              )}
+                              <span className={`badge badge-${u.status}`}>
+                                {u.status === "active" ? "Active" : "Inactive"}
+                              </span>
+                            </div>
+                            {u.full_name && (
+                              <p
+                                style={{
+                                  margin: "0 0 6px 0",
+                                  fontSize: "12px",
+                                  color: "#888",
+                                }}
+                              >
+                                {u.email}
+                              </p>
+                            )}
+                            {u.invited_by && u.invited_by !== "system" && (
+                              <p
+                                style={{
+                                  margin: "0 0 8px 0",
+                                  fontSize: "11px",
+                                  color: "#aaa",
+                                }}
+                              >
+                                Invited by {u.invited_by}
+                              </p>
+                            )}
+                            {/* Permission toggles */}
+                            <div className="team-perms-grid">
+                              {[
+                                ["can_view_call_sheet", "Call Sheet"],
+                                ["can_edit_prices", "Edit Prices"],
+                                ["can_approve_vets", "Approve Vets"],
+                                ["can_manage_users", "Manage Users"],
+                                ["can_manage_team", "Manage Team"],
+                              ].map(([field, label]) => (
+                                <label
+                                  key={field}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "5px",
+                                    fontSize: "12px",
+                                    cursor:
+                                      isMe && field === "can_manage_team"
+                                        ? "not-allowed"
+                                        : "pointer",
+                                    opacity:
+                                      isMe && field === "can_manage_team"
+                                        ? 0.5
+                                        : 1,
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={!!u[field]}
+                                    disabled={
+                                      isMe && field === "can_manage_team"
+                                    }
+                                    onChange={(e) =>
+                                      updateAdminPermission(
+                                        u.id,
+                                        field,
+                                        e.target.checked,
+                                      )
+                                    }
+                                  />
+                                  {label}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Actions */}
+                          {!isMe && (
+                            <div className="team-member-actions">
+                              {isDeactivating ? (
+                                <div
+                                  style={{
+                                    background: "#fff0f0",
+                                    border: "1px solid #ffcdd2",
+                                    borderRadius: "6px",
+                                    padding: "10px 12px",
+                                  }}
+                                >
+                                  <p
+                                    style={{
+                                      margin: "0 0 8px 0",
+                                      fontSize: "13px",
+                                      color: "#c62828",
+                                      fontWeight: "600",
+                                    }}
+                                  >
+                                    {u.status === "active"
+                                      ? "Deactivate"
+                                      : "Reactivate"}{" "}
+                                    {u.full_name || u.email}?
+                                  </p>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "flex-end",
+                                      gap: "6px",
+                                    }}
+                                  >
+                                    <button
+                                      className="adm-btn adm-btn-gray"
+                                      onClick={() =>
+                                        setTeamDeactivatingId(null)
+                                      }
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      className={`adm-btn ${u.status === "active" ? "adm-btn-red" : "adm-btn-green"}`}
+                                      onClick={() => toggleAdminStatus(u)}
+                                    >
+                                      {u.status === "active"
+                                        ? "Deactivate"
+                                        : "Reactivate"}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  className={`adm-btn ${u.status === "active" ? "adm-btn-gray" : "adm-btn-green"}`}
+                                  onClick={() => setTeamDeactivatingId(u.id)}
+                                >
+                                  {u.status === "active"
+                                    ? "Deactivate"
+                                    : "Reactivate"}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
