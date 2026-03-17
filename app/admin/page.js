@@ -1273,7 +1273,7 @@ export default function AdminPage() {
         .badge-active { background: #e8f5e9; color: #2d6a4f; border: 1px solid #c8e6c9; }
         .badge-inactive { background: #f0f0f0; color: #888; border: 1px solid #ddd; }
         .row-edit-bg { background: #f9f9f9; border-radius: 10px; padding: 20px 20px 16px 20px; margin: 6px 0 20px 0; border: 1px solid #e8e8e8; }
-        .pv-edit-btns .adm-btn { font-size: 11px; padding: 4px 8px; }
+        .pv-edit-btns .adm-btn { font-size: 11px; padding: 8px 10px; }
         @media (min-width: 701px) { .pv-edit-btns .adm-btn { font-size: 13px; padding: 7px 14px; } }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
@@ -4409,14 +4409,26 @@ export default function AdminPage() {
                                       padding: "16px",
                                     }}
                                   >
-                                    {/* X on its own line, right-aligned */}
+                                    {/* Header — title + X inline */}
                                     <div
                                       style={{
                                         display: "flex",
-                                        justifyContent: "flex-end",
-                                        marginBottom: "6px",
+                                        justifyContent: "space-between",
+                                        alignItems: "flex-start",
+                                        gap: "12px",
+                                        marginBottom: "14px",
                                       }}
                                     >
+                                      <p
+                                        style={{
+                                          margin: 0,
+                                          fontSize: "14px",
+                                          fontWeight: "700",
+                                          color: "#111",
+                                        }}
+                                      >
+                                        Notes for {vet.name}
+                                      </p>
                                       <button
                                         onClick={() =>
                                           setShowCallbackNotes(false)
@@ -4429,23 +4441,11 @@ export default function AdminPage() {
                                           color: "#aaa",
                                           lineHeight: 1,
                                           padding: "0 2px",
+                                          flexShrink: 0,
                                         }}
                                       >
                                         ✕
                                       </button>
-                                    </div>
-                                    {/* Title on its own full-width line below X */}
-                                    <div style={{ marginBottom: "14px" }}>
-                                      <p
-                                        style={{
-                                          margin: 0,
-                                          fontSize: "14px",
-                                          fontWeight: "700",
-                                          color: "#111",
-                                        }}
-                                      >
-                                        Notes for {vet.name}
-                                      </p>
                                     </div>
                                     {/* Add new note */}
                                     <div style={{ marginBottom: "16px" }}>
