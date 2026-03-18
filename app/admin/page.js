@@ -4536,12 +4536,13 @@ export default function AdminPage() {
                                     className="adm-input"
                                     value={
                                       vet.accepting_new_patients === null
-                                        ? "unknown"
+                                        ? ""
                                         : vet.accepting_new_patients
                                           ? "yes"
                                           : "no"
                                     }
                                     onChange={async (e) => {
+                                      if (e.target.value === "") return;
                                       const val =
                                         e.target.value === "unknown"
                                           ? null
@@ -4576,9 +4577,10 @@ export default function AdminPage() {
                                       );
                                     }}
                                   >
-                                    <option value="unknown">Unknown</option>
+                                    <option value="">— Select —</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
+                                    <option value="unknown">Unknown</option>
                                   </select>
                                 </div>
                                 <div>
@@ -4587,8 +4589,16 @@ export default function AdminPage() {
                                   </label>
                                   <select
                                     className="adm-input"
-                                    value={vet.carecredit ? "yes" : "no"}
+                                    value={
+                                      vet.carecredit === null ||
+                                      vet.carecredit === undefined
+                                        ? ""
+                                        : vet.carecredit
+                                          ? "yes"
+                                          : "no"
+                                    }
                                     onChange={async (e) => {
+                                      if (e.target.value === "") return;
                                       const val = e.target.value === "yes";
                                       const table =
                                         vet._source === "pending"
@@ -4614,8 +4624,10 @@ export default function AdminPage() {
                                       );
                                     }}
                                   >
-                                    <option value="no">No</option>
+                                    <option value="">— Select —</option>
                                     <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                    <option value="unknown">Unknown</option>
                                   </select>
                                 </div>
                               </div>
