@@ -138,6 +138,8 @@ export default function AdminPage() {
     callPricesRef.current = callPrices;
   }, [callPrices]);
   const [callSaving, setCallSaving] = useState(false);
+  const [lockedVetId, setLockedVetId] = useState(null);
+  const [lockedVetName, setLockedVetName] = useState("");
   const [callSpeciesError, setCallSpeciesError] = useState(false);
   const [pendingVetSearch, setPendingVetSearch] = useState("");
   const [callSheetSearch, setCallSheetSearch] = useState("");
@@ -374,6 +376,12 @@ export default function AdminPage() {
   }
 
   async function saveCallPrices(vet) {
+    // Use lockedVetId if set — prevents race condition where callIndex changed after prices were entered
+    const targetVet =
+      lockedVetId && lockedVetId !== vet.id
+        ? { ...vet, id: lockedVetId, name: lockedVetName }
+        : vet;
+    const vetToSave = targetVet;
     setCallSaving(true);
     const latestPrices = callPricesRef.current;
     const validPrices = latestPrices.filter(
@@ -406,12 +414,12 @@ export default function AdminPage() {
 
     // If we already created/found this vet in a previous save (add more prices flow), reuse that ID
     let savedVetId = callReviewVetId || vet.id;
-    if (vet._source === "pending" && !callReviewVetId) {
+    if (vetToSave._source === "pending" && !callReviewVetId) {
       // Check if a vet with this name already exists — avoid duplicates
       const { data: existingVet } = await supabase
         .from("vets")
         .select("id")
-        .ilike("name", vet.name.trim())
+        .ilike("name", vetToSave.name.trim())
         .maybeSingle();
 
       if (existingVet) {
@@ -420,33 +428,34 @@ export default function AdminPage() {
         await supabase
           .from("pending_vets")
           .update({ status: "approved" })
-          .eq("id", vet.id);
+          .eq("id", vetToSave.id);
       } else {
         // Create new vet
-        const slug = (vet.slug || vet.name)
+        const slug = (vetToSave.slug || vetToSave.name)
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-|-$/g, "");
         const { data: newVet, error: vetError } = await supabase
           .from("vets")
           .insert({
-            name: vet.name,
+            name: vetToSave.name,
             slug,
-            address: vet.address,
-            city: vet.city,
-            state: vet.state || null,
-            zip_code: vet.zip_code,
-            phone: vet.phone,
-            website: vet.website,
-            hours: vet.hours,
+            address: vetToSave.address,
+            city: vetToSave.city,
+            state: vetToSave.state || null,
+            zip_code: vetToSave.zip_code,
+            phone: vetToSave.phone,
+            website: vetToSave.website,
+            hours: vetToSave.hours,
             neighborhood:
-              vet.neighborhood && vet.neighborhood !== vet.city
-                ? vet.neighborhood
+              vetToSave.neighborhood &&
+              vetToSave.neighborhood !== vetToSave.city
+                ? vetToSave.neighborhood
                 : null,
-            vet_type: vet.vet_type
-              ? Array.isArray(vet.vet_type)
-                ? vet.vet_type
-                : [vet.vet_type]
+            vet_type: vetToSave.vet_type
+              ? Array.isArray(vetToSave.vet_type)
+                ? vetToSave.vet_type
+                : [vetToSave.vet_type]
               : ["General Practice"],
             accepting_new_patients: null,
             carecredit: false,
@@ -462,24 +471,24 @@ export default function AdminPage() {
         await supabase
           .from("pending_vets")
           .update({ status: "approved" })
-          .eq("id", vet.id);
+          .eq("id", vetToSave.id);
         savedVetId = newVet.id;
       }
       // Update the vet in both queues so it's treated as active on subsequent saves
       const updatedVet = {
-        ...vet,
+        ...vetToSave,
         id: savedVetId,
         _source: "active",
         _hasPrices: true,
       };
       setCallQueue((prev) =>
         prev.map((v) =>
-          v.id === vet.id && v._source === "pending" ? updatedVet : v,
+          v.id === vetToSave.id && v._source === "pending" ? updatedVet : v,
         ),
       );
       setFullCallQueue((prev) =>
         prev.map((v) =>
-          v.id === vet.id && v._source === "pending" ? updatedVet : v,
+          v.id === vetToSave.id && v._source === "pending" ? updatedVet : v,
         ),
       );
     }
@@ -522,6 +531,8 @@ export default function AdminPage() {
     setCallReviewVetId(savedVetId);
     setCallReviewEditing(null);
     setCallPrices([]);
+    setLockedVetId(null);
+    setLockedVetName("");
     // Fetch fresh from DB — single source of truth
     await fetchReviewPrices(savedVetId);
     // Mark vet as having prices in both queues
@@ -645,7 +656,12 @@ export default function AdminPage() {
     setCallIndex((i) => i + 1);
   }
 
-  function addCallPriceRow() {
+  function addCallPriceRow(vet) {
+    // Lock the vet when the first price row is added — prevents saving to wrong vet
+    if (vet && !lockedVetId) {
+      setLockedVetId(vet.id);
+      setLockedVetName(vet.name);
+    }
     setCallPrices((prev) => [
       ...prev,
       {
@@ -4152,9 +4168,12 @@ export default function AdminPage() {
                                 </button>
                                 <button
                                   className="adm-btn adm-btn-gray"
-                                  onClick={() =>
-                                    setCallIndex((i) => Math.max(0, i - 1))
-                                  }
+                                  onClick={() => {
+                                    setCallIndex((i) => Math.max(0, i - 1));
+                                    setCallPrices([]);
+                                    setLockedVetId(null);
+                                    setLockedVetName("");
+                                  }}
                                   disabled={callIndex === 0}
                                 >
                                   ← Prev
@@ -4164,6 +4183,8 @@ export default function AdminPage() {
                                   onClick={() => {
                                     setCallIndex((i) => i + 1);
                                     setCallPrices([]);
+                                    setLockedVetId(null);
+                                    setLockedVetName("");
                                   }}
                                 >
                                   Skip →
@@ -4229,6 +4250,8 @@ export default function AdminPage() {
                                           onMouseDown={() => {
                                             setCallIndex(realIdx);
                                             setCallPrices([]);
+                                            setLockedVetId(null);
+                                            setLockedVetName("");
                                             setCallSheetSearch("");
                                           }}
                                         >
@@ -4957,7 +4980,7 @@ export default function AdminPage() {
                                   <button
                                     className="adm-btn adm-btn-outline"
                                     onClick={() => {
-                                      addCallPriceRow();
+                                      addCallPriceRow(vet);
                                       setShowCallbackNotes(false);
                                       setCallbackNoteText("");
                                     }}
@@ -5392,6 +5415,18 @@ export default function AdminPage() {
                                           })}
                                         </ul>
                                       </div>
+                                    )}
+                                    {lockedVetId && lockedVetId !== vet.id && (
+                                      <p
+                                        style={{
+                                          margin: "0 0 8px 0",
+                                          fontSize: "12px",
+                                          color: "#e65100",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        ⚠️ Saving prices for {lockedVetName}
+                                      </p>
                                     )}
                                     <button
                                       className="adm-btn adm-btn-green"
