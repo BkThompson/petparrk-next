@@ -1357,8 +1357,9 @@ export default function AdminPage() {
     <>
       <style>{`
         * { box-sizing: border-box; }
-        .adm-input { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: system-ui, sans-serif; outline: none; background: #fff; }
+        .adm-input { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: system-ui, sans-serif; outline: none; background: #fff; box-sizing: border-box; }
         .adm-input:focus { border-color: #2d6a4f; }
+        @media (max-width: 700px) { .adm-input { padding: 8px 10px; font-size: 13px; } }
         select.adm-input { cursor: pointer; padding-right: 28px; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
         .adm-btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: system-ui, sans-serif; white-space: nowrap; }
         .adm-btn-green { background: #2d6a4f; color: #fff; }
@@ -6094,6 +6095,8 @@ export default function AdminPage() {
                       onClick={() => {
                         setShowInviteForm((v) => !v);
                         setInviteError("");
+                        setTeamEditingId(null);
+                        setTeamEditName("");
                       }}
                     >
                       {showInviteForm ? "Cancel" : "+ Invite Person"}
@@ -6381,6 +6384,8 @@ export default function AdminPage() {
                                     onClick={() => {
                                       setTeamEditingId(u.id);
                                       setTeamEditName(u.full_name || "");
+                                      setShowInviteForm(false);
+                                      setInviteError("");
                                     }}
                                   >
                                     Edit Name
