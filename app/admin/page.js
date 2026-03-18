@@ -4535,7 +4535,8 @@ export default function AdminPage() {
                                   <select
                                     className="adm-input"
                                     value={
-                                      vet.accepting_new_patients === null
+                                      vet.accepting_new_patients === null ||
+                                      vet.accepting_new_patients === undefined
                                         ? ""
                                         : vet.accepting_new_patients
                                           ? "yes"
