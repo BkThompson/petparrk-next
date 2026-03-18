@@ -1673,11 +1673,21 @@ export default function AdminPage() {
                 className={`tab-btn${tab === t ? " active" : ""}`}
                 onClick={() => {
                   setTab(t);
+                  // Close all open edit states on every tab switch
                   setEditingVet(null);
                   setEditingPendingVet(null);
                   setEditingPrice(null);
                   setShowAddPrice(false);
                   setCallReviewEditing(null);
+                  // Team tab
+                  setShowInviteForm(false);
+                  setInviteError("");
+                  setTeamEditingId(null);
+                  setTeamEditName("");
+                  // Call sheet
+                  setShowCallbackNotes(false);
+                  setCallbackNoteText("");
+                  // Tab-specific fetches
                   if (t === "Prices" && selectedVetId) {
                     setPricesLoading(true);
                     fetchPricesForVet(selectedVetId);
@@ -4547,6 +4557,8 @@ export default function AdminPage() {
                                       setNotesVetName(vet.name);
                                       fetchCallNotes(vet.id);
                                       setShowCallbackNotes(true);
+                                      // Close price rows when notes open
+                                      setCallPrices([]);
                                     }}
                                   >
                                     🕐 Call back later
@@ -4830,7 +4842,11 @@ export default function AdminPage() {
                                   </p>
                                   <button
                                     className="adm-btn adm-btn-outline"
-                                    onClick={addCallPriceRow}
+                                    onClick={() => {
+                                      addCallPriceRow();
+                                      setShowCallbackNotes(false);
+                                      setCallbackNoteText("");
+                                    }}
                                   >
                                     + Add Price
                                   </button>
