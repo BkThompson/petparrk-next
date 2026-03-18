@@ -707,7 +707,7 @@ export default function Home() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    ✅ Accepting patients
+                    ✅ Accepting New Patients
                   </span>
                 )}
                 {vet.accepting_new_patients === false && (
@@ -721,7 +721,7 @@ export default function Home() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    ❌ Not accepting
+                    ❌ Not Accepting New Patients
                   </span>
                 )}
               </div>
