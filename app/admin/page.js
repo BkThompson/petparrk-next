@@ -21,6 +21,7 @@ const TABS = [
 const VET_TYPES = [
   "General Practice",
   "Emergency",
+  "Urgent Care",
   "Specialty",
   "Holistic",
   "Low-Cost / Non-Profit",
@@ -4518,6 +4519,106 @@ export default function AdminPage() {
                                   {vet.phone}
                                 </a>
                               )}
+
+                              {/* CareCredit + Accepting New Patients — side by side desktop, stacked mobile */}
+                              <div
+                                className="form-grid-2"
+                                style={{
+                                  marginBottom: "14px",
+                                  marginTop: "4px",
+                                }}
+                              >
+                                <div>
+                                  <label className="field-label">
+                                    Accepting New Patients
+                                  </label>
+                                  <select
+                                    className="adm-input"
+                                    value={
+                                      vet.accepting_new_patients === null
+                                        ? "unknown"
+                                        : vet.accepting_new_patients
+                                          ? "yes"
+                                          : "no"
+                                    }
+                                    onChange={async (e) => {
+                                      const val =
+                                        e.target.value === "unknown"
+                                          ? null
+                                          : e.target.value === "yes";
+                                      const table =
+                                        vet._source === "pending"
+                                          ? "pending_vets"
+                                          : "vets";
+                                      await supabase
+                                        .from(table)
+                                        .update({ accepting_new_patients: val })
+                                        .eq("id", vet.id);
+                                      setCallQueue((prev) =>
+                                        prev.map((v, i) =>
+                                          i === callIndex
+                                            ? {
+                                                ...v,
+                                                accepting_new_patients: val,
+                                              }
+                                            : v,
+                                        ),
+                                      );
+                                      setFullCallQueue((prev) =>
+                                        prev.map((v, i) =>
+                                          i === callIndex
+                                            ? {
+                                                ...v,
+                                                accepting_new_patients: val,
+                                              }
+                                            : v,
+                                        ),
+                                      );
+                                    }}
+                                  >
+                                    <option value="unknown">Unknown</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="field-label">
+                                    CareCredit
+                                  </label>
+                                  <select
+                                    className="adm-input"
+                                    value={vet.carecredit ? "yes" : "no"}
+                                    onChange={async (e) => {
+                                      const val = e.target.value === "yes";
+                                      const table =
+                                        vet._source === "pending"
+                                          ? "pending_vets"
+                                          : "vets";
+                                      await supabase
+                                        .from(table)
+                                        .update({ carecredit: val })
+                                        .eq("id", vet.id);
+                                      setCallQueue((prev) =>
+                                        prev.map((v, i) =>
+                                          i === callIndex
+                                            ? { ...v, carecredit: val }
+                                            : v,
+                                        ),
+                                      );
+                                      setFullCallQueue((prev) =>
+                                        prev.map((v, i) =>
+                                          i === callIndex
+                                            ? { ...v, carecredit: val }
+                                            : v,
+                                        ),
+                                      );
+                                    }}
+                                  >
+                                    <option value="no">No</option>
+                                    <option value="yes">Yes</option>
+                                  </select>
+                                </div>
+                              </div>
 
                               {/* No prices? — row on desktop, stacked on mobile */}
                               <div
