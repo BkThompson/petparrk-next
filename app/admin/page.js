@@ -4155,6 +4155,13 @@ export default function AdminPage() {
                                 <button
                                   className="adm-btn adm-btn-gray"
                                   onClick={() => {
+                                    if (
+                                      callPrices.length > 0 &&
+                                      !window.confirm(
+                                        "You have unsaved prices. Refresh anyway?",
+                                      )
+                                    )
+                                      return;
                                     fetchCallQueue();
                                     setCallIndex(0);
                                     setCallPrices([]);
@@ -4162,6 +4169,8 @@ export default function AdminPage() {
                                     setCallReviewVetId(null);
                                     setCallSaved(false);
                                     setCallReviewEditing(null);
+                                    setLockedVetId(null);
+                                    setLockedVetName("");
                                   }}
                                 >
                                   ↺ Refresh
@@ -4169,6 +4178,13 @@ export default function AdminPage() {
                                 <button
                                   className="adm-btn adm-btn-gray"
                                   onClick={() => {
+                                    if (
+                                      callPrices.length > 0 &&
+                                      !window.confirm(
+                                        "You have unsaved prices. Go back anyway?",
+                                      )
+                                    )
+                                      return;
                                     setCallIndex((i) => Math.max(0, i - 1));
                                     setCallPrices([]);
                                     setLockedVetId(null);
@@ -4181,6 +4197,13 @@ export default function AdminPage() {
                                 <button
                                   className="adm-btn adm-btn-gray"
                                   onClick={() => {
+                                    if (
+                                      callPrices.length > 0 &&
+                                      !window.confirm(
+                                        "You have unsaved prices. Skip anyway?",
+                                      )
+                                    )
+                                      return;
                                     setCallIndex((i) => i + 1);
                                     setCallPrices([]);
                                     setLockedVetId(null);
@@ -4248,6 +4271,13 @@ export default function AdminPage() {
                                             borderBottom: "1px solid #f5f5f5",
                                           }}
                                           onMouseDown={() => {
+                                            if (
+                                              callPrices.length > 0 &&
+                                              !window.confirm(
+                                                "You have unsaved prices. Jump to another vet anyway?",
+                                              )
+                                            )
+                                              return;
                                             setCallIndex(realIdx);
                                             setCallPrices([]);
                                             setLockedVetId(null);
@@ -4558,19 +4588,19 @@ export default function AdminPage() {
                                   <select
                                     className="adm-input"
                                     value={
-                                      vet.accepting_new_patients === null ||
-                                      vet.accepting_new_patients === undefined
-                                        ? ""
-                                        : vet.accepting_new_patients
-                                          ? "yes"
-                                          : "no"
+                                      vet.accepting_new_patients === true
+                                        ? "yes"
+                                        : vet.accepting_new_patients === false
+                                          ? "no"
+                                          : "unknown"
                                     }
                                     onChange={async (e) => {
-                                      if (e.target.value === "") return;
                                       const val =
-                                        e.target.value === "unknown"
-                                          ? null
-                                          : e.target.value === "yes";
+                                        e.target.value === "yes"
+                                          ? true
+                                          : e.target.value === "no"
+                                            ? false
+                                            : null;
                                       const table =
                                         vet._source === "pending"
                                           ? "pending_vets"
@@ -4601,7 +4631,6 @@ export default function AdminPage() {
                                       );
                                     }}
                                   >
-                                    <option value="">— Select —</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                     <option value="unknown">Unknown</option>
@@ -4614,16 +4643,19 @@ export default function AdminPage() {
                                   <select
                                     className="adm-input"
                                     value={
-                                      vet.carecredit === null ||
-                                      vet.carecredit === undefined
-                                        ? ""
-                                        : vet.carecredit
-                                          ? "yes"
-                                          : "no"
+                                      vet.carecredit === true
+                                        ? "yes"
+                                        : vet.carecredit === false
+                                          ? "no"
+                                          : "unknown"
                                     }
                                     onChange={async (e) => {
-                                      if (e.target.value === "") return;
-                                      const val = e.target.value === "yes";
+                                      const val =
+                                        e.target.value === "yes"
+                                          ? true
+                                          : e.target.value === "no"
+                                            ? false
+                                            : null;
                                       const table =
                                         vet._source === "pending"
                                           ? "pending_vets"
@@ -4648,7 +4680,6 @@ export default function AdminPage() {
                                       );
                                     }}
                                   >
-                                    <option value="">— Select —</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                     <option value="unknown">Unknown</option>
