@@ -347,7 +347,7 @@ export default function VetPage() {
           </Link>
           {session !== undefined &&
             (session ? (
-              <Navbar />
+              
             ) : (
               <button
                 onClick={() => router.push("/auth")}

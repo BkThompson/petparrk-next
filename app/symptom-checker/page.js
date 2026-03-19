@@ -155,7 +155,7 @@ export default function SymptomCheckerHomePage() {
           >
             ← Back to all vets
           </Link>
-          {session && <Navbar />}
+          
         </div>
 
         <div style={{ textAlign: "center", marginBottom: "32px" }}>

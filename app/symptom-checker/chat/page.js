@@ -969,7 +969,7 @@ export default function SymptomCheckerChatPage() {
           >
             ← Back
           </button>
-          {session && <Navbar />}
+          
         </div>
 
         {selectedPet && (
@@ -1378,7 +1378,7 @@ export default function SymptomCheckerChatPage() {
           >
             ← Back
           </button>
-          {session && <Navbar />}
+          
         </div>
 
         {selectedPet && (

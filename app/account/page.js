@@ -250,7 +250,7 @@ export default function AccountPage() {
           >
             ← Back to all vets
           </Link>
-          <Navbar />
+          
         </div>
 
         <h1 style={{ margin: "0 0 20px 0", fontSize: "1.4rem", color: "#111" }}>

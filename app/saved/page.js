@@ -136,7 +136,7 @@ export default function SavedPage() {
           >
             ← Back to all vets
           </Link>
-          {session && <Navbar />}
+          
         </div>
 
         <div style={{ marginBottom: "24px" }}>

@@ -1138,7 +1138,7 @@ export default function ProfilePage() {
           >
             ← Back to all vets
           </Link>
-          <Navbar />
+          
         </div>
 
         {/* ── Profile header ── */}

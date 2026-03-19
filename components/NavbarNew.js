@@ -28,7 +28,6 @@ function PawMark({ size = 28 }) {
 const NAV_LINKS = [
   { href: "/", label: "Find a Vet" },
   { href: "/symptom-checker", label: "Symptom Checker" },
-  { href: "/how-it-works", label: "How It Works" },
 ];
 
 const DROPDOWN_LINKS = [
@@ -122,7 +121,7 @@ export default function NavbarNew() {
     setTimeout(() => {
       setMobileOpen(false);
       setIsClosing(false);
-    }, 180); // match animation duration
+    }, 120); // match animation duration
   }
 
   function toggleMobileMenu() {
@@ -390,7 +389,7 @@ export default function NavbarNew() {
           height: 2px;
           background: #fff;
           border-radius: 9999px;
-          transition: transform 0.18s ease, opacity 0.18s ease;
+          transition: transform 0.25s ease, opacity 0.25s ease;
           transform-origin: center;
         }
         .pp-hamburger.open .pp-hamburger-line:nth-child(1) {
@@ -421,7 +420,7 @@ export default function NavbarNew() {
 
         /* FIX 4: Exit animation */
         .pp-mobile-overlay.closing {
-          animation: mobileSlideOut 0.18s ease forwards;
+          animation: mobileSlideOut 0.12s ease forwards;
         }
         @keyframes mobileSlideIn {
           from { opacity: 0; transform: translateY(-12px); }
