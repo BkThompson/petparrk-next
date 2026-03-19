@@ -16,50 +16,49 @@ function PawMark({ size = 28 }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      {/* Main pad */}
       <ellipse cx="14" cy="17" rx="6.5" ry="5.5" fill="#CF5C36" />
-      {/* Top left toe */}
       <ellipse cx="7.5" cy="10.5" rx="2.8" ry="3.2" fill="#CF5C36" />
-      {/* Top right toe */}
       <ellipse cx="20.5" cy="10.5" rx="2.8" ry="3.2" fill="#CF5C36" />
-      {/* Middle left toe */}
       <ellipse cx="10.5" cy="8" rx="2.4" ry="2.8" fill="#CF5C36" />
-      {/* Middle right toe */}
       <ellipse cx="17.5" cy="8" rx="2.4" ry="2.8" fill="#CF5C36" />
     </svg>
   );
 }
 
-// ── Nav Links config ────────────────────────────────────────────
 const NAV_LINKS = [
-  { href: "/",               label: "Find a Vet" },
+  { href: "/", label: "Find a Vet" },
   { href: "/symptom-checker", label: "Symptom Checker" },
-  { href: "/how-it-works",   label: "How It Works" },
+  { href: "/how-it-works", label: "How It Works" },
 ];
 
 const DROPDOWN_LINKS = [
-  { href: "/",                label: "Find a Vet",        icon: "🏠" },
-  { href: "/symptom-checker", label: "Symptom Checker",   icon: "🩺" },
-  { href: "/profile",         label: "My Profile",        icon: "👤" },
-  { href: "/saved",           label: "Saved Vets",        icon: "❤️" },
-  { href: "/account",         label: "Account Settings",  icon: "⚙️" },
+  { href: "/", label: "Find a Vet", icon: "🏠" },
+  { href: "/symptom-checker", label: "Symptom Checker", icon: "🩺" },
+  { href: "/profile", label: "My Profile", icon: "👤" },
+  { href: "/saved", label: "Saved Vets", icon: "❤️" },
+  { href: "/account", label: "Account Settings", icon: "⚙️" },
 ];
 
+const BREAKPOINT = 768;
+
 export default function NavbarNew() {
-  const router   = useRouter();
+  const router = useRouter();
   const pathname = usePathname();
-  const [session,          setSession]          = useState(undefined);
+  const [session, setSession] = useState(undefined);
   const [profileAvatarUrl, setProfileAvatarUrl] = useState(null);
-  const [avatarError,      setAvatarError]      = useState(false);
-  const [showDropdown,     setShowDropdown]     = useState(false);
-  const [mobileOpen,       setMobileOpen]       = useState(false);
-  const [scrolled,         setScrolled]         = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef(null);
 
   // ── Auth ──────────────────────────────────────────────────────
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => subscription.unsubscribe();
   }, []);
 
@@ -70,7 +69,9 @@ export default function NavbarNew() {
       .select("avatar_url")
       .eq("id", session.user.id)
       .single()
-      .then(({ data }) => { if (data?.avatar_url) setProfileAvatarUrl(data.avatar_url); });
+      .then(({ data }) => {
+        if (data?.avatar_url) setProfileAvatarUrl(data.avatar_url);
+      });
   }, [session]);
 
   // ── Scroll shadow ─────────────────────────────────────────────
@@ -90,28 +91,63 @@ export default function NavbarNew() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ── FIX 3: Close mobile menu when resizing to desktop ────────
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth >= BREAKPOINT && mobileOpen) {
+        closeMobileMenu();
+      }
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [mobileOpen]);
+
   // ── Lock body scroll when mobile menu open ────────────────────
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen]);
 
   // ── Close mobile menu on route change ────────────────────────
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  useEffect(() => {
+    closeMobileMenu();
+  }, [pathname]);
+
+  // ── FIX 4: Animated close — play exit animation first ────────
+  function closeMobileMenu() {
+    if (!mobileOpen) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      setMobileOpen(false);
+      setIsClosing(false);
+    }, 280); // match animation duration
+  }
+
+  function toggleMobileMenu() {
+    if (mobileOpen) {
+      closeMobileMenu();
+    } else {
+      setMobileOpen(true);
+    }
+  }
 
   async function handleSignOut() {
     setShowDropdown(false);
-    setMobileOpen(false);
+    closeMobileMenu();
     await supabase.auth.signOut();
     router.push("/auth");
   }
 
-  const avatarUrl = (!avatarError && (profileAvatarUrl || session?.user?.user_metadata?.avatar_url)) || null;
+  const avatarUrl =
+    (!avatarError &&
+      (profileAvatarUrl || session?.user?.user_metadata?.avatar_url)) ||
+    null;
   const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
 
   return (
     <>
-      {/* ── Inline styles ──────────────────────────────────────── */}
       <style>{`
         .pp-nav {
           position: sticky;
@@ -166,29 +202,39 @@ export default function NavbarNew() {
         @media (min-width: 768px) {
           .pp-nav-links { display: flex; }
         }
+
+        /* FIX 1+2: Reserve space for underline always so layout never shifts.
+           Use opacity to show/hide the underline instead of content/no-content. */
         .pp-nav-link {
           font-size: 14px;
           font-weight: 500;
           color: rgba(255,255,255,0.65);
           text-decoration: none;
-          transition: color 0.15s ease;
           font-family: var(--font, 'Urbanist', sans-serif);
           position: relative;
-          padding-bottom: 2px;
+          padding-bottom: 6px;
+          transition: color 0.15s ease;
         }
         .pp-nav-link:hover { color: #fff; opacity: 1; }
-        .pp-nav-link.active {
-          color: var(--color-gold, #EFC88B);
-        }
-        .pp-nav-link.active::after {
+        .pp-nav-link.active { color: var(--color-gold, #EFC88B); }
+
+        /* Always present in DOM, toggled via opacity — no layout shift */
+        .pp-nav-link::after {
           content: '';
           position: absolute;
-          bottom: -4px;
+          bottom: 0;
           left: 0;
           right: 0;
           height: 2px;
           background: var(--color-terracotta, #CF5C36);
           border-radius: 9999px;
+          opacity: 0;
+          transform: scaleX(0.6);
+          transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .pp-nav-link.active::after {
+          opacity: 1;
+          transform: scaleX(1);
         }
 
         /* Right side */
@@ -319,7 +365,7 @@ export default function NavbarNew() {
         }
         .pp-dd-signout:hover { background: var(--color-error-light, #FCEAEA); }
 
-        /* Hamburger button */
+        /* Hamburger — FIX 3: hidden above breakpoint */
         .pp-hamburger {
           display: flex;
           flex-direction: column;
@@ -337,7 +383,7 @@ export default function NavbarNew() {
         }
         .pp-hamburger:hover { background: rgba(255,255,255,0.08); }
         @media (min-width: 768px) {
-          .pp-hamburger { display: none; }
+          .pp-hamburger { display: none !important; }
         }
         .pp-hamburger-line {
           width: 22px;
@@ -358,7 +404,7 @@ export default function NavbarNew() {
           transform: translateY(-7px) rotate(-45deg);
         }
 
-        /* Mobile overlay */
+        /* FIX 3: Mobile overlay hidden on desktop */
         .pp-mobile-overlay {
           position: fixed;
           inset: 0;
@@ -369,10 +415,23 @@ export default function NavbarNew() {
           padding: 80px 32px 48px;
           animation: mobileSlideIn 0.3s ease forwards;
         }
+        @media (min-width: 768px) {
+          .pp-mobile-overlay { display: none !important; }
+        }
+
+        /* FIX 4: Exit animation */
+        .pp-mobile-overlay.closing {
+          animation: mobileSlideOut 0.28s ease forwards;
+        }
         @keyframes mobileSlideIn {
           from { opacity: 0; transform: translateY(-12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes mobileSlideOut {
+          from { opacity: 1; transform: translateY(0); }
+          to   { opacity: 0; transform: translateY(-12px); }
+        }
+
         .pp-mobile-links {
           display: flex;
           flex-direction: column;
@@ -404,6 +463,7 @@ export default function NavbarNew() {
         .pp-mobile-link:nth-child(3) { animation-delay: 0.15s; }
         .pp-mobile-link:nth-child(4) { animation-delay: 0.20s; }
         .pp-mobile-link:nth-child(5) { animation-delay: 0.25s; }
+
         .pp-mobile-bottom {
           margin-top: 32px;
           display: flex;
@@ -460,7 +520,6 @@ export default function NavbarNew() {
       {/* ── Navbar ─────────────────────────────────────────────── */}
       <nav className={`pp-nav${scrolled ? " scrolled" : ""}`}>
         <div className="pp-nav-inner">
-
           {/* Logo */}
           <Link href="/" className="pp-logo">
             <PawMark size={28} />
@@ -484,7 +543,6 @@ export default function NavbarNew() {
           {/* Right side */}
           <div className="pp-nav-right">
             {session === undefined ? null : session ? (
-              /* Logged in — avatar + dropdown */
               <div ref={dropdownRef} style={{ position: "relative" }}>
                 <button
                   className="pp-avatar-btn"
@@ -497,7 +555,11 @@ export default function NavbarNew() {
                       src={avatarUrl}
                       alt="avatar"
                       onError={() => setAvatarError(true)}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
                     />
                   ) : (
                     avatarLetter
@@ -506,13 +568,10 @@ export default function NavbarNew() {
 
                 {showDropdown && (
                   <div className="pp-dropdown">
-                    {/* Email header */}
                     <div className="pp-dd-header">
                       <div className="pp-dd-email-label">Signed in as</div>
                       <div className="pp-dd-email">{session.user.email}</div>
                     </div>
-
-                    {/* Links */}
                     {DROPDOWN_LINKS.map(({ href, label, icon }) => (
                       <Link
                         key={href}
@@ -524,7 +583,6 @@ export default function NavbarNew() {
                         {label}
                       </Link>
                     ))}
-
                     <hr className="pp-dd-divider" />
                     <button className="pp-dd-signout" onClick={handleSignOut}>
                       Sign Out
@@ -533,16 +591,15 @@ export default function NavbarNew() {
                 )}
               </div>
             ) : (
-              /* Logged out — Sign In button (desktop only) */
               <Link href="/auth" className="pp-signin-btn">
                 Sign In
               </Link>
             )}
 
-            {/* Hamburger — mobile only */}
+            {/* Hamburger */}
             <button
               className={`pp-hamburger${mobileOpen ? " open" : ""}`}
-              onClick={() => setMobileOpen(!mobileOpen)}
+              onClick={toggleMobileMenu}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
             >
@@ -554,9 +611,13 @@ export default function NavbarNew() {
         </div>
       </nav>
 
-      {/* ── Mobile full-screen overlay ──────────────────────────── */}
-      {mobileOpen && (
-        <div className="pp-mobile-overlay" role="dialog" aria-label="Navigation menu">
+      {/* ── Mobile overlay — stays in DOM during exit animation ── */}
+      {(mobileOpen || isClosing) && (
+        <div
+          className={`pp-mobile-overlay${isClosing ? " closing" : ""}`}
+          role="dialog"
+          aria-label="Navigation menu"
+        >
           <div className="pp-mobile-links">
             {NAV_LINKS.map(({ href, label }) => (
               <Link
@@ -567,8 +628,6 @@ export default function NavbarNew() {
                 {label}
               </Link>
             ))}
-
-            {/* Extra links when logged in */}
             {session && (
               <>
                 <Link href="/profile" className="pp-mobile-link">
@@ -581,13 +640,14 @@ export default function NavbarNew() {
             )}
           </div>
 
-          {/* Bottom section */}
           <div className="pp-mobile-bottom">
             {session ? (
               <>
                 <div className="pp-mobile-user">
                   Signed in as
-                  <div className="pp-mobile-user-email">{session.user.email}</div>
+                  <div className="pp-mobile-user-email">
+                    {session.user.email}
+                  </div>
                 </div>
                 <button className="pp-mobile-signout" onClick={handleSignOut}>
                   Sign Out
