@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
-import Navbar from "../components/Navbar";
+//import Navbar from "../components/Navbar";
 
 function formatPrice(low, high, type) {
   if (!low) return null;
@@ -324,65 +324,6 @@ export default function Home() {
           minHeight: "100vh",
         }}
       >
-        {/* Header */}
-        <div
-          style={{
-            position: "relative",
-            textAlign: "center",
-            marginBottom: "24px",
-          }}
-        >
-          {session !== undefined && (
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                right: 0,
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              {session ? (
-                <Navbar />
-              ) : (
-                <button
-                  onClick={() => router.push("/auth")}
-                  style={{
-                    padding: "6px 14px",
-                    borderRadius: "20px",
-                    border: "1px solid #2d6a4f",
-                    background: "#fff",
-                    color: "#2d6a4f",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                  }}
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
-          )}
-
-          <h1 style={{ color: "#2d6a4f", fontSize: "2rem", margin: "0" }}>
-            🐾 PetParrk
-          </h1>
-          <p
-            style={{
-              color: "#333",
-              margin: "4px 0 2px 0",
-              fontSize: "15px",
-              fontWeight: "500",
-            }}
-          >
-            Know what you'll pay before you go.
-          </p>
-          <p style={{ color: "#888", margin: "0", fontSize: "13px" }}>
-            Vet pricing transparency for the East Bay
-          </p>
-        </div>
-
         {/* Search */}
         <div style={{ marginBottom: "16px" }}>
           <input
