@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
-import Navbar from "../../../components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SESSION_KEY = "petparrk_symptom_session";
@@ -208,7 +207,7 @@ export default function SymptomCheckerChatPage() {
           guestMode,
           guestPet,
           freeCheckUsed,
-        })
+        }),
       );
     } catch (e) {}
   }, [
@@ -346,10 +345,10 @@ export default function SymptomCheckerChatPage() {
           .filter(Boolean)
           .join(", ")})`
       : guestPet.species
-      ? `my ${[guestPet.breed, guestPet.species].filter(Boolean).join(" ")}${
-          guestPet.age ? ", " + guestPet.age + " old" : ""
-        }`
-      : "my pet";
+        ? `my ${[guestPet.breed, guestPet.species].filter(Boolean).join(" ")}${
+            guestPet.age ? ", " + guestPet.age + " old" : ""
+          }`
+        : "my pet";
 
     const firstMessage = `I'm checking on ${petDesc}. The issue is related to their **${areaLabel}**. It started **${durationLabel.toLowerCase()}** and seems **${severity.toLowerCase()}** in severity. What should I know?`;
     const greeting = `Hi! I'm here to help check on ${
@@ -582,7 +581,7 @@ export default function SymptomCheckerChatPage() {
                 style={{ margin: j === lines.length - 1 ? 0 : "0 0 6px 0" }}
               >
                 {parts.map((part, k) =>
-                  k % 2 === 1 ? <strong key={k}>{part}</strong> : part
+                  k % 2 === 1 ? <strong key={k}>{part}</strong> : part,
                 )}
               </p>
             );
@@ -1568,8 +1567,8 @@ export default function SymptomCheckerChatPage() {
                   recording
                     ? "Listening..."
                     : triageResult
-                    ? "Ask a follow-up question..."
-                    : "Add more detail or ask a follow-up..."
+                      ? "Ask a follow-up question..."
+                      : "Add more detail or ask a follow-up..."
                 }
                 rows={2}
                 style={{
