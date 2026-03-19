@@ -390,7 +390,7 @@ export default function NavbarNew() {
           height: 2px;
           background: #fff;
           border-radius: 9999px;
-          transition: transform 0.25s ease, opacity 0.25s ease;
+          transition: transform 0.18s ease, opacity 0.18s ease;
           transform-origin: center;
         }
         .pp-hamburger.open .pp-hamburger-line:nth-child(1) {

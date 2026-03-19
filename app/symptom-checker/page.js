@@ -130,7 +130,7 @@ export default function SymptomCheckerHomePage() {
       `}</style>
       <div
         style={{
-          maxWidth: "800px",
+          maxWidth: "1280px",
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",

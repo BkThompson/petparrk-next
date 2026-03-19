@@ -925,7 +925,7 @@ export default function SymptomCheckerChatPage() {
     return (
       <div
         style={{
-          maxWidth: "800px",
+          maxWidth: "1280px",
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",
@@ -1348,7 +1348,7 @@ export default function SymptomCheckerChatPage() {
 
       <div
         style={{
-          maxWidth: "800px",
+          maxWidth: "1280px",
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",

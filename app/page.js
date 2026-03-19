@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
-//import Navbar from "../components/Navbar";
 
 function formatPrice(low, high, type) {
   if (!low) return null;
@@ -317,7 +316,7 @@ export default function Home() {
 
       <div
         style={{
-          maxWidth: "800px",
+          maxWidth: "1280px",
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",

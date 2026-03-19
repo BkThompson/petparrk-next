@@ -225,7 +225,7 @@ export default function AccountPage() {
 
       <div
         style={{
-          maxWidth: "800px",
+          maxWidth: "1280px",
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",
