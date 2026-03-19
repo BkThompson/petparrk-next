@@ -28,6 +28,7 @@ function PawMark({ size = 28 }) {
 const NAV_LINKS = [
   { href: "/", label: "Find a Vet" },
   { href: "/symptom-checker", label: "Symptom Checker" },
+  { href: "/how-it-works", label: "How It Works" },
 ];
 
 const DROPDOWN_LINKS = [
