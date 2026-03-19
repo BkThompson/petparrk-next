@@ -4730,10 +4730,9 @@ export default function AdminPage() {
                                       );
                                     }}
                                   >
-                                    <option value="select">— Select —</option>
+                                    <option value="">— Select —</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
-                                    <option value="unknown">Unknown</option>
                                   </select>
                                 </div>
                                 <div>
@@ -4780,10 +4779,9 @@ export default function AdminPage() {
                                       );
                                     }}
                                   >
-                                    <option value="select">— Select —</option>
+                                    <option value="">— Select —</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
-                                    <option value="unknown">Unknown</option>
                                   </select>
                                 </div>
                               </div>
