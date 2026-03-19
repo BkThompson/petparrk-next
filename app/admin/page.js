@@ -5271,6 +5271,54 @@ export default function AdminPage() {
                                         />
                                       </div>
                                     </div>
+                                    {/* Vaccines Included — appears directly under service row for vaccine packages */}
+                                    {(() => {
+                                      const svc = services.find(
+                                        (s) =>
+                                          s.id === parseInt(p.service_id) ||
+                                          s.id === p.service_id,
+                                      );
+                                      return (
+                                        svc?.name
+                                          ?.toLowerCase()
+                                          .includes("package") &&
+                                        svc?.category === "Vaccine"
+                                      );
+                                    })() && (
+                                      <div style={{ marginBottom: "14px" }}>
+                                        <label
+                                          className="field-label"
+                                          style={{
+                                            display: "block",
+                                            marginBottom: "6px",
+                                          }}
+                                        >
+                                          Vaccines Included
+                                        </label>
+                                        <input
+                                          className="adm-input"
+                                          value={p.vaccines_included || ""}
+                                          onChange={(e) =>
+                                            updateCallPrice(
+                                              i,
+                                              "vaccines_included",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="e.g. Rabies, DHPP, Bordetella..."
+                                        />
+                                        <p
+                                          style={{
+                                            margin: "4px 0 0 0",
+                                            fontSize: "11px",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          This will display publicly on the vet
+                                          profile
+                                        </p>
+                                      </div>
+                                    )}
                                     {/* Row 1b: Species + Includes side by side */}
                                     <div
                                       className="form-grid-2"
@@ -5482,54 +5530,6 @@ export default function AdminPage() {
                                         placeholder="Notes about this price..."
                                       />
                                     </div>
-                                    {/* Vaccines Included — only show for vaccine package services */}
-                                    {(() => {
-                                      const svc = services.find(
-                                        (s) =>
-                                          s.id === parseInt(p.service_id) ||
-                                          s.id === p.service_id,
-                                      );
-                                      return (
-                                        svc?.name
-                                          ?.toLowerCase()
-                                          .includes("package") &&
-                                        svc?.category === "Vaccine"
-                                      );
-                                    })() && (
-                                      <div style={{ marginBottom: "14px" }}>
-                                        <label
-                                          className="field-label"
-                                          style={{
-                                            display: "block",
-                                            marginBottom: "6px",
-                                          }}
-                                        >
-                                          Vaccines Included
-                                        </label>
-                                        <input
-                                          className="adm-input"
-                                          value={p.vaccines_included || ""}
-                                          onChange={(e) =>
-                                            updateCallPrice(
-                                              i,
-                                              "vaccines_included",
-                                              e.target.value,
-                                            )
-                                          }
-                                          placeholder="e.g. Rabies, DHPP, Bordetella..."
-                                        />
-                                        <p
-                                          style={{
-                                            margin: "4px 0 0 0",
-                                            fontSize: "11px",
-                                            color: "#aaa",
-                                          }}
-                                        >
-                                          This will display publicly on the vet
-                                          profile
-                                        </p>
-                                      </div>
-                                    )}
                                     {/* Row 4: Clear + Remove buttons — right aligned */}
                                     <div
                                       style={{
