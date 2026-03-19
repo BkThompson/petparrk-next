@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
-import Navbar from "../../components/Navbar";
 
 export default function AccountPage() {
   const router = useRouter();

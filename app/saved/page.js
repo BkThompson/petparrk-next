@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
-import Navbar from "../../components/Navbar";
 
 function formatPrice(low, high, type) {
   if (!low) return null;
@@ -199,24 +198,24 @@ export default function SavedPage() {
         {savedVets.map((vet) => {
           const vetPrices = prices[vet.id] || [];
           const exam = vetPrices.find(
-            (p) => p.services?.name === "Doctor Exam" && p.price_low
+            (p) => p.services?.name === "Doctor Exam" && p.price_low,
           );
           const dental = vetPrices.find(
-            (p) => p.services?.name === "Dental Cleaning" && p.price_low
+            (p) => p.services?.name === "Dental Cleaning" && p.price_low,
           );
           const spay = vetPrices.find(
-            (p) => p.services?.name === "Spay (~40lb dog)" && p.price_low
+            (p) => p.services?.name === "Spay (~40lb dog)" && p.price_low,
           );
           const neuter = vetPrices.find(
-            (p) => p.services?.name === "Neuter (~40lb dog)" && p.price_low
+            (p) => p.services?.name === "Neuter (~40lb dog)" && p.price_low,
           );
           const lastUpdated = vet.last_verified
             ? new Date(vet.last_verified + "T12:00:00")
             : vetPrices.length > 0
-            ? new Date(
-                Math.max(...vetPrices.map((p) => new Date(p.created_at)))
-              )
-            : null;
+              ? new Date(
+                  Math.max(...vetPrices.map((p) => new Date(p.created_at))),
+                )
+              : null;
           const isRemoving = removingIds.has(vet.id);
 
           return (
@@ -294,7 +293,7 @@ export default function SavedPage() {
                         {formatPrice(
                           exam.price_low,
                           exam.price_high,
-                          exam.price_type
+                          exam.price_type,
                         )}
                       </span>
                     </div>
@@ -313,7 +312,7 @@ export default function SavedPage() {
                         {formatPrice(
                           dental.price_low,
                           dental.price_high,
-                          dental.price_type
+                          dental.price_type,
                         )}
                       </span>
                     </div>
@@ -332,7 +331,7 @@ export default function SavedPage() {
                         {formatPrice(
                           spay.price_low,
                           spay.price_high,
-                          spay.price_type
+                          spay.price_type,
                         )}
                       </span>
                     </div>
@@ -351,7 +350,7 @@ export default function SavedPage() {
                         {formatPrice(
                           neuter.price_low,
                           neuter.price_high,
-                          neuter.price_type
+                          neuter.price_type,
                         )}
                       </span>
                     </div>
