@@ -32,36 +32,34 @@ function PawMark({ size = 28 }) {
 
 // ── Nav Links config ────────────────────────────────────────────
 const NAV_LINKS = [
-  { href: "/", label: "Find a Vet" },
+  { href: "/",               label: "Find a Vet" },
   { href: "/symptom-checker", label: "Symptom Checker" },
-  { href: "/how-it-works", label: "How It Works" },
+  { href: "/how-it-works",   label: "How It Works" },
 ];
 
 const DROPDOWN_LINKS = [
-  { href: "/", label: "Find a Vet", icon: "🏠" },
-  { href: "/symptom-checker", label: "Symptom Checker", icon: "🩺" },
-  { href: "/profile", label: "My Profile", icon: "👤" },
-  { href: "/saved", label: "Saved Vets", icon: "❤️" },
-  { href: "/account", label: "Account Settings", icon: "⚙️" },
+  { href: "/",                label: "Find a Vet",        icon: "🏠" },
+  { href: "/symptom-checker", label: "Symptom Checker",   icon: "🩺" },
+  { href: "/profile",         label: "My Profile",        icon: "👤" },
+  { href: "/saved",           label: "Saved Vets",        icon: "❤️" },
+  { href: "/account",         label: "Account Settings",  icon: "⚙️" },
 ];
 
 export default function NavbarNew() {
-  const router = useRouter();
+  const router   = useRouter();
   const pathname = usePathname();
-  const [session, setSession] = useState(undefined);
+  const [session,          setSession]          = useState(undefined);
   const [profileAvatarUrl, setProfileAvatarUrl] = useState(null);
-  const [avatarError, setAvatarError] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [avatarError,      setAvatarError]      = useState(false);
+  const [showDropdown,     setShowDropdown]     = useState(false);
+  const [mobileOpen,       setMobileOpen]       = useState(false);
+  const [scrolled,         setScrolled]         = useState(false);
   const dropdownRef = useRef(null);
 
   // ── Auth ──────────────────────────────────────────────────────
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => subscription.unsubscribe();
   }, []);
 
@@ -72,9 +70,7 @@ export default function NavbarNew() {
       .select("avatar_url")
       .eq("id", session.user.id)
       .single()
-      .then(({ data }) => {
-        if (data?.avatar_url) setProfileAvatarUrl(data.avatar_url);
-      });
+      .then(({ data }) => { if (data?.avatar_url) setProfileAvatarUrl(data.avatar_url); });
   }, [session]);
 
   // ── Scroll shadow ─────────────────────────────────────────────
@@ -97,15 +93,11 @@ export default function NavbarNew() {
   // ── Lock body scroll when mobile menu open ────────────────────
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
 
   // ── Close mobile menu on route change ────────────────────────
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   async function handleSignOut() {
     setShowDropdown(false);
@@ -114,10 +106,7 @@ export default function NavbarNew() {
     router.push("/auth");
   }
 
-  const avatarUrl =
-    (!avatarError &&
-      (profileAvatarUrl || session?.user?.user_metadata?.avatar_url)) ||
-    null;
+  const avatarUrl = (!avatarError && (profileAvatarUrl || session?.user?.user_metadata?.avatar_url)) || null;
   const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
 
   return (
@@ -471,6 +460,7 @@ export default function NavbarNew() {
       {/* ── Navbar ─────────────────────────────────────────────── */}
       <nav className={`pp-nav${scrolled ? " scrolled" : ""}`}>
         <div className="pp-nav-inner">
+
           {/* Logo */}
           <Link href="/" className="pp-logo">
             <PawMark size={28} />
@@ -507,11 +497,7 @@ export default function NavbarNew() {
                       src={avatarUrl}
                       alt="avatar"
                       onError={() => setAvatarError(true)}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   ) : (
                     avatarLetter
@@ -570,11 +556,7 @@ export default function NavbarNew() {
 
       {/* ── Mobile full-screen overlay ──────────────────────────── */}
       {mobileOpen && (
-        <div
-          className="pp-mobile-overlay"
-          role="dialog"
-          aria-label="Navigation menu"
-        >
+        <div className="pp-mobile-overlay" role="dialog" aria-label="Navigation menu">
           <div className="pp-mobile-links">
             {NAV_LINKS.map(({ href, label }) => (
               <Link
@@ -605,9 +587,7 @@ export default function NavbarNew() {
               <>
                 <div className="pp-mobile-user">
                   Signed in as
-                  <div className="pp-mobile-user-email">
-                    {session.user.email}
-                  </div>
+                  <div className="pp-mobile-user-email">{session.user.email}</div>
                 </div>
                 <button className="pp-mobile-signout" onClick={handleSignOut}>
                   Sign Out
