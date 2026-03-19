@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Urbanist } from "next/font/google";
 import ToastProvider from "../components/ToastProvider";
+import NavbarWrapper from "../components/NavbarWrapper";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -52,6 +53,7 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body style={{ fontFamily: "var(--font-urbanist, var(--font))" }}>
+        <NavbarWrapper />
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
