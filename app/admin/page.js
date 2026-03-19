@@ -5137,72 +5137,118 @@ export default function AdminPage() {
                                     className="row-edit-bg"
                                     style={{ marginBottom: "20px" }}
                                   >
-                                    {/* Row 1: Service + Price Type + Low + High */}
-                                    <div
-                                      className="form-grid-4"
-                                      style={{ marginBottom: "14px" }}
-                                    >
-                                      <div>
-                                        <label className="field-label">
-                                          Service
-                                        </label>
-                                        <select
-                                          className="adm-input"
-                                          style={
-                                            callSpeciesError && !p.service_id
-                                              ? {
-                                                  borderColor: "#c62828",
-                                                  borderWidth: "2px",
-                                                }
-                                              : {}
-                                          }
-                                          value={p.service_id}
-                                          onChange={(e) => {
-                                            setCallSpeciesError(false);
-                                            updateCallPrice(
-                                              i,
-                                              "service_id",
-                                              e.target.value,
-                                            );
+                                    {/* Service — full width own row */}
+                                    <div style={{ marginBottom: "10px" }}>
+                                      <label className="field-label">
+                                        Service
+                                      </label>
+                                      <select
+                                        className="adm-input"
+                                        style={
+                                          callSpeciesError && !p.service_id
+                                            ? {
+                                                borderColor: "#c62828",
+                                                borderWidth: "2px",
+                                              }
+                                            : {}
+                                        }
+                                        value={p.service_id}
+                                        onChange={(e) => {
+                                          setCallSpeciesError(false);
+                                          updateCallPrice(
+                                            i,
+                                            "service_id",
+                                            e.target.value,
+                                          );
+                                        }}
+                                      >
+                                        <option value="">— Select —</option>
+                                        {(() => {
+                                          const grouped = {};
+                                          services.forEach((s) => {
+                                            const cat = s.category || "Other";
+                                            if (!grouped[cat])
+                                              grouped[cat] = [];
+                                            grouped[cat].push(s);
+                                          });
+                                          const catOrder = [
+                                            "Exam",
+                                            "Vaccine",
+                                            "Dental",
+                                            "Surgery",
+                                            "Other",
+                                          ];
+                                          const sorted = [
+                                            ...new Set([
+                                              ...catOrder,
+                                              ...Object.keys(grouped),
+                                            ]),
+                                          ].filter((c) => grouped[c]);
+                                          return sorted.map((cat) => (
+                                            <optgroup key={cat} label={cat}>
+                                              {grouped[cat].map((s) => (
+                                                <option key={s.id} value={s.id}>
+                                                  {s.name}
+                                                </option>
+                                              ))}
+                                            </optgroup>
+                                          ));
+                                        })()}
+                                      </select>
+                                    </div>
+                                    {/* Vaccines Included — full width, directly under Service on both desktop and mobile */}
+                                    {(() => {
+                                      const svc = services.find(
+                                        (s) =>
+                                          s.id === parseInt(p.service_id) ||
+                                          s.id === p.service_id,
+                                      );
+                                      return (
+                                        svc?.name
+                                          ?.toLowerCase()
+                                          .includes("package") &&
+                                        svc?.category === "Vaccine"
+                                      );
+                                    })() && (
+                                      <div style={{ marginBottom: "10px" }}>
+                                        <label
+                                          className="field-label"
+                                          style={{
+                                            display: "block",
+                                            marginBottom: "6px",
                                           }}
                                         >
-                                          <option value="">— Select —</option>
-                                          {(() => {
-                                            const grouped = {};
-                                            services.forEach((s) => {
-                                              const cat = s.category || "Other";
-                                              if (!grouped[cat])
-                                                grouped[cat] = [];
-                                              grouped[cat].push(s);
-                                            });
-                                            const catOrder = [
-                                              "Exam",
-                                              "Vaccine",
-                                              "Dental",
-                                              "Surgery",
-                                              "Other",
-                                            ];
-                                            const sorted = [
-                                              ...new Set([
-                                                ...catOrder,
-                                                ...Object.keys(grouped),
-                                              ]),
-                                            ].filter((c) => grouped[c]);
-                                            return sorted.map((cat) => (
-                                              <optgroup key={cat} label={cat}>
-                                                {grouped[cat].map((s) => (
-                                                  <option
-                                                    key={s.id}
-                                                    value={s.id}
-                                                  >
-                                                    {s.name}
-                                                  </option>
-                                                ))}
-                                              </optgroup>
-                                            ));
-                                          })()}
-                                        </select>
+                                          Vaccines Included
+                                        </label>
+                                        <input
+                                          className="adm-input"
+                                          value={p.vaccines_included || ""}
+                                          onChange={(e) =>
+                                            updateCallPrice(
+                                              i,
+                                              "vaccines_included",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="e.g. Rabies, DHPP, Bordetella..."
+                                        />
+                                        <p
+                                          style={{
+                                            margin: "4px 0 0 0",
+                                            fontSize: "11px",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          This will display publicly on the vet
+                                          profile
+                                        </p>
                                       </div>
+                                    )}
+                                    {/* Row 1: Price Type + Low + High */}
+                                    <div
+                                      className="form-grid-3"
+                                      style={{ marginBottom: "14px" }}
+                                    >
                                       <div>
                                         <label className="field-label">
                                           Price Type
@@ -5271,54 +5317,6 @@ export default function AdminPage() {
                                         />
                                       </div>
                                     </div>
-                                    {/* Vaccines Included — appears directly under service row for vaccine packages */}
-                                    {(() => {
-                                      const svc = services.find(
-                                        (s) =>
-                                          s.id === parseInt(p.service_id) ||
-                                          s.id === p.service_id,
-                                      );
-                                      return (
-                                        svc?.name
-                                          ?.toLowerCase()
-                                          .includes("package") &&
-                                        svc?.category === "Vaccine"
-                                      );
-                                    })() && (
-                                      <div style={{ marginBottom: "14px" }}>
-                                        <label
-                                          className="field-label"
-                                          style={{
-                                            display: "block",
-                                            marginBottom: "6px",
-                                          }}
-                                        >
-                                          Vaccines Included
-                                        </label>
-                                        <input
-                                          className="adm-input"
-                                          value={p.vaccines_included || ""}
-                                          onChange={(e) =>
-                                            updateCallPrice(
-                                              i,
-                                              "vaccines_included",
-                                              e.target.value,
-                                            )
-                                          }
-                                          placeholder="e.g. Rabies, DHPP, Bordetella..."
-                                        />
-                                        <p
-                                          style={{
-                                            margin: "4px 0 0 0",
-                                            fontSize: "11px",
-                                            color: "#aaa",
-                                          }}
-                                        >
-                                          This will display publicly on the vet
-                                          profile
-                                        </p>
-                                      </div>
-                                    )}
                                     {/* Row 1b: Species + Includes side by side */}
                                     <div
                                       className="form-grid-2"
