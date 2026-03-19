@@ -75,10 +75,10 @@
   --shadow-focus: 0 0 0 3px rgba(207, 92, 54, 0.25);
 
   /* Layout */
-  --max-content: 1200px;
+  --max-content: 1280px;
   --max-text: 720px;
   --max-narrow: 480px;
-  --container-padding: 20px;
+  --container-padding: 24px;
 
   /* Transitions */
   --transition-fast: 0.15s ease;
@@ -712,5 +712,31 @@ select {
 @media (min-width: 769px) {
   .hide-desktop {
     display: none !important;
+  }
+}
+
+/* ── Page Container ──────────────────────────────
+   Use this on every page instead of hardcoded
+   maxWidth. Replaces the old 800px containers.    */
+.page-container {
+  width: 100%;
+  max-width: var(--max-content);
+  margin: 0 auto;
+  padding: 32px var(--container-padding) 80px;
+  box-sizing: border-box;
+}
+
+.page-container-narrow {
+  width: 100%;
+  max-width: var(--max-text);
+  margin: 0 auto;
+  padding: 32px var(--container-padding) 80px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .page-container,
+  .page-container-narrow {
+    padding-top: 48px;
   }
 }
