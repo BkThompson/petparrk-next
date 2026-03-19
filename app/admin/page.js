@@ -140,6 +140,7 @@ export default function AdminPage() {
   const [callSaving, setCallSaving] = useState(false);
   const [lockedVetId, setLockedVetId] = useState(null);
   const [lockedVetName, setLockedVetName] = useState("");
+  const [unsavedModal, setUnsavedModal] = useState(null); // { action: fn, message: str }
   const [callSpeciesError, setCallSpeciesError] = useState(false);
   const [pendingVetSearch, setPendingVetSearch] = useState("");
   const [callSheetSearch, setCallSheetSearch] = useState("");
@@ -675,6 +676,7 @@ export default function AdminPage() {
         species: "",
         call_for_quote: false,
         notes: "",
+        vaccines_included: "",
       },
     ]);
   }
@@ -2996,11 +2998,36 @@ export default function AdminPage() {
                               }}
                             >
                               <option value="">— Select —</option>
-                              {services.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                  {s.name}
-                                </option>
-                              ))}
+                              {(() => {
+                                const grouped = {};
+                                services.forEach((s) => {
+                                  const cat = s.category || "Other";
+                                  if (!grouped[cat]) grouped[cat] = [];
+                                  grouped[cat].push(s);
+                                });
+                                const catOrder = [
+                                  "Exam",
+                                  "Vaccine",
+                                  "Dental",
+                                  "Surgery",
+                                  "Other",
+                                ];
+                                const sorted = [
+                                  ...new Set([
+                                    ...catOrder,
+                                    ...Object.keys(grouped),
+                                  ]),
+                                ].filter((c) => grouped[c]);
+                                return sorted.map((cat) => (
+                                  <optgroup key={cat} label={cat}>
+                                    {grouped[cat].map((s) => (
+                                      <option key={s.id} value={s.id}>
+                                        {s.name}
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                ));
+                              })()}
                             </select>
                           </div>
                           <div>
@@ -3526,11 +3553,36 @@ export default function AdminPage() {
                                         })
                                       }
                                     >
-                                      {services.map((s) => (
-                                        <option key={s.id} value={s.id}>
-                                          {s.name}
-                                        </option>
-                                      ))}
+                                      {(() => {
+                                        const grouped = {};
+                                        services.forEach((s) => {
+                                          const cat = s.category || "Other";
+                                          if (!grouped[cat]) grouped[cat] = [];
+                                          grouped[cat].push(s);
+                                        });
+                                        const catOrder = [
+                                          "Exam",
+                                          "Vaccine",
+                                          "Dental",
+                                          "Surgery",
+                                          "Other",
+                                        ];
+                                        const sorted = [
+                                          ...new Set([
+                                            ...catOrder,
+                                            ...Object.keys(grouped),
+                                          ]),
+                                        ].filter((c) => grouped[c]);
+                                        return sorted.map((cat) => (
+                                          <optgroup key={cat} label={cat}>
+                                            {grouped[cat].map((s) => (
+                                              <option key={s.id} value={s.id}>
+                                                {s.name}
+                                              </option>
+                                            ))}
+                                          </optgroup>
+                                        ));
+                                      })()}
                                     </select>
                                   </div>
                                   <div>
@@ -4155,13 +4207,24 @@ export default function AdminPage() {
                                 <button
                                   className="adm-btn adm-btn-gray"
                                   onClick={() => {
-                                    if (
-                                      callPrices.length > 0 &&
-                                      !window.confirm(
-                                        "You have unsaved prices. Refresh anyway?",
-                                      )
-                                    )
+                                    if (callPrices.length > 0) {
+                                      setUnsavedModal({
+                                        message:
+                                          "You have unsaved prices. Refresh anyway?",
+                                        action: () => {
+                                          fetchCallQueue();
+                                          setCallIndex(0);
+                                          setCallPrices([]);
+                                          setCallReviewPrices([]);
+                                          setCallReviewVetId(null);
+                                          setCallSaved(false);
+                                          setCallReviewEditing(null);
+                                          setLockedVetId(null);
+                                          setLockedVetName("");
+                                        },
+                                      });
                                       return;
+                                    }
                                     fetchCallQueue();
                                     setCallIndex(0);
                                     setCallPrices([]);
@@ -4178,13 +4241,21 @@ export default function AdminPage() {
                                 <button
                                   className="adm-btn adm-btn-gray"
                                   onClick={() => {
-                                    if (
-                                      callPrices.length > 0 &&
-                                      !window.confirm(
-                                        "You have unsaved prices. Go back anyway?",
-                                      )
-                                    )
+                                    if (callPrices.length > 0) {
+                                      setUnsavedModal({
+                                        message:
+                                          "You have unsaved prices. Go back anyway?",
+                                        action: () => {
+                                          setCallIndex((i) =>
+                                            Math.max(0, i - 1),
+                                          );
+                                          setCallPrices([]);
+                                          setLockedVetId(null);
+                                          setLockedVetName("");
+                                        },
+                                      });
                                       return;
+                                    }
                                     setCallIndex((i) => Math.max(0, i - 1));
                                     setCallPrices([]);
                                     setLockedVetId(null);
@@ -4197,13 +4268,19 @@ export default function AdminPage() {
                                 <button
                                   className="adm-btn adm-btn-gray"
                                   onClick={() => {
-                                    if (
-                                      callPrices.length > 0 &&
-                                      !window.confirm(
-                                        "You have unsaved prices. Skip anyway?",
-                                      )
-                                    )
+                                    if (callPrices.length > 0) {
+                                      setUnsavedModal({
+                                        message:
+                                          "You have unsaved prices. Skip this vet anyway?",
+                                        action: () => {
+                                          setCallIndex((i) => i + 1);
+                                          setCallPrices([]);
+                                          setLockedVetId(null);
+                                          setLockedVetName("");
+                                        },
+                                      });
                                       return;
+                                    }
                                     setCallIndex((i) => i + 1);
                                     setCallPrices([]);
                                     setLockedVetId(null);
@@ -4271,13 +4348,20 @@ export default function AdminPage() {
                                             borderBottom: "1px solid #f5f5f5",
                                           }}
                                           onMouseDown={() => {
-                                            if (
-                                              callPrices.length > 0 &&
-                                              !window.confirm(
-                                                "You have unsaved prices. Jump to another vet anyway?",
-                                              )
-                                            )
+                                            if (callPrices.length > 0) {
+                                              setUnsavedModal({
+                                                message:
+                                                  "You have unsaved prices. Jump to another vet anyway?",
+                                                action: () => {
+                                                  setCallIndex(realIdx);
+                                                  setCallPrices([]);
+                                                  setLockedVetId(null);
+                                                  setLockedVetName("");
+                                                  setCallSheetSearch("");
+                                                },
+                                              });
                                               return;
+                                            }
                                             setCallIndex(realIdx);
                                             setCallPrices([]);
                                             setLockedVetId(null);
@@ -4592,9 +4676,12 @@ export default function AdminPage() {
                                         ? "yes"
                                         : vet.accepting_new_patients === false
                                           ? "no"
-                                          : "unknown"
+                                          : vet.accepting_new_patients === null
+                                            ? "unknown"
+                                            : ""
                                     }
                                     onChange={async (e) => {
+                                      if (e.target.value === "") return;
                                       const val =
                                         e.target.value === "yes"
                                           ? true
@@ -4631,6 +4718,7 @@ export default function AdminPage() {
                                       );
                                     }}
                                   >
+                                    <option value="">— Select —</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                     <option value="unknown">Unknown</option>
@@ -4647,9 +4735,12 @@ export default function AdminPage() {
                                         ? "yes"
                                         : vet.carecredit === false
                                           ? "no"
-                                          : "unknown"
+                                          : vet.carecredit === null
+                                            ? "unknown"
+                                            : ""
                                     }
                                     onChange={async (e) => {
+                                      if (e.target.value === "") return;
                                       const val =
                                         e.target.value === "yes"
                                           ? true
@@ -4680,6 +4771,7 @@ export default function AdminPage() {
                                       );
                                     }}
                                   >
+                                    <option value="">— Select —</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                     <option value="unknown">Unknown</option>
@@ -5068,11 +5160,40 @@ export default function AdminPage() {
                                           }}
                                         >
                                           <option value="">— Select —</option>
-                                          {services.map((s) => (
-                                            <option key={s.id} value={s.id}>
-                                              {s.name}
-                                            </option>
-                                          ))}
+                                          {(() => {
+                                            const grouped = {};
+                                            services.forEach((s) => {
+                                              const cat = s.category || "Other";
+                                              if (!grouped[cat])
+                                                grouped[cat] = [];
+                                              grouped[cat].push(s);
+                                            });
+                                            const catOrder = [
+                                              "Exam",
+                                              "Vaccine",
+                                              "Dental",
+                                              "Surgery",
+                                              "Other",
+                                            ];
+                                            const sorted = [
+                                              ...new Set([
+                                                ...catOrder,
+                                                ...Object.keys(grouped),
+                                              ]),
+                                            ].filter((c) => grouped[c]);
+                                            return sorted.map((cat) => (
+                                              <optgroup key={cat} label={cat}>
+                                                {grouped[cat].map((s) => (
+                                                  <option
+                                                    key={s.id}
+                                                    value={s.id}
+                                                  >
+                                                    {s.name}
+                                                  </option>
+                                                ))}
+                                              </optgroup>
+                                            ));
+                                          })()}
                                         </select>
                                       </div>
                                       <div>
@@ -5354,6 +5475,54 @@ export default function AdminPage() {
                                         placeholder="Notes about this price..."
                                       />
                                     </div>
+                                    {/* Vaccines Included — only show for vaccine package services */}
+                                    {(() => {
+                                      const svc = services.find(
+                                        (s) =>
+                                          s.id === parseInt(p.service_id) ||
+                                          s.id === p.service_id,
+                                      );
+                                      return (
+                                        svc?.name
+                                          ?.toLowerCase()
+                                          .includes("package") &&
+                                        svc?.category === "Vaccine"
+                                      );
+                                    })() && (
+                                      <div style={{ marginBottom: "14px" }}>
+                                        <label
+                                          className="field-label"
+                                          style={{
+                                            display: "block",
+                                            marginBottom: "6px",
+                                          }}
+                                        >
+                                          Vaccines Included
+                                        </label>
+                                        <input
+                                          className="adm-input"
+                                          value={p.vaccines_included || ""}
+                                          onChange={(e) =>
+                                            updateCallPrice(
+                                              i,
+                                              "vaccines_included",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="e.g. Rabies, DHPP, Bordetella..."
+                                        />
+                                        <p
+                                          style={{
+                                            margin: "4px 0 0 0",
+                                            fontSize: "11px",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          This will display publicly on the vet
+                                          profile
+                                        </p>
+                                      </div>
+                                    )}
                                     {/* Row 4: Clear + Remove buttons — right aligned */}
                                     <div
                                       style={{
@@ -5745,14 +5914,44 @@ export default function AdminPage() {
                                                 <option value="">
                                                   — Select —
                                                 </option>
-                                                {services.map((s) => (
-                                                  <option
-                                                    key={s.id}
-                                                    value={s.id}
-                                                  >
-                                                    {s.name}
-                                                  </option>
-                                                ))}
+                                                {(() => {
+                                                  const grouped = {};
+                                                  services.forEach((s) => {
+                                                    const cat =
+                                                      s.category || "Other";
+                                                    if (!grouped[cat])
+                                                      grouped[cat] = [];
+                                                    grouped[cat].push(s);
+                                                  });
+                                                  const catOrder = [
+                                                    "Exam",
+                                                    "Vaccine",
+                                                    "Dental",
+                                                    "Surgery",
+                                                    "Other",
+                                                  ];
+                                                  const sorted = [
+                                                    ...new Set([
+                                                      ...catOrder,
+                                                      ...Object.keys(grouped),
+                                                    ]),
+                                                  ].filter((c) => grouped[c]);
+                                                  return sorted.map((cat) => (
+                                                    <optgroup
+                                                      key={cat}
+                                                      label={cat}
+                                                    >
+                                                      {grouped[cat].map((s) => (
+                                                        <option
+                                                          key={s.id}
+                                                          value={s.id}
+                                                        >
+                                                          {s.name}
+                                                        </option>
+                                                      ))}
+                                                    </optgroup>
+                                                  ));
+                                                })()}
                                               </select>
                                             </div>
                                             <div>
@@ -7070,6 +7269,75 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+      {/* ── Unsaved Prices Modal ── */}
+      {unsavedModal && (
+        <>
+          <div
+            onClick={() => setUnsavedModal(null)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.4)",
+              zIndex: 600,
+            }}
+          />
+          <div
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%,-50%)",
+              zIndex: 700,
+              background: "#fff",
+              borderRadius: "12px",
+              padding: "24px",
+              width: "min(380px, 90vw)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+              fontFamily: "system-ui, sans-serif",
+            }}
+          >
+            <p
+              style={{
+                margin: "0 0 6px 0",
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#111",
+              }}
+            >
+              Unsaved Prices
+            </p>
+            <p
+              style={{ margin: "0 0 20px 0", fontSize: "14px", color: "#555" }}
+            >
+              {unsavedModal.message}
+            </p>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+              }}
+            >
+              <button
+                className="adm-btn adm-btn-gray"
+                onClick={() => setUnsavedModal(null)}
+              >
+                Cancel — Keep Editing
+              </button>
+              <button
+                className="adm-btn adm-btn-red"
+                onClick={() => {
+                  unsavedModal.action();
+                  setUnsavedModal(null);
+                }}
+              >
+                Discard & Continue
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* ── Global Floating Notes Button + Panel — visible on all tabs ── */}
       {/* Panel — slides from right on desktop, up from bottom on mobile */}
       {/* Panel — slides from right on desktop, up from bottom on mobile */}
