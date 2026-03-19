@@ -1691,30 +1691,39 @@ export default function AdminPage() {
                 key={t}
                 className={`tab-btn${tab === t ? " active" : ""}`}
                 onClick={() => {
-                  setTab(t);
-                  // Close all open edit states on every tab switch
-                  setEditingVet(null);
-                  setEditingPendingVet(null);
-                  setEditingPrice(null);
-                  setShowAddPrice(false);
-                  setCallReviewEditing(null);
-                  // Team tab
-                  setShowInviteForm(false);
-                  setInviteError("");
-                  setTeamEditingId(null);
-                  setTeamEditName("");
-                  // Call sheet
-                  setShowCallbackNotes(false);
-                  setCallbackNoteText("");
-                  // Tab-specific fetches
-                  if (t === "Prices" && selectedVetId) {
-                    setPricesLoading(true);
-                    fetchPricesForVet(selectedVetId);
+                  const doSwitch = () => {
+                    setTab(t);
+                    setEditingVet(null);
+                    setEditingPendingVet(null);
+                    setEditingPrice(null);
+                    setShowAddPrice(false);
+                    setCallReviewEditing(null);
+                    setShowInviteForm(false);
+                    setInviteError("");
+                    setTeamEditingId(null);
+                    setTeamEditName("");
+                    setShowCallbackNotes(false);
+                    setCallbackNoteText("");
+                    setCallPrices([]);
+                    setLockedVetId(null);
+                    setLockedVetName("");
+                    if (t === "Prices" && selectedVetId) {
+                      setPricesLoading(true);
+                      fetchPricesForVet(selectedVetId);
+                    }
+                    fetchAllCallNotes();
+                    if (t === "Call Sheet" && callReviewVetId)
+                      fetchReviewPrices(callReviewVetId);
+                    if (t === "Team") fetchAdminUsers();
+                  };
+                  if (callPrices.length > 0 && t !== tab) {
+                    setUnsavedModal({
+                      message: "You have unsaved prices. Switch tabs anyway?",
+                      action: doSwitch,
+                    });
+                  } else {
+                    doSwitch();
                   }
-                  fetchAllCallNotes();
-                  if (t === "Call Sheet" && callReviewVetId)
-                    fetchReviewPrices(callReviewVetId);
-                  if (t === "Team") fetchAdminUsers();
                 }}
               >
                 {t}
@@ -4681,13 +4690,47 @@ export default function AdminPage() {
                                             : ""
                                     }
                                     onChange={async (e) => {
-                                      if (e.target.value === "") return;
                                       const val =
                                         e.target.value === "yes"
                                           ? true
                                           : e.target.value === "no"
                                             ? false
-                                            : null;
+                                            : e.target.value === "unknown"
+                                              ? null
+                                              : undefined;
+                                      if (val === undefined) {
+                                        const table =
+                                          vet._source === "pending"
+                                            ? "pending_vets"
+                                            : "vets";
+                                        await supabase
+                                          .from(table)
+                                          .update({
+                                            accepting_new_patients: null,
+                                          })
+                                          .eq("id", vet.id);
+                                        setCallQueue((prev) =>
+                                          prev.map((v, i) =>
+                                            i === callIndex
+                                              ? {
+                                                  ...v,
+                                                  accepting_new_patients: null,
+                                                }
+                                              : v,
+                                          ),
+                                        );
+                                        setFullCallQueue((prev) =>
+                                          prev.map((v, i) =>
+                                            i === callIndex
+                                              ? {
+                                                  ...v,
+                                                  accepting_new_patients: null,
+                                                }
+                                              : v,
+                                          ),
+                                        );
+                                        return;
+                                      }
                                       const table =
                                         vet._source === "pending"
                                           ? "pending_vets"
@@ -4740,13 +4783,39 @@ export default function AdminPage() {
                                             : ""
                                     }
                                     onChange={async (e) => {
-                                      if (e.target.value === "") return;
                                       const val =
                                         e.target.value === "yes"
                                           ? true
                                           : e.target.value === "no"
                                             ? false
-                                            : null;
+                                            : e.target.value === "unknown"
+                                              ? null
+                                              : undefined;
+                                      if (val === undefined) {
+                                        const table =
+                                          vet._source === "pending"
+                                            ? "pending_vets"
+                                            : "vets";
+                                        await supabase
+                                          .from(table)
+                                          .update({ carecredit: null })
+                                          .eq("id", vet.id);
+                                        setCallQueue((prev) =>
+                                          prev.map((v, i) =>
+                                            i === callIndex
+                                              ? { ...v, carecredit: null }
+                                              : v,
+                                          ),
+                                        );
+                                        setFullCallQueue((prev) =>
+                                          prev.map((v, i) =>
+                                            i === callIndex
+                                              ? { ...v, carecredit: null }
+                                              : v,
+                                          ),
+                                        );
+                                        return;
+                                      }
                                       const table =
                                         vet._source === "pending"
                                           ? "pending_vets"
