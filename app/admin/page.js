@@ -1716,7 +1716,11 @@ export default function AdminPage() {
                       fetchReviewPrices(callReviewVetId);
                     if (t === "Team") fetchAdminUsers();
                   };
-                  if (callPrices.length > 0 && t !== tab) {
+                  if (
+                    callPrices.length > 0 &&
+                    t !== tab &&
+                    tab === "Call Sheet"
+                  ) {
                     setUnsavedModal({
                       message: "You have unsaved prices. Switch tabs anyway?",
                       action: doSwitch,
@@ -4685,66 +4689,31 @@ export default function AdminPage() {
                                         ? "yes"
                                         : vet.accepting_new_patients === false
                                           ? "no"
-                                          : vet.accepting_new_patients === null
-                                            ? "unknown"
-                                            : ""
+                                          : ""
                                     }
                                     onChange={async (e) => {
-                                      const val =
+                                      const dbVal =
                                         e.target.value === "yes"
                                           ? true
                                           : e.target.value === "no"
                                             ? false
-                                            : e.target.value === "unknown"
-                                              ? null
-                                              : undefined;
-                                      if (val === undefined) {
-                                        const table =
-                                          vet._source === "pending"
-                                            ? "pending_vets"
-                                            : "vets";
-                                        await supabase
-                                          .from(table)
-                                          .update({
-                                            accepting_new_patients: null,
-                                          })
-                                          .eq("id", vet.id);
-                                        setCallQueue((prev) =>
-                                          prev.map((v, i) =>
-                                            i === callIndex
-                                              ? {
-                                                  ...v,
-                                                  accepting_new_patients: null,
-                                                }
-                                              : v,
-                                          ),
-                                        );
-                                        setFullCallQueue((prev) =>
-                                          prev.map((v, i) =>
-                                            i === callIndex
-                                              ? {
-                                                  ...v,
-                                                  accepting_new_patients: null,
-                                                }
-                                              : v,
-                                          ),
-                                        );
-                                        return;
-                                      }
+                                            : null;
                                       const table =
                                         vet._source === "pending"
                                           ? "pending_vets"
                                           : "vets";
                                       await supabase
                                         .from(table)
-                                        .update({ accepting_new_patients: val })
+                                        .update({
+                                          accepting_new_patients: dbVal,
+                                        })
                                         .eq("id", vet.id);
                                       setCallQueue((prev) =>
                                         prev.map((v, i) =>
                                           i === callIndex
                                             ? {
                                                 ...v,
-                                                accepting_new_patients: val,
+                                                accepting_new_patients: dbVal,
                                               }
                                             : v,
                                         ),
@@ -4754,14 +4723,14 @@ export default function AdminPage() {
                                           i === callIndex
                                             ? {
                                                 ...v,
-                                                accepting_new_patients: val,
+                                                accepting_new_patients: dbVal,
                                               }
                                             : v,
                                         ),
                                       );
                                     }}
                                   >
-                                    <option value="">— Select —</option>
+                                    <option value="select">— Select —</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                     <option value="unknown">Unknown</option>
@@ -4778,69 +4747,40 @@ export default function AdminPage() {
                                         ? "yes"
                                         : vet.carecredit === false
                                           ? "no"
-                                          : vet.carecredit === null
-                                            ? "unknown"
-                                            : ""
+                                          : ""
                                     }
                                     onChange={async (e) => {
-                                      const val =
+                                      const dbVal =
                                         e.target.value === "yes"
                                           ? true
                                           : e.target.value === "no"
                                             ? false
-                                            : e.target.value === "unknown"
-                                              ? null
-                                              : undefined;
-                                      if (val === undefined) {
-                                        const table =
-                                          vet._source === "pending"
-                                            ? "pending_vets"
-                                            : "vets";
-                                        await supabase
-                                          .from(table)
-                                          .update({ carecredit: null })
-                                          .eq("id", vet.id);
-                                        setCallQueue((prev) =>
-                                          prev.map((v, i) =>
-                                            i === callIndex
-                                              ? { ...v, carecredit: null }
-                                              : v,
-                                          ),
-                                        );
-                                        setFullCallQueue((prev) =>
-                                          prev.map((v, i) =>
-                                            i === callIndex
-                                              ? { ...v, carecredit: null }
-                                              : v,
-                                          ),
-                                        );
-                                        return;
-                                      }
+                                            : null;
                                       const table =
                                         vet._source === "pending"
                                           ? "pending_vets"
                                           : "vets";
                                       await supabase
                                         .from(table)
-                                        .update({ carecredit: val })
+                                        .update({ carecredit: dbVal })
                                         .eq("id", vet.id);
                                       setCallQueue((prev) =>
                                         prev.map((v, i) =>
                                           i === callIndex
-                                            ? { ...v, carecredit: val }
+                                            ? { ...v, carecredit: dbVal }
                                             : v,
                                         ),
                                       );
                                       setFullCallQueue((prev) =>
                                         prev.map((v, i) =>
                                           i === callIndex
-                                            ? { ...v, carecredit: val }
+                                            ? { ...v, carecredit: dbVal }
                                             : v,
                                         ),
                                       );
                                     }}
                                   >
-                                    <option value="">— Select —</option>
+                                    <option value="select">— Select —</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                     <option value="unknown">Unknown</option>
