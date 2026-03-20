@@ -31,12 +31,38 @@ const PRICE_RANGES = [
   { label: "$125+", value: "over125" },
 ];
 
+const PILLARS = [
+  {
+    icon: "💰",
+    title: "Vet Pricing",
+    description:
+      "Compare real exam fees, dental costs, and more before you walk in. No surprises.",
+    cta: "Find a Vet",
+    href: "#vet-directory",
+  },
+  {
+    icon: "🩺",
+    title: "Symptom Checker",
+    description:
+      "Not sure if it's an emergency? Get instant AI triage guidance — 24/7, free.",
+    cta: "Check Symptoms",
+    href: "/symptom-checker",
+  },
+  {
+    icon: "📋",
+    title: "Pet Health Card",
+    description:
+      "Build your pet's health history over time. Records and vet visits in one place.",
+    cta: "Coming Soon",
+    href: "/profile",
+  },
+];
+
 export default function Home() {
   const router = useRouter();
   const [session, setSession] = useState(undefined);
   const [savedVetIds, setSavedVetIds] = useState(new Set());
   const [animatingId, setAnimatingId] = useState(null);
-  const [showDropdown, setShowDropdown] = useState(false);
   const [profileAvatarUrl, setProfileAvatarUrl] = useState(null);
   const [avatarError, setAvatarError] = useState(false);
   const dropdownRef = useRef(null);
@@ -59,6 +85,7 @@ export default function Home() {
     submitter_note: "",
   });
   const [formStatus, setFormStatus] = useState(null);
+  const [heroSearch, setHeroSearch] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -118,22 +145,6 @@ export default function Home() {
       });
   }, [session]);
 
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  async function handleSignOut() {
-    setShowDropdown(false);
-    await supabase.auth.signOut();
-    router.push("/auth");
-  }
-
   async function toggleSave(e, vetId) {
     e.preventDefault();
     e.stopPropagation();
@@ -161,12 +172,6 @@ export default function Home() {
       setSavedVetIds((prev) => new Set([...prev, vetId]));
     }
   }
-
-  const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
-  const avatarUrl =
-    (!avatarError &&
-      (profileAvatarUrl || session?.user?.user_metadata?.avatar_url)) ||
-    null;
 
   const neighborhoods = [
     "All",
@@ -234,6 +239,24 @@ export default function Home() {
       return aPrice - bPrice;
     });
 
+  // 3 teaser vets — cheapest exam price
+  const teaserVets = [...vets]
+    .filter((v) =>
+      prices[v.id]?.find(
+        (p) => p.services?.name === "Doctor Exam" && p.price_low,
+      ),
+    )
+    .sort((a, b) => {
+      const aP =
+        prices[a.id]?.find((p) => p.services?.name === "Doctor Exam")
+          ?.price_low ?? 999;
+      const bP =
+        prices[b.id]?.find((p) => p.services?.name === "Doctor Exam")
+          ?.price_low ?? 999;
+      return aP - bP;
+    })
+    .slice(0, 3);
+
   const handleSubmit = async () => {
     if (!formData.vet_name || !formData.service_name || !formData.price_paid) {
       setFormStatus("error");
@@ -252,8 +275,6 @@ export default function Home() {
       setFormStatus("error");
       return;
     }
-
-    // Only send notification email if user is logged in (route requires auth)
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession();
@@ -273,7 +294,6 @@ export default function Home() {
         }),
       }).catch(() => {});
     }
-
     setFormStatus("success");
     setFormData({
       vet_name: "",
@@ -284,6 +304,14 @@ export default function Home() {
     });
   };
 
+  function handleHeroSearch(e) {
+    e.preventDefault();
+    setSearch(heroSearch);
+    document
+      .getElementById("vet-directory")
+      ?.scrollIntoView({ behavior: "smooth" });
+  }
+
   return (
     <>
       <style>{`
@@ -293,711 +321,1316 @@ export default function Home() {
           70%  { transform: scale(0.85); }
           100% { transform: scale(1); }
         }
+        @keyframes fadeSlideUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
         .heart-btn { transition: transform 0.1s; border: none; background: none; cursor: pointer; padding: 0; font-size: 20px; line-height: 1; }
         .heart-btn:hover { transform: scale(1.15); }
         .heart-animating { animation: heartPop 0.4s ease forwards; }
-        .avatar-dropdown-item {
-          display: block;
-          width: 100%;
-          padding: 10px 16px;
-          text-align: left;
-          background: none;
-          border: none;
-          font-size: 13px;
-          cursor: pointer;
-          color: #333;
-          white-space: nowrap;
-          box-sizing: border-box;
-        }
-        .avatar-dropdown-item:hover { background: #f5f5f5; }
-        .avatar-dropdown-item.danger { color: #555; }
-        .avatar-dropdown-item.danger:hover { background: #f5f5f5; }
+        .anim-1 { animation: fadeSlideUp 0.5s ease forwards; }
+        .anim-2 { animation: fadeSlideUp 0.5s 0.1s ease both; }
+        .anim-3 { animation: fadeSlideUp 0.5s 0.2s ease both; }
+        .anim-4 { animation: fadeSlideUp 0.5s 0.3s ease both; }
+
+        .vet-card { border: 1px solid var(--color-border, #EDE8E0); border-radius: 16px; padding: 20px; background: #fff; transition: box-shadow 0.2s ease, transform 0.2s ease; box-shadow: 0 2px 8px rgba(23,37,49,0.06); }
+        .vet-card:hover { box-shadow: 0 8px 32px rgba(23,37,49,0.12); transform: translateY(-2px); }
+
+        .pillar-card { background: #fff; border: 1px solid var(--color-border, #EDE8E0); border-radius: 20px; padding: 28px 24px; transition: box-shadow 0.2s ease, transform 0.2s ease; box-shadow: 0 2px 8px rgba(23,37,49,0.05); }
+        .pillar-card:hover { box-shadow: 0 8px 24px rgba(23,37,49,0.10); transform: translateY(-2px); }
+
+        .filter-pill { padding: 7px 14px; border-radius: 20px; border: 1px solid #EDE8E0; background: #fff; color: var(--color-ink, #1A1A1A); cursor: pointer; font-size: 13px; font-weight: 500; font-family: var(--font, 'Urbanist', sans-serif); transition: all 0.15s ease; white-space: nowrap; }
+        .filter-pill:hover { border-color: var(--color-navy-dark, #172531); }
+        .filter-pill.active { background: var(--color-navy-dark, #172531); color: #fff; border-color: var(--color-navy-dark, #172531); }
+
+        .pp-select { padding: 8px 14px; border-radius: 10px; border: 1px solid #EDE8E0; font-size: 14px; font-family: var(--font, 'Urbanist', sans-serif); background: #fff; color: var(--color-ink, #1A1A1A); outline: none; cursor: pointer; }
+        .pp-select:focus { border-color: var(--color-terracotta, #CF5C36); }
+
+        .hero-search { width: 100%; padding: 16px 20px; border-radius: 12px; border: 2px solid transparent; font-size: 16px; font-family: var(--font, 'Urbanist', sans-serif); background: #fff; color: var(--color-ink, #1A1A1A); outline: none; box-shadow: 0 4px 24px rgba(23,37,49,0.12); transition: border-color 0.15s; box-sizing: border-box; }
+        .hero-search:focus { border-color: var(--color-terracotta, #CF5C36); }
+        .hero-search::placeholder { color: #9CA3AF; }
+
+        .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .badge-navy { background: #EBF0F5; color: #2C4657; }
+        .badge-success { background: #EDFAF3; color: #1A6641; }
+        .badge-error { background: #FCEAEA; color: #C94040; }
+        .badge-terra { background: #FEF3EB; color: #8B3A1E; }
+
+        .price-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--color-cream, #F5F0E8); border-radius: 8px; padding: 5px 10px; font-size: 13px; }
+        .price-chip-label { color: var(--color-muted, #9CA3AF); }
+        .price-chip-value { font-weight: 700; color: var(--color-terracotta, #CF5C36); }
+
+        .section-divider { border: none; border-top: 1px solid var(--color-border, #EDE8E0); margin: 0; }
+
+        .submit-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #EDE8E0; font-size: 14px; font-family: var(--font, 'Urbanist', sans-serif); background: #fff; outline: none; box-sizing: border-box; transition: border-color 0.15s; }
+        .submit-input:focus { border-color: var(--color-terracotta, #CF5C36); }
       `}</style>
 
-      <div
+      {/* ── HERO ─────────────────────────────────────────────────── */}
+      <section
         style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          padding: "20px",
-          fontFamily: "system-ui, sans-serif",
-          minHeight: "calc(100vh - 64px)",
+          background: "var(--color-navy-mid, #2C4657)",
+          padding: "64px 20px 80px",
         }}
       >
-        {/* Search */}
-        <div style={{ marginBottom: "16px" }}>
-          <input
-            type="text"
-            placeholder="Search vets..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+        <div
+          style={{ maxWidth: "720px", margin: "0 auto", textAlign: "center" }}
+        >
+          <p
+            className="anim-1"
             style={{
-              width: "100%",
-              padding: "10px 14px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              fontSize: "15px",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-
-        {/* Neighborhood Filter */}
-        <div style={{ marginBottom: "16px" }}>
-          <label
-            style={{
-              fontWeight: "bold",
-              marginRight: "8px",
-              color: "#333",
-              fontSize: "13px",
+              fontSize: "11px",
+              fontWeight: "700",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-gold, #EFC88B)",
+              marginBottom: "16px",
             }}
           >
-            Neighborhood
-          </label>
-          <select
-            value={neighborhood}
-            onChange={(e) => setNeighborhood(e.target.value)}
+            East Bay · Oakland · Berkeley
+          </p>
+          <h1
+            className="anim-2"
             style={{
-              padding: "6px 12px",
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
+              fontSize: "clamp(32px, 6vw, 56px)",
+              fontWeight: "800",
+              color: "#fff",
+              lineHeight: "1.1",
+              marginBottom: "16px",
+              fontFamily: "var(--font, 'Urbanist', sans-serif)",
             }}
           >
-            {neighborhoods.map((n) => (
-              <option key={n}>{n}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Vet Type Filter */}
-        {vetTypes.length > 2 && (
-          <div style={{ marginBottom: "16px" }}>
-            <label
+            Know what you'll pay
+            <br />
+            before you go.
+          </h1>
+          <p
+            className="anim-3"
+            style={{
+              fontSize: "18px",
+              color: "rgba(255,255,255,0.75)",
+              lineHeight: "1.7",
+              marginBottom: "36px",
+            }}
+          >
+            Real vet prices for the East Bay. Compare costs, check symptoms, and
+            take control of your pet's health.
+          </p>
+          <form
+            className="anim-4"
+            onSubmit={handleHeroSearch}
+            style={{
+              position: "relative",
+              maxWidth: "560px",
+              margin: "0 auto",
+            }}
+          >
+            <input
+              type="text"
+              className="hero-search"
+              placeholder="Search vets by name or neighborhood..."
+              value={heroSearch}
+              onChange={(e) => setHeroSearch(e.target.value)}
+            />
+            <button
+              type="submit"
               style={{
-                fontWeight: "bold",
-                marginRight: "8px",
-                color: "#333",
-                fontSize: "13px",
-              }}
-            >
-              Type
-            </label>
-            <select
-              value={vetTypeFilter}
-              onChange={(e) => setVetTypeFilter(e.target.value)}
-              style={{
-                padding: "6px 12px",
-                borderRadius: "6px",
-                border: "1px solid #ccc",
+                position: "absolute",
+                right: "8px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "var(--color-terracotta, #CF5C36)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "10px 20px",
                 fontSize: "14px",
+                fontWeight: "700",
+                cursor: "pointer",
+                fontFamily: "var(--font, 'Urbanist', sans-serif)",
               }}
             >
-              {vetTypes.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+              Search
+            </button>
+          </form>
+        </div>
+      </section>
 
-        {/* Ownership Filter */}
-        <div style={{ marginBottom: "16px" }}>
+      {/* ── THREE PILLARS ─────────────────────────────────────────── */}
+      <section
+        style={{
+          background: "var(--color-cream, #F5F0E8)",
+          padding: "64px 20px",
+        }}
+      >
+        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "40px" }}>
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--color-terracotta, #CF5C36)",
+                marginBottom: "12px",
+              }}
+            >
+              What PetParrk does
+            </p>
+            <h2
+              style={{
+                fontSize: "clamp(24px, 4vw, 36px)",
+                fontWeight: "800",
+                color: "var(--color-navy-dark, #172531)",
+                lineHeight: "1.2",
+                fontFamily: "var(--font, 'Urbanist', sans-serif)",
+              }}
+            >
+              Your pet's daily companion
+            </h2>
+          </div>
           <div
             style={{
-              fontWeight: "bold",
-              marginBottom: "8px",
-              color: "#333",
-              fontSize: "13px",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "20px",
             }}
           >
-            Ownership
+            {PILLARS.map((pillar) => (
+              <div key={pillar.title} className="pillar-card">
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "14px",
+                    background: "var(--color-cream, #F5F0E8)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "24px",
+                    marginBottom: "16px",
+                  }}
+                >
+                  {pillar.icon}
+                </div>
+                <h3
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: "700",
+                    color: "var(--color-navy-dark, #172531)",
+                    marginBottom: "8px",
+                    fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                  }}
+                >
+                  {pillar.title}
+                </h3>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--color-slate, #4B5563)",
+                    lineHeight: "1.7",
+                    marginBottom: "20px",
+                  }}
+                >
+                  {pillar.description}
+                </p>
+                <a
+                  href={pillar.href}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    color: "var(--color-terracotta, #CF5C36)",
+                    textDecoration: "none",
+                  }}
+                >
+                  {pillar.cta} →
+                </a>
+              </div>
+            ))}
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        </div>
+      </section>
+
+      {/* ── VET TEASERS ───────────────────────────────────────────── */}
+      {!loading && teaserVets.length > 0 && (
+        <section style={{ background: "#fff", padding: "64px 20px" }}>
+          <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+                marginBottom: "32px",
+                flexWrap: "wrap",
+                gap: "12px",
+              }}
+            >
+              <div>
+                <p
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "var(--color-terracotta, #CF5C36)",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Real data, right now
+                </p>
+                <h2
+                  style={{
+                    fontSize: "clamp(22px, 3vw, 30px)",
+                    fontWeight: "800",
+                    color: "var(--color-navy-dark, #172531)",
+                    lineHeight: "1.2",
+                    fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                  }}
+                >
+                  Vets near you
+                </h2>
+              </div>
+              <a
+                href="#vet-directory"
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "700",
+                  color: "var(--color-terracotta, #CF5C36)",
+                  textDecoration: "none",
+                }}
+              >
+                See all {vets.length} vets →
+              </a>
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gap: "16px",
+              }}
+            >
+              {teaserVets.map((vet) => {
+                const vetPrices = prices[vet.id] || [];
+                const exam = vetPrices.find(
+                  (p) => p.services?.name === "Doctor Exam" && p.price_low,
+                );
+                const dental = vetPrices.find(
+                  (p) => p.services?.name === "Dental Cleaning" && p.price_low,
+                );
+                const isSaved = savedVetIds.has(vet.id);
+                const isAnimating = animatingId === vet.id;
+                return (
+                  <div key={vet.id} className="vet-card">
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <Link
+                          href={`/vet/${vet.slug}`}
+                          style={{
+                            fontSize: "16px",
+                            fontWeight: "700",
+                            color: "var(--color-navy-dark, #172531)",
+                            textDecoration: "none",
+                            fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.target.style.color =
+                              "var(--color-terracotta, #CF5C36)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.target.style.color =
+                              "var(--color-navy-dark, #172531)")
+                          }
+                        >
+                          {vet.name}
+                        </Link>
+                        <p
+                          style={{
+                            fontSize: "13px",
+                            color: "var(--color-muted, #9CA3AF)",
+                            margin: "2px 0 0",
+                          }}
+                        >
+                          {[vet.neighborhood, vet.city]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => toggleSave(e, vet.id)}
+                        className={`heart-btn${isAnimating ? " heart-animating" : ""}`}
+                        title={isSaved ? "Remove from saved" : "Save this vet"}
+                      >
+                        {isSaved ? "❤️" : "🤍"}
+                      </button>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "4px",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      {(Array.isArray(vet.vet_type)
+                        ? vet.vet_type
+                        : [vet.vet_type]
+                      )
+                        .filter(Boolean)
+                        .map((t) => (
+                          <span key={t} className="badge badge-navy">
+                            {t}
+                          </span>
+                        ))}
+                      {vet.accepting_new_patients === true && (
+                        <span className="badge badge-success">✓ Accepting</span>
+                      )}
+                      {vet.accepting_new_patients === false && (
+                        <span className="badge badge-error">
+                          ✕ Not accepting
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                        marginBottom: "14px",
+                      }}
+                    >
+                      {exam && (
+                        <span className="price-chip">
+                          <span className="price-chip-label">Exam</span>
+                          <span className="price-chip-value">
+                            {formatPrice(
+                              exam.price_low,
+                              exam.price_high,
+                              exam.price_type,
+                            )}
+                          </span>
+                        </span>
+                      )}
+                      {dental && (
+                        <span className="price-chip">
+                          <span className="price-chip-label">Dental</span>
+                          <span className="price-chip-value">
+                            {formatPrice(
+                              dental.price_low,
+                              dental.price_high,
+                              dental.price_type,
+                            )}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        borderTop: "1px solid var(--color-border, #EDE8E0)",
+                        paddingTop: "12px",
+                      }}
+                    >
+                      <Link
+                        href={`/vet/${vet.slug}`}
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: "700",
+                          color: "var(--color-terracotta, #CF5C36)",
+                          textDecoration: "none",
+                        }}
+                      >
+                        View full profile →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── TRUST STRIP ───────────────────────────────────────────── */}
+      <section
+        style={{
+          background: "var(--color-navy-dark, #172531)",
+          padding: "40px 20px",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1280px",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "32px",
+            textAlign: "center",
+          }}
+        >
+          {[
+            { value: `${vets.length}+`, label: "Verified vets" },
+            { value: "Free", label: "Always free to use" },
+            { value: "Real", label: "Prices from real visits" },
+          ].map((stat) => (
+            <div key={stat.label}>
+              <div
+                style={{
+                  fontSize: "32px",
+                  fontWeight: "800",
+                  color: "var(--color-gold, #EFC88B)",
+                  fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                  marginBottom: "4px",
+                }}
+              >
+                {stat.value}
+              </div>
+              <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.6)" }}>
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── SIGN UP CTA (logged out only) ─────────────────────────── */}
+      {session === null && (
+        <section
+          style={{
+            background: "var(--color-cream, #F5F0E8)",
+            padding: "64px 20px",
+          }}
+        >
+          <div
+            style={{ maxWidth: "560px", margin: "0 auto", textAlign: "center" }}
+          >
+            <h2
+              style={{
+                fontSize: "clamp(24px, 4vw, 32px)",
+                fontWeight: "800",
+                color: "var(--color-navy-dark, #172531)",
+                marginBottom: "12px",
+                fontFamily: "var(--font, 'Urbanist', sans-serif)",
+              }}
+            >
+              Save vets. Track your pet's health.
+            </h2>
+            <p
+              style={{
+                fontSize: "16px",
+                color: "var(--color-slate, #4B5563)",
+                lineHeight: "1.7",
+                marginBottom: "28px",
+              }}
+            >
+              Create a free account to save vets, run symptom checks, and build
+              your pet's health history.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <Link
+                href="/auth"
+                style={{
+                  padding: "14px 32px",
+                  background: "var(--color-terracotta, #CF5C36)",
+                  color: "#fff",
+                  borderRadius: "12px",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  textDecoration: "none",
+                  fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                }}
+              >
+                Create free account
+              </Link>
+              <Link
+                href="/auth"
+                style={{
+                  padding: "13px 32px",
+                  background: "transparent",
+                  color: "var(--color-navy-dark, #172531)",
+                  border: "2px solid var(--color-navy-dark, #172531)",
+                  borderRadius: "12px",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  textDecoration: "none",
+                  fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                }}
+              >
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── FULL VET DIRECTORY ────────────────────────────────────── */}
+      <section
+        id="vet-directory"
+        style={{
+          background: "var(--color-cream, #F5F0E8)",
+          padding: "64px 20px 80px",
+        }}
+      >
+        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+          {/* Directory header */}
+          <div style={{ marginBottom: "32px" }}>
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--color-terracotta, #CF5C36)",
+                marginBottom: "8px",
+              }}
+            >
+              Vet directory
+            </p>
+            <h2
+              style={{
+                fontSize: "clamp(22px, 3vw, 30px)",
+                fontWeight: "800",
+                color: "var(--color-navy-dark, #172531)",
+                fontFamily: "var(--font, 'Urbanist', sans-serif)",
+              }}
+            >
+              All vets in the East Bay
+            </h2>
+          </div>
+
+          {/* Search */}
+          <div style={{ marginBottom: "16px" }}>
+            <input
+              type="text"
+              placeholder="Search vets by name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1.5px solid var(--color-border, #EDE8E0)",
+                fontSize: "15px",
+                outline: "none",
+                boxSizing: "border-box",
+                fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                background: "#fff",
+                transition: "border-color 0.15s",
+              }}
+              onFocus={(e) =>
+                (e.target.style.borderColor =
+                  "var(--color-terracotta, #CF5C36)")
+              }
+              onBlur={(e) =>
+                (e.target.style.borderColor = "var(--color-border, #EDE8E0)")
+              }
+            />
+          </div>
+
+          {/* Filters row */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "12px",
+              alignItems: "center",
+              marginBottom: "20px",
+            }}
+          >
+            <select
+              className="pp-select"
+              value={neighborhood}
+              onChange={(e) => setNeighborhood(e.target.value)}
+            >
+              {neighborhoods.map((n) => (
+                <option key={n}>{n}</option>
+              ))}
+            </select>
+
+            {vetTypes.length > 2 && (
+              <select
+                className="pp-select"
+                value={vetTypeFilter}
+                onChange={(e) => setVetTypeFilter(e.target.value)}
+              >
+                {vetTypes.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            )}
+
             {["All", "Independent", "Corporate"].map((o) => (
               <button
                 key={o}
                 onClick={() => setOwnership(o)}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "20px",
-                  border: `1px solid ${ownership === o ? "#2d6a4f" : "#ccc"}`,
-                  background: ownership === o ? "#2d6a4f" : "#fff",
-                  color: ownership === o ? "#fff" : "#333",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                }}
+                className={`filter-pill${ownership === o ? " active" : ""}`}
               >
                 {o}
               </button>
             ))}
-          </div>
-        </div>
 
-        {/* Accepting New Patients Filter */}
-        <div style={{ marginBottom: "16px" }}>
-          <div
-            style={{
-              fontWeight: "bold",
-              marginBottom: "8px",
-              color: "#333",
-              fontSize: "13px",
-            }}
-          >
-            Accepting New Patients
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {[
               { label: "All", value: "All" },
-              { label: "✅ Accepting", value: "Yes" },
-              { label: "❌ Not accepting", value: "No" },
+              { label: "✓ Accepting", value: "Yes" },
+              { label: "✕ Not accepting", value: "No" },
             ].map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => setAcceptingFilter(opt.value)}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "20px",
-                  border: `1px solid ${acceptingFilter === opt.value ? "#2d6a4f" : "#ccc"}`,
-                  background:
-                    acceptingFilter === opt.value ? "#2d6a4f" : "#fff",
-                  color: acceptingFilter === opt.value ? "#fff" : "#333",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  whiteSpace: "nowrap",
-                }}
+                className={`filter-pill${acceptingFilter === opt.value ? " active" : ""}`}
               >
                 {opt.label}
               </button>
             ))}
-          </div>
-        </div>
 
-        {/* Exam Price Range Filter */}
-        <div style={{ marginBottom: "16px" }}>
-          <div
-            style={{
-              fontWeight: "bold",
-              marginBottom: "8px",
-              color: "#333",
-              fontSize: "13px",
-            }}
-          >
-            Exam Price
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {PRICE_RANGES.map((r) => (
               <button
                 key={r.value}
                 onClick={() => setPriceRange(r.value)}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "20px",
-                  border: `1px solid ${priceRange === r.value ? "#2d6a4f" : "#ccc"}`,
-                  background: priceRange === r.value ? "#2d6a4f" : "#fff",
-                  color: priceRange === r.value ? "#fff" : "#333",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  whiteSpace: "nowrap",
-                }}
+                className={`filter-pill${priceRange === r.value ? " active" : ""}`}
               >
                 {r.label}
               </button>
             ))}
-          </div>
-        </div>
 
-        {/* Sort */}
-        <div style={{ marginBottom: "16px" }}>
-          <div
-            style={{
-              fontWeight: "bold",
-              marginBottom: "8px",
-              color: "#333",
-              fontSize: "13px",
-            }}
-          >
-            Sort
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {[
-              ["price", "💰 Cheapest First"],
+              ["price", "💰 Cheapest"],
               ["az", "A–Z"],
             ].map(([val, label]) => (
               <button
                 key={val}
                 onClick={() => setSortBy(val)}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "20px",
-                  border: `1px solid ${sortBy === val ? "#2d6a4f" : "#ccc"}`,
-                  background: sortBy === val ? "#2d6a4f" : "#fff",
-                  color: sortBy === val ? "#fff" : "#333",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                }}
+                className={`filter-pill${sortBy === val ? " active" : ""}`}
               >
                 {label}
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Result count */}
-        <p
-          style={{
-            color: "#888",
-            fontSize: "13px",
-            marginBottom: "16px",
-            marginTop: "0",
-          }}
-        >
-          {loading
-            ? "Loading…"
-            : `${filtered.length} vet${filtered.length !== 1 ? "s" : ""} found`}
-        </p>
-
-        {/* Vet Cards */}
-        {filtered.map((vet) => {
-          const vetPrices = prices[vet.id] || [];
-          const exam = vetPrices.find(
-            (p) => p.services?.name === "Doctor Exam" && p.price_low,
-          );
-          const dental = vetPrices.find(
-            (p) => p.services?.name === "Dental Cleaning" && p.price_low,
-          );
-          const spay = vetPrices.find(
-            (p) => p.services?.name === "Spay (~40lb dog)" && p.price_low,
-          );
-          const neuter = vetPrices.find(
-            (p) => p.services?.name === "Neuter (~40lb dog)" && p.price_low,
-          );
-          const lastUpdated = vet.last_verified
-            ? new Date(vet.last_verified + "T12:00:00")
-            : vetPrices.length > 0
-              ? new Date(
-                  Math.max(...vetPrices.map((p) => new Date(p.created_at))),
-                )
-              : null;
-          const isSaved = savedVetIds.has(vet.id);
-          const isAnimating = animatingId === vet.id;
-
-          return (
-            <div
-              key={vet.id}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "10px",
-                padding: "16px",
-                marginBottom: "12px",
-                background: "#ffffff",
-              }}
-            >
-              <h2 style={{ margin: "0 0 4px 0", fontSize: "1.1rem" }}>
-                <Link
-                  href={`/vet/${vet.slug}`}
-                  style={{ color: "#111", textDecoration: "none" }}
-                  onMouseEnter={(e) => {
-                    e.target.style.color = "#2d6a4f";
-                    e.target.style.textDecoration = "underline";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.color = "#111";
-                    e.target.style.textDecoration = "none";
-                  }}
-                >
-                  {vet.name}
-                </Link>
-              </h2>
-
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "4px",
-                  marginBottom: "6px",
-                }}
-              >
-                {(Array.isArray(vet.vet_type) ? vet.vet_type : [vet.vet_type])
-                  .filter(Boolean)
-                  .map((t) => (
-                    <span
-                      key={t}
-                      style={{
-                        fontSize: "11px",
-                        background: "#e8f5e9",
-                        color: "#2d6a4f",
-                        padding: "2px 8px",
-                        borderRadius: "12px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {t}
-                    </span>
-                  ))}
-                {vet.accepting_new_patients === true && (
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      background: "#e8f0fe",
-                      color: "#3949ab",
-                      padding: "2px 8px",
-                      borderRadius: "12px",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    ✅ Accepting New Patients
-                  </span>
-                )}
-                {vet.accepting_new_patients === false && (
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      background: "#fce8e8",
-                      color: "#c62828",
-                      padding: "2px 8px",
-                      borderRadius: "12px",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    ❌ Not Accepting New Patients
-                  </span>
-                )}
-              </div>
-
-              <p
-                style={{ margin: "0 0 2px 0", color: "#666", fontSize: "13px" }}
-              >
-                {[vet.neighborhood, vet.city].filter(Boolean).join(" · ")}
-              </p>
-              <p style={{ margin: "0 0 2px 0", fontSize: "13px" }}>
-                <a
-                  href={`tel:${vet.phone}`}
-                  style={{ color: "#666", textDecoration: "none" }}
-                >
-                  {formatPhone(vet.phone)}
-                </a>
-              </p>
-              {vet.website && (
-                <p style={{ margin: "0", fontSize: "13px" }}>
-                  <a
-                    href={`https://${vet.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#2d6a4f", textDecoration: "none" }}
-                    onMouseEnter={(e) =>
-                      (e.target.style.textDecoration = "underline")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.target.style.textDecoration = "none")
-                    }
-                  >
-                    Website ↗
-                  </a>
-                </p>
-              )}
-
-              {!exam && !dental && !spay && !neuter ? (
-                <p
-                  style={{
-                    margin: "12px 0 0 0",
-                    fontSize: "13px",
-                    color: "#999",
-                    fontStyle: "italic",
-                  }}
-                >
-                  No pricing available
-                </p>
-              ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    marginTop: "12px",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  {exam && (
-                    <div
-                      style={{
-                        background: "#f0f0f0",
-                        borderRadius: "6px",
-                        padding: "6px 10px",
-                        fontSize: "13px",
-                      }}
-                    >
-                      <span style={{ color: "#666" }}>Exam </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(
-                          exam.price_low,
-                          exam.price_high,
-                          exam.price_type,
-                        )}
-                      </span>
-                    </div>
-                  )}
-                  {dental && (
-                    <div
-                      style={{
-                        background: "#f0f0f0",
-                        borderRadius: "6px",
-                        padding: "6px 10px",
-                        fontSize: "13px",
-                      }}
-                    >
-                      <span style={{ color: "#666" }}>Dental </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(
-                          dental.price_low,
-                          dental.price_high,
-                          dental.price_type,
-                        )}
-                      </span>
-                    </div>
-                  )}
-                  {spay && (
-                    <div
-                      style={{
-                        background: "#f0f0f0",
-                        borderRadius: "6px",
-                        padding: "6px 10px",
-                        fontSize: "13px",
-                      }}
-                    >
-                      <span style={{ color: "#666" }}>Spay </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(
-                          spay.price_low,
-                          spay.price_high,
-                          spay.price_type,
-                        )}
-                      </span>
-                    </div>
-                  )}
-                  {neuter && (
-                    <div
-                      style={{
-                        background: "#f0f0f0",
-                        borderRadius: "6px",
-                        padding: "6px 10px",
-                        fontSize: "13px",
-                      }}
-                    >
-                      <span style={{ color: "#666" }}>Neuter </span>
-                      <span style={{ fontWeight: "bold", color: "#111" }}>
-                        {formatPrice(
-                          neuter.price_low,
-                          neuter.price_high,
-                          neuter.price_type,
-                        )}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginTop: "10px",
-                  borderTop: "1px solid #f0f0f0",
-                  paddingTop: "8px",
-                }}
-              >
-                <p style={{ margin: 0, color: "#aaa", fontSize: "11px" }}>
-                  {lastUpdated
-                    ? `Verified ${lastUpdated.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`
-                    : ""}
-                </p>
-                <button
-                  onClick={(e) => toggleSave(e, vet.id)}
-                  title={isSaved ? "Remove from saved" : "Save this vet"}
-                  className={`heart-btn${isAnimating ? " heart-animating" : ""}`}
-                >
-                  {isSaved ? "❤️" : "🤍"}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-
-        {!loading && filtered.length === 0 && (
-          <div
-            style={{ textAlign: "center", padding: "40px 20px", color: "#888" }}
-          >
-            <p style={{ fontSize: "32px", margin: "0 0 12px 0" }}>🔍</p>
-            <p
-              style={{
-                fontSize: "15px",
-                fontWeight: "600",
-                color: "#555",
-                margin: "0 0 8px 0",
-              }}
-            >
-              No vets found
-            </p>
-            <p style={{ fontSize: "13px", margin: "0" }}>
-              Try adjusting your filters
-            </p>
-          </div>
-        )}
-
-        {/* Submit a Price */}
-        <div style={{ marginTop: "40px", textAlign: "center" }}>
-          <button
-            onClick={() => {
-              setShowForm(!showForm);
-              setFormStatus(null);
-            }}
-            style={{
-              padding: "10px 24px",
-              backgroundColor: "#2d6a4f",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "14px",
-              cursor: "pointer",
-            }}
-          >
-            {showForm ? "Cancel" : "💰 Submit a Price"}
-          </button>
-          {showForm && (
-            <div
-              style={{
-                marginTop: "20px",
-                background: "#fff",
-                border: "1px solid #ddd",
-                borderRadius: "12px",
-                padding: "24px",
-                textAlign: "left",
-                maxWidth: "500px",
-                margin: "20px auto 0",
-              }}
-            >
-              <h3 style={{ margin: "0 0 16px 0", color: "#111" }}>
-                Submit a Vet Price
-              </h3>
-              {[
-                "vet_name",
-                "service_name",
-                "price_paid",
-                "visit_date",
-                "submitter_note",
-              ].map((field) => (
-                <div key={field} style={{ marginBottom: "12px" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "13px",
-                      color: "#555",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    {field === "vet_name"
-                      ? "Vet Name *"
-                      : field === "service_name"
-                        ? "Service (e.g. Exam, Dental) *"
-                        : field === "price_paid"
-                          ? "Price Paid ($) *"
-                          : field === "visit_date"
-                            ? "Date of Visit (optional)"
-                            : "Notes (optional)"}
-                  </label>
-                  <input
-                    type={
-                      field === "price_paid"
-                        ? "number"
-                        : field === "visit_date"
-                          ? "date"
-                          : "text"
-                    }
-                    value={formData[field]}
-                    onChange={(e) =>
-                      setFormData({ ...formData, [field]: e.target.value })
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #ccc",
-                      fontSize: "14px",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-              ))}
-              {formStatus === "error" && (
-                <p style={{ color: "red", fontSize: "13px" }}>
-                  Please fill in all required fields.
-                </p>
-              )}
-              {formStatus === "success" && (
-                <p style={{ color: "green", fontSize: "13px" }}>
-                  Thanks! Your submission is under review.
-                </p>
-              )}
-              <button
-                onClick={handleSubmit}
-                style={{
-                  padding: "10px 24px",
-                  backgroundColor: "#2d6a4f",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  marginTop: "4px",
-                }}
-              >
-                Submit
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <footer
-          style={{
-            marginTop: "60px",
-            borderTop: "1px solid #ddd",
-            paddingTop: "24px",
-            paddingBottom: "40px",
-            textAlign: "center",
-            color: "#888",
-            fontSize: "13px",
-          }}
-        >
+          {/* Result count */}
           <p
             style={{
-              margin: "0 0 8px 0",
-              fontWeight: "bold",
-              color: "#2d6a4f",
-              fontSize: "15px",
+              color: "var(--color-muted, #9CA3AF)",
+              fontSize: "13px",
+              marginBottom: "20px",
             }}
           >
-            🐾 PetParrk
+            {loading
+              ? "Loading…"
+              : `${filtered.length} vet${filtered.length !== 1 ? "s" : ""} found`}
           </p>
-          <p style={{ margin: "0 0 8px 0" }}>
-            Real prices. Real vets. No surprises.
-          </p>
-          <p style={{ margin: "0 0 8px 0" }}>
-            Pricing data is self-reported and verified by our team. Always call
-            to confirm before your visit.
-          </p>
-          <p style={{ margin: "0" }}>
-            Questions or feedback?{" "}
+
+          {/* Vet cards grid */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+              gap: "16px",
+            }}
+          >
+            {filtered.map((vet) => {
+              const vetPrices = prices[vet.id] || [];
+              const exam = vetPrices.find(
+                (p) => p.services?.name === "Doctor Exam" && p.price_low,
+              );
+              const dental = vetPrices.find(
+                (p) => p.services?.name === "Dental Cleaning" && p.price_low,
+              );
+              const spay = vetPrices.find(
+                (p) => p.services?.name === "Spay (~40lb dog)" && p.price_low,
+              );
+              const neuter = vetPrices.find(
+                (p) => p.services?.name === "Neuter (~40lb dog)" && p.price_low,
+              );
+              const lastUpdated = vet.last_verified
+                ? new Date(vet.last_verified + "T12:00:00")
+                : vetPrices.length > 0
+                  ? new Date(
+                      Math.max(...vetPrices.map((p) => new Date(p.created_at))),
+                    )
+                  : null;
+              const isSaved = savedVetIds.has(vet.id);
+              const isAnimating = animatingId === vet.id;
+
+              return (
+                <div key={vet.id} className="vet-card">
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <Link
+                        href={`/vet/${vet.slug}`}
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: "700",
+                          color: "var(--color-navy-dark, #172531)",
+                          textDecoration: "none",
+                          fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.target.style.color =
+                            "var(--color-terracotta, #CF5C36)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.target.style.color =
+                            "var(--color-navy-dark, #172531)")
+                        }
+                      >
+                        {vet.name}
+                      </Link>
+                      <p
+                        style={{
+                          fontSize: "13px",
+                          color: "var(--color-muted, #9CA3AF)",
+                          margin: "2px 0 0",
+                        }}
+                      >
+                        {[vet.neighborhood, vet.city]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => toggleSave(e, vet.id)}
+                      className={`heart-btn${isAnimating ? " heart-animating" : ""}`}
+                      title={isSaved ? "Remove from saved" : "Save this vet"}
+                    >
+                      {isSaved ? "❤️" : "🤍"}
+                    </button>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "4px",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    {(Array.isArray(vet.vet_type)
+                      ? vet.vet_type
+                      : [vet.vet_type]
+                    )
+                      .filter(Boolean)
+                      .map((t) => (
+                        <span key={t} className="badge badge-navy">
+                          {t}
+                        </span>
+                      ))}
+                    {vet.accepting_new_patients === true && (
+                      <span className="badge badge-success">✓ Accepting</span>
+                    )}
+                    {vet.accepting_new_patients === false && (
+                      <span className="badge badge-error">✕ Not accepting</span>
+                    )}
+                    {vet.ownership && (
+                      <span className="badge badge-terra">{vet.ownership}</span>
+                    )}
+                  </div>
+
+                  {vet.phone && (
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color: "var(--color-slate, #4B5563)",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      <a
+                        href={`tel:${vet.phone}`}
+                        style={{ color: "inherit", textDecoration: "none" }}
+                      >
+                        {formatPhone(vet.phone)}
+                      </a>
+                    </p>
+                  )}
+
+                  {!exam && !dental && !spay && !neuter ? (
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color: "var(--color-muted, #9CA3AF)",
+                        fontStyle: "italic",
+                        margin: "12px 0 0",
+                      }}
+                    >
+                      No pricing available
+                    </p>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "6px",
+                        marginTop: "10px",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {exam && (
+                        <span className="price-chip">
+                          <span className="price-chip-label">Exam</span>
+                          <span className="price-chip-value">
+                            {formatPrice(
+                              exam.price_low,
+                              exam.price_high,
+                              exam.price_type,
+                            )}
+                          </span>
+                        </span>
+                      )}
+                      {dental && (
+                        <span className="price-chip">
+                          <span className="price-chip-label">Dental</span>
+                          <span className="price-chip-value">
+                            {formatPrice(
+                              dental.price_low,
+                              dental.price_high,
+                              dental.price_type,
+                            )}
+                          </span>
+                        </span>
+                      )}
+                      {spay && (
+                        <span className="price-chip">
+                          <span className="price-chip-label">Spay</span>
+                          <span className="price-chip-value">
+                            {formatPrice(
+                              spay.price_low,
+                              spay.price_high,
+                              spay.price_type,
+                            )}
+                          </span>
+                        </span>
+                      )}
+                      {neuter && (
+                        <span className="price-chip">
+                          <span className="price-chip-label">Neuter</span>
+                          <span className="price-chip-value">
+                            {formatPrice(
+                              neuter.price_low,
+                              neuter.price_high,
+                              neuter.price_type,
+                            )}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginTop: "14px",
+                      borderTop: "1px solid var(--color-border, #EDE8E0)",
+                      paddingTop: "10px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        color: "var(--color-muted, #9CA3AF)",
+                      }}
+                    >
+                      {lastUpdated
+                        ? `Verified ${lastUpdated.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`
+                        : ""}
+                    </span>
+                    <Link
+                      href={`/vet/${vet.slug}`}
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "700",
+                        color: "var(--color-terracotta, #CF5C36)",
+                        textDecoration: "none",
+                      }}
+                    >
+                      View profile →
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* No results */}
+          {!loading && filtered.length === 0 && (
+            <div style={{ textAlign: "center", padding: "60px 20px" }}>
+              <p style={{ fontSize: "32px", margin: "0 0 12px" }}>🔍</p>
+              <p
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: "var(--color-navy-dark, #172531)",
+                  margin: "0 0 8px",
+                }}
+              >
+                No vets found
+              </p>
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "var(--color-muted, #9CA3AF)",
+                  margin: 0,
+                }}
+              >
+                Try adjusting your filters
+              </p>
+            </div>
+          )}
+
+          {/* Submit a Price */}
+          <div style={{ marginTop: "60px", textAlign: "center" }}>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--color-slate, #4B5563)",
+                marginBottom: "12px",
+              }}
+            >
+              Visited a vet recently? Help the community.
+            </p>
+            <button
+              onClick={() => {
+                setShowForm(!showForm);
+                setFormStatus(null);
+              }}
+              style={{
+                padding: "12px 28px",
+                background: "var(--color-navy-dark, #172531)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "12px",
+                fontSize: "14px",
+                fontWeight: "700",
+                cursor: "pointer",
+                fontFamily: "var(--font, 'Urbanist', sans-serif)",
+              }}
+            >
+              {showForm ? "Cancel" : "💰 Submit a Price"}
+            </button>
+
+            {showForm && (
+              <div
+                style={{
+                  marginTop: "20px",
+                  background: "#fff",
+                  border: "1px solid var(--color-border, #EDE8E0)",
+                  borderRadius: "16px",
+                  padding: "28px",
+                  textAlign: "left",
+                  maxWidth: "500px",
+                  margin: "20px auto 0",
+                  boxShadow: "0 4px 16px rgba(23,37,49,0.08)",
+                }}
+              >
+                <h3
+                  style={{
+                    margin: "0 0 20px",
+                    fontSize: "18px",
+                    fontWeight: "700",
+                    color: "var(--color-navy-dark, #172531)",
+                    fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                  }}
+                >
+                  Submit a Vet Price
+                </h3>
+                {[
+                  "vet_name",
+                  "service_name",
+                  "price_paid",
+                  "visit_date",
+                  "submitter_note",
+                ].map((field) => (
+                  <div key={field} style={{ marginBottom: "14px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: "600",
+                        color: "var(--color-slate, #4B5563)",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      {field === "vet_name"
+                        ? "Vet Name *"
+                        : field === "service_name"
+                          ? "Service (e.g. Exam, Dental) *"
+                          : field === "price_paid"
+                            ? "Price Paid ($) *"
+                            : field === "visit_date"
+                              ? "Date of Visit (optional)"
+                              : "Notes (optional)"}
+                    </label>
+                    <input
+                      type={
+                        field === "price_paid"
+                          ? "number"
+                          : field === "visit_date"
+                            ? "date"
+                            : "text"
+                      }
+                      value={formData[field]}
+                      onChange={(e) =>
+                        setFormData({ ...formData, [field]: e.target.value })
+                      }
+                      className="submit-input"
+                    />
+                  </div>
+                ))}
+                {formStatus === "error" && (
+                  <p
+                    style={{
+                      color: "var(--color-error, #C94040)",
+                      fontSize: "13px",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Please fill in all required fields.
+                  </p>
+                )}
+                {formStatus === "success" && (
+                  <p
+                    style={{
+                      color: "var(--color-success, #2A7D4F)",
+                      fontSize: "13px",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Thanks! Your submission is under review.
+                  </p>
+                )}
+                <button
+                  onClick={handleSubmit}
+                  style={{
+                    padding: "12px 28px",
+                    background: "var(--color-terracotta, #CF5C36)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "10px",
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                  }}
+                >
+                  Submit
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ────────────────────────────────────────────────── */}
+      <footer
+        style={{
+          background: "var(--color-navy-dark, #172531)",
+          padding: "48px 20px 40px",
+        }}
+      >
+        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "32px",
+              marginBottom: "40px",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "800",
+                  color: "#fff",
+                  marginBottom: "8px",
+                  fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                }}
+              >
+                PetParrk
+              </div>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "rgba(255,255,255,0.5)",
+                  lineHeight: "1.7",
+                  margin: 0,
+                }}
+              >
+                Real prices. Real vets.
+                <br />
+                No surprises.
+              </p>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  color: "var(--color-gold, #EFC88B)",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  marginBottom: "12px",
+                }}
+              >
+                Product
+              </div>
+              {[
+                ["Find a Vet", "/"],
+                ["Symptom Checker", "/symptom-checker"],
+                ["How It Works", "/how-it-works"],
+              ].map(([label, href]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  style={{
+                    display: "block",
+                    fontSize: "13px",
+                    color: "rgba(255,255,255,0.6)",
+                    textDecoration: "none",
+                    marginBottom: "8px",
+                  }}
+                  onMouseEnter={(e) => (e.target.style.color = "#fff")}
+                  onMouseLeave={(e) =>
+                    (e.target.style.color = "rgba(255,255,255,0.6)")
+                  }
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  color: "var(--color-gold, #EFC88B)",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  marginBottom: "12px",
+                }}
+              >
+                Company
+              </div>
+              {[
+                ["About", "/about"],
+                ["Contact", "/contact"],
+                ["Press", "/press"],
+              ].map(([label, href]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  style={{
+                    display: "block",
+                    fontSize: "13px",
+                    color: "rgba(255,255,255,0.6)",
+                    textDecoration: "none",
+                    marginBottom: "8px",
+                  }}
+                  onMouseEnter={(e) => (e.target.style.color = "#fff")}
+                  onMouseLeave={(e) =>
+                    (e.target.style.color = "rgba(255,255,255,0.6)")
+                  }
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  color: "var(--color-gold, #EFC88B)",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  marginBottom: "12px",
+                }}
+              >
+                Legal
+              </div>
+              {[
+                ["Privacy Policy", "/privacy-policy"],
+                ["Terms of Service", "/terms"],
+                ["Your Privacy Choices", "/privacy-policy"],
+              ].map(([label, href]) => (
+                <Link
+                  key={label}
+                  href={href}
+                  style={{
+                    display: "block",
+                    fontSize: "13px",
+                    color: "rgba(255,255,255,0.6)",
+                    textDecoration: "none",
+                    marginBottom: "8px",
+                  }}
+                  onMouseEnter={(e) => (e.target.style.color = "#fff")}
+                  onMouseLeave={(e) =>
+                    (e.target.style.color = "rgba(255,255,255,0.6)")
+                  }
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div
+            style={{
+              borderTop: "1px solid rgba(255,255,255,0.1)",
+              paddingTop: "24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "13px",
+                color: "rgba(255,255,255,0.4)",
+                margin: 0,
+              }}
+            >
+              © 2026 PetParrk. Pricing data is self-reported and verified by our
+              team. Always call to confirm before your visit.
+            </p>
             <a
               href="mailto:bkalthompson@gmail.com"
-              style={{ color: "#2d6a4f", textDecoration: "none" }}
+              style={{
+                fontSize: "13px",
+                color: "rgba(255,255,255,0.5)",
+                textDecoration: "none",
+              }}
             >
               bkalthompson@gmail.com
             </a>
-          </p>
-        </footer>
-      </div>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }
