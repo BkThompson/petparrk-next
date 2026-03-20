@@ -2,6 +2,7 @@ import "./globals.css";
 import { Urbanist } from "next/font/google";
 import ToastProvider from "../components/ToastProvider";
 import NavbarWrapper from "../components/NavbarWrapper";
+import Footer from "../components/Footer";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -11,16 +12,16 @@ const urbanist = Urbanist({
 });
 
 export const metadata = {
-  title: "PetParrk – Vet Pricing Transparency for the East Bay",
+  title: "PetParrk – Vet Pricing Transparency for the Bay Area",
   description:
-    "Compare real vet prices in Oakland, Berkeley, and the East Bay. Know what you'll pay before you go. No surprises.",
+    "Compare real vet prices across the San Francisco Bay Area. Know what you'll pay before you go. No surprises.",
   keywords:
-    "vet prices, veterinarian cost, East Bay vet, Oakland vet, Berkeley vet, pet care, vet pricing transparency",
+    "vet prices, veterinarian cost, Bay Area vet, Oakland vet, Berkeley vet, San Francisco vet, pet care, vet pricing transparency",
   authors: [{ name: "PetParrk" }],
   openGraph: {
     title: "PetParrk – Know What You'll Pay Before You Go",
     description:
-      "Real vet prices for Oakland, Berkeley, and the East Bay. Compare costs, check symptoms, and track your pet's health.",
+      "Real vet prices for the San Francisco Bay Area. Compare costs, check symptoms, and track your pet's health.",
     url: "https://petparrk-next.vercel.app",
     siteName: "PetParrk",
     type: "website",
@@ -29,7 +30,7 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PetParrk – Vet Pricing Transparency",
-    description: "Real vet prices for the East Bay. No surprises.",
+    description: "Real vet prices for the Bay Area. No surprises.",
   },
   robots: {
     index: true,
@@ -52,9 +53,19 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#172531" />
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body style={{ fontFamily: "var(--font-urbanist, var(--font))" }}>
+      <body
+        style={{
+          fontFamily: "var(--font-urbanist, var(--font))",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+        }}
+      >
         <NavbarWrapper />
-        <ToastProvider>{children}</ToastProvider>
+        <main style={{ flex: 1 }}>
+          <ToastProvider>{children}</ToastProvider>
+        </main>
+        <Footer />
       </body>
     </html>
   );
