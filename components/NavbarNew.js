@@ -254,26 +254,13 @@ export default function NavbarNew() {
           position: relative;
         }
 
-        /* Ghost text — reserves bold width, zero layout shift */
         .pp-nav-link span {
           display: block;
           font-weight: 500;
         }
-        .pp-nav-link span::before {
-          content: attr(data-label);
-          font-weight: 700;
-          visibility: hidden;
-          height: 0;
-          display: block;
-          overflow: hidden;
-          pointer-events: none;
-          user-select: none;
-        }
 
         .pp-nav-link:hover { color: #fff; }
-        .pp-nav-link:hover span { font-weight: 700; }
         .pp-nav-link.active { color: #EFC88B; }
-        .pp-nav-link.active span { font-weight: 700; }
 
         /* Right side */
         .pp-nav-right {
