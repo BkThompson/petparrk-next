@@ -740,3 +740,4 @@ select {
     padding-top: 48px;
   }
 }
+html { overflow-y: scroll; }
