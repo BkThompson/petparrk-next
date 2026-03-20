@@ -177,7 +177,7 @@ export default function PetCardPage() {
 
       <div
         style={{
-          minHeight: "100vh",
+          minHeight: "calc(100vh - 64px)",
           background: "#f5f5f0",
           fontFamily: "system-ui, sans-serif",
           padding: "24px 16px 60px 16px",

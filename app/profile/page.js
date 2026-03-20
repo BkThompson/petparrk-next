@@ -1117,7 +1117,7 @@ export default function ProfilePage() {
           margin: "0 auto",
           padding: "20px",
           fontFamily: "system-ui, sans-serif",
-          minHeight: "100vh",
+          minHeight: "calc(100vh - 64px)",
         }}
       >
         <div

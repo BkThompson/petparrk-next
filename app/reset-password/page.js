@@ -79,7 +79,7 @@ function ResetPasswordForm() {
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#f7f9f7", display: "flex",
+      minHeight: "calc(100vh - 64px)", background: "#f7f9f7", display: "flex",
       alignItems: "center", justifyContent: "center", padding: "20px",
       fontFamily: "system-ui, sans-serif",
     }}>
