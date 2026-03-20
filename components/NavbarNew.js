@@ -122,7 +122,7 @@ export default function NavbarNew() {
     setTimeout(() => {
       setMobileOpen(false);
       setIsClosing(false);
-    }, 120); // match animation duration
+    }, 80); // match animation duration
   }
 
   function toggleMobileMenu() {
@@ -214,6 +214,9 @@ export default function NavbarNew() {
           position: relative;
           padding-bottom: 6px;
           transition: color 0.15s ease;
+          display: inline-block;
+          min-width: 130px;
+          text-align: center;
         }
         .pp-nav-link:hover { color: #fff; opacity: 1; }
         .pp-nav-link.active { color: var(--color-gold, #EFC88B); }
@@ -421,7 +424,7 @@ export default function NavbarNew() {
 
         /* FIX 4: Exit animation */
         .pp-mobile-overlay.closing {
-          animation: mobileSlideOut 0.12s ease forwards;
+          animation: mobileSlideOut 0.08s ease forwards;
         }
         @keyframes mobileSlideIn {
           from { opacity: 0; transform: translateY(-12px); }
