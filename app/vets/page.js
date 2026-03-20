@@ -279,12 +279,21 @@ function VetsContent() {
         .submit-input:focus { border-color: var(--color-terracotta, #CF5C36); }
 
         .more-filters { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease; opacity: 0; }
-        .more-filters.open { max-height: 300px; opacity: 1; }
-        @media (max-width: 640px) {
+        .more-filters.open { max-height: 400px; opacity: 1; }
+
+        /* More filters inner — inline on desktop, stacked on mobile */
+        .more-filters-inner { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+        .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+        .filter-group-label { font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+
+        /* Primary filters + more filters stack at 767px */
+        @media (max-width: 767px) {
           .filters-row { flex-direction: column !important; align-items: stretch !important; }
-          .filters-row .pp-select { width: 100%; }
+          .filters-row .pp-select { width: 100%; box-sizing: border-box; }
           .filters-row .dir-search { width: 100% !important; min-width: unset !important; }
-          .filter-pills-row { display: flex; flex-wrap: wrap; gap: 8px; }
+          .filters-row .filter-pill { flex: 1; text-align: center; }
+          .more-filters-inner { flex-direction: column; align-items: flex-start; }
+          .filter-group { flex-wrap: wrap; }
         }
       `}</style>
 
@@ -420,11 +429,27 @@ function VetsContent() {
                   fontWeight: "500",
                   fontFamily: "var(--font, 'Urbanist', sans-serif)",
                   whiteSpace: "nowrap",
-                  minWidth: "130px",
+                  minWidth: "140px",
                   textAlign: "center",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
                 }}
               >
-                {showMoreFilters ? "Fewer filters ↑" : "More filters ↓"}
+                {showMoreFilters ? "Fewer filters" : "More filters"}
+                <span
+                  style={{
+                    fontSize: "10px",
+                    transition: "transform 0.3s ease",
+                    display: "inline-block",
+                    transform: showMoreFilters
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                  }}
+                >
+                  ▼
+                </span>
               </button>
             </div>
 
@@ -435,113 +460,58 @@ function VetsContent() {
                   paddingTop: "16px",
                   marginTop: "16px",
                   borderTop: "1px solid var(--color-border, #EDE8E0)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      color: "#9CA3AF",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      minWidth: "90px",
-                    }}
-                  >
-                    Exam Price
-                  </span>
-                  <div
-                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                  >
-                    {PRICE_RANGES.map((r) => (
-                      <button
-                        key={r.value}
-                        onClick={() => setPriceRange(r.value)}
-                        className={`filter-pill${priceRange === r.value ? " active" : ""}`}
-                      >
-                        {r.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      color: "#9CA3AF",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      minWidth: "90px",
-                    }}
-                  >
-                    Ownership
-                  </span>
-                  <div
-                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                  >
-                    {["All", "Independent", "Corporate"].map((o) => (
-                      <button
-                        key={o}
-                        onClick={() => setOwnership(o)}
-                        className={`filter-pill${ownership === o ? " active" : ""}`}
-                      >
-                        {o}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {vetTypes.length > 2 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "8px",
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        color: "#9CA3AF",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        minWidth: "90px",
-                      }}
+                <div className="more-filters-inner">
+                  <div className="filter-group">
+                    <span className="filter-group-label">Exam Price</span>
+                    <div
+                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
                     >
-                      Type
-                    </span>
-                    <select
-                      className="pp-select"
-                      value={vetTypeFilter}
-                      onChange={(e) => setVetTypeFilter(e.target.value)}
-                    >
-                      {vetTypes.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
+                      {PRICE_RANGES.map((r) => (
+                        <button
+                          key={r.value}
+                          onClick={() => setPriceRange(r.value)}
+                          className={`filter-pill${priceRange === r.value ? " active" : ""}`}
+                        >
+                          {r.label}
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
-                )}
+                  <div className="filter-group">
+                    <span className="filter-group-label">Ownership</span>
+                    <div
+                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
+                    >
+                      {["All", "Independent", "Corporate"].map((o) => (
+                        <button
+                          key={o}
+                          onClick={() => setOwnership(o)}
+                          className={`filter-pill${ownership === o ? " active" : ""}`}
+                        >
+                          {o}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {vetTypes.length > 2 && (
+                    <div className="filter-group">
+                      <span className="filter-group-label">Type</span>
+                      <select
+                        className="pp-select"
+                        value={vetTypeFilter}
+                        onChange={(e) => setVetTypeFilter(e.target.value)}
+                      >
+                        {vetTypes.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -591,7 +591,7 @@ export default function Home() {
         >
           {[
             { value: `${vets.length}+`, label: "Verified vets" },
-            { value: "Free", label: "Always free to browse" },
+            { value: "Free", label: "No account needed" },
             {
               value: "Verified",
               label: "Every price reviewed before it goes live",
@@ -622,7 +622,7 @@ export default function Home() {
         style={{
           height: "1px",
           background:
-            "linear-gradient(to right, transparent, #EDE8E0 20%, #EDE8E0 80%, transparent)",
+            "linear-gradient(to right, #172531, #EDE8E0 25%, #EDE8E0 75%, #172531)",
         }}
       />
 
