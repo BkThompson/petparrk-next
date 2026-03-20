@@ -591,9 +591,9 @@ export default function Home() {
         >
           {[
             { value: `${vets.length}+`, label: "Verified vets" },
-            { value: "Free", label: "No account required to browse" },
+            { value: "Free", label: "Always free to browse" },
             {
-              value: "Staff-verified",
+              value: "Verified",
               label: "Every price reviewed before it goes live",
             },
           ].map((stat) => (
@@ -619,7 +619,11 @@ export default function Home() {
 
       {/* ── DIVIDER ──────────────────────────────────────────────────── */}
       <div
-        style={{ height: "1px", background: "var(--color-border, #EDE8E0)" }}
+        style={{
+          height: "1px",
+          background:
+            "linear-gradient(to right, transparent, #EDE8E0 20%, #EDE8E0 80%, transparent)",
+        }}
       />
 
       {/* ── SIGN UP CTA (logged out only) ─────────────────────────── */}

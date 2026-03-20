@@ -259,7 +259,7 @@ function VetsContent() {
         .filter-pill:hover { border-color: var(--color-navy-dark, #172531); }
         .filter-pill.active { background: var(--color-navy-dark, #172531); color: #fff; border-color: var(--color-navy-dark, #172531); }
 
-        .pp-select { padding: 8px 14px; border-radius: 10px; border: 1px solid #EDE8E0; font-size: 14px; font-family: var(--font, 'Urbanist', sans-serif); background: #fff; color: #1A1A1A; outline: none; cursor: pointer; height: 38px; }
+        .pp-select { padding: 8px 36px 8px 14px; border-radius: 10px; border: 1px solid #EDE8E0; font-size: 14px; font-family: var(--font, 'Urbanist', sans-serif); background: #fff; color: #1A1A1A; outline: none; cursor: pointer; height: 38px; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
         .pp-select:focus { border-color: var(--color-terracotta, #CF5C36); }
 
         .dir-search { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1.5px solid var(--color-border, #EDE8E0); font-size: 15px; outline: none; box-sizing: border-box; font-family: var(--font, 'Urbanist', sans-serif); background: #fff; transition: border-color 0.15s; }
@@ -420,6 +420,8 @@ function VetsContent() {
                   fontWeight: "500",
                   fontFamily: "var(--font, 'Urbanist', sans-serif)",
                   whiteSpace: "nowrap",
+                  minWidth: "130px",
+                  textAlign: "center",
                 }}
               >
                 {showMoreFilters ? "Fewer filters ↑" : "More filters ↓"}
@@ -433,58 +435,100 @@ function VetsContent() {
                   paddingTop: "16px",
                   marginTop: "16px",
                   borderTop: "1px solid var(--color-border, #EDE8E0)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
                 }}
               >
                 <div
                   style={{
                     display: "flex",
-                    gap: "12px",
+                    gap: "8px",
                     flexWrap: "wrap",
                     alignItems: "center",
                   }}
                 >
                   <span
                     style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
+                      fontSize: "11px",
+                      fontWeight: "700",
                       color: "#9CA3AF",
                       textTransform: "uppercase",
-                      letterSpacing: "0.05em",
+                      letterSpacing: "0.08em",
+                      minWidth: "90px",
                     }}
                   >
                     Exam Price
                   </span>
-                  {PRICE_RANGES.map((r) => (
-                    <button
-                      key={r.value}
-                      onClick={() => setPriceRange(r.value)}
-                      className={`filter-pill${priceRange === r.value ? " active" : ""}`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
+                  <div
+                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
+                  >
+                    {PRICE_RANGES.map((r) => (
+                      <button
+                        key={r.value}
+                        onClick={() => setPriceRange(r.value)}
+                        className={`filter-pill${priceRange === r.value ? " active" : ""}`}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                  }}
+                >
                   <span
                     style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
+                      fontSize: "11px",
+                      fontWeight: "700",
                       color: "#9CA3AF",
                       textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      marginLeft: "8px",
+                      letterSpacing: "0.08em",
+                      minWidth: "90px",
                     }}
                   >
                     Ownership
                   </span>
-                  {["All", "Independent", "Corporate"].map((o) => (
-                    <button
-                      key={o}
-                      onClick={() => setOwnership(o)}
-                      className={`filter-pill${ownership === o ? " active" : ""}`}
+                  <div
+                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
+                  >
+                    {["All", "Independent", "Corporate"].map((o) => (
+                      <button
+                        key={o}
+                        onClick={() => setOwnership(o)}
+                        className={`filter-pill${ownership === o ? " active" : ""}`}
+                      >
+                        {o}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {vetTypes.length > 2 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        color: "#9CA3AF",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        minWidth: "90px",
+                      }}
                     >
-                      {o}
-                    </button>
-                  ))}
-                  {vetTypes.length > 2 && (
+                      Type
+                    </span>
                     <select
                       className="pp-select"
                       value={vetTypeFilter}
@@ -496,8 +540,8 @@ function VetsContent() {
                         </option>
                       ))}
                     </select>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
