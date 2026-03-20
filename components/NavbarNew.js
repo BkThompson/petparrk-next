@@ -26,13 +26,13 @@ function PawMark({ size = 28 }) {
 }
 
 const NAV_LINKS = [
-  { href: "/vets", label: "Find a Vet" },
+  { href: "/", label: "Find a Vet" },
   { href: "/symptom-checker", label: "Symptom Checker" },
   { href: "/how-it-works", label: "How It Works" },
 ];
 
 const DROPDOWN_LINKS = [
-  { href: "/vets", label: "Find a Vet", icon: "🏠" },
+  { href: "/", label: "Find a Vet", icon: "🏠" },
   { href: "/symptom-checker", label: "Symptom Checker", icon: "🩺" },
   { href: "/profile", label: "My Profile", icon: "👤" },
   { href: "/saved", label: "Saved Vets", icon: "❤️" },
@@ -179,6 +179,7 @@ export default function NavbarNew() {
           will-change: transform;
           transform: translateZ(0);
           backface-visibility: hidden;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
         }
         .pp-nav.scrolled {
           box-shadow: 0 4px 24px rgba(23,37,49,0.25);

@@ -198,11 +198,16 @@ export default function Home() {
       <section
         style={{
           background: "var(--color-navy-mid, #2C4657)",
-          padding: "72px 24px 88px",
+          padding: "72px 0 88px",
         }}
       >
         <div
-          style={{ maxWidth: "720px", margin: "0 auto", textAlign: "center" }}
+          style={{
+            maxWidth: "720px",
+            margin: "0 auto",
+            textAlign: "center",
+            padding: "0 24px",
+          }}
         >
           <p
             className="anim-1"
@@ -287,10 +292,7 @@ export default function Home() {
 
       {/* ── THREE PILLARS ─────────────────────────────────────────── */}
       <section
-        style={{
-          background: "var(--color-cream, #F5F0E8)",
-          padding: "72px 24px",
-        }}
+        style={{ background: "var(--color-cream, #F5F0E8)", padding: "72px 0" }}
       >
         <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
@@ -377,7 +379,7 @@ export default function Home() {
 
       {/* ── VET TEASERS ───────────────────────────────────────────── */}
       {!loading && teaserVets.length > 0 && (
-        <section style={{ background: "#fff", padding: "72px 24px" }}>
+        <section style={{ background: "#fff", padding: "72px 0" }}>
           <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
             <div
               style={{
@@ -591,6 +593,8 @@ export default function Home() {
             gap: "32px",
             textAlign: "center",
             paddingBottom: "48px",
+            paddingLeft: "24px",
+            paddingRight: "24px",
           }}
         >
           {[
@@ -634,11 +638,16 @@ export default function Home() {
         <section
           style={{
             background: "var(--color-cream, #F5F0E8)",
-            padding: "72px 24px",
+            padding: "72px 0",
           }}
         >
           <div
-            style={{ maxWidth: "560px", margin: "0 auto", textAlign: "center" }}
+            style={{
+              maxWidth: "560px",
+              margin: "0 auto",
+              textAlign: "center",
+              padding: "0 24px",
+            }}
           >
             <h2
               style={{

@@ -307,10 +307,12 @@ function VetsContent() {
         <div
           style={{
             background: "var(--color-navy-dark, #172531)",
-            padding: "40px 24px 48px",
+            padding: "40px 0 48px",
           }}
         >
-          <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0" }}>
+          <div
+            style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
+          >
             <p
               style={{
                 fontSize: "11px",

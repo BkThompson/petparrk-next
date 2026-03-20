@@ -5,10 +5,10 @@ export default function Footer() {
     <footer
       style={{
         background: "var(--color-navy-dark, #172531)",
-        padding: "48px 24px 40px",
+        padding: "48px 0 40px",
       }}
     >
-      <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}>
         <div
           style={{
             display: "grid",
