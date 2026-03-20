@@ -321,7 +321,7 @@ export default function VetPage() {
           maxWidth: "1280px",
           margin: "0 auto",
           padding: "20px",
-          fontFamily: "system-ui, sans-serif",
+          fontFamily: "var(--font, system-ui, sans-serif)",
           minHeight: "100vh",
           boxSizing: "border-box",
         }}
@@ -345,26 +345,6 @@ export default function VetPage() {
           >
             ← Back to all vets
           </Link>
-          {session !== undefined &&
-            (session ? (
-              
-            ) : (
-              <button
-                onClick={() => router.push("/auth")}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: "20px",
-                  border: "1px solid #2d6a4f",
-                  background: "#fff",
-                  color: "#2d6a4f",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                }}
-              >
-                Sign In
-              </button>
-            ))}
         </div>
 
         {/* Vet Info Card */}
@@ -447,14 +427,12 @@ export default function VetPage() {
             )}
           </div>
 
-          {/* Location — no label */}
           {locationLine && (
             <p style={{ margin: "0 0 6px 0", fontSize: "14px", color: "#555" }}>
               {locationLine}
             </p>
           )}
 
-          {/* Address — no label, just linked address */}
           {vet.address && (
             <div style={{ margin: "0 0 6px 0", fontSize: "14px" }}>
               <a
@@ -471,7 +449,6 @@ export default function VetPage() {
             </div>
           )}
 
-          {/* Phone — no label, formatted */}
           {vet.phone && (
             <p style={{ margin: "0 0 6px 0", fontSize: "14px" }}>
               <a
@@ -483,7 +460,6 @@ export default function VetPage() {
             </p>
           )}
 
-          {/* Website — no label */}
           {vet.website && (
             <p style={{ margin: "0 0 14px 0", fontSize: "14px" }}>
               <a
@@ -497,7 +473,6 @@ export default function VetPage() {
             </p>
           )}
 
-          {/* CareCredit + New Patients */}
           <div
             style={{
               display: "grid",
@@ -543,7 +518,6 @@ export default function VetPage() {
             </div>
           </div>
 
-          {/* Hours */}
           {hoursLines.length > 0 && (
             <div style={{ fontSize: "14px", marginBottom: "16px" }}>
               <span
