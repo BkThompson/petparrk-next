@@ -278,7 +278,14 @@ function VetsContent() {
         .submit-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #EDE8E0; font-size: 14px; font-family: var(--font, 'Urbanist', sans-serif); background: #fff; outline: none; box-sizing: border-box; transition: border-color 0.15s; }
         .submit-input:focus { border-color: var(--color-terracotta, #CF5C36); }
 
-        .more-filters-panel { overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; }
+        .more-filters { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease; opacity: 0; }
+        .more-filters.open { max-height: 300px; opacity: 1; }
+        @media (max-width: 640px) {
+          .filters-row { flex-direction: column !important; align-items: stretch !important; }
+          .filters-row .pp-select { width: 100%; }
+          .filters-row .dir-search { width: 100% !important; min-width: unset !important; }
+          .filter-pills-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        }
       `}</style>
 
       <div
@@ -351,6 +358,7 @@ function VetsContent() {
             }}
           >
             <div
+              className="filters-row"
               style={{
                 display: "flex",
                 gap: "12px",
@@ -418,12 +426,12 @@ function VetsContent() {
               </button>
             </div>
 
-            {/* More filters panel */}
-            {showMoreFilters && (
+            {/* More filters panel — CSS animated */}
+            <div className={`more-filters${showMoreFilters ? " open" : ""}`}>
               <div
                 style={{
-                  marginTop: "16px",
                   paddingTop: "16px",
+                  marginTop: "16px",
                   borderTop: "1px solid var(--color-border, #EDE8E0)",
                 }}
               >
@@ -491,7 +499,7 @@ function VetsContent() {
                   )}
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Result count */}

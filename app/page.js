@@ -323,15 +323,9 @@ export default function Home() {
               <div key={pillar.title} className="pillar-card">
                 <div
                   style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "14px",
-                    background: "var(--color-cream, #F5F0E8)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "24px",
+                    fontSize: "48px",
                     marginBottom: "16px",
+                    textAlign: "center",
                   }}
                 >
                   {pillar.icon}
@@ -343,6 +337,7 @@ export default function Home() {
                     color: "var(--color-navy-dark, #172531)",
                     marginBottom: "8px",
                     fontFamily: "var(--font, 'Urbanist', sans-serif)",
+                    textAlign: "center",
                   }}
                 >
                   {pillar.title}
@@ -353,24 +348,27 @@ export default function Home() {
                     color: "var(--color-slate, #4B5563)",
                     lineHeight: "1.7",
                     marginBottom: "20px",
+                    textAlign: "center",
                   }}
                 >
                   {pillar.description}
                 </p>
-                <Link
-                  href={pillar.href}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    fontSize: "13px",
-                    fontWeight: "700",
-                    color: "var(--color-terracotta, #CF5C36)",
-                    textDecoration: "none",
-                  }}
-                >
-                  {pillar.cta} →
-                </Link>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <Link
+                    href={pillar.href}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      color: "var(--color-terracotta, #CF5C36)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    {pillar.cta} →
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
@@ -425,7 +423,7 @@ export default function Home() {
                   textDecoration: "none",
                 }}
               >
-                See all {vets.length} vets →
+                See all vets →
               </Link>
             </div>
             <div
@@ -593,8 +591,11 @@ export default function Home() {
         >
           {[
             { value: `${vets.length}+`, label: "Verified vets" },
-            { value: "Free to start", label: "No credit card needed" },
-            { value: "Verified", label: "Community-sourced prices" },
+            { value: "Free", label: "No account required to browse" },
+            {
+              value: "Staff-verified",
+              label: "Every price reviewed before it goes live",
+            },
           ].map((stat) => (
             <div key={stat.label}>
               <div
@@ -615,6 +616,11 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* ── DIVIDER ──────────────────────────────────────────────────── */}
+      <div
+        style={{ height: "1px", background: "var(--color-border, #EDE8E0)" }}
+      />
 
       {/* ── SIGN UP CTA (logged out only) ─────────────────────────── */}
       {session === null && (
