@@ -124,7 +124,7 @@ export default function NavbarNew() {
     setTimeout(() => {
       setMobileOpen(false);
       setIsClosing(false);
-    }, 80); // match animation duration
+    }, 220); // match animation duration
   }
 
   function toggleMobileMenu() {
@@ -258,9 +258,21 @@ export default function NavbarNew() {
           display: block;
           font-weight: 500;
         }
+        .pp-nav-link span::before {
+          content: attr(data-label);
+          font-weight: 700;
+          visibility: hidden;
+          height: 0;
+          display: block;
+          overflow: hidden;
+          pointer-events: none;
+          user-select: none;
+        }
 
         .pp-nav-link:hover { color: #fff; }
+        .pp-nav-link:hover span { font-weight: 700; }
         .pp-nav-link.active { color: #EFC88B; }
+        .pp-nav-link.active span { font-weight: 700; }
 
         /* Right side */
         .pp-nav-right {
@@ -415,7 +427,7 @@ export default function NavbarNew() {
           height: 2px;
           background: #fff;
           border-radius: 9999px;
-          transition: transform 0.25s ease, opacity 0.25s ease;
+          transition: transform 0.15s ease, opacity 0.15s ease;
           transform-origin: center;
         }
         .pp-hamburger.open .pp-hamburger-line:nth-child(1) {
@@ -446,7 +458,7 @@ export default function NavbarNew() {
 
         /* FIX 4: Exit animation */
         .pp-mobile-overlay.closing {
-          animation: mobileSlideOut 0.08s ease forwards;
+          animation: mobileSlideOut 0.22s ease forwards;
         }
         @keyframes mobileSlideIn {
           from { opacity: 0; transform: translateY(-12px); }
