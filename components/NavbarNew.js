@@ -52,6 +52,8 @@ export default function NavbarNew() {
   const [isClosing, setIsClosing] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef(null);
+  const navLinksRef = useRef(null);
+  const indicatorRef = useRef(null);
 
   // ── Auth ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -144,6 +146,23 @@ export default function NavbarNew() {
     (!avatarError &&
       (profileAvatarUrl || session?.user?.user_metadata?.avatar_url)) ||
     null;
+
+  function moveIndicator(el) {
+    if (!indicatorRef.current || !navLinksRef.current) return;
+    const navRect = navLinksRef.current.getBoundingClientRect();
+    const linkRect = el.getBoundingClientRect();
+    indicatorRef.current.style.width = linkRect.width + "px";
+    indicatorRef.current.style.transform = `translateX(${linkRect.left - navRect.left}px)`;
+    indicatorRef.current.classList.add("visible");
+  }
+
+  // Move indicator to active link on mount and pathname change
+  useEffect(() => {
+    if (!navLinksRef.current || !indicatorRef.current) return;
+    const active = navLinksRef.current.querySelector(".pp-nav-link.active");
+    if (active) moveIndicator(active);
+    else indicatorRef.current.classList.remove("visible");
+  }, [pathname]);
   const avatarLetter = session?.user?.email?.[0]?.toUpperCase();
 
   return (
@@ -201,28 +220,44 @@ export default function NavbarNew() {
           align-items: center;
           gap: 32px;
           list-style: none;
+          position: relative;
         }
         @media (min-width: 768px) {
           .pp-nav-links { display: flex; }
         }
 
+        /* Sliding indicator bar */
+        .pp-nav-indicator {
+          position: absolute;
+          bottom: -4px;
+          height: 2px;
+          background: #CF5C36;
+          border-radius: 9999px;
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                      width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                      opacity 0.2s ease;
+          pointer-events: none;
+          opacity: 0;
+          left: 0;
+          transform-origin: left center;
+        }
+        .pp-nav-indicator.visible { opacity: 1; }
+
         .pp-nav-link {
           font-size: 14px;
-          font-weight: 500;
-          color: rgba(255,255,255,0.65);
+          color: rgba(255,255,255,0.6);
           text-decoration: none;
           font-family: var(--font, 'Urbanist', sans-serif);
-          position: relative;
+          white-space: nowrap;
           padding-bottom: 8px;
           transition: color 0.15s ease;
-          white-space: nowrap;
+          position: relative;
         }
-        .pp-nav-link:hover { color: #fff; }
-        .pp-nav-link.active { color: var(--color-gold, #EFC88B); }
 
-        /* Ghost text — span reserves bold width always, zero layout shift */
+        /* Ghost text — reserves bold width, zero layout shift */
         .pp-nav-link span {
           display: block;
+          font-weight: 500;
         }
         .pp-nav-link span::before {
           content: attr(data-label);
@@ -234,29 +269,11 @@ export default function NavbarNew() {
           pointer-events: none;
           user-select: none;
         }
-        .pp-nav-link.active span {
-          font-weight: 700;
-        }
 
-        /* Underline — fixed width, centered, never affects layout */
-        .pp-nav-link::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 50%;
-          transform: translateX(-50%) scaleX(0);
-          width: 24px;
-          height: 2px;
-          background: var(--color-terracotta, #CF5C36);
-          border-radius: 9999px;
-          opacity: 0;
-          transition: opacity 0.2s ease, transform 0.2s ease;
-          transform-origin: center;
-        }
-        .pp-nav-link.active::after {
-          opacity: 1;
-          transform: translateX(-50%) scaleX(1);
-        }
+        .pp-nav-link:hover { color: #fff; }
+        .pp-nav-link:hover span { font-weight: 700; }
+        .pp-nav-link.active { color: #EFC88B; }
+        .pp-nav-link.active span { font-weight: 700; }
 
         /* Right side */
         .pp-nav-right {
@@ -548,12 +565,27 @@ export default function NavbarNew() {
           </Link>
 
           {/* Desktop nav links */}
-          <ul className="pp-nav-links">
+          <ul
+            className="pp-nav-links"
+            ref={navLinksRef}
+            onMouseLeave={() => {
+              const active = navLinksRef.current?.querySelector(
+                ".pp-nav-link.active",
+              );
+              if (active && indicatorRef.current) {
+                moveIndicator(active);
+              } else if (indicatorRef.current) {
+                indicatorRef.current.classList.remove("visible");
+              }
+            }}
+          >
+            <div className="pp-nav-indicator" ref={indicatorRef} />
             {NAV_LINKS.map(({ href, label }) => (
               <li key={href}>
                 <Link
                   href={href}
                   className={`pp-nav-link${pathname === href ? " active" : ""}`}
+                  onMouseEnter={(e) => moveIndicator(e.currentTarget)}
                 >
                   <span data-label={label}>{label}</span>
                 </Link>
