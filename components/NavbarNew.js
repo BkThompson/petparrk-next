@@ -270,7 +270,6 @@ export default function NavbarNew() {
         }
 
         .pp-nav-link:hover { color: #fff; }
-        .pp-nav-link:hover span { font-weight: 700; }
         .pp-nav-link.active { color: #EFC88B; }
         .pp-nav-link.active span { font-weight: 700; }
 
@@ -650,7 +649,7 @@ export default function NavbarNew() {
 
             {/* Hamburger */}
             <button
-              className={`pp-hamburger${mobileOpen ? " open" : ""}`}
+              className={`pp-hamburger${mobileOpen && !isClosing ? " open" : ""}`}
               onClick={toggleMobileMenu}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
