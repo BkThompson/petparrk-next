@@ -206,8 +206,6 @@ export default function NavbarNew() {
           .pp-nav-links { display: flex; }
         }
 
-        /* FIX 1+2: Reserve space for underline always so layout never shifts.
-           Use opacity to show/hide the underline instead of content/no-content. */
         .pp-nav-link {
           font-size: 14px;
           font-weight: 500;
@@ -215,15 +213,18 @@ export default function NavbarNew() {
           text-decoration: none;
           font-family: var(--font, 'Urbanist', sans-serif);
           position: relative;
-          padding-bottom: 6px;
+          padding-bottom: 8px;
           transition: color 0.15s ease;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
+          white-space: nowrap;
         }
-        /* Ghost text technique — bold text always reserves space,
-           visible text sits on top. Zero layout shift on weight change. */
-        .pp-nav-link::before {
+        .pp-nav-link:hover { color: #fff; }
+        .pp-nav-link.active { color: var(--color-gold, #EFC88B); }
+
+        /* Ghost text — span reserves bold width always, zero layout shift */
+        .pp-nav-link span {
+          display: block;
+        }
+        .pp-nav-link span::before {
           content: attr(data-label);
           font-weight: 700;
           visibility: hidden;
@@ -233,29 +234,28 @@ export default function NavbarNew() {
           pointer-events: none;
           user-select: none;
         }
-        .pp-nav-link:hover { color: #fff; opacity: 1; }
-        .pp-nav-link.active {
-          color: var(--color-gold, #EFC88B);
+        .pp-nav-link.active span {
           font-weight: 700;
         }
 
-        /* Always present in DOM, toggled via opacity — no layout shift */
+        /* Underline — fixed width, centered, never affects layout */
         .pp-nav-link::after {
           content: '';
           position: absolute;
           bottom: 0;
-          left: 0;
-          right: 0;
+          left: 50%;
+          transform: translateX(-50%) scaleX(0);
+          width: 24px;
           height: 2px;
           background: var(--color-terracotta, #CF5C36);
           border-radius: 9999px;
           opacity: 0;
-          transform: scaleX(0.6);
           transition: opacity 0.2s ease, transform 0.2s ease;
+          transform-origin: center;
         }
         .pp-nav-link.active::after {
           opacity: 1;
-          transform: scaleX(1);
+          transform: translateX(-50%) scaleX(1);
         }
 
         /* Right side */
@@ -553,10 +553,9 @@ export default function NavbarNew() {
               <li key={href}>
                 <Link
                   href={href}
-                  data-label={label}
                   className={`pp-nav-link${pathname === href ? " active" : ""}`}
                 >
-                  {label}
+                  <span data-label={label}>{label}</span>
                 </Link>
               </li>
             ))}
