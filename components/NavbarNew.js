@@ -26,13 +26,13 @@ function PawMark({ size = 28 }) {
 }
 
 const NAV_LINKS = [
-  { href: "/", label: "Find a Vet" },
+  { href: "/vets", label: "Find a Vet" },
   { href: "/symptom-checker", label: "Symptom Checker" },
   { href: "/how-it-works", label: "How It Works" },
 ];
 
 const DROPDOWN_LINKS = [
-  { href: "/", label: "Find a Vet", icon: "🏠" },
+  { href: "/vets", label: "Find a Vet", icon: "🏠" },
   { href: "/symptom-checker", label: "Symptom Checker", icon: "🩺" },
   { href: "/profile", label: "My Profile", icon: "👤" },
   { href: "/saved", label: "Saved Vets", icon: "❤️" },
