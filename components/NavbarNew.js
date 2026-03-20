@@ -157,6 +157,9 @@ export default function NavbarNew() {
           height: 64px;
           background: var(--color-navy-dark, #172531);
           transition: box-shadow 0.2s ease;
+          will-change: transform;
+          transform: translateZ(0);
+          backface-visibility: hidden;
         }
         .pp-nav.scrolled {
           box-shadow: 0 4px 24px rgba(23,37,49,0.25);
@@ -214,12 +217,27 @@ export default function NavbarNew() {
           position: relative;
           padding-bottom: 6px;
           transition: color 0.15s ease;
-          display: inline-block;
-          min-width: 130px;
-          text-align: center;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        /* Ghost text technique — bold text always reserves space,
+           visible text sits on top. Zero layout shift on weight change. */
+        .pp-nav-link::before {
+          content: attr(data-label);
+          font-weight: 700;
+          visibility: hidden;
+          height: 0;
+          display: block;
+          overflow: hidden;
+          pointer-events: none;
+          user-select: none;
         }
         .pp-nav-link:hover { color: #fff; opacity: 1; }
-        .pp-nav-link.active { color: var(--color-gold, #EFC88B); }
+        .pp-nav-link.active {
+          color: var(--color-gold, #EFC88B);
+          font-weight: 700;
+        }
 
         /* Always present in DOM, toggled via opacity — no layout shift */
         .pp-nav-link::after {
@@ -535,6 +553,7 @@ export default function NavbarNew() {
               <li key={href}>
                 <Link
                   href={href}
+                  data-label={label}
                   className={`pp-nav-link${pathname === href ? " active" : ""}`}
                 >
                   {label}
