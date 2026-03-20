@@ -576,7 +576,10 @@ export default function Home() {
       <section
         style={{
           background: "var(--color-navy-dark, #172531)",
-          padding: "48px 20px",
+          paddingTop: "48px",
+          paddingBottom: "0",
+          paddingLeft: "20px",
+          paddingRight: "20px",
         }}
       >
         <div
@@ -587,6 +590,7 @@ export default function Home() {
             gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
             gap: "32px",
             textAlign: "center",
+            paddingBottom: "48px",
           }}
         >
           {[
@@ -615,16 +619,15 @@ export default function Home() {
             </div>
           ))}
         </div>
+        <div
+          style={{
+            height: "1px",
+            background:
+              "linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.15) 30%, rgba(255,255,255,0.15) 70%, rgba(255,255,255,0))",
+            margin: "0 24px",
+          }}
+        />
       </section>
-
-      {/* ── DIVIDER ──────────────────────────────────────────────────── */}
-      <div
-        style={{
-          height: "1px",
-          background:
-            "linear-gradient(to right, #172531, #EDE8E0 25%, #EDE8E0 75%, #172531)",
-        }}
-      />
 
       {/* ── SIGN UP CTA (logged out only) ─────────────────────────── */}
       {session === null && (

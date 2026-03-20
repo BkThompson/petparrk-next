@@ -307,10 +307,10 @@ function VetsContent() {
         <div
           style={{
             background: "var(--color-navy-dark, #172531)",
-            padding: "40px 20px 48px",
+            padding: "40px 24px 48px",
           }}
         >
-          <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+          <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0" }}>
             <p
               style={{
                 fontSize: "11px",
@@ -352,7 +352,7 @@ function VetsContent() {
           style={{
             maxWidth: "1280px",
             margin: "0 auto",
-            padding: "32px 20px 80px",
+            padding: "32px 24px 80px",
           }}
         >
           {/* Primary filters */}
