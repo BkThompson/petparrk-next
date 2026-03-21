@@ -26,7 +26,7 @@ function PawMark({ size = 28 }) {
 }
 
 const NAV_LINKS = [
-  { href: "/", label: "Find a Vet" },
+  { href: "/vets", label: "Find a Vet" },
   { href: "/symptom-checker", label: "Symptom Checker" },
   { href: "/how-it-works", label: "How It Works" },
 ];
@@ -179,7 +179,7 @@ export default function NavbarNew() {
           will-change: transform;
           transform: translateZ(0);
           backface-visibility: hidden;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+          
         }
         .pp-nav.scrolled {
           box-shadow: 0 4px 24px rgba(23,37,49,0.25);
@@ -225,6 +225,7 @@ export default function NavbarNew() {
         }
         @media (min-width: 768px) {
           .pp-nav-links { display: flex; }
+          .pp-nav { box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
         }
 
         /* Sliding indicator bar */
@@ -484,7 +485,7 @@ export default function NavbarNew() {
           font-weight: 700;
           color: rgba(255,255,255,0.75);
           text-decoration: none;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+          
           font-family: var(--font, 'Urbanist', sans-serif);
           transition: color 0.15s;
           animation: mobileLinkFadeIn 0.35s ease both;

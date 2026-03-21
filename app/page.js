@@ -207,6 +207,7 @@ export default function Home() {
             margin: "0 auto",
             textAlign: "center",
             padding: "0 24px",
+            boxSizing: "border-box",
           }}
         >
           <p
@@ -294,7 +295,9 @@ export default function Home() {
       <section
         style={{ background: "var(--color-cream, #F5F0E8)", padding: "72px 0" }}
       >
-        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+        <div
+          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
+        >
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <p
               style={{
@@ -380,7 +383,9 @@ export default function Home() {
       {/* ── VET TEASERS ───────────────────────────────────────────── */}
       {!loading && teaserVets.length > 0 && (
         <section style={{ background: "#fff", padding: "72px 0" }}>
-          <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+          <div
+            style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
+          >
             <div
               style={{
                 display: "flex",
