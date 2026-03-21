@@ -307,7 +307,7 @@ function VetsContent() {
         <div
           style={{
             background: "var(--color-navy-dark, #172531)",
-            padding: "56px 0 64px",
+            padding: "64px 0 72px",
           }}
         >
           <div
@@ -395,7 +395,7 @@ function VetsContent() {
                 ))}
               </select>
               {[
-                { label: "✓ Accepting", value: "Yes" },
+                { label: "✓ New Patients", value: "Yes" },
                 { label: "All", value: "All" },
               ].map((opt) => (
                 <button

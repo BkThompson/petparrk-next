@@ -3,6 +3,7 @@ import { Urbanist } from "next/font/google";
 import ToastProvider from "../components/ToastProvider";
 import NavbarWrapper from "../components/NavbarWrapper";
 import Footer from "../components/Footer";
+import ScrollToTop from "../components/ScrollToTop";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -62,6 +63,7 @@ export default function RootLayout({ children }) {
         }}
       >
         <NavbarWrapper />
+        <ScrollToTop />
         <main style={{ flex: 1 }}>
           <ToastProvider>{children}</ToastProvider>
         </main>

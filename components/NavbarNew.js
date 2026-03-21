@@ -621,10 +621,6 @@ export default function NavbarNew() {
 
                 {showDropdown && (
                   <div className="pp-dropdown">
-                    <div className="pp-dd-header">
-                      <div className="pp-dd-email-label">Signed in as</div>
-                      <div className="pp-dd-email">{session.user.email}</div>
-                    </div>
                     {DROPDOWN_LINKS.map(({ href, label, icon }) => (
                       <Link
                         key={href}
@@ -689,23 +685,18 @@ export default function NavbarNew() {
                 <Link href="/saved" className="pp-mobile-link">
                   Saved Vets
                 </Link>
+                <Link href="/account" className="pp-mobile-link">
+                  Account Settings
+                </Link>
               </>
             )}
           </div>
 
           <div className="pp-mobile-bottom">
             {session ? (
-              <>
-                <div className="pp-mobile-user">
-                  Signed in as
-                  <div className="pp-mobile-user-email">
-                    {session.user.email}
-                  </div>
-                </div>
-                <button className="pp-mobile-signout" onClick={handleSignOut}>
-                  Sign Out
-                </button>
-              </>
+              <button className="pp-mobile-signout" onClick={handleSignOut}>
+                Sign Out
+              </button>
             ) : (
               <Link href="/auth" className="pp-mobile-signin">
                 Sign In
