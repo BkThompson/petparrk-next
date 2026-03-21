@@ -179,7 +179,7 @@ export default function NavbarNew() {
           will-change: transform;
           transform: translateZ(0);
           backface-visibility: hidden;
-          border-bottom: 1px solid rgba(255,255,255,0.08);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.25);
         }
         .pp-nav.scrolled {
           box-shadow: 0 4px 24px rgba(23,37,49,0.25);
@@ -484,7 +484,7 @@ export default function NavbarNew() {
           font-weight: 700;
           color: rgba(255,255,255,0.75);
           text-decoration: none;
-          border-bottom: 1px solid rgba(255,255,255,0.08);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.25);
           font-family: var(--font, 'Urbanist', sans-serif);
           transition: color 0.15s;
           animation: mobileLinkFadeIn 0.35s ease both;
