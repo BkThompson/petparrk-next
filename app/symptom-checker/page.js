@@ -189,20 +189,40 @@ export default function SymptomCheckerHomePage() {
             padding: "40px 24px 80px",
           }}
         >
-          {/* Disclaimer */}
-          <p
+          {/* Description */}
+          <div
             style={{
-              fontSize: "12px",
-              color: "#9CA3AF",
-              textAlign: "center",
-              marginBottom: "32px",
-              lineHeight: "1.6",
+              background: "#fff",
+              borderRadius: "16px",
+              padding: "20px 24px",
+              marginBottom: "24px",
+              border: "1px solid var(--color-border, #EDE8E0)",
             }}
           >
-            ⚕️ PetParrk provides triage guidance only. We are not veterinarians
-            or medical professionals. This is not a substitute for professional
-            veterinary care.
-          </p>
+            <p
+              style={{
+                fontSize: "15px",
+                color: "var(--color-navy-dark, #172531)",
+                fontWeight: "600",
+                margin: "0 0 6px 0",
+                fontFamily: "var(--font-urbanist, system-ui)",
+              }}
+            >
+              How it works
+            </p>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--color-slate, #4B5563)",
+                lineHeight: "1.7",
+                margin: 0,
+              }}
+            >
+              Answer 3 quick questions about your pet — the area of concern, how
+              long it's been going on, and how severe it seems. You'll get an
+              instant triage recommendation and next steps from our AI.
+            </p>
+          </div>
 
           {session ? (
             <>
@@ -543,6 +563,20 @@ export default function SymptomCheckerHomePage() {
               </div>
             </div>
           )}
+          {/* Disclaimer — below cards */}
+          <p
+            style={{
+              marginTop: "32px",
+              fontSize: "12px",
+              color: "#9CA3AF",
+              textAlign: "center",
+              lineHeight: "1.7",
+            }}
+          >
+            ⚕️ PetParrk provides triage guidance only. We are not veterinarians
+            or medical professionals. This is not a substitute for professional
+            veterinary care.
+          </p>
         </div>
       </div>
     </>
