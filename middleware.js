@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
 
-const ALLOWED_IPS = []; // leave empty, we'll use a secret token instead
-
 export function middleware(request) {
-  const token = request.cookies.get("preview_token")?.value;
-  const url = request.nextUrl.clone();
-
-  if (token === "petparrk2026078118!") {
+  // Skip protection in local development
+  if (process.env.NODE_ENV === "development") {
     return NextResponse.next();
   }
 
-  // Allow access to the unlock page itself
+  const token = request.cookies.get("preview_token")?.value;
+  const url = request.nextUrl.clone();
+
+  if (token === "your-secret-word-here") {
+    return NextResponse.next();
+  }
+
   if (url.pathname === "/unlock") {
     return NextResponse.next();
   }
