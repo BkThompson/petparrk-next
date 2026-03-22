@@ -120,10 +120,8 @@ export default function SymptomCheckerChatPage() {
   const [guestPet, setGuestPet] = useState({ species: "", breed: "", age: "" });
   const [freeCheckUsed, setFreeCheckUsed] = useState(false);
   const [triageMounted, setTriageMounted] = useState(false);
-  const [ready, setReady] = useState(false); // prevents flash before session loads
-
-  // Guided flow
-  const [guidedStep, setGuidedStep] = useState(1); // 1, 2, 3, or "chat"
+  const [ready, setReady] = useState(false);
+  const [guidedStep, setGuidedStep] = useState(1);
   const [guidedAnswers, setGuidedAnswers] = useState({
     area: null,
     duration: null,
@@ -135,10 +133,9 @@ export default function SymptomCheckerChatPage() {
   const recognitionRef = useRef(null);
   const [recording, setRecording] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
-  const [isChromeiOS, setIsChromeiOS] = useState(false);
   const inputRef = useRef(null);
+  const initializedRef = useRef(false);
 
-  // ── Auth ──────────────────────────────────────────────────────────
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const {
@@ -147,10 +144,6 @@ export default function SymptomCheckerChatPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Load session from sessionStorage on mount ─────────────────────
-  // Guard with a ref so React Strict Mode's double-invoke doesn't
-  // redirect on the second run (which sees autoStart already cleared).
-  const initializedRef = useRef(false);
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
@@ -161,21 +154,17 @@ export default function SymptomCheckerChatPage() {
         return;
       }
       const parsed = JSON.parse(saved);
-
       if (parsed.autoStart && parsed.selectedPet) {
-        // Fresh check for a named pet — start guided flow
         setSelectedPet(parsed.selectedPet);
         setGuestMode(false);
         setGuidedStep(1);
         setReady(true);
       } else if (parsed.autoStart && parsed.guestMode) {
-        // Fresh guest check
         setGuestMode(true);
         setGuestPet(parsed.guestPet || { species: "", breed: "", age: "" });
         setGuidedStep(1);
         setReady(true);
       } else if (parsed.messages?.length > 0) {
-        // Resume a saved session
         setSelectedPet(parsed.selectedPet || null);
         setMessages(parsed.messages || []);
         setTriageResult(parsed.triageResult || null);
@@ -193,7 +182,6 @@ export default function SymptomCheckerChatPage() {
     }
   }, []);
 
-  // ── Persist session ───────────────────────────────────────────────
   useEffect(() => {
     if (!ready || messages.length === 0) return;
     try {
@@ -220,80 +208,63 @@ export default function SymptomCheckerChatPage() {
     ready,
   ]);
 
-  // ── Scroll ────────────────────────────────────────────────────────
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // ── Focus input ───────────────────────────────────────────────────
   useEffect(() => {
     if (guidedStep !== "chat") return;
     const isMobile = window.innerWidth < 768;
     if (!isMobile) inputRef.current?.focus();
   }, [guidedStep]);
 
-  // ── Speech recognition support check ─────────────────────────────
-  // Explicit checks — never rely on the API existing as a proxy for "works".
-  // Firefox defines nothing. Chrome/FF iOS define it but Apple blocks access.
   useEffect(() => {
     const ua = navigator.userAgent;
-
-    // Always block these — they either have no API or it doesn't work
     const isFirefox = ua.includes("Firefox") || ua.includes("FxiOS");
-    const isChromeIOS = ua.includes("CriOS"); // Chrome on iPhone/iPad
+    const isChromeIOS = ua.includes("CriOS");
     const isIOS = /iPhone|iPad|iPod/.test(ua);
-    const isNonSafariIOS = isIOS && !ua.includes("Safari"); // any iOS browser that isn't Safari
-
+    const isNonSafariIOS = isIOS && !ua.includes("Safari");
     if (isFirefox || isChromeIOS || isNonSafariIOS) {
       setSpeechSupported(false);
       return;
     }
-
-    // For everything else, check if the API actually exists
     const api = window.SpeechRecognition || window.webkitSpeechRecognition;
     setSpeechSupported(!!api);
   }, []);
 
-  // ── Voice recording ───────────────────────────────────────────────
   function toggleRecording() {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return; // Button shouldn't show — guard just in case
-
+    if (!SpeechRecognition) return;
     if (recording) {
       recognitionRef.current?.stop();
       setRecording(false);
       return;
     }
-
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = "en-US";
-
     recognition.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
-      setInput((prev) => (prev ? prev + " " + transcript : transcript));
+      const t = e.results[0][0].transcript;
+      setInput((p) => (p ? p + " " + t : t));
     };
     recognition.onerror = (e) => {
       setRecording(false);
       if (e.error === "not-allowed") {
-        // Safari iOS: Settings > Safari > Microphone > Allow
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const msg = isIOS
-          ? "Mic access denied. On iPhone: Settings → Safari → Microphone → Allow."
-          : "Mic access denied. Please allow microphone access in your browser settings.";
-        alert(msg);
+        alert(
+          isIOS
+            ? "Mic access denied. On iPhone: Settings → Safari → Microphone → Allow."
+            : "Mic access denied.",
+        );
       }
     };
     recognition.onend = () => setRecording(false);
-
     recognitionRef.current = recognition;
     recognition.start();
     setRecording(true);
   }
 
-  // ── Triage card mount — fires on every entry into chat ────────────
   useEffect(() => {
     if (!triageResult || guidedStep !== "chat") return;
     setTriageMounted(false);
@@ -307,7 +278,6 @@ export default function SymptomCheckerChatPage() {
     return () => cancelAnimationFrame(raf);
   }, [triageResult, guidedStep]);
 
-  // ── Reset ─────────────────────────────────────────────────────────
   function resetSession() {
     try {
       sessionStorage.removeItem(SESSION_KEY);
@@ -315,13 +285,11 @@ export default function SymptomCheckerChatPage() {
     router.push("/symptom-checker");
   }
 
-  // ── Guided flow ───────────────────────────────────────────────────
   function selectArea(area) {
     setGuidedAnswers((a) => ({ ...a, area }));
     setStepDirection(1);
     setGuidedStep(2);
   }
-
   function selectDuration(duration) {
     setGuidedAnswers((a) => ({ ...a, duration }));
     setStepDirection(1);
@@ -333,37 +301,25 @@ export default function SymptomCheckerChatPage() {
     setGuidedAnswers(answers);
     setStepDirection(1);
     setGuidedStep("chat");
-
     const areaLabel =
       SYMPTOM_AREAS.find((a) => a.id === answers.area)?.label || answers.area;
     const durationLabel =
       DURATIONS.find((d) => d.id === answers.duration)?.label ||
       answers.duration;
-    const petName = selectedPet?.name;
     const petDesc = selectedPet
-      ? `${selectedPet.name} (${[selectedPet.species, selectedPet.breed]
-          .filter(Boolean)
-          .join(", ")})`
+      ? `${selectedPet.name} (${[selectedPet.species, selectedPet.breed].filter(Boolean).join(", ")})`
       : guestPet.species
-        ? `my ${[guestPet.breed, guestPet.species].filter(Boolean).join(" ")}${
-            guestPet.age ? ", " + guestPet.age + " old" : ""
-          }`
+        ? `my ${[guestPet.breed, guestPet.species].filter(Boolean).join(" ")}${guestPet.age ? ", " + guestPet.age + " old" : ""}`
         : "my pet";
-
+    const petName = selectedPet?.name;
     const firstMessage = `I'm checking on ${petDesc}. The issue is related to their **${areaLabel}**. It started **${durationLabel.toLowerCase()}** and seems **${severity.toLowerCase()}** in severity. What should I know?`;
-    const greeting = `Hi! I'm here to help check on ${
-      petName || "your pet"
-    }. 🐾\n\nBefore we start, please know that I provide triage guidance only — I'm not a veterinarian or medical professional, and this is not a substitute for professional veterinary care.\n\nNow, tell me — what's going on with ${
-      petName || "your pet"
-    } today? Describe what you're seeing and I'll ask a few follow-up questions.`;
-
+    const greeting = `Hi! I'm here to help check on ${petName || "your pet"}. 🐾\n\nBefore we start, please know that I provide triage guidance only — I'm not a veterinarian or medical professional, and this is not a substitute for professional veterinary care.\n\nNow, tell me — what's going on with ${petName || "your pet"} today? Describe what you're seeing and I'll ask a few follow-up questions.`;
     const greetingMessage = { role: "assistant", content: greeting };
     const userMessage = { role: "user", content: firstMessage };
     setMessages([greetingMessage, userMessage]);
     await callAPI([userMessage]);
   }
 
-  // ── API ───────────────────────────────────────────────────────────
   async function callAPI(apiMessages) {
     setLoading(true);
     try {
@@ -381,7 +337,6 @@ export default function SymptomCheckerChatPage() {
       const data = await res.json();
       const content =
         data.content || "Sorry, something went wrong. Please try again.";
-
       let newTriageResult = null;
       if (content.includes("[TRIAGE_RESULT: EMERGENCY]"))
         newTriageResult = "EMERGENCY";
@@ -389,7 +344,6 @@ export default function SymptomCheckerChatPage() {
         newTriageResult = "SEE_VET";
       else if (content.includes("[TRIAGE_RESULT: MONITOR]"))
         newTriageResult = "MONITOR";
-
       const diffMatch = content.match(/\[DIFFERENTIALS:\s*([^\]]+)\]/);
       const parsedDiffs = diffMatch
         ? diffMatch[1]
@@ -398,32 +352,30 @@ export default function SymptomCheckerChatPage() {
             .filter(Boolean)
         : [];
       if (parsedDiffs.length > 0) setDifferentials(parsedDiffs);
-
       if (newTriageResult) {
         setTriageResult(newTriageResult);
         setTriageCardExpanded(true);
         if (guestMode) setFreeCheckUsed(true);
       }
-
       const cleanContent = content
         .replace(/\[TRIAGE_RESULT: EMERGENCY\]/g, "")
         .replace(/\[TRIAGE_RESULT: SEE_VET\]/g, "")
         .replace(/\[TRIAGE_RESULT: MONITOR\]/g, "")
         .replace(/\[DIFFERENTIALS:[^\]]*\]/g, "")
         .trim();
-
       const assistantMessage = { role: "assistant", content: cleanContent };
       setMessages((prev) => [...prev, assistantMessage]);
-
       if (session && selectedPet && newTriageResult) {
-        await supabase.from("symptom_checks").insert({
-          pet_id: selectedPet.id,
-          owner_id: session.user.id,
-          triage_result: newTriageResult,
-          differentials: parsedDiffs,
-          transcript: JSON.stringify([...apiMessages, assistantMessage]),
-          created_at: new Date().toISOString(),
-        });
+        await supabase
+          .from("symptom_checks")
+          .insert({
+            pet_id: selectedPet.id,
+            owner_id: session.user.id,
+            triage_result: newTriageResult,
+            differentials: parsedDiffs,
+            transcript: JSON.stringify([...apiMessages, assistantMessage]),
+            created_at: new Date().toISOString(),
+          });
       }
     } catch (err) {
       setMessages((prev) => [
@@ -440,18 +392,15 @@ export default function SymptomCheckerChatPage() {
   async function sendMessage() {
     if (!input.trim() || loading) return;
     if (guestMode && freeCheckUsed) return;
-
     const userMessage = { role: "user", content: input.trim() };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInput("");
     setLoading(true);
-
     try {
       const apiMessages = updatedMessages
         .filter((_, i) => !(i === 0 && updatedMessages[0].role === "assistant"))
         .map((m) => ({ role: m.role, content: m.content }));
-
       const res = await fetch("/api/symptom-checker", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -463,7 +412,6 @@ export default function SymptomCheckerChatPage() {
       const data = await res.json();
       const content =
         data.content || "Sorry, something went wrong. Please try again.";
-
       let newTriageResult = triageResult;
       if (content.includes("[TRIAGE_RESULT: EMERGENCY]")) {
         newTriageResult = "EMERGENCY";
@@ -475,7 +423,6 @@ export default function SymptomCheckerChatPage() {
         newTriageResult = "MONITOR";
         if (guestMode) setFreeCheckUsed(true);
       }
-
       const diffMatch = content.match(/\[DIFFERENTIALS:\s*([^\]]+)\]/);
       const parsedDiffs = diffMatch
         ? diffMatch[1]
@@ -484,31 +431,29 @@ export default function SymptomCheckerChatPage() {
             .filter(Boolean)
         : [];
       if (parsedDiffs.length > 0) setDifferentials(parsedDiffs);
-
       if (newTriageResult !== triageResult) {
         setTriageResult(newTriageResult);
         setTriageCardExpanded(true);
       }
-
       const cleanContent = content
         .replace(/\[TRIAGE_RESULT: EMERGENCY\]/g, "")
         .replace(/\[TRIAGE_RESULT: SEE_VET\]/g, "")
         .replace(/\[TRIAGE_RESULT: MONITOR\]/g, "")
         .replace(/\[DIFFERENTIALS:[^\]]*\]/g, "")
         .trim();
-
       const assistantMessage = { role: "assistant", content: cleanContent };
       setMessages((prev) => [...prev, assistantMessage]);
-
       if (session && selectedPet && content.includes("[TRIAGE_RESULT:")) {
-        await supabase.from("symptom_checks").insert({
-          pet_id: selectedPet.id,
-          owner_id: session.user.id,
-          triage_result: newTriageResult,
-          differentials: parsedDiffs,
-          transcript: JSON.stringify([...updatedMessages, assistantMessage]),
-          created_at: new Date().toISOString(),
-        });
+        await supabase
+          .from("symptom_checks")
+          .insert({
+            pet_id: selectedPet.id,
+            owner_id: session.user.id,
+            triage_result: newTriageResult,
+            differentials: parsedDiffs,
+            transcript: JSON.stringify([...updatedMessages, assistantMessage]),
+            created_at: new Date().toISOString(),
+          });
       }
     } catch (err) {
       setMessages((prev) => [
@@ -529,7 +474,6 @@ export default function SymptomCheckerChatPage() {
     }
   }
 
-  // ── Render helpers ────────────────────────────────────────────────
   function renderMessage(msg, i) {
     const isUser = msg.role === "user";
     const lines = msg.content.split("\n");
@@ -736,7 +680,6 @@ export default function SymptomCheckerChatPage() {
             >
               {config.message}
             </p>
-
             {differentials.length > 0 && (
               <div style={{ marginBottom: "14px" }}>
                 <p
@@ -772,7 +715,6 @@ export default function SymptomCheckerChatPage() {
                 </div>
               </div>
             )}
-
             {config.vetLabel && nearbyVets.length > 0 && (
               <div>
                 <p
@@ -866,7 +808,6 @@ export default function SymptomCheckerChatPage() {
                 ))}
               </div>
             )}
-
             <div
               style={{
                 display: "flex",
@@ -912,7 +853,6 @@ export default function SymptomCheckerChatPage() {
     );
   }
 
-  // ── Guided flow screens ───────────────────────────────────────────
   function renderGuidedFlow() {
     const petName = selectedPet?.name || guestPet.species || "your pet";
     const stepVariants = {
@@ -923,417 +863,468 @@ export default function SymptomCheckerChatPage() {
     const stepNum = guidedStep === 1 ? 1 : guidedStep === 2 ? 2 : 3;
 
     return (
-      <div
-        style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          padding: "20px",
-          fontFamily: "system-ui, sans-serif",
-          minHeight: "calc(100vh - 64px)",
-        }}
-      >
-        <style>{`
-          .guided-area-card { border: 2px solid #e8e8e8; border-radius: 14px; padding: 14px 16px; cursor: pointer; background: #fff; display: flex; align-items: center; gap: 14px; transition: all 0.15s ease; margin-bottom: 10px; }
-          .guided-area-card:hover { border-color: #2d6a4f; background: #f0f7f4; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,106,79,0.1); }
-          .guided-pill { border: 2px solid #e8e8e8; border-radius: 50px; padding: 12px 20px; cursor: pointer; background: #fff; display: flex; align-items: center; gap: 10px; transition: all 0.15s ease; }
-          .guided-pill:hover { border-color: #2d6a4f; background: #f0f7f4; }
-          .guided-severity-card { border: 2px solid #e8e8e8; border-radius: 16px; padding: 18px 20px; cursor: pointer; background: #fff; transition: all 0.15s ease; margin-bottom: 12px; }
-          .guided-severity-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-        `}</style>
+      <>
+        {/* Standard page header */}
+        <div
+          style={{
+            background: "var(--color-navy-dark, #172531)",
+            padding: "56px 0",
+          }}
+        >
+          <div
+            style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
+          >
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--color-gold, #EFC88B)",
+                marginBottom: "8px",
+              }}
+            >
+              AI Triage
+            </p>
+            <h1
+              style={{
+                fontSize: "clamp(24px, 4vw, 36px)",
+                fontWeight: "800",
+                color: "#fff",
+                fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+                marginBottom: "8px",
+              }}
+            >
+              Symptom Checker
+            </h1>
+            <p
+              style={{
+                fontSize: "15px",
+                color: "rgba(255,255,255,0.6)",
+                margin: 0,
+              }}
+            >
+              Get instant triage guidance for your pet — free, 24/7.
+            </p>
+          </div>
+        </div>
 
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "24px",
+            maxWidth: "680px",
+            margin: "0 auto",
+            padding: "32px 24px 80px",
+            fontFamily: "var(--font-urbanist, system-ui, sans-serif)",
           }}
         >
-          <button
-            onClick={() => {
-              if (guidedStep === 1) router.push("/symptom-checker");
-              else {
-                setStepDirection(-1);
-                setGuidedStep((s) => s - 1);
-              }
-            }}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#2d6a4f",
-              fontSize: "14px",
-              cursor: "pointer",
-              padding: 0,
-              fontFamily: "system-ui, sans-serif",
-            }}
-          >
-            ← Back
-          </button>
-          
-        </div>
+          <style>{`
+            .guided-area-card { border: 2px solid #e8e8e8; border-radius: 14px; padding: 14px 16px; cursor: pointer; background: #fff; display: flex; align-items: center; gap: 14px; transition: all 0.15s ease; margin-bottom: 10px; }
+            .guided-area-card:hover { border-color: #2d6a4f; background: #f0f7f4; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,106,79,0.1); }
+            .guided-pill { border: 2px solid #e8e8e8; border-radius: 50px; padding: 12px 20px; cursor: pointer; background: #fff; display: flex; align-items: center; gap: 10px; transition: all 0.15s ease; }
+            .guided-pill:hover { border-color: #2d6a4f; background: #f0f7f4; }
+            .guided-severity-card { border: 2px solid #e8e8e8; border-radius: 16px; padding: 18px 20px; cursor: pointer; background: #fff; transition: all 0.15s ease; margin-bottom: 12px; }
+            .guided-severity-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+          `}</style>
 
-        {selectedPet && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              marginBottom: "20px",
-              padding: "10px 14px",
-              background: "#f9f9f9",
-              borderRadius: "10px",
-              border: "1px solid #eee",
-            }}
-          >
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                background: "#e8f5e9",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-                fontSize: "16px",
-                border: "2px solid #ddd",
-                flexShrink: 0,
-              }}
-            >
-              {selectedPet.photo_url ? (
-                <img
-                  src={selectedPet.photo_url}
-                  alt={selectedPet.name}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : selectedPet.species === "Dog" ? (
-                "🐶"
-              ) : (
-                "🐾"
-              )}
-            </div>
-            <span
-              style={{ fontWeight: "600", fontSize: "13px", color: "#111" }}
-            >
-              Checking on {selectedPet.name}
-            </span>
-            <span
-              style={{
-                marginLeft: "auto",
-                fontSize: "11px",
-                background: "#e8f5e9",
-                padding: "2px 8px",
-                borderRadius: "20px",
-                color: "#2d6a4f",
-              }}
-            >
-              🩺 Symptom Check
-            </span>
-          </div>
-        )}
-
-        <div style={{ marginBottom: "28px" }}>
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: "8px",
+              marginBottom: "24px",
             }}
           >
-            <span
+            <button
+              onClick={() => {
+                if (guidedStep === 1) router.push("/symptom-checker");
+                else {
+                  setStepDirection(-1);
+                  setGuidedStep((s) => s - 1);
+                }
+              }}
               style={{
-                fontSize: "12px",
-                fontWeight: "700",
+                background: "none",
+                border: "none",
                 color: "#2d6a4f",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
+                fontSize: "14px",
+                cursor: "pointer",
+                padding: 0,
+                fontFamily: "var(--font-urbanist, system-ui)",
               }}
             >
-              Step {stepNum} of 3
-            </span>
-            <span style={{ fontSize: "12px", color: "#aaa" }}>
-              {stepNum === 1 ? "Area" : stepNum === 2 ? "Duration" : "Severity"}
-            </span>
+              ← Back
+            </button>
           </div>
-          <div
-            style={{
-              height: "4px",
-              background: "#eee",
-              borderRadius: "4px",
-              overflow: "hidden",
-            }}
-          >
+
+          {selectedPet && (
             <div
               style={{
-                height: "100%",
-                width: `${(stepNum / 3) * 100}%`,
-                background: "#2d6a4f",
-                borderRadius: "4px",
-                transition: "width 0.4s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                marginBottom: "20px",
+                padding: "10px 14px",
+                background: "#f9f9f9",
+                borderRadius: "10px",
+                border: "1px solid #eee",
               }}
-            />
-          </div>
-        </div>
-
-        <AnimatePresence mode="wait" custom={stepDirection}>
-          {guidedStep === 1 && (
-            <motion.div
-              key="step1"
-              custom={stepDirection}
-              variants={stepVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.25, ease: "easeInOut" }}
             >
-              <h2
-                style={{
-                  margin: "0 0 6px 0",
-                  fontSize: "1.3rem",
-                  fontWeight: "700",
-                  color: "#111",
-                }}
-              >
-                What area is the problem?
-              </h2>
-              <p
-                style={{
-                  margin: "0 0 20px 0",
-                  fontSize: "14px",
-                  color: "#888",
-                }}
-              >
-                Tap the one that best describes what's going on with {petName}.
-              </p>
-              {SYMPTOM_AREAS.map((area) => (
-                <div
-                  key={area.id}
-                  className="guided-area-card"
-                  onClick={() => selectArea(area.id)}
-                >
-                  <span
-                    style={{
-                      fontSize: "28px",
-                      flexShrink: 0,
-                      width: "40px",
-                      textAlign: "center",
-                    }}
-                  >
-                    {area.emoji}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p
-                      style={{
-                        margin: "0 0 2px 0",
-                        fontWeight: "700",
-                        fontSize: "15px",
-                        color: "#111",
-                      }}
-                    >
-                      {area.label}
-                    </p>
-                    <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
-                      {area.desc}
-                    </p>
-                  </div>
-                  <span
-                    style={{ color: "#ccc", fontSize: "18px", flexShrink: 0 }}
-                  >
-                    →
-                  </span>
-                </div>
-              ))}
-            </motion.div>
-          )}
-
-          {guidedStep === 2 && (
-            <motion.div
-              key="step2"
-              custom={stepDirection}
-              variants={stepVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.25, ease: "easeInOut" }}
-            >
-              <h2
-                style={{
-                  margin: "0 0 6px 0",
-                  fontSize: "1.3rem",
-                  fontWeight: "700",
-                  color: "#111",
-                }}
-              >
-                How long has this been going on?
-              </h2>
-              <p
-                style={{
-                  margin: "0 0 20px 0",
-                  fontSize: "14px",
-                  color: "#888",
-                }}
-              >
-                Give your best estimate — it helps with the assessment.
-              </p>
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  background: "#e8f5e9",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  fontSize: "16px",
+                  border: "2px solid #ddd",
+                  flexShrink: 0,
                 }}
               >
-                {DURATIONS.map((d) => (
-                  <div
-                    key={d.id}
-                    className="guided-pill"
-                    onClick={() => selectDuration(d.id)}
+                {selectedPet.photo_url ? (
+                  <img
+                    src={selectedPet.photo_url}
+                    alt={selectedPet.name}
                     style={{
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                      padding: "18px",
-                      borderRadius: "14px",
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
                     }}
-                  >
-                    <span style={{ fontSize: "28px", marginBottom: "8px" }}>
-                      {d.emoji}
-                    </span>
-                    <p
-                      style={{
-                        margin: "0 0 4px 0",
-                        fontWeight: "700",
-                        fontSize: "15px",
-                        color: "#111",
-                      }}
-                    >
-                      {d.label}
-                    </p>
-                    <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
-                      {d.desc}
-                    </p>
-                  </div>
-                ))}
+                  />
+                ) : selectedPet.species === "Dog" ? (
+                  "🐶"
+                ) : (
+                  "🐾"
+                )}
               </div>
-            </motion.div>
+              <span
+                style={{ fontWeight: "600", fontSize: "13px", color: "#111" }}
+              >
+                Checking on {selectedPet.name}
+              </span>
+              <span
+                style={{
+                  marginLeft: "auto",
+                  fontSize: "11px",
+                  background: "#e8f5e9",
+                  padding: "2px 8px",
+                  borderRadius: "20px",
+                  color: "#2d6a4f",
+                }}
+              >
+                🩺 Symptom Check
+              </span>
+            </div>
           )}
 
-          {guidedStep === 3 && (
-            <motion.div
-              key="step3"
-              custom={stepDirection}
-              variants={stepVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.25, ease: "easeInOut" }}
+          <div style={{ marginBottom: "28px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "8px",
+              }}
             >
-              <h2
+              <span
                 style={{
-                  margin: "0 0 6px 0",
-                  fontSize: "1.3rem",
+                  fontSize: "12px",
                   fontWeight: "700",
-                  color: "#111",
+                  color: "#2d6a4f",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
                 }}
               >
-                How severe does it seem?
-              </h2>
-              <p
+                Step {stepNum} of 3
+              </span>
+              <span style={{ fontSize: "12px", color: "#aaa" }}>
+                {stepNum === 1
+                  ? "Area"
+                  : stepNum === 2
+                    ? "Duration"
+                    : "Severity"}
+              </span>
+            </div>
+            <div
+              style={{
+                height: "4px",
+                background: "#eee",
+                borderRadius: "4px",
+                overflow: "hidden",
+              }}
+            >
+              <div
                 style={{
-                  margin: "0 0 20px 0",
-                  fontSize: "14px",
-                  color: "#888",
+                  height: "100%",
+                  width: `${(stepNum / 3) * 100}%`,
+                  background: "#2d6a4f",
+                  borderRadius: "4px",
+                  transition: "width 0.4s ease",
                 }}
+              />
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait" custom={stepDirection}>
+            {guidedStep === 1 && (
+              <motion.div
+                key="step1"
+                custom={stepDirection}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.25, ease: "easeInOut" }}
               >
-                Use your best judgment — you know {petName} best.
-              </p>
-              {SEVERITIES.map((s) => (
-                <div
-                  key={s.id}
-                  className="guided-severity-card"
-                  style={{ borderColor: "#e8e8e8" }}
-                  onClick={() => selectSeverity(s.id)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = s.color;
-                    e.currentTarget.style.background = s.bg;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "#e8e8e8";
-                    e.currentTarget.style.background = "#fff";
+                <h2
+                  style={{
+                    margin: "0 0 6px 0",
+                    fontSize: "1.3rem",
+                    fontWeight: "700",
+                    color: "#111",
                   }}
                 >
+                  What area is the problem?
+                </h2>
+                <p
+                  style={{
+                    margin: "0 0 20px 0",
+                    fontSize: "14px",
+                    color: "#888",
+                  }}
+                >
+                  Tap the one that best describes what's going on with {petName}
+                  .
+                </p>
+                {SYMPTOM_AREAS.map((area) => (
                   <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "14px",
-                    }}
+                    key={area.id}
+                    className="guided-area-card"
+                    onClick={() => selectArea(area.id)}
                   >
-                    <span style={{ fontSize: "32px", flexShrink: 0 }}>
-                      {s.emoji}
+                    <span
+                      style={{
+                        fontSize: "28px",
+                        flexShrink: 0,
+                        width: "40px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {area.emoji}
                     </span>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <p
                         style={{
-                          margin: "0 0 4px 0",
+                          margin: "0 0 2px 0",
                           fontWeight: "700",
-                          fontSize: "16px",
-                          color: s.color,
+                          fontSize: "15px",
+                          color: "#111",
                         }}
                       >
-                        {s.label}
+                        {area.label}
                       </p>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "13px",
-                          color: "#555",
-                          lineHeight: "1.5",
-                        }}
-                      >
-                        {s.desc}
+                      <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
+                        {area.desc}
                       </p>
                     </div>
                     <span
-                      style={{
-                        marginLeft: "auto",
-                        color: "#ccc",
-                        fontSize: "18px",
-                        flexShrink: 0,
-                      }}
+                      style={{ color: "#ccc", fontSize: "18px", flexShrink: 0 }}
                     >
                       →
                     </span>
                   </div>
+                ))}
+              </motion.div>
+            )}
+
+            {guidedStep === 2 && (
+              <motion.div
+                key="step2"
+                custom={stepDirection}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+              >
+                <h2
+                  style={{
+                    margin: "0 0 6px 0",
+                    fontSize: "1.3rem",
+                    fontWeight: "700",
+                    color: "#111",
+                  }}
+                >
+                  How long has this been going on?
+                </h2>
+                <p
+                  style={{
+                    margin: "0 0 20px 0",
+                    fontSize: "14px",
+                    color: "#888",
+                  }}
+                >
+                  Give your best estimate — it helps with the assessment.
+                </p>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "12px",
+                  }}
+                >
+                  {DURATIONS.map((d) => (
+                    <div
+                      key={d.id}
+                      className="guided-pill"
+                      onClick={() => selectDuration(d.id)}
+                      style={{
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        padding: "18px",
+                        borderRadius: "14px",
+                      }}
+                    >
+                      <span style={{ fontSize: "28px", marginBottom: "8px" }}>
+                        {d.emoji}
+                      </span>
+                      <p
+                        style={{
+                          margin: "0 0 4px 0",
+                          fontWeight: "700",
+                          fontSize: "15px",
+                          color: "#111",
+                        }}
+                      >
+                        {d.label}
+                      </p>
+                      <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
+                        {d.desc}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <p
-          style={{
-            margin: "24px 0 0 0",
-            fontSize: "11px",
-            color: "#bbb",
-            textAlign: "center",
-          }}
-        >
-          ⚕️ PetParrk is not a veterinary service. Always consult a licensed
-          veterinarian.
-        </p>
-      </div>
+              </motion.div>
+            )}
+
+            {guidedStep === 3 && (
+              <motion.div
+                key="step3"
+                custom={stepDirection}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+              >
+                <h2
+                  style={{
+                    margin: "0 0 6px 0",
+                    fontSize: "1.3rem",
+                    fontWeight: "700",
+                    color: "#111",
+                  }}
+                >
+                  How severe does it seem?
+                </h2>
+                <p
+                  style={{
+                    margin: "0 0 20px 0",
+                    fontSize: "14px",
+                    color: "#888",
+                  }}
+                >
+                  Use your best judgment — you know {petName} best.
+                </p>
+                {SEVERITIES.map((s) => (
+                  <div
+                    key={s.id}
+                    className="guided-severity-card"
+                    style={{ borderColor: "#e8e8e8" }}
+                    onClick={() => selectSeverity(s.id)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = s.color;
+                      e.currentTarget.style.background = s.bg;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "#e8e8e8";
+                      e.currentTarget.style.background = "#fff";
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "14px",
+                      }}
+                    >
+                      <span style={{ fontSize: "32px", flexShrink: 0 }}>
+                        {s.emoji}
+                      </span>
+                      <div>
+                        <p
+                          style={{
+                            margin: "0 0 4px 0",
+                            fontWeight: "700",
+                            fontSize: "16px",
+                            color: s.color,
+                          }}
+                        >
+                          {s.label}
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "13px",
+                            color: "#555",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          {s.desc}
+                        </p>
+                      </div>
+                      <span
+                        style={{
+                          marginLeft: "auto",
+                          color: "#ccc",
+                          fontSize: "18px",
+                          flexShrink: 0,
+                        }}
+                      >
+                        →
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <p
+            style={{
+              margin: "24px 0 0 0",
+              fontSize: "11px",
+              color: "#bbb",
+              textAlign: "center",
+            }}
+          >
+            ⚕️ PetParrk is not a veterinary service. Always consult a licensed
+            veterinarian.
+          </p>
+        </div>
+      </>
     );
   }
 
   if (!ready) return null;
-
-  // ── Guided steps 1–3 ─────────────────────────────────────────────
   if (guidedStep !== "chat") return renderGuidedFlow();
 
-  // ── Chat screen ───────────────────────────────────────────────────
   return (
     <>
       <style>{`
-        .chat-input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #ddd; font-size: 14px; font-family: system-ui, sans-serif; outline: none; resize: none; box-sizing: border-box; }
+        .chat-input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #ddd; font-size: 14px; font-family: var(--font-urbanist, system-ui, sans-serif); outline: none; resize: none; box-sizing: border-box; }
         .chat-input:focus { border-color: #2d6a4f; }
         .send-btn { padding: 12px 20px; background: #2d6a4f; color: #fff; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; font-weight: 600; white-space: nowrap; }
         .send-btn:hover { background: #245a42; }
@@ -1346,13 +1337,58 @@ export default function SymptomCheckerChatPage() {
         .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
       `}</style>
 
+      {/* Standard page header */}
       <div
         style={{
-          maxWidth: "1280px",
+          background: "var(--color-navy-dark, #172531)",
+          padding: "56px 0",
+        }}
+      >
+        <div
+          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
+        >
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-gold, #EFC88B)",
+              marginBottom: "8px",
+            }}
+          >
+            AI Triage
+          </p>
+          <h1
+            style={{
+              fontSize: "clamp(24px, 4vw, 36px)",
+              fontWeight: "800",
+              color: "#fff",
+              fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+              marginBottom: "8px",
+            }}
+          >
+            Symptom Checker
+          </h1>
+          <p
+            style={{
+              fontSize: "15px",
+              color: "rgba(255,255,255,0.6)",
+              margin: 0,
+            }}
+          >
+            Get instant triage guidance for your pet — free, 24/7.
+          </p>
+        </div>
+      </div>
+
+      <div
+        style={{
+          maxWidth: "680px",
           margin: "0 auto",
-          padding: "20px",
-          fontFamily: "system-ui, sans-serif",
-          minHeight: "calc(100vh - 64px)",
+          padding: "24px 24px 80px",
+          fontFamily: "var(--font-urbanist, system-ui, sans-serif)",
+          minHeight: "calc(100vh - 64px - 168px)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -1378,7 +1414,6 @@ export default function SymptomCheckerChatPage() {
           >
             ← Back
           </button>
-          
         </div>
 
         {selectedPet && (

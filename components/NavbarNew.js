@@ -147,7 +147,7 @@ export default function NavbarNew() {
     closeDropdown();
     closeMobileMenu();
     await supabase.auth.signOut();
-    router.push("/auth");
+    router.push("/");
   }
 
   const avatarUrl =
@@ -292,32 +292,7 @@ export default function NavbarNew() {
         }
 
         /* Sign in button */
-        .pp-signin-btn {
-          display: none;
-        }
-        @media (min-width: 768px) {
-          .pp-signin-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 18px;
-            border-radius: 8px;
-            border: 1.5px solid rgba(255,255,255,0.35);
-            background: transparent;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: var(--font-urbanist, 'Urbanist', sans-serif);
-            text-decoration: none;
-            cursor: pointer;
-            transition: border-color 0.15s ease, background 0.15s ease;
-            white-space: nowrap;
-          }
-        }
-        .pp-signin-btn:hover {
-          border-color: rgba(255,255,255,0.7);
-          background: rgba(255,255,255,0.06);
-        }
+        .pp-signin-btn { display: none; }
         .pp-signin-btn:hover {
           border-color: rgba(255,255,255,0.7);
           background: rgba(255,255,255,0.06);
@@ -588,21 +563,33 @@ export default function NavbarNew() {
           width: 100%;
           padding: 14px 0;
           text-align: center;
-          background: rgba(255,255,255,0.08);
-          border: 1.5px solid rgba(255,255,255,0.25);
+          background: rgba(255,255,255,0.1);
+          border: 1.5px solid rgba(255,255,255,0.3);
           border-radius: 12px;
           font-size: 16px;
           font-weight: 700;
           color: #fff;
           text-decoration: none;
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
-          margin-top: 4px;
           transition: background 0.15s ease;
         }
-        .pp-mobile-signin-btn:hover { background: rgba(255,255,255,0.14); }
+        .pp-mobile-signin-btn:hover { background: rgba(255,255,255,0.18); }
         .pp-mobile-signout {
+          display: block;
+          width: 100%;
+          padding: 14px 0;
+          text-align: center;
+          background: rgba(207,92,54,0.15);
+          border: 1.5px solid rgba(207,92,54,0.5);
+          border-radius: 12px;
+          font-size: 16px;
+          font-weight: 700;
+          color: #CF5C36;
+          cursor: pointer;
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+          transition: background 0.15s ease;
+        }
         .pp-mobile-signout:hover { background: rgba(207,92,54,0.25); }
-        .pp-mobile-signout:hover { background: rgba(201,64,64,0.25); }
       `}</style>
 
       {/* ── Navbar ─────────────────────────────────────────────── */}
