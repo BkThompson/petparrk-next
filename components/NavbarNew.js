@@ -539,6 +539,12 @@ export default function NavbarNew() {
           display: block;
         }
         .pp-mobile-signin:hover { opacity: 0.88; }
+        .pp-mobile-divider {
+          width: 100%;
+          height: 1px;
+          background: rgba(255,255,255,0.1);
+          margin: 8px 0;
+        }
         .pp-mobile-signout {
           width: 100%;
           padding: 14px;
@@ -677,7 +683,7 @@ export default function NavbarNew() {
                 {label}
               </Link>
             ))}
-            {session && (
+            {session ? (
               <>
                 <Link href="/profile" className="pp-mobile-link">
                   My Profile
@@ -688,17 +694,13 @@ export default function NavbarNew() {
                 <Link href="/account" className="pp-mobile-link">
                   Account Settings
                 </Link>
+                <div className="pp-mobile-divider" />
+                <button className="pp-mobile-signout" onClick={handleSignOut}>
+                  Sign Out
+                </button>
               </>
-            )}
-          </div>
-
-          <div className="pp-mobile-bottom">
-            {session ? (
-              <button className="pp-mobile-signout" onClick={handleSignOut}>
-                Sign Out
-              </button>
             ) : (
-              <Link href="/auth" className="pp-mobile-signin">
+              <Link href="/auth" className="pp-mobile-link">
                 Sign In
               </Link>
             )}
