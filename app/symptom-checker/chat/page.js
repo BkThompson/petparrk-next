@@ -869,6 +869,8 @@ export default function SymptomCheckerChatPage() {
           style={{
             background: "var(--color-navy-dark, #172531)",
             padding: "56px 0",
+            minHeight: "168px",
+            boxSizing: "border-box",
           }}
         >
           <div
@@ -1342,6 +1344,8 @@ export default function SymptomCheckerChatPage() {
         style={{
           background: "var(--color-navy-dark, #172531)",
           padding: "56px 0",
+          minHeight: "168px",
+          boxSizing: "border-box",
         }}
       >
         <div
