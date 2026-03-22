@@ -9,7 +9,7 @@ export function middleware(request) {
   const token = request.cookies.get("preview_token")?.value;
   const url = request.nextUrl.clone();
 
-  if (token === "your-secret-word-here") {
+  if (token === "petparrk2026078118!") {
     return NextResponse.next();
   }
 
