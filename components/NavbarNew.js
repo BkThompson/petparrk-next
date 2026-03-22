@@ -329,8 +329,6 @@ export default function NavbarNew() {
           transition: border-color 0.15s, transform 0.15s;
           flex-shrink: 0;
           font-family: var(--font, 'Urbanist', sans-serif);
-        
-          display: none;
         }
         .pp-avatar-btn:hover {
           border-color: rgba(255,255,255,0.5);
@@ -690,17 +688,19 @@ export default function NavbarNew() {
               </Link>
             )}
 
-            {/* Hamburger */}
-            <button
-              className={`pp-hamburger${mobileOpen && !isClosing ? " open" : ""}`}
-              onClick={toggleMobileMenu}
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              aria-expanded={mobileOpen}
-            >
-              <span className="pp-hamburger-line" />
-              <span className="pp-hamburger-line" />
-              <span className="pp-hamburger-line" />
-            </button>
+            {/* Hamburger — only shows when logged out on mobile */}
+            {!session && (
+              <button
+                className={`pp-hamburger${mobileOpen && !isClosing ? " open" : ""}`}
+                onClick={toggleMobileMenu}
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileOpen}
+              >
+                <span className="pp-hamburger-line" />
+                <span className="pp-hamburger-line" />
+                <span className="pp-hamburger-line" />
+              </button>
+            )}
           </div>
         </div>
       </nav>
