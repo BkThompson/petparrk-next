@@ -31,11 +31,19 @@ function AuthPageContent() {
   }, []);
 
   function reset() {
-    setError(""); setSuccessMsg(""); setEmail(""); setPassword("");
-    setConfirmPassword(""); setFullName(""); setShowPassword(false);
+    setError("");
+    setSuccessMsg("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setFullName("");
+    setShowPassword(false);
   }
 
-  function switchMode(newMode) { reset(); setMode(newMode); }
+  function switchMode(newMode) {
+    reset();
+    setMode(newMode);
+  }
 
   async function handleGoogleSignIn() {
     setError("");
@@ -48,28 +56,48 @@ function AuthPageContent() {
 
   async function handleSignIn(e) {
     e.preventDefault();
-    setLoading(true); setError("");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(true);
+    setError("");
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     setLoading(false);
     if (error) setError(error.message);
     else router.push("/");
   }
 
   async function handleSignUp(e) {
-    e.preventDefault(); setError("");
-    if (password !== confirmPassword) { setError("Passwords do not match."); return; }
-    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    e.preventDefault();
+    setError("");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
-      email, password, options: { data: { full_name: fullName } },
+      email,
+      password,
+      options: { data: { full_name: fullName } },
     });
     setLoading(false);
     if (error) setError(error.message);
-    else { setSuccessMsg("✅ Account created! Check your email to confirm, then sign in."); switchMode("signin"); }
+    else {
+      setSuccessMsg(
+        "✅ Account created! Check your email to confirm, then sign in.",
+      );
+      switchMode("signin");
+    }
   }
 
   async function handleForgotPassword(e) {
-    e.preventDefault(); setError(""); setLoading(true);
+    e.preventDefault();
+    setError("");
+    setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
@@ -79,63 +107,155 @@ function AuthPageContent() {
   }
 
   const inputStyle = {
-    width: "100%", padding: "12px 14px", borderRadius: "10px",
-    border: "1.5px solid var(--color-border, #EDE8E0)", fontSize: "15px",
-    fontFamily: "var(--font-urbanist, system-ui)", outline: "none",
-    boxSizing: "border-box", background: "#fff", transition: "border-color 0.15s",
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    border: "1.5px solid var(--color-border, #EDE8E0)",
+    fontSize: "15px",
+    fontFamily: "var(--font-urbanist, system-ui)",
+    outline: "none",
+    boxSizing: "border-box",
+    background: "#fff",
+    transition: "border-color 0.15s",
   };
 
   const labelStyle = {
-    display: "block", fontSize: "13px", fontWeight: "600",
-    color: "var(--color-slate, #4B5563)", marginBottom: "6px",
+    display: "block",
+    fontSize: "13px",
+    fontWeight: "600",
+    color: "var(--color-slate, #4B5563)",
+    marginBottom: "6px",
   };
 
   const primaryBtn = {
-    width: "100%", padding: "13px",
+    width: "100%",
+    padding: "13px",
     background: loading ? "#aaa" : "var(--color-terracotta, #CF5C36)",
-    color: "#fff", border: "none", borderRadius: "10px", fontSize: "15px",
-    fontWeight: "700", cursor: loading ? "not-allowed" : "pointer",
-    fontFamily: "var(--font-urbanist, system-ui)", transition: "opacity 0.15s",
+    color: "#fff",
+    border: "none",
+    borderRadius: "10px",
+    fontSize: "15px",
+    fontWeight: "700",
+    cursor: loading ? "not-allowed" : "pointer",
+    fontFamily: "var(--font-urbanist, system-ui)",
+    transition: "opacity 0.15s",
   };
 
   const googleBtn = {
-    width: "100%", padding: "12px", background: "#fff", color: "#333",
-    border: "1.5px solid var(--color-border, #EDE8E0)", borderRadius: "10px",
-    fontSize: "15px", fontWeight: "500", cursor: "pointer",
+    width: "100%",
+    padding: "12px",
+    background: "#fff",
+    color: "#333",
+    border: "1.5px solid var(--color-border, #EDE8E0)",
+    borderRadius: "10px",
+    fontSize: "15px",
+    fontWeight: "500",
+    cursor: "pointer",
     fontFamily: "var(--font-urbanist, system-ui)",
-    display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
     transition: "border-color 0.15s",
   };
 
   const linkBtn = {
-    background: "none", border: "none",
+    background: "none",
+    border: "none",
     color: "var(--color-terracotta, #CF5C36)",
-    cursor: "pointer", fontSize: "14px", fontWeight: "600",
-    padding: 0, fontFamily: "var(--font-urbanist, system-ui)",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "600",
+    padding: 0,
+    fontFamily: "var(--font-urbanist, system-ui)",
   };
 
   const divider = (
-    <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0", color: "#aaa", fontSize: "13px" }}>
-      <div style={{ flex: 1, height: "1px", background: "var(--color-border, #EDE8E0)" }} />
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        margin: "20px 0",
+        color: "#aaa",
+        fontSize: "13px",
+      }}
+    >
+      <div
+        style={{
+          flex: 1,
+          height: "1px",
+          background: "var(--color-border, #EDE8E0)",
+        }}
+      />
       or continue with email
-      <div style={{ flex: 1, height: "1px", background: "var(--color-border, #EDE8E0)" }} />
+      <div
+        style={{
+          flex: 1,
+          height: "1px",
+          background: "var(--color-border, #EDE8E0)",
+        }}
+      />
     </div>
   );
 
   const eyeBtn = (
-    <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#888", fontSize: "18px" }}>
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      style={{
+        position: "absolute",
+        right: "12px",
+        top: "50%",
+        transform: "translateY(-50%)",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        color: "#888",
+        fontSize: "18px",
+      }}
+    >
       {showPassword ? "🙈" : "👁️"}
     </button>
   );
 
   return (
-    <div style={{ minHeight: "calc(100vh - 64px)", background: "var(--color-cream, #F5F0E8)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "48px 20px 80px", fontFamily: "var(--font-urbanist, system-ui)" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "40px 36px", width: "100%", maxWidth: "420px", boxShadow: "0 4px 24px rgba(23,37,49,0.08)", border: "1px solid var(--color-border, #EDE8E0)" }}>
-
+    <div
+      style={{
+        minHeight: "calc(100vh - 64px)",
+        background: "var(--color-cream, #F5F0E8)",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        padding: "48px 20px 80px",
+        fontFamily: "var(--font-urbanist, system-ui)",
+      }}
+    >
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: "20px",
+          padding: "40px 36px",
+          width: "100%",
+          maxWidth: "420px",
+          boxShadow: "0 4px 24px rgba(23,37,49,0.08)",
+          border: "1px solid var(--color-border, #EDE8E0)",
+        }}
+      >
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
           <div style={{ fontSize: "32px", marginBottom: "6px" }}>🐾</div>
-          <h1 style={{ margin: 0, color: "var(--color-navy-dark, #172531)", fontSize: "22px", fontWeight: "800", fontFamily: "var(--font-urbanist, system-ui)" }}>PetParrk</h1>
+          <h1
+            style={{
+              margin: 0,
+              color: "var(--color-navy-dark, #172531)",
+              fontSize: "22px",
+              fontWeight: "800",
+              fontFamily: "var(--font-urbanist, system-ui)",
+            }}
+          >
+            PetParrk
+          </h1>
           <p style={{ margin: "6px 0 0", color: "#9CA3AF", fontSize: "14px" }}>
             {mode === "signin" && "Welcome back"}
             {mode === "signup" && "Create your free account"}
@@ -145,16 +265,59 @@ function AuthPageContent() {
 
         {/* Mode tabs — Sign In / Create Account */}
         {mode !== "forgot" && (
-          <div style={{ display: "flex", background: "var(--color-cream, #F5F0E8)", borderRadius: "10px", padding: "4px", marginBottom: "24px", gap: "4px" }}>
+          <div
+            style={{
+              display: "flex",
+              background: "var(--color-cream, #F5F0E8)",
+              borderRadius: "10px",
+              padding: "4px",
+              marginBottom: "24px",
+              gap: "4px",
+            }}
+          >
             <button
               onClick={() => switchMode("signin")}
-              style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "none", background: mode === "signin" ? "#fff" : "transparent", color: mode === "signin" ? "var(--color-navy-dark, #172531)" : "#9CA3AF", fontSize: "14px", fontWeight: "700", cursor: "pointer", fontFamily: "var(--font-urbanist, system-ui)", boxShadow: mode === "signin" ? "0 1px 4px rgba(23,37,49,0.08)" : "none", transition: "all 0.15s" }}
+              style={{
+                flex: 1,
+                padding: "8px",
+                borderRadius: "7px",
+                border: "none",
+                background: mode === "signin" ? "#fff" : "transparent",
+                color:
+                  mode === "signin"
+                    ? "var(--color-navy-dark, #172531)"
+                    : "#9CA3AF",
+                fontSize: "14px",
+                fontWeight: "700",
+                cursor: "pointer",
+                fontFamily: "var(--font-urbanist, system-ui)",
+                boxShadow:
+                  mode === "signin" ? "0 1px 4px rgba(23,37,49,0.08)" : "none",
+                transition: "all 0.15s",
+              }}
             >
               Sign In
             </button>
             <button
               onClick={() => switchMode("signup")}
-              style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "none", background: mode === "signup" ? "#fff" : "transparent", color: mode === "signup" ? "var(--color-navy-dark, #172531)" : "#9CA3AF", fontSize: "14px", fontWeight: "700", cursor: "pointer", fontFamily: "var(--font-urbanist, system-ui)", boxShadow: mode === "signup" ? "0 1px 4px rgba(23,37,49,0.08)" : "none", transition: "all 0.15s" }}
+              style={{
+                flex: 1,
+                padding: "8px",
+                borderRadius: "7px",
+                border: "none",
+                background: mode === "signup" ? "#fff" : "transparent",
+                color:
+                  mode === "signup"
+                    ? "var(--color-navy-dark, #172531)"
+                    : "#9CA3AF",
+                fontSize: "14px",
+                fontWeight: "700",
+                cursor: "pointer",
+                fontFamily: "var(--font-urbanist, system-ui)",
+                boxShadow:
+                  mode === "signup" ? "0 1px 4px rgba(23,37,49,0.08)" : "none",
+                transition: "all 0.15s",
+              }}
             >
               Create Account
             </button>
@@ -162,8 +325,36 @@ function AuthPageContent() {
         )}
 
         {/* Banners */}
-        {error && <div style={{ background: "#FCEAEA", color: "#C94040", borderRadius: "8px", padding: "10px 14px", fontSize: "14px", marginBottom: "16px", animation: "fadeIn 0.2s ease" }}>{error}</div>}
-        {successMsg && <div style={{ background: "#EDFAF3", color: "#1A6641", borderRadius: "8px", padding: "10px 14px", fontSize: "14px", marginBottom: "16px", animation: "fadeIn 0.2s ease" }}>{successMsg}</div>}
+        {error && (
+          <div
+            style={{
+              background: "#FCEAEA",
+              color: "#C94040",
+              borderRadius: "8px",
+              padding: "10px 14px",
+              fontSize: "14px",
+              marginBottom: "16px",
+              animation: "fadeIn 0.2s ease",
+            }}
+          >
+            {error}
+          </div>
+        )}
+        {successMsg && (
+          <div
+            style={{
+              background: "#EDFAF3",
+              color: "#1A6641",
+              borderRadius: "8px",
+              padding: "10px 14px",
+              fontSize: "14px",
+              marginBottom: "16px",
+              animation: "fadeIn 0.2s ease",
+            }}
+          >
+            {successMsg}
+          </div>
+        )}
         <style>{`
           @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
           .auth-form-content { animation: fadeIn 0.2s ease; }
@@ -179,22 +370,43 @@ function AuthPageContent() {
             <form onSubmit={handleSignIn}>
               <div style={{ marginBottom: "16px" }}>
                 <label style={labelStyle}>Email</label>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" style={inputStyle} />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  style={inputStyle}
+                />
               </div>
               <div style={{ marginBottom: "8px" }}>
                 <label style={labelStyle}>Password</label>
                 <div style={{ position: "relative" }}>
-                  <input type={showPassword ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" style={{ ...inputStyle, paddingRight: "44px" }} />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Your password"
+                    style={{ ...inputStyle, paddingRight: "44px" }}
+                  />
                   {eyeBtn}
                 </div>
               </div>
               <div style={{ textAlign: "right", marginBottom: "20px" }}>
-                <button type="button" style={linkBtn} onClick={() => switchMode("forgot")}>Forgot password?</button>
+                <button
+                  type="button"
+                  style={linkBtn}
+                  onClick={() => switchMode("forgot")}
+                >
+                  Forgot password?
+                </button>
               </div>
-              <button type="submit" style={primaryBtn} disabled={loading}>{loading ? "Signing in…" : "Sign In"}</button>
+              <button type="submit" style={primaryBtn} disabled={loading}>
+                {loading ? "Signing in…" : "Sign In"}
+              </button>
             </form>
-          </>
-        </div>
+          </div>
         )}
 
         {/* SIGN UP */}
@@ -207,55 +419,129 @@ function AuthPageContent() {
             <form onSubmit={handleSignUp}>
               <div style={{ marginBottom: "16px" }}>
                 <label style={labelStyle}>Full Name</label>
-                <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your name" style={inputStyle} />
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Your name"
+                  style={inputStyle}
+                />
               </div>
               <div style={{ marginBottom: "16px" }}>
                 <label style={labelStyle}>Email</label>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" style={inputStyle} />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  style={inputStyle}
+                />
               </div>
               <div style={{ marginBottom: "16px" }}>
                 <label style={labelStyle}>Password</label>
                 <div style={{ position: "relative" }}>
-                  <input type={showPassword ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" style={{ ...inputStyle, paddingRight: "44px" }} />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                    style={{ ...inputStyle, paddingRight: "44px" }}
+                  />
                   {eyeBtn}
                 </div>
               </div>
               <div style={{ marginBottom: "20px" }}>
                 <label style={labelStyle}>Confirm Password</label>
-                <input type={showPassword ? "text" : "password"} required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat your password" style={inputStyle} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat your password"
+                  style={inputStyle}
+                />
               </div>
-              <button type="submit" style={primaryBtn} disabled={loading}>{loading ? "Creating account…" : "Create Account"}</button>
-              <p style={{ fontSize: "12px", color: "#9CA3AF", textAlign: "center", marginTop: "12px" }}>
+              <button type="submit" style={primaryBtn} disabled={loading}>
+                {loading ? "Creating account…" : "Create Account"}
+              </button>
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "#9CA3AF",
+                  textAlign: "center",
+                  marginTop: "12px",
+                }}
+              >
                 By signing up you agree to our Terms &amp; Privacy Policy.
               </p>
             </form>
-          </>
-        </div>
+          </div>
         )}
 
         {/* FORGOT PASSWORD */}
         {mode === "forgot" && (
           <>
-            <p style={{ fontSize: "14px", color: "#4B5563", marginBottom: "20px", lineHeight: "1.6" }}>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "#4B5563",
+                marginBottom: "20px",
+                lineHeight: "1.6",
+              }}
+            >
               Enter your email and we'll send you a link to reset your password.
             </p>
             <form onSubmit={handleForgotPassword}>
               <div style={{ marginBottom: "20px" }}>
                 <label style={labelStyle}>Email</label>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" style={inputStyle} />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  style={inputStyle}
+                />
               </div>
-              <button type="submit" style={primaryBtn} disabled={loading}>{loading ? "Sending…" : "Send Reset Link"}</button>
+              <button type="submit" style={primaryBtn} disabled={loading}>
+                {loading ? "Sending…" : "Send Reset Link"}
+              </button>
             </form>
-            <p style={{ textAlign: "center", marginTop: "20px", fontSize: "14px" }}>
-              <button style={linkBtn} onClick={() => switchMode("signin")}>← Back to Sign In</button>
+            <p
+              style={{
+                textAlign: "center",
+                marginTop: "20px",
+                fontSize: "14px",
+              }}
+            >
+              <button style={linkBtn} onClick={() => switchMode("signin")}>
+                ← Back to Sign In
+              </button>
             </p>
           </>
         )}
 
         {/* Browse without account */}
         {mode !== "forgot" && (
-          <p style={{ textAlign: "center", marginTop: "16px", fontSize: "13px" }}>
-            <button style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", fontSize: "13px", fontWeight: "400", fontFamily: "var(--font-urbanist, system-ui)", padding: 0 }} onClick={() => router.push("/")}>
+          <p
+            style={{ textAlign: "center", marginTop: "16px", fontSize: "13px" }}
+          >
+            <button
+              style={{
+                background: "none",
+                border: "none",
+                color: "#9CA3AF",
+                cursor: "pointer",
+                fontSize: "13px",
+                fontWeight: "400",
+                fontFamily: "var(--font-urbanist, system-ui)",
+                padding: 0,
+              }}
+              onClick={() => router.push("/")}
+            >
               Browse without an account →
             </button>
           </p>
@@ -276,10 +562,22 @@ export default function AuthPage() {
 function GoogleIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 48 48">
-      <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.5 6.8 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z"/>
-      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19.1 13 24 13c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.5 6.8 29.5 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
-      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.4C9.8 35.5 16.4 44 24 44z"/>
-      <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.2 5.2C37 38.4 44 33 44 24c0-1.3-.1-2.7-.4-3.9z"/>
+      <path
+        fill="#FFC107"
+        d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.5 6.8 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z"
+      />
+      <path
+        fill="#FF3D00"
+        d="M6.3 14.7l6.6 4.8C14.7 16 19.1 13 24 13c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.5 6.8 29.5 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"
+      />
+      <path
+        fill="#4CAF50"
+        d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.4C9.8 35.5 16.4 44 24 44z"
+      />
+      <path
+        fill="#1976D2"
+        d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.2 5.2C37 38.4 44 33 44 24c0-1.3-.1-2.7-.4-3.9z"
+      />
     </svg>
   );
 }
