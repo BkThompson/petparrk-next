@@ -623,11 +623,13 @@ function VetsContent() {
                       ))}
                     {vet.accepting_new_patients === true && (
                       <span className="badge badge-success">
-                        ✓ Accepting New Patients
+                        ✅ Accepting New Patients
                       </span>
                     )}
                     {vet.accepting_new_patients === false && (
-                      <span className="badge badge-error">✕ Not Accepting</span>
+                      <span className="badge badge-error">
+                        ✕ Not Accepting New Patients
+                      </span>
                     )}
                     {vet.ownership && (
                       <span className="badge badge-terra">{vet.ownership}</span>

@@ -330,7 +330,12 @@ export default function NavbarNew() {
           position: absolute;
           top: calc(100% + 8px);
           right: 0;
-          background: rgba(20, 32, 44, 0.92);
+          background: linear-gradient(
+            to bottom,
+            rgba(20,32,44,0.75) 0%,
+            rgba(20,32,44,0.95) 60%,
+            rgba(20,32,44,1) 100%
+          );
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(255,255,255,0.08);
@@ -414,14 +419,14 @@ export default function NavbarNew() {
           justify-content: center;
           align-items: center;
           gap: 5px;
-          width: 40px;
-          height: 40px;
+          width: 36px;
+          height: 36px;
           background: none;
           border: none;
           cursor: pointer;
           padding: 0;
-          border-radius: 8px;
-          transition: background 0.15s;
+          z-index: 310;
+          flex-shrink: 0;
         }
         .pp-hamburger:hover { background: rgba(255,255,255,0.08); }
         @media (min-width: 768px) {
@@ -552,20 +557,20 @@ export default function NavbarNew() {
         .pp-mobile-signout {
           display: block;
           width: 100%;
-          padding: 16px 0;
-          text-align: left;
-          background: none;
-          border: none;
-          font-size: clamp(28px, 7vw, 40px);
+          padding: 14px 0;
+          text-align: center;
+          background: rgba(207,92,54,0.15);
+          border: 1px solid rgba(207,92,54,0.4);
+          border-radius: 12px;
+          font-size: clamp(16px, 4vw, 20px);
           font-weight: 700;
-          color: var(--color-terracotta, #CF5C36);
+          color: #CF5C36;
           cursor: pointer;
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
-          letter-spacing: -0.02em;
-          opacity: 0.85;
-          transition: opacity 0.15s ease;
+          margin-top: 4px;
+          transition: background 0.15s ease;
         }
-        .pp-mobile-signout:hover { opacity: 1; }
+        .pp-mobile-signout:hover { background: rgba(207,92,54,0.25); }
         .pp-mobile-signout:hover { background: rgba(201,64,64,0.25); }
       `}</style>
 

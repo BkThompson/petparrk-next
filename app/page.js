@@ -512,11 +512,13 @@ export default function Home() {
                           </span>
                         ))}
                       {vet.accepting_new_patients === true && (
-                        <span className="badge badge-success">✓ Accepting</span>
+                        <span className="badge badge-success">
+                          ✅ Accepting New Patients
+                        </span>
                       )}
                       {vet.accepting_new_patients === false && (
                         <span className="badge badge-error">
-                          ✕ Not accepting
+                          ✕ Not Accepting New Patients
                         </span>
                       )}
                     </div>
