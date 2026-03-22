@@ -1,17 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
-const GREEN = "#2d6a4f";
-const GREEN_LIGHT = "#e8f5e9";
-const GREEN_DARK = "#1b4332";
-
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [mode, setMode] = useState("signin"); // 'signin' | 'signup' | 'forgot'
+  const [mode, setMode] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,7 +18,12 @@ export default function AuthPage() {
   const [successMsg, setSuccessMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // If already logged in, redirect to home
+  // Read tab query param on mount — supports ?tab=signup
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "signup") setMode("signup");
+  }, [searchParams]);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) router.push("/");
@@ -43,7 +45,6 @@ export default function AuthPage() {
     setMode(newMode);
   }
 
-  // ─── Google OAuth ─────────────────────────────────────────────────────────
   async function handleGoogleSignIn() {
     setError("");
     const { error } = await supabase.auth.signInWithOAuth({
@@ -53,7 +54,6 @@ export default function AuthPage() {
     if (error) setError(error.message);
   }
 
-  // ─── Email Sign In ────────────────────────────────────────────────────────
   async function handleSignIn(e) {
     e.preventDefault();
     setLoading(true);
@@ -63,14 +63,10 @@ export default function AuthPage() {
       password,
     });
     setLoading(false);
-    if (error) {
-      setError(error.message);
-    } else {
-      router.push("/");
-    }
+    if (error) setError(error.message);
+    else router.push("/");
   }
 
-  // ─── Email Sign Up ────────────────────────────────────────────────────────
   async function handleSignUp(e) {
     e.preventDefault();
     setError("");
@@ -89,17 +85,15 @@ export default function AuthPage() {
       options: { data: { full_name: fullName } },
     });
     setLoading(false);
-    if (error) {
-      setError(error.message);
-    } else {
+    if (error) setError(error.message);
+    else {
       setSuccessMsg(
-        "✅ Account created! Check your email to confirm, then sign in."
+        "✅ Account created! Check your email to confirm, then sign in.",
       );
       switchMode("signin");
     }
   }
 
-  // ─── Forgot Password ──────────────────────────────────────────────────────
   async function handleForgotPassword(e) {
     e.preventDefault();
     setError("");
@@ -108,44 +102,43 @@ export default function AuthPage() {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccessMsg("📬 Reset link sent! Check your inbox.");
-    }
+    if (error) setError(error.message);
+    else setSuccessMsg("📬 Reset link sent! Check your inbox.");
   }
 
-  // ─── Styles ───────────────────────────────────────────────────────────────
   const inputStyle = {
     width: "100%",
     padding: "12px 14px",
-    borderRadius: "8px",
-    border: "1.5px solid #ddd",
+    borderRadius: "10px",
+    border: "1.5px solid var(--color-border, #EDE8E0)",
     fontSize: "15px",
-    fontFamily: "system-ui, sans-serif",
+    fontFamily: "var(--font-urbanist, system-ui)",
     outline: "none",
     boxSizing: "border-box",
+    background: "#fff",
+    transition: "border-color 0.15s",
   };
 
   const labelStyle = {
     display: "block",
     fontSize: "13px",
     fontWeight: "600",
-    color: "#444",
+    color: "var(--color-slate, #4B5563)",
     marginBottom: "6px",
   };
 
   const primaryBtn = {
     width: "100%",
     padding: "13px",
-    background: loading ? "#aaa" : GREEN,
+    background: loading ? "#aaa" : "var(--color-terracotta, #CF5C36)",
     color: "#fff",
     border: "none",
-    borderRadius: "8px",
+    borderRadius: "10px",
     fontSize: "15px",
-    fontWeight: "600",
+    fontWeight: "700",
     cursor: loading ? "not-allowed" : "pointer",
-    fontFamily: "system-ui, sans-serif",
+    fontFamily: "var(--font-urbanist, system-ui)",
+    transition: "opacity 0.15s",
   };
 
   const googleBtn = {
@@ -153,27 +146,28 @@ export default function AuthPage() {
     padding: "12px",
     background: "#fff",
     color: "#333",
-    border: "1.5px solid #ddd",
-    borderRadius: "8px",
+    border: "1.5px solid var(--color-border, #EDE8E0)",
+    borderRadius: "10px",
     fontSize: "15px",
     fontWeight: "500",
     cursor: "pointer",
-    fontFamily: "system-ui, sans-serif",
+    fontFamily: "var(--font-urbanist, system-ui)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: "10px",
+    transition: "border-color 0.15s",
   };
 
   const linkBtn = {
     background: "none",
     border: "none",
-    color: GREEN,
+    color: "var(--color-terracotta, #CF5C36)",
     cursor: "pointer",
     fontSize: "14px",
     fontWeight: "600",
     padding: 0,
-    fontFamily: "system-ui, sans-serif",
+    fontFamily: "var(--font-urbanist, system-ui)",
   };
 
   const divider = (
@@ -187,9 +181,21 @@ export default function AuthPage() {
         fontSize: "13px",
       }}
     >
-      <div style={{ flex: 1, height: "1px", background: "#eee" }} />
+      <div
+        style={{
+          flex: 1,
+          height: "1px",
+          background: "var(--color-border, #EDE8E0)",
+        }}
+      />
       or continue with email
-      <div style={{ flex: 1, height: "1px", background: "#eee" }} />
+      <div
+        style={{
+          flex: 1,
+          height: "1px",
+          background: "var(--color-border, #EDE8E0)",
+        }}
+      />
     </div>
   );
 
@@ -217,50 +223,113 @@ export default function AuthPage() {
     <div
       style={{
         minHeight: "calc(100vh - 64px)",
-        background: "#f7f9f7",
+        background: "var(--color-cream, #F5F0E8)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: "20px",
-        fontFamily: "system-ui, sans-serif",
+        fontFamily: "var(--font-urbanist, system-ui)",
       }}
     >
       <div
         style={{
           background: "#fff",
-          borderRadius: "16px",
+          borderRadius: "20px",
           padding: "40px 36px",
           width: "100%",
           maxWidth: "420px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+          boxShadow: "0 4px 24px rgba(23,37,49,0.08)",
+          border: "1px solid var(--color-border, #EDE8E0)",
         }}
       >
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <div style={{ fontSize: "36px", marginBottom: "4px" }}>🐾</div>
+          <div style={{ fontSize: "32px", marginBottom: "6px" }}>🐾</div>
           <h1
             style={{
               margin: 0,
-              color: GREEN,
-              fontSize: "1.6rem",
-              fontWeight: "700",
+              color: "var(--color-navy-dark, #172531)",
+              fontSize: "22px",
+              fontWeight: "800",
+              fontFamily: "var(--font-urbanist, system-ui)",
             }}
           >
             PetParrk
           </h1>
-          <p style={{ margin: "6px 0 0", color: "#777", fontSize: "14px" }}>
-            {mode === "signin" && "Know before you go to the vet"}
+          <p style={{ margin: "6px 0 0", color: "#9CA3AF", fontSize: "14px" }}>
+            {mode === "signin" && "Welcome back"}
             {mode === "signup" && "Create your free account"}
             {mode === "forgot" && "Reset your password"}
           </p>
         </div>
 
+        {/* Mode tabs — Sign In / Create Account */}
+        {mode !== "forgot" && (
+          <div
+            style={{
+              display: "flex",
+              background: "var(--color-cream, #F5F0E8)",
+              borderRadius: "10px",
+              padding: "4px",
+              marginBottom: "24px",
+              gap: "4px",
+            }}
+          >
+            <button
+              onClick={() => switchMode("signin")}
+              style={{
+                flex: 1,
+                padding: "8px",
+                borderRadius: "7px",
+                border: "none",
+                background: mode === "signin" ? "#fff" : "transparent",
+                color:
+                  mode === "signin"
+                    ? "var(--color-navy-dark, #172531)"
+                    : "#9CA3AF",
+                fontSize: "14px",
+                fontWeight: "700",
+                cursor: "pointer",
+                fontFamily: "var(--font-urbanist, system-ui)",
+                boxShadow:
+                  mode === "signin" ? "0 1px 4px rgba(23,37,49,0.08)" : "none",
+                transition: "all 0.15s",
+              }}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => switchMode("signup")}
+              style={{
+                flex: 1,
+                padding: "8px",
+                borderRadius: "7px",
+                border: "none",
+                background: mode === "signup" ? "#fff" : "transparent",
+                color:
+                  mode === "signup"
+                    ? "var(--color-navy-dark, #172531)"
+                    : "#9CA3AF",
+                fontSize: "14px",
+                fontWeight: "700",
+                cursor: "pointer",
+                fontFamily: "var(--font-urbanist, system-ui)",
+                boxShadow:
+                  mode === "signup" ? "0 1px 4px rgba(23,37,49,0.08)" : "none",
+                transition: "all 0.15s",
+              }}
+            >
+              Create Account
+            </button>
+          </div>
+        )}
+
         {/* Banners */}
         {error && (
           <div
             style={{
-              background: "#fde8e8",
-              color: "#b91c1c",
+              background: "#FCEAEA",
+              color: "#C94040",
               borderRadius: "8px",
               padding: "10px 14px",
               fontSize: "14px",
@@ -273,8 +342,8 @@ export default function AuthPage() {
         {successMsg && (
           <div
             style={{
-              background: GREEN_LIGHT,
-              color: GREEN_DARK,
+              background: "#EDFAF3",
+              color: "#1A6641",
               borderRadius: "8px",
               padding: "10px 14px",
               fontSize: "14px",
@@ -285,15 +354,13 @@ export default function AuthPage() {
           </div>
         )}
 
-        {/* ── SIGN IN ── */}
+        {/* SIGN IN */}
         {mode === "signin" && (
           <>
             <button style={googleBtn} onClick={handleGoogleSignIn}>
               <GoogleIcon /> Continue with Google
             </button>
-
             {divider}
-
             <form onSubmit={handleSignIn}>
               <div style={{ marginBottom: "16px" }}>
                 <label style={labelStyle}>Email</label>
@@ -306,7 +373,6 @@ export default function AuthPage() {
                   style={inputStyle}
                 />
               </div>
-
               <div style={{ marginBottom: "8px" }}>
                 <label style={labelStyle}>Password</label>
                 <div style={{ position: "relative" }}>
@@ -321,7 +387,6 @@ export default function AuthPage() {
                   {eyeBtn}
                 </div>
               </div>
-
               <div style={{ textAlign: "right", marginBottom: "20px" }}>
                 <button
                   type="button"
@@ -331,37 +396,20 @@ export default function AuthPage() {
                   Forgot password?
                 </button>
               </div>
-
               <button type="submit" style={primaryBtn} disabled={loading}>
                 {loading ? "Signing in…" : "Sign In"}
               </button>
             </form>
-
-            <p
-              style={{
-                textAlign: "center",
-                marginTop: "20px",
-                fontSize: "14px",
-                color: "#666",
-              }}
-            >
-              Don&apos;t have an account?{" "}
-              <button style={linkBtn} onClick={() => switchMode("signup")}>
-                Sign up free
-              </button>
-            </p>
           </>
         )}
 
-        {/* ── SIGN UP ── */}
+        {/* SIGN UP */}
         {mode === "signup" && (
           <>
             <button style={googleBtn} onClick={handleGoogleSignIn}>
               <GoogleIcon /> Continue with Google
             </button>
-
             {divider}
-
             <form onSubmit={handleSignUp}>
               <div style={{ marginBottom: "16px" }}>
                 <label style={labelStyle}>Full Name</label>
@@ -374,7 +422,6 @@ export default function AuthPage() {
                   style={inputStyle}
                 />
               </div>
-
               <div style={{ marginBottom: "16px" }}>
                 <label style={labelStyle}>Email</label>
                 <input
@@ -386,7 +433,6 @@ export default function AuthPage() {
                   style={inputStyle}
                 />
               </div>
-
               <div style={{ marginBottom: "16px" }}>
                 <label style={labelStyle}>Password</label>
                 <div style={{ position: "relative" }}>
@@ -401,7 +447,6 @@ export default function AuthPage() {
                   {eyeBtn}
                 </div>
               </div>
-
               <div style={{ marginBottom: "20px" }}>
                 <label style={labelStyle}>Confirm Password</label>
                 <input
@@ -413,15 +458,13 @@ export default function AuthPage() {
                   style={inputStyle}
                 />
               </div>
-
               <button type="submit" style={primaryBtn} disabled={loading}>
-                {loading ? "Creating account…" : "Create Free Account"}
+                {loading ? "Creating account…" : "Create Account"}
               </button>
-
               <p
                 style={{
                   fontSize: "12px",
-                  color: "#999",
+                  color: "#9CA3AF",
                   textAlign: "center",
                   marginTop: "12px",
                 }}
@@ -429,38 +472,22 @@ export default function AuthPage() {
                 By signing up you agree to our Terms &amp; Privacy Policy.
               </p>
             </form>
-
-            <p
-              style={{
-                textAlign: "center",
-                marginTop: "16px",
-                fontSize: "14px",
-                color: "#666",
-              }}
-            >
-              Already have an account?{" "}
-              <button style={linkBtn} onClick={() => switchMode("signin")}>
-                Sign in
-              </button>
-            </p>
           </>
         )}
 
-        {/* ── FORGOT PASSWORD ── */}
+        {/* FORGOT PASSWORD */}
         {mode === "forgot" && (
           <>
             <p
               style={{
                 fontSize: "14px",
-                color: "#666",
+                color: "#4B5563",
                 marginBottom: "20px",
-                lineHeight: "1.5",
+                lineHeight: "1.6",
               }}
             >
-              Enter your email and we&apos;ll send you a link to reset your
-              password.
+              Enter your email and we'll send you a link to reset your password.
             </p>
-
             <form onSubmit={handleForgotPassword}>
               <div style={{ marginBottom: "20px" }}>
                 <label style={labelStyle}>Email</label>
@@ -473,18 +500,15 @@ export default function AuthPage() {
                   style={inputStyle}
                 />
               </div>
-
               <button type="submit" style={primaryBtn} disabled={loading}>
                 {loading ? "Sending…" : "Send Reset Link"}
               </button>
             </form>
-
             <p
               style={{
                 textAlign: "center",
                 marginTop: "20px",
                 fontSize: "14px",
-                color: "#666",
               }}
             >
               <button style={linkBtn} onClick={() => switchMode("signin")}>
@@ -500,7 +524,16 @@ export default function AuthPage() {
             style={{ textAlign: "center", marginTop: "16px", fontSize: "13px" }}
           >
             <button
-              style={{ ...linkBtn, color: "#aaa", fontWeight: "400" }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#9CA3AF",
+                cursor: "pointer",
+                fontSize: "13px",
+                fontWeight: "400",
+                fontFamily: "var(--font-urbanist, system-ui)",
+                padding: 0,
+              }}
               onClick={() => router.push("/")}
             >
               Browse without an account →
@@ -509,6 +542,14 @@ export default function AuthPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuthPageContent />
+    </Suspense>
   );
 }
 

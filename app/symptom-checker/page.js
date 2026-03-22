@@ -134,7 +134,7 @@ export default function SymptomCheckerHomePage() {
         style={{
           background: "var(--color-navy-dark, #172531)",
           padding: "56px 0",
-          minHeight: "168px",
+          minHeight: "180px",
           boxSizing: "border-box",
         }}
       >
@@ -171,7 +171,7 @@ export default function SymptomCheckerHomePage() {
               margin: 0,
             }}
           >
-            Answer 3 quick questions and get an instant triage recommendation.
+            Get instant triage guidance for your pet — free, 24/7.
           </p>
         </div>
       </div>
@@ -537,8 +537,8 @@ export default function SymptomCheckerHomePage() {
                 >
                   Start Free Check
                 </button>
-                <Link href="/auth" className="sc-btn-outline">
-                  Sign Up Free
+                <Link href="/auth?tab=signup" className="sc-btn-outline">
+                  Create Account
                 </Link>
               </div>
             </div>

@@ -308,6 +308,8 @@ function VetsContent() {
           style={{
             background: "var(--color-navy-dark, #172531)",
             padding: "56px 0",
+            minHeight: "180px",
+            boxSizing: "border-box",
           }}
         >
           <div
@@ -331,7 +333,7 @@ function VetsContent() {
                 fontWeight: "800",
                 color: "#fff",
                 fontFamily: "var(--font, 'Urbanist', sans-serif)",
-                marginBottom: "4px",
+                marginBottom: "8px",
               }}
             >
               Find a Vet

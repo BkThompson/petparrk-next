@@ -293,7 +293,32 @@ export default function NavbarNew() {
         }
 
         /* Sign in button */
-        .pp-signin-btn { display: none; }
+        .pp-signin-btn {
+          display: none;
+        }
+        @media (min-width: 768px) {
+          .pp-signin-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 18px;
+            border-radius: 8px;
+            border: 1.5px solid rgba(255,255,255,0.35);
+            background: transparent;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+            text-decoration: none;
+            cursor: pointer;
+            transition: border-color 0.15s ease, background 0.15s ease;
+            white-space: nowrap;
+          }
+          .pp-signin-btn:hover {
+            border-color: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.06);
+          }
+        }
         .pp-signin-btn:hover {
           border-color: rgba(255,255,255,0.7);
           background: rgba(255,255,255,0.06);
@@ -785,7 +810,7 @@ export default function NavbarNew() {
             ) : (
               <>
                 <div className="pp-mobile-divider" />
-                <Link href="/auth?mode=signup" className="pp-mobile-signup-btn">
+                <Link href="/auth?tab=signup" className="pp-mobile-signup-btn">
                   Create Account
                 </Link>
                 <Link href="/auth" className="pp-mobile-signin-btn">
