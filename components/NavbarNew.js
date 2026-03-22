@@ -293,23 +293,27 @@ export default function NavbarNew() {
 
         /* Sign in button */
         .pp-signin-btn {
-          display: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           padding: 8px 18px;
-          background: var(--color-terracotta, #CF5C36);
+          border-radius: 8px;
+          border: 1.5px solid rgba(255,255,255,0.35);
+          background: transparent;
           color: #fff;
-          border: none;
-          border-radius: 12px;
           font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          font-family: var(--font, 'Urbanist', sans-serif);
-          transition: opacity 0.15s, transform 0.15s;
+          font-weight: 600;
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
           text-decoration: none;
+          cursor: pointer;
+          transition: border-color 0.15s ease, background 0.15s ease;
+          white-space: nowrap;
         }
-        .pp-signin-btn:hover { opacity: 0.88; transform: scale(1.02); }
-        @media (min-width: 768px) {
-          .pp-signin-btn { display: inline-flex; align-items: center; }
+        .pp-signin-btn:hover {
+          border-color: rgba(255,255,255,0.7);
+          background: rgba(255,255,255,0.06);
         }
+
 
         /* Avatar button */
         .pp-avatar-btn {
