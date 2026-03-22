@@ -322,7 +322,7 @@ export default function VetPage() {
           margin: "0 auto",
           padding: "20px",
           fontFamily: "var(--font, system-ui, sans-serif)",
-          minHeight: "calc(100vh - 64px)",
+          minHeight: "100vh",
           boxSizing: "border-box",
         }}
       >
@@ -510,8 +510,8 @@ export default function VetPage() {
                     }}
                   >
                     {vet.accepting_new_patients
-                      ? "✅ Accepting"
-                      : "❌ Not accepting"}
+                      ? "✅ Accepting New Patients"
+                      : "❌ Not Accepting New Patients"}
                   </strong>
                 </>
               )}

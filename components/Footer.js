@@ -157,11 +157,20 @@ export default function Footer() {
             style={{
               fontSize: "13px",
               color: "rgba(255,255,255,0.4)",
-              margin: 0,
+              margin: "0 0 2px",
             }}
           >
             © 2026 PetParrk. Prices are community-sourced and verified by our
-            team. Always call to confirm before your visit.
+            team.
+          </p>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "rgba(255,255,255,0.4)",
+              margin: 0,
+            }}
+          >
+            Always call to confirm before your visit.
           </p>
           <a
             href="mailto:bkalthompson@gmail.com"

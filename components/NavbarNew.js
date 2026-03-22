@@ -332,15 +332,15 @@ export default function NavbarNew() {
           right: 0;
           background: linear-gradient(
             to bottom,
-            rgba(20,32,44,0.75) 0%,
-            rgba(20,32,44,0.95) 60%,
-            rgba(20,32,44,1) 100%
+            rgba(20,32,44,0.6) 0%,
+            rgba(20,32,44,0.88) 40%,
+            rgba(20,32,44,0.98) 100%
           );
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255,255,255,0.12);
           border-radius: 4px;
-          min-width: 200px;
+          min-width: 210px;
           overflow: hidden;
           z-index: 200;
           animation: ddFadeIn 0.18s cubic-bezier(0.4,0,0.2,1);
