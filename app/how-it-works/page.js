@@ -186,7 +186,9 @@ export default function HowItWorksPage() {
               fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
             }}
           >
-            Real prices. Real vets. No surprises.
+            Real prices. Real vets.
+            <br />
+            <span style={{ whiteSpace: "nowrap" }}>No surprises.</span>
           </h2>
           <p
             style={{

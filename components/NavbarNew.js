@@ -32,8 +32,6 @@ const NAV_LINKS = [
 ];
 
 const DROPDOWN_LINKS = [
-  { href: "/", label: "Find a Vet", icon: "🏠" },
-  { href: "/symptom-checker", label: "Symptom Checker", icon: "🩺" },
   { href: "/profile", label: "My Profile", icon: "👤" },
   { href: "/saved", label: "Saved Vets", icon: "❤️" },
   { href: "/account", label: "Account Settings", icon: "⚙️" },
@@ -330,19 +328,22 @@ export default function NavbarNew() {
         /* Dropdown */
         .pp-dropdown {
           position: absolute;
-          top: calc(100% + 10px);
+          top: calc(100% + 8px);
           right: 0;
-          background: #fff;
-          border: 1px solid var(--color-border, #EDE8E0);
-          border-radius: 16px;
-          box-shadow: 0 8px 32px rgba(23,37,49,0.14);
-          min-width: 210px;
-          z-index: 200;
+          background: rgba(20, 32, 44, 0.92);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 4px;
+          min-width: 200px;
           overflow: hidden;
-          animation: ddFadeIn 0.15s ease forwards;
+          z-index: 200;
+          animation: ddFadeIn 0.18s cubic-bezier(0.4,0,0.2,1);
         }
         @keyframes ddFadeIn {
-          from { opacity: 0; transform: translateY(6px); }
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
           to   { opacity: 1; transform: translateY(0); }
         }
         .pp-dd-header {
@@ -373,33 +374,36 @@ export default function NavbarNew() {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 10px 16px;
-          font-size: 13px;
+          padding: 11px 16px;
+          font-size: 14px;
           font-weight: 500;
-          color: var(--color-ink, #1A1A1A);
+          color: rgba(255,255,255,0.85);
           text-decoration: none;
-          transition: background 0.12s;
-          font-family: var(--font, 'Urbanist', sans-serif);
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+          transition: background 0.12s ease, color 0.12s ease;
         }
-        .pp-dd-link:hover { background: var(--color-cream, #F5F0E8); }
+        .pp-dd-link:hover {
+          background: rgba(255,255,255,0.08);
+          color: #fff;
+        }
         .pp-dd-divider {
           border: none;
-          border-top: 1px solid var(--color-border, #EDE8E0);
+          border-top: 1px solid rgba(255,255,255,0.08);
           margin: 4px 0;
         }
         .pp-dd-signout {
           display: block;
           width: 100%;
-          padding: 10px 16px;
+          padding: 11px 16px;
           text-align: left;
           background: none;
           border: none;
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 500;
-          color: var(--color-error, #C94040);
+          color: #CF5C36;
           cursor: pointer;
-          font-family: var(--font, 'Urbanist', sans-serif);
-          transition: background 0.12s;
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+          transition: background 0.12s ease;
         }
         .pp-dd-signout:hover { background: var(--color-error-light, #FCEAEA); }
 
@@ -543,21 +547,25 @@ export default function NavbarNew() {
           width: 100%;
           height: 1px;
           background: rgba(255,255,255,0.1);
-          margin: 8px 0;
+          margin: 16px 0;
         }
         .pp-mobile-signout {
+          display: block;
           width: 100%;
-          padding: 14px;
-          background: rgba(201,64,64,0.15);
-          color: #ff8080;
-          border: 1px solid rgba(201,64,64,0.3);
-          border-radius: 12px;
-          font-size: 15px;
-          font-weight: 600;
+          padding: 16px 0;
+          text-align: left;
+          background: none;
+          border: none;
+          font-size: clamp(28px, 7vw, 40px);
+          font-weight: 700;
+          color: var(--color-terracotta, #CF5C36);
           cursor: pointer;
-          font-family: var(--font, 'Urbanist', sans-serif);
-          transition: background 0.15s;
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+          letter-spacing: -0.02em;
+          opacity: 0.85;
+          transition: opacity 0.15s ease;
         }
+        .pp-mobile-signout:hover { opacity: 1; }
         .pp-mobile-signout:hover { background: rgba(201,64,64,0.25); }
       `}</style>
 
@@ -674,6 +682,7 @@ export default function NavbarNew() {
           aria-label="Navigation menu"
         >
           <div className="pp-mobile-links">
+            {/* Main nav */}
             {NAV_LINKS.map(({ href, label }) => (
               <Link
                 key={href}
@@ -683,8 +692,11 @@ export default function NavbarNew() {
                 {label}
               </Link>
             ))}
+
+            {/* Account links — logged in */}
             {session ? (
               <>
+                <div className="pp-mobile-divider" />
                 <Link href="/profile" className="pp-mobile-link">
                   My Profile
                 </Link>
@@ -700,9 +712,12 @@ export default function NavbarNew() {
                 </button>
               </>
             ) : (
-              <Link href="/auth" className="pp-mobile-link">
-                Sign In
-              </Link>
+              <>
+                <div className="pp-mobile-divider" />
+                <Link href="/auth" className="pp-mobile-link">
+                  Sign In
+                </Link>
+              </>
             )}
           </div>
         </div>
