@@ -4,6 +4,7 @@ import ToastProvider from "../components/ToastProvider";
 import NavbarWrapper from "../components/NavbarWrapper";
 import Footer from "../components/Footer";
 import ScrollToTop from "../components/ScrollToTop";
+import ConditionalShell from "../components/ConditionalShell";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -34,8 +35,8 @@ export const metadata = {
     description: "Real vet prices for the Bay Area. No surprises.",
   },
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
   },
   verification: {
     google: "7s6yV00GY-q643NY-Vlq7Hh3zC6GCxh91Wiwlz8JebA",
@@ -62,12 +63,14 @@ export default function RootLayout({ children }) {
           minHeight: "100vh",
         }}
       >
-        <NavbarWrapper />
-        <ScrollToTop />
-        <main style={{ flex: 1 }}>
-          <ToastProvider>{children}</ToastProvider>
-        </main>
-        <Footer />
+        <ConditionalShell
+          nav={<><NavbarWrapper /><ScrollToTop /></>}
+          footer={<Footer />}
+        >
+          <main style={{ flex: 1 }}>
+            <ToastProvider>{children}</ToastProvider>
+          </main>
+        </ConditionalShell>
       </body>
     </html>
   );
