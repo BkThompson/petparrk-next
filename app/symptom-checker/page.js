@@ -190,29 +190,21 @@ export default function SymptomCheckerHomePage() {
           }}
         >
           {/* Description */}
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: "16px",
-              padding: "20px 24px",
-              marginBottom: "24px",
-              border: "1px solid var(--color-border, #EDE8E0)",
-            }}
-          >
-            <p
+          <div style={{ marginBottom: "28px" }}>
+            <h2
               style={{
-                fontSize: "15px",
+                fontSize: "20px",
+                fontWeight: "700",
                 color: "var(--color-navy-dark, #172531)",
-                fontWeight: "600",
-                margin: "0 0 6px 0",
+                margin: "0 0 8px 0",
                 fontFamily: "var(--font-urbanist, system-ui)",
               }}
             >
               How it works
-            </p>
+            </h2>
             <p
               style={{
-                fontSize: "14px",
+                fontSize: "15px",
                 color: "var(--color-slate, #4B5563)",
                 lineHeight: "1.7",
                 margin: 0,

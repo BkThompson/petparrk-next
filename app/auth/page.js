@@ -263,26 +263,41 @@ function AuthPageContent() {
           </p>
         </div>
 
-        {/* Mode tabs — Sign In / Create Account */}
+        {/* Mode tabs — sliding pill */}
         {mode !== "forgot" && (
           <div
             style={{
+              position: "relative",
               display: "flex",
               background: "var(--color-cream, #F5F0E8)",
               borderRadius: "10px",
               padding: "4px",
               marginBottom: "24px",
-              gap: "4px",
             }}
           >
+            {/* Sliding pill */}
+            <div
+              style={{
+                position: "absolute",
+                top: "4px",
+                bottom: "4px",
+                left: mode === "signin" ? "4px" : "calc(50% + 2px)",
+                width: "calc(50% - 6px)",
+                background: "#fff",
+                borderRadius: "7px",
+                boxShadow: "0 1px 4px rgba(23,37,49,0.1)",
+                transition: "left 0.22s cubic-bezier(0.4,0,0.2,1)",
+                pointerEvents: "none",
+              }}
+            />
             <button
               onClick={() => switchMode("signin")}
               style={{
                 flex: 1,
-                padding: "8px",
+                padding: "9px 8px",
                 borderRadius: "7px",
                 border: "none",
-                background: mode === "signin" ? "#fff" : "transparent",
+                background: "transparent",
                 color:
                   mode === "signin"
                     ? "var(--color-navy-dark, #172531)"
@@ -291,9 +306,9 @@ function AuthPageContent() {
                 fontWeight: "700",
                 cursor: "pointer",
                 fontFamily: "var(--font-urbanist, system-ui)",
-                boxShadow:
-                  mode === "signin" ? "0 1px 4px rgba(23,37,49,0.08)" : "none",
-                transition: "all 0.15s",
+                position: "relative",
+                zIndex: 1,
+                transition: "color 0.22s ease",
               }}
             >
               Sign In
@@ -302,10 +317,10 @@ function AuthPageContent() {
               onClick={() => switchMode("signup")}
               style={{
                 flex: 1,
-                padding: "8px",
+                padding: "9px 8px",
                 borderRadius: "7px",
                 border: "none",
-                background: mode === "signup" ? "#fff" : "transparent",
+                background: "transparent",
                 color:
                   mode === "signup"
                     ? "var(--color-navy-dark, #172531)"
@@ -314,9 +329,9 @@ function AuthPageContent() {
                 fontWeight: "700",
                 cursor: "pointer",
                 fontFamily: "var(--font-urbanist, system-ui)",
-                boxShadow:
-                  mode === "signup" ? "0 1px 4px rgba(23,37,49,0.08)" : "none",
-                transition: "all 0.15s",
+                position: "relative",
+                zIndex: 1,
+                transition: "color 0.22s ease",
               }}
             >
               Create Account
