@@ -510,8 +510,8 @@ export default function VetPage() {
                     }}
                   >
                     {vet.accepting_new_patients
-                      ? "✅ Accepting New Patients"
-                      : "❌ Not Accepting New Patients"}
+                      ? "✅ Accepting"
+                      : "❌ Not Accepting"}
                   </strong>
                 </>
               )}

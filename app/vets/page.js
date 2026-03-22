@@ -395,7 +395,7 @@ function VetsContent() {
                 ))}
               </select>
               {[
-                { label: "Accepting Patients", value: "Yes" },
+                { label: "Accepting New Patients", value: "Yes" },
                 { label: "All", value: "All" },
               ].map((opt) => (
                 <button
