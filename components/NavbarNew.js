@@ -46,6 +46,7 @@ export default function NavbarNew() {
   const [profileAvatarUrl, setProfileAvatarUrl] = useState(null);
   const [avatarError, setAvatarError] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isDropdownClosing, setIsDropdownClosing] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -85,7 +86,7 @@ export default function NavbarNew() {
   useEffect(() => {
     function handleClickOutside(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target))
-        setShowDropdown(false);
+        closeDropdown();
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -133,8 +134,16 @@ export default function NavbarNew() {
     }
   }
 
+  function closeDropdown() {
+    setIsDropdownClosing(true);
+    setTimeout(() => {
+      setShowDropdown(false);
+      setIsDropdownClosing(false);
+    }, 150);
+  }
+
   async function handleSignOut() {
-    setShowDropdown(false);
+    closeDropdown();
     closeMobileMenu();
     await supabase.auth.signOut();
     router.push("/auth");
@@ -345,9 +354,17 @@ export default function NavbarNew() {
           z-index: 200;
           animation: ddFadeIn 0.18s cubic-bezier(0.4,0,0.2,1);
         }
+        .pp-dropdown.closing {
+          animation: ddFadeOut 0.15s cubic-bezier(0.4,0,0.2,1) forwards;
+          pointer-events: none;
+        }
         @keyframes ddFadeIn {
-          from { opacity: 0; transform: translateY(-8px); }
+          from { opacity: 0; transform: translateY(-6px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes ddFadeOut {
+          from { opacity: 1; transform: translateY(0); }
+          to   { opacity: 0; transform: translateY(-6px); }
         }
           to   { opacity: 1; transform: translateY(0); }
         }
@@ -618,7 +635,9 @@ export default function NavbarNew() {
               <div ref={dropdownRef} style={{ position: "relative" }}>
                 <button
                   className="pp-avatar-btn"
-                  onClick={() => setShowDropdown(!showDropdown)}
+                  onClick={() =>
+                    showDropdown ? closeDropdown() : setShowDropdown(true)
+                  }
                   aria-label="Account menu"
                   aria-expanded={showDropdown}
                 >
@@ -638,14 +657,16 @@ export default function NavbarNew() {
                   )}
                 </button>
 
-                {showDropdown && (
-                  <div className="pp-dropdown">
+                {(showDropdown || isDropdownClosing) && (
+                  <div
+                    className={`pp-dropdown${isDropdownClosing ? " closing" : ""}`}
+                  >
                     {DROPDOWN_LINKS.map(({ href, label, icon }) => (
                       <Link
                         key={href}
                         href={href}
                         className="pp-dd-link"
-                        onClick={() => setShowDropdown(false)}
+                        onClick={() => closeDropdown()}
                       >
                         <span style={{ fontSize: "16px" }}>{icon}</span>
                         {label}

@@ -146,11 +146,6 @@ export default function Footer() {
           style={{
             borderTop: "1px solid rgba(255,255,255,0.1)",
             paddingTop: "24px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "12px",
           }}
         >
           <p
@@ -172,16 +167,6 @@ export default function Footer() {
           >
             Always call to confirm before your visit.
           </p>
-          <a
-            href="mailto:bkalthompson@gmail.com"
-            style={{
-              fontSize: "13px",
-              color: "rgba(255,255,255,0.5)",
-              textDecoration: "none",
-            }}
-          >
-            bkalthompson@gmail.com
-          </a>
         </div>
       </div>
     </footer>

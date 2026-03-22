@@ -336,7 +336,7 @@ export default function VetPage() {
           }}
         >
           <Link
-            href="/"
+            href="/vets"
             style={{
               color: "#2d6a4f",
               fontSize: "14px",
