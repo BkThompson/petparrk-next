@@ -233,6 +233,7 @@ export default function NavbarNew() {
         @media (min-width: 768px) {
           .pp-nav-links { display: flex; }
           .pp-nav { box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
+          .pp-avatar-btn { display: flex !important; }
         }
 
         /* Sliding indicator bar */
@@ -328,6 +329,8 @@ export default function NavbarNew() {
           transition: border-color 0.15s, transform 0.15s;
           flex-shrink: 0;
           font-family: var(--font, 'Urbanist', sans-serif);
+        
+          display: none;
         }
         .pp-avatar-btn:hover {
           border-color: rgba(255,255,255,0.5);
@@ -341,13 +344,11 @@ export default function NavbarNew() {
           right: 0;
           background: linear-gradient(
             to bottom,
-            rgba(20,32,44,0.6) 0%,
-            rgba(20,32,44,0.88) 40%,
-            rgba(20,32,44,0.98) 100%
+            #1E3347 0%,
+            #172531 60%,
+            #121E28 100%
           );
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255,255,255,0.12);
+          border: 1px solid rgba(255,255,255,0.1);
           border-radius: 4px;
           min-width: 210px;
           overflow: hidden;
