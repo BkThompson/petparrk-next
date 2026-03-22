@@ -127,6 +127,7 @@ export default function NavbarNew() {
   }
 
   function toggleMobileMenu() {
+    if (showDropdown) closeDropdown();
     if (mobileOpen) {
       closeMobileMenu();
     } else {
@@ -233,7 +234,6 @@ export default function NavbarNew() {
         @media (min-width: 768px) {
           .pp-nav-links { display: flex; }
           .pp-nav { box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
-          .pp-avatar-btn { display: flex !important; }
         }
 
         /* Sliding indicator bar */
@@ -477,7 +477,7 @@ export default function NavbarNew() {
           background: var(--color-navy-dark, #172531);
           display: flex;
           flex-direction: column;
-          padding: 80px 32px 48px;
+          padding: 72px 32px 48px;
           animation: mobileSlideIn 0.3s ease forwards;
         }
         @media (min-width: 768px) {
@@ -636,9 +636,13 @@ export default function NavbarNew() {
               <div ref={dropdownRef} style={{ position: "relative" }}>
                 <button
                   className="pp-avatar-btn"
-                  onClick={() =>
-                    showDropdown ? closeDropdown() : setShowDropdown(true)
-                  }
+                  onClick={() => {
+                    if (window.innerWidth < 768) {
+                      toggleMobileMenu();
+                    } else {
+                      showDropdown ? closeDropdown() : setShowDropdown(true);
+                    }
+                  }}
                   aria-label="Account menu"
                   aria-expanded={showDropdown}
                 >
@@ -708,6 +712,26 @@ export default function NavbarNew() {
           role="dialog"
           aria-label="Navigation menu"
         >
+          {/* X close button — always visible at top right */}
+          <button
+            onClick={toggleMobileMenu}
+            aria-label="Close menu"
+            style={{
+              position: "absolute",
+              top: "20px",
+              right: "24px",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "8px",
+              color: "#fff",
+              fontSize: "24px",
+              lineHeight: 1,
+            }}
+          >
+            ✕
+          </button>
+
           <div className="pp-mobile-links">
             {/* Main nav */}
             {NAV_LINKS.map(({ href, label }) => (
