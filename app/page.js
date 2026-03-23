@@ -421,17 +421,6 @@ export default function Home() {
                   Affordable vets near you
                 </h2>
               </div>
-              <Link
-                href="/vets"
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "700",
-                  color: "var(--color-terracotta, #CF5C36)",
-                  textDecoration: "none",
-                }}
-              >
-                See all vets →
-              </Link>
             </div>
             <div
               style={{
