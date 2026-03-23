@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
 
 const VALUES = [
@@ -53,36 +50,90 @@ const PROBLEMS = [
 ];
 
 export default function AboutPage() {
-  const [activeValue, setActiveValue] = useState(0);
-
   return (
     <>
       <style>{`
-        .value-carousel-btn {
-          width: 40px; height: 40px; border-radius: 50%;
-          border: 1.5px solid var(--color-border, #EDE8E0);
-          background: #fff; cursor: pointer; display: flex;
-          align-items: center; justify-content: center;
-          font-size: 18px; transition: all 0.15s ease;
-          flex-shrink: 0;
+        /* Problem zigzag rows */
+        .problem-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 64px;
+          align-items: center;
         }
-        .value-carousel-btn:hover {
-          background: var(--color-navy-dark, #172531);
-          border-color: var(--color-navy-dark, #172531);
-          color: #fff;
+        .problem-row-reverse {
+          direction: rtl;
         }
-        .value-dot {
-          width: 8px; height: 8px; border-radius: 50%;
-          border: none; cursor: pointer; padding: 0;
-          transition: all 0.2s ease;
+        .problem-row-reverse > * {
+          direction: ltr;
         }
+        .problem-text { }
+        .problem-image-slot { }
         .problem-number {
-          font-size: clamp(64px, 10vw, 100px);
+          font-size: clamp(56px, 8vw, 96px);
           font-weight: 800;
           color: var(--color-border, #EDE8E0);
           line-height: 1;
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
           user-select: none;
+        }
+        @media (max-width: 768px) {
+          .problem-row, .problem-row-reverse {
+            grid-template-columns: 1fr;
+            direction: ltr;
+            gap: 32px;
+          }
+          .problem-image-slot { order: -1; }
+          .problem-number { font-size: 48px; }
+        }
+
+        /* Values — Stripe editorial */
+        .value-stripe-row {
+          display: grid;
+          grid-template-columns: 160px 1fr;
+          gap: 48px;
+          padding: 48px 0;
+          border-top: 1px solid var(--color-border, #EDE8E0);
+          align-items: start;
+        }
+        .value-stripe-row:last-child {
+          border-bottom: 1px solid var(--color-border, #EDE8E0);
+        }
+        .value-stripe-number {
+          font-size: clamp(72px, 10vw, 120px);
+          font-weight: 800;
+          line-height: 1;
+          color: var(--color-border, #EDE8E0);
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+          user-select: none;
+          padding-top: 4px;
+        }
+        .value-stripe-content {
+          padding-top: 12px;
+        }
+        .value-stripe-title {
+          font-size: clamp(22px, 3vw, 30px);
+          font-weight: 800;
+          color: var(--color-navy-dark, #172531);
+          margin: 0 0 14px 0;
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+          line-height: 1.2;
+        }
+        .value-stripe-body {
+          font-size: 17px;
+          color: var(--color-slate, #4B5563);
+          line-height: 1.8;
+          margin: 0;
+          max-width: 640px;
+        }
+        @media (max-width: 640px) {
+          .value-stripe-row {
+            grid-template-columns: 64px 1fr;
+            gap: 20px;
+            padding: 32px 0;
+          }
+          .value-stripe-number { font-size: 56px; }
+          .value-stripe-title { font-size: 20px; }
+          .value-stripe-body { font-size: 15px; }
         }
       `}</style>
 
@@ -160,7 +211,7 @@ export default function AboutPage() {
               fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
             }}
           >
-            Pet care shouldn't feel like a guessing game.
+            Pet care shouldn't feel like a guessing game.
           </h2>
           <p
             style={{
@@ -203,12 +254,12 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Problems — alternating layout */}
+      {/* Problems — alternating zigzag layout */}
       <section style={{ background: "#fff", padding: "80px 0" }}>
         <div
           style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
         >
-          <div style={{ maxWidth: "800px", marginBottom: "60px" }}>
+          <div style={{ maxWidth: "800px", marginBottom: "72px" }}>
             <p
               style={{
                 fontSize: "11px",
@@ -234,58 +285,96 @@ export default function AboutPage() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-            {PROBLEMS.map((p, i) => (
-              <div
-                key={p.number}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "120px 1fr",
-                  gap: "32px",
-                  padding: "48px 0",
-                  borderTop: "1px solid var(--color-border, #EDE8E0)",
-                  alignItems: "start",
-                }}
-              >
-                <div className="problem-number">{p.number}</div>
-                <div style={{ paddingTop: "8px" }}>
-                  <p
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      color: "var(--color-muted, #9CA3AF)",
-                      marginBottom: "8px",
-                    }}
+            {PROBLEMS.map((p, i) => {
+              const imageRight = i % 2 === 0;
+              return (
+                <div
+                  key={p.number}
+                  style={{
+                    borderTop: "1px solid var(--color-border, #EDE8E0)",
+                    padding: "64px 0",
+                  }}
+                >
+                  {/* Desktop: two column zigzag. Mobile: stacked */}
+                  <div
+                    className={`problem-row${imageRight ? "" : " problem-row-reverse"}`}
                   >
-                    {p.subtitle}
-                  </p>
-                  <h3
-                    style={{
-                      fontSize: "clamp(20px, 2.5vw, 26px)",
-                      fontWeight: "800",
-                      color: "var(--color-navy-dark, #172531)",
-                      marginBottom: "16px",
-                      fontFamily:
-                        "var(--font-urbanist, 'Urbanist', sans-serif)",
-                    }}
-                  >
-                    {p.title}
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: "16px",
-                      color: "var(--color-slate, #4B5563)",
-                      lineHeight: "1.8",
-                      maxWidth: "640px",
-                      margin: 0,
-                    }}
-                  >
-                    {p.body}
-                  </p>
+                    {/* Text side */}
+                    <div className="problem-text">
+                      <div className="problem-number">{p.number}</div>
+                      <p
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          color: "var(--color-muted, #9CA3AF)",
+                          marginBottom: "8px",
+                          marginTop: "16px",
+                        }}
+                      >
+                        {p.subtitle}
+                      </p>
+                      <h3
+                        style={{
+                          fontSize: "clamp(20px, 2.5vw, 26px)",
+                          fontWeight: "800",
+                          color: "var(--color-navy-dark, #172531)",
+                          marginBottom: "16px",
+                          fontFamily:
+                            "var(--font-urbanist, 'Urbanist', sans-serif)",
+                        }}
+                      >
+                        {p.title}
+                      </h3>
+                      <p
+                        style={{
+                          fontSize: "16px",
+                          color: "var(--color-slate, #4B5563)",
+                          lineHeight: "1.8",
+                          margin: 0,
+                        }}
+                      >
+                        {p.body}
+                      </p>
+                    </div>
+                    {/* Image placeholder side */}
+                    <div className="problem-image-slot">
+                      <div
+                        style={{
+                          width: "100%",
+                          aspectRatio: "4/3",
+                          background:
+                            "linear-gradient(135deg, var(--color-cream, #F5F0E8) 0%, #E8E0D4 100%)",
+                          borderRadius: "20px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexDirection: "column",
+                          gap: "12px",
+                        }}
+                      >
+                        <div style={{ fontSize: "48px" }}>
+                          {i === 0 ? "🌙" : i === 1 ? "💸" : "📂"}
+                        </div>
+                        <p
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            color: "var(--color-muted, #9CA3AF)",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.08em",
+                            margin: 0,
+                          }}
+                        >
+                          Photo coming soon
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -345,145 +434,50 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Values carousel */}
+      {/* Values — Stripe editorial style */}
       <section style={{ background: "#fff", padding: "80px 0" }}>
         <div
           style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              marginBottom: "48px",
-              flexWrap: "wrap",
-              gap: "16px",
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "700",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: "var(--color-terracotta, #CF5C36)",
-                  marginBottom: "12px",
-                }}
-              >
-                What we believe
-              </p>
-              <h2
-                style={{
-                  fontSize: "clamp(24px, 3vw, 32px)",
-                  fontWeight: "800",
-                  color: "var(--color-navy-dark, #172531)",
-                  fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
-                  margin: 0,
-                }}
-              >
-                Our values
-              </h2>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <button
-                className="value-carousel-btn"
-                onClick={() =>
-                  setActiveValue((v) => (v - 1 + VALUES.length) % VALUES.length)
-                }
-              >
-                ←
-              </button>
-              <div
-                style={{ display: "flex", gap: "8px", alignItems: "center" }}
-              >
-                {VALUES.map((_, i) => (
-                  <button
-                    key={i}
-                    className="value-dot"
-                    onClick={() => setActiveValue(i)}
-                    style={{
-                      background:
-                        i === activeValue
-                          ? "var(--color-navy-dark, #172531)"
-                          : "var(--color-border, #EDE8E0)",
-                    }}
-                  />
-                ))}
-              </div>
-              <button
-                className="value-carousel-btn"
-                onClick={() => setActiveValue((v) => (v + 1) % VALUES.length)}
-              >
-                →
-              </button>
-            </div>
-          </div>
-
-          {/* Carousel track */}
-          <div style={{ overflow: "hidden", borderRadius: "20px" }}>
-            <div
+          <div style={{ marginBottom: "64px" }}>
+            <p
               style={{
-                display: "flex",
-                gap: "0",
-                transition: "transform 0.4s cubic-bezier(0.4,0,0.2,1)",
-                transform: `translateX(-${activeValue * 100}%)`,
-                willChange: "transform",
+                fontSize: "11px",
+                fontWeight: "700",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--color-terracotta, #CF5C36)",
+                marginBottom: "12px",
               }}
             >
-              {VALUES.map((val, i) => (
-                <div
-                  key={val.title}
-                  style={{
-                    minWidth: "100%",
-                    flexShrink: 0,
-                    background: "var(--color-cream, #F5F0E8)",
-                    borderRadius: "20px",
-                    padding: "clamp(28px, 5vw, 56px)",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <div style={{ fontSize: "52px", marginBottom: "20px" }}>
-                    {val.emoji}
-                  </div>
-                  <h3
-                    style={{
-                      fontSize: "clamp(20px, 3vw, 28px)",
-                      fontWeight: "800",
-                      color: "var(--color-navy-dark, #172531)",
-                      marginBottom: "16px",
-                      fontFamily:
-                        "var(--font-urbanist, 'Urbanist', sans-serif)",
-                    }}
-                  >
-                    {val.title}
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: "17px",
-                      color: "var(--color-slate, #4B5563)",
-                      lineHeight: "1.8",
-                      maxWidth: "600px",
-                      margin: "0 0 32px",
-                    }}
-                  >
-                    {val.body}
-                  </p>
-                  <div
-                    style={{
-                      fontSize: "13px",
-                      color: "var(--color-muted, #9CA3AF)",
-                      fontWeight: "700",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    {String(i + 1).padStart(2, "0")} /{" "}
-                    {String(VALUES.length).padStart(2, "0")}
-                  </div>
-                </div>
-              ))}
-            </div>
+              What we believe
+            </p>
+            <h2
+              style={{
+                fontSize: "clamp(24px, 3vw, 32px)",
+                fontWeight: "800",
+                color: "var(--color-navy-dark, #172531)",
+                fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+                margin: 0,
+              }}
+            >
+              Our values
+            </h2>
           </div>
+
+          {VALUES.map((val, i) => (
+            <div key={val.title} className="value-stripe-row">
+              {/* Large faded number */}
+              <div className="value-stripe-number">
+                {String(i + 1).padStart(2, "0")}
+              </div>
+              {/* Content */}
+              <div className="value-stripe-content">
+                <h3 className="value-stripe-title">{val.title}</h3>
+                <p className="value-stripe-body">{val.body}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
