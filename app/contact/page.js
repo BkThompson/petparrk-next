@@ -51,141 +51,303 @@ export default function ContactPage() {
       </div>
 
       <section
-        style={{ background: "var(--color-cream, #F5F0E8)", padding: "72px 0" }}
+        style={{ background: "var(--color-cream, #F5F0E8)", padding: "80px 0" }}
       >
-        <div style={{ maxWidth: "720px", margin: "0 auto", padding: "0 24px" }}>
-          <p
-            style={{
-              fontSize: "17px",
-              color: "var(--color-slate, #4B5563)",
-              lineHeight: "1.8",
-              marginBottom: "48px",
-            }}
-          >
-            PetParrk is a small team with big ambitions. Whether you have
-            feedback, a question, or just want to share your experience — we
-            read every message and respond to as many as we can.
-          </p>
-
+        <div
+          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
+        >
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: "20px",
-              marginBottom: "56px",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "80px",
+              alignItems: "start",
             }}
           >
-            {[
-              {
-                emoji: "💬",
-                title: "General feedback",
-                body: "Tell us what's working, what's not, or what you wish PetParrk could do. Your feedback directly shapes what we build next.",
-              },
-              {
-                emoji: "🏥",
-                title: "Vet partnerships",
-                body: "Are you a vet or clinic interested in being featured or partnering with PetParrk? We'd love to talk.",
-              },
-              {
-                emoji: "📰",
-                title: "Press & media",
-                body: "Writing about pet care, health tech, or local startups? Reach out and we'll get back to you quickly.",
-              },
-              {
-                emoji: "🐾",
-                title: "Submit a price",
-                body: "Visited a vet recently? Help the community by submitting what you paid. Find the vet on our directory and submit directly from their profile.",
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
+            {/* Left — text content */}
+            <div>
+              <p
                 style={{
-                  background: "#fff",
-                  border: "1px solid var(--color-border, #EDE8E0)",
-                  borderRadius: "16px",
-                  padding: "24px",
-                  boxShadow: "0 2px 8px rgba(23,37,49,0.05)",
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--color-terracotta, #CF5C36)",
+                  marginBottom: "16px",
                 }}
               >
-                <div style={{ fontSize: "28px", marginBottom: "12px" }}>
-                  {item.emoji}
-                </div>
-                <h3
-                  style={{
-                    fontSize: "16px",
-                    fontWeight: "700",
-                    color: "var(--color-navy-dark, #172531)",
-                    marginBottom: "8px",
-                    fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
-                  }}
-                >
-                  {item.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--color-slate, #4B5563)",
-                    lineHeight: "1.7",
-                    margin: 0,
-                  }}
-                >
-                  {item.body}
-                </p>
-              </div>
-            ))}
-          </div>
+                Get in touch
+              </p>
+              <h2
+                style={{
+                  fontSize: "clamp(26px, 3vw, 36px)",
+                  fontWeight: "800",
+                  color: "var(--color-navy-dark, #172531)",
+                  marginBottom: "24px",
+                  fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+                  lineHeight: "1.2",
+                }}
+              >
+                We're a small team building something we believe in.
+              </h2>
+              <p
+                style={{
+                  fontSize: "17px",
+                  color: "var(--color-slate, #4B5563)",
+                  lineHeight: "1.8",
+                  marginBottom: "40px",
+                }}
+              >
+                Whether you have feedback on the product, a question about your
+                vet search, or you just want to tell us about your pet — we read
+                everything and respond to as many messages as we can.
+              </p>
 
-          {/* Email CTA */}
-          <div
+              {/* Contact reasons */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "32px",
+                  marginBottom: "48px",
+                }}
+              >
+                {[
+                  {
+                    label: "General feedback",
+                    body: "Tell us what's working, what's not, or what you wish PetParrk could do. Your feedback shapes what we build.",
+                  },
+                  {
+                    label: "Vet partnerships",
+                    body: "Are you a vet or clinic interested in being featured or partnering with us? We'd love to connect.",
+                  },
+                  {
+                    label: "Press & media",
+                    body: "Writing about pet care, health tech, or Bay Area startups? Reach out and we'll get back to you quickly.",
+                  },
+                  {
+                    label: "Submit a price",
+                    body: "Visited a vet recently? Help the community by submitting what you paid from that vet's profile page.",
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    style={{
+                      borderLeft: "3px solid var(--color-terracotta, #CF5C36)",
+                      paddingLeft: "20px",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "700",
+                        color: "var(--color-navy-dark, #172531)",
+                        marginBottom: "4px",
+                        fontFamily:
+                          "var(--font-urbanist, 'Urbanist', sans-serif)",
+                      }}
+                    >
+                      {item.label}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "14px",
+                        color: "var(--color-slate, #4B5563)",
+                        lineHeight: "1.7",
+                        margin: 0,
+                      }}
+                    >
+                      {item.body}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Email CTAs */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                <a
+                  href="mailto:info@petparrk.com"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "16px 24px",
+                    background: "var(--color-navy-dark, #172531)",
+                    color: "#fff",
+                    borderRadius: "12px",
+                    textDecoration: "none",
+                    fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+                    fontWeight: "700",
+                    fontSize: "15px",
+                  }}
+                >
+                  <span>✉️</span> info@petparrk.com
+                </a>
+                <a
+                  href="mailto:support@petparrk.com"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "15px 24px",
+                    background: "transparent",
+                    color: "var(--color-navy-dark, #172531)",
+                    border: "1.5px solid var(--color-border, #EDE8E0)",
+                    borderRadius: "12px",
+                    textDecoration: "none",
+                    fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+                    fontWeight: "700",
+                    fontSize: "15px",
+                  }}
+                >
+                  <span>🛟</span> support@petparrk.com
+                </a>
+              </div>
+            </div>
+
+            {/* Right — image placeholder */}
+            <div style={{ position: "sticky", top: "88px" }}>
+              {/* Main image placeholder */}
+              <div
+                style={{
+                  width: "100%",
+                  aspectRatio: "4/5",
+                  background:
+                    "linear-gradient(135deg, #2C4657 0%, #172531 100%)",
+                  borderRadius: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "16px",
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    textAlign: "center",
+                    color: "rgba(255,255,255,0.3)",
+                  }}
+                >
+                  <div style={{ fontSize: "64px", marginBottom: "12px" }}>
+                    🐾
+                  </div>
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      letterSpacing: "0.05em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Photo coming soon
+                  </p>
+                </div>
+                {/* Decorative overlay */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "24px",
+                    left: "24px",
+                    right: "24px",
+                  }}
+                >
+                  <p
+                    style={{
+                      color: "rgba(255,255,255,0.9)",
+                      fontSize: "18px",
+                      fontWeight: "800",
+                      fontFamily:
+                        "var(--font-urbanist, 'Urbanist', sans-serif)",
+                      lineHeight: "1.3",
+                      margin: 0,
+                    }}
+                  >
+                    "Real prices. Real vets. No surprises."
+                  </p>
+                </div>
+              </div>
+
+              {/* Two smaller image placeholders */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
+                }}
+              >
+                {["🐶", "🐱"].map((emoji, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      aspectRatio: "1",
+                      background: "var(--color-border, #EDE8E0)",
+                      borderRadius: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "40px",
+                    }}
+                  >
+                    {emoji}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom CTA */}
+      <section
+        style={{
+          background: "var(--color-navy-dark, #172531)",
+          padding: "60px 0",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "800px",
+            margin: "0 auto",
+            padding: "0 24px",
+            textAlign: "center",
+          }}
+        >
+          <p
             style={{
-              background: "var(--color-navy-dark, #172531)",
-              borderRadius: "20px",
-              padding: "40px 36px",
-              textAlign: "center",
+              fontSize: "17px",
+              color: "rgba(255,255,255,0.7)",
+              lineHeight: "1.7",
+              marginBottom: "24px",
             }}
           >
-            <div style={{ fontSize: "36px", marginBottom: "16px" }}>✉️</div>
-            <h2
-              style={{
-                fontSize: "22px",
-                fontWeight: "800",
-                color: "#fff",
-                marginBottom: "10px",
-                fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
-              }}
-            >
-              Drop us a line
-            </h2>
-            <p
-              style={{
-                fontSize: "15px",
-                color: "rgba(255,255,255,0.65)",
-                lineHeight: "1.7",
-                marginBottom: "24px",
-              }}
-            >
-              For anything else, email us directly. We're a small team so
-              responses may take a day or two — but we do respond.
-            </p>
-            <a
-              href="mailto:hello@petparrk.com"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "14px 32px",
-                background: "var(--color-terracotta, #CF5C36)",
-                color: "#fff",
-                borderRadius: "12px",
-                fontSize: "15px",
-                fontWeight: "700",
-                textDecoration: "none",
-                fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
-              }}
-            >
-              hello@petparrk.com
-            </a>
-          </div>
+            Not sure where to start? Browse our vet directory — no account
+            required.
+          </p>
+          <Link
+            href="/vets"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "14px 32px",
+              background: "var(--color-terracotta, #CF5C36)",
+              color: "#fff",
+              borderRadius: "12px",
+              fontSize: "15px",
+              fontWeight: "700",
+              textDecoration: "none",
+              fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+            }}
+          >
+            Find a Vet →
+          </Link>
         </div>
       </section>
     </>

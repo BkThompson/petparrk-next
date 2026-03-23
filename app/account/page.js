@@ -1,450 +1,582 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase";
+import { useState } from "react";
 import Link from "next/link";
 
-export default function AccountPage() {
-  const router = useRouter();
-  const [session, setSession] = useState(undefined);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordMsg, setPasswordMsg] = useState(null);
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [emailMsg, setEmailMsg] = useState(null);
-  const [savingEmail, setSavingEmail] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [deleteMsg, setDeleteMsg] = useState(null);
+const VALUES = [
+  {
+    emoji: "🐾",
+    title: "Pet Owners First",
+    body: "Every decision we make starts with one question: does this help the pet owner? Not the advertiser, not us — the person trying to do right by their pet.",
+  },
+  {
+    emoji: "🔍",
+    title: "Transparency Always",
+    body: "Honest pricing, clear information, no hidden agendas. We show you where our data comes from and we never charge you to access information that should always have been available.",
+  },
+  {
+    emoji: "🌱",
+    title: "Prevention Over Reaction",
+    body: "The best vet visit is the one you were prepared for. We're building tools that help you stay ahead — not just tools for when things go wrong.",
+  },
+  {
+    emoji: "🤝",
+    title: "Community Over Competition",
+    body: "We're not replacing vets — we're helping you work with them better. Great vets deserve to be found. Pet owners deserve to find them.",
+  },
+  {
+    emoji: "🔓",
+    title: "Accessibility for All",
+    body: "Pet care shouldn't be a privilege. We're keeping the core platform free and fighting to make information that's always existed behind phone calls available to everyone.",
+  },
+];
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      if (!data.session) router.push("/auth");
-    });
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-      if (!s) router.push("/auth");
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+const PROBLEMS = [
+  {
+    number: "01",
+    title: "Is this an emergency?",
+    subtitle: "Decision paralysis at 2am",
+    body: "Your puppy is vomiting at 2am. Is it an emergency? Do you spend $500+ at the ER, or wait until morning and risk being wrong? Google gives you conflicting, scary results. ChatGPT gives you generic advice that doesn't know your dog. There's no affordable, instant, trustworthy answer — so you panic or you guess.",
+  },
+  {
+    number: "02",
+    title: "What will this actually cost?",
+    subtitle: "Bill shock and price opacity",
+    body: 'You call five vets asking for a teeth cleaning price. Three refuse to quote without seeing your dog. One gives a range so wide it\'s useless. You pick the vet who gave you a number — $450 — and the final bill is $780. Pre-anesthesia bloodwork. IV fluids. Medication. Each charge was "medically necessary" but never mentioned. You were already committed before you found out.',
+  },
+  {
+    number: "03",
+    title: "Where is everything?",
+    subtitle: "Scattered records, overwhelmed owners",
+    body: "Vaccination records in a PDF from the breeder. Vet notes locked in a system you can't access. Training advice in bookmarks. Health questions spread across Reddit, Facebook groups, and Google. If you're a new pet owner, the information you need is everywhere and nowhere at the same time.",
+  },
+];
 
-  async function handleChangePassword() {
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg({ type: "error", text: "Passwords don't match." });
-      return;
-    }
-    if (newPassword.length < 8) {
-      setPasswordMsg({
-        type: "error",
-        text: "Password must be at least 8 characters.",
-      });
-      return;
-    }
-    setSavingPassword(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) setPasswordMsg({ type: "error", text: error.message });
-    else {
-      setPasswordMsg({
-        type: "success",
-        text: "Password updated successfully!",
-      });
-      setNewPassword("");
-      setConfirmPassword("");
-    }
-    setSavingPassword(false);
-  }
-
-  async function handleChangeEmail() {
-    if (!newEmail || !newEmail.includes("@")) {
-      setEmailMsg({ type: "error", text: "Please enter a valid email." });
-      return;
-    }
-    setSavingEmail(true);
-    const { error } = await supabase.auth.updateUser({ email: newEmail });
-    if (error) setEmailMsg({ type: "error", text: error.message });
-    else {
-      setEmailMsg({
-        type: "success",
-        text: "Confirmation sent to your new email. Please check your inbox.",
-      });
-      setNewEmail("");
-    }
-    setSavingEmail(false);
-  }
-
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-    router.push("/auth");
-  }
-
-  async function handleDeleteAccount() {
-    setDeleting(true);
-    setDeleteMsg(null);
-    try {
-      const {
-        data: { session: currentSession },
-      } = await supabase.auth.getSession();
-      if (!currentSession) {
-        setDeleteMsg({
-          type: "error",
-          text: "Session expired. Please sign in again.",
-        });
-        setDeleting(false);
-        return;
-      }
-      const res = await fetch("/api/delete-account", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${currentSession.access_token}` },
-      });
-      const result = await res.json();
-      if (!res.ok) {
-        setDeleteMsg({
-          type: "error",
-          text: result.error || "Something went wrong. Please try again.",
-        });
-        setDeleting(false);
-        return;
-      }
-      await supabase.auth.signOut();
-      router.push("/?deleted=true");
-    } catch (err) {
-      setDeleteMsg({
-        type: "error",
-        text: "Something went wrong. Please try again.",
-      });
-      setDeleting(false);
-    }
-  }
-
-  const isGoogleUser =
-    session?.user?.app_metadata?.provider === "google" ||
-    session?.user?.identities?.some((i) => i.provider === "google");
-
-  if (session === undefined) return null;
-  if (!session) return null;
+export default function AboutPage() {
+  const [activeValue, setActiveValue] = useState(0);
 
   return (
     <>
       <style>{`
-        .input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; font-family: system-ui, sans-serif; outline: none; }
-        .input:focus { border-color: #2d6a4f; }
-        .btn-primary { padding: 8px 20px; background: #2d6a4f; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; font-family: system-ui, sans-serif; }
-        .btn-primary:hover { background: #245a42; }
-        .btn-secondary { padding: 8px 20px; background: #fff; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: system-ui, sans-serif; }
-        .btn-secondary:hover { background: #f5f5f5; }
-        .btn-danger { padding: 8px 20px; background: #fff; color: #c62828; border: 1px solid #c62828; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; font-family: system-ui, sans-serif; }
-        .btn-danger:hover { background: #fce8e8; }
-        .btn-danger-solid { padding: 10px 24px; background: #c62828; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; font-family: system-ui, sans-serif; }
-        .btn-danger-solid:hover { background: #b71c1c; }
-        .btn-danger-solid:disabled { opacity: 0.6; cursor: not-allowed; }
-        .section { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-        .section-danger { background: #fff; border: 1px solid #f5c6c6; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-        .label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-        .field { margin-bottom: 14px; }
-        .msg-success { background: #e8f5e9; color: #2d6a4f; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
-        .msg-error { background: #fce8e8; color: #c62828; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal { background: #fff; border-radius: 16px; padding: 28px; max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        .value-carousel-btn {
+          width: 40px; height: 40px; border-radius: 50%;
+          border: 1.5px solid var(--color-border, #EDE8E0);
+          background: #fff; cursor: pointer; display: flex;
+          align-items: center; justify-content: center;
+          font-size: 18px; transition: all 0.15s ease;
+          flex-shrink: 0;
+        }
+        .value-carousel-btn:hover {
+          background: var(--color-navy-dark, #172531);
+          border-color: var(--color-navy-dark, #172531);
+          color: #fff;
+        }
+        .value-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          border: none; cursor: pointer; padding: 0;
+          transition: all 0.2s ease;
+        }
+        .problem-number {
+          font-size: clamp(64px, 10vw, 100px);
+          font-weight: 800;
+          color: var(--color-border, #EDE8E0);
+          line-height: 1;
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+          user-select: none;
+        }
       `}</style>
 
-      {showDeleteModal && (
+      {/* Page header */}
+      <div
+        style={{
+          background: "var(--color-navy-dark, #172531)",
+          padding: "56px 0",
+          minHeight: "180px",
+          boxSizing: "border-box",
+        }}
+      >
         <div
-          className="modal-overlay"
-          onClick={() => !deleting && setShowDeleteModal(false)}
+          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
         >
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-gold, #EFC88B)",
+              marginBottom: "8px",
+            }}
+          >
+            Our Story
+          </p>
+          <h1
+            style={{
+              fontSize: "clamp(24px, 4vw, 36px)",
+              fontWeight: "800",
+              color: "#fff",
+              fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+              marginBottom: "8px",
+            }}
+          >
+            About PetParrk
+          </h1>
+          <p
+            style={{
+              fontSize: "15px",
+              color: "rgba(255,255,255,0.6)",
+              margin: 0,
+            }}
+          >
+            Built in Oakland. Built for pet owners.
+          </p>
+        </div>
+      </div>
+
+      {/* Mission — wide text */}
+      <section
+        style={{ background: "var(--color-cream, #F5F0E8)", padding: "80px 0" }}
+      >
+        <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 24px" }}>
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-terracotta, #CF5C36)",
+              marginBottom: "16px",
+            }}
+          >
+            Why we exist
+          </p>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 44px)",
+              fontWeight: "800",
+              color: "var(--color-navy-dark, #172531)",
+              lineHeight: "1.15",
+              marginBottom: "28px",
+              fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+            }}
+          >
+            Pet care shouldn't feel like a guessing game.
+          </h2>
+          <p
+            style={{
+              fontSize: "18px",
+              color: "var(--color-slate, #4B5563)",
+              lineHeight: "1.8",
+              marginBottom: "20px",
+            }}
+          >
+            PetParrk started with a frustration every pet owner knows. You call
+            a vet, ask about pricing, and hear "it depends." You search online
+            and find conflicting, scary results. You wonder if what your pet is
+            doing is normal or an emergency — and every time, you're left
+            guessing.
+          </p>
+          <p
+            style={{
+              fontSize: "18px",
+              color: "var(--color-slate, #4B5563)",
+              lineHeight: "1.8",
+              marginBottom: "20px",
+            }}
+          >
+            We built PetParrk to change that. Starting in the East Bay, we're
+            building a platform that gives pet owners real information: real
+            prices from real vets, AI-powered guidance when you're not sure
+            what's wrong, and a place to build and own your pet's health history
+            over time.
+          </p>
+          <p
+            style={{
+              fontSize: "18px",
+              color: "var(--color-slate, #4B5563)",
+              lineHeight: "1.8",
+            }}
+          >
+            No surprises. No gatekeeping. Just honest, transparent tools to help
+            you make better decisions for your pet — every single day.
+          </p>
+        </div>
+      </section>
+
+      {/* Problems — alternating layout */}
+      <section style={{ background: "#fff", padding: "80px 0" }}>
+        <div
+          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
+        >
+          <div style={{ maxWidth: "800px", marginBottom: "60px" }}>
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--color-terracotta, #CF5C36)",
+                marginBottom: "12px",
+              }}
+            >
+              The problem
+            </p>
             <h2
               style={{
-                margin: "0 0 12px 0",
-                fontSize: "1.2rem",
-                color: "#111",
+                fontSize: "clamp(26px, 3vw, 36px)",
+                fontWeight: "800",
+                color: "var(--color-navy-dark, #172531)",
+                fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
               }}
             >
-              Delete your account?
+              Three things that shouldn't be this hard.
             </h2>
-            <p
-              style={{
-                margin: "0 0 8px 0",
-                fontSize: "14px",
-                color: "#555",
-                lineHeight: "1.5",
-              }}
-            >
-              This will permanently delete your account, your profile, and all
-              your pet records. This cannot be undone.
-            </p>
-            <p
-              style={{
-                margin: "0 0 20px 0",
-                fontSize: "14px",
-                color: "#c62828",
-                fontWeight: "600",
-              }}
-            >
-              Are you absolutely sure?
-            </p>
-            {deleteMsg && (
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            {PROBLEMS.map((p, i) => (
               <div
-                className={
-                  deleteMsg.type === "success" ? "msg-success" : "msg-error"
+                key={p.number}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "120px 1fr",
+                  gap: "32px",
+                  padding: "48px 0",
+                  borderTop: "1px solid var(--color-border, #EDE8E0)",
+                  alignItems: "start",
+                }}
+              >
+                <div className="problem-number">{p.number}</div>
+                <div style={{ paddingTop: "8px" }}>
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--color-muted, #9CA3AF)",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    {p.subtitle}
+                  </p>
+                  <h3
+                    style={{
+                      fontSize: "clamp(20px, 2.5vw, 26px)",
+                      fontWeight: "800",
+                      color: "var(--color-navy-dark, #172531)",
+                      marginBottom: "16px",
+                      fontFamily:
+                        "var(--font-urbanist, 'Urbanist', sans-serif)",
+                    }}
+                  >
+                    {p.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "16px",
+                      color: "var(--color-slate, #4B5563)",
+                      lineHeight: "1.8",
+                      maxWidth: "640px",
+                      margin: 0,
+                    }}
+                  >
+                    {p.body}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Our answer */}
+      <section
+        style={{ background: "var(--color-cream, #F5F0E8)", padding: "80px 0" }}
+      >
+        <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 24px" }}>
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-terracotta, #CF5C36)",
+              marginBottom: "16px",
+            }}
+          >
+            Our answer
+          </p>
+          <h2
+            style={{
+              fontSize: "clamp(26px, 3vw, 36px)",
+              fontWeight: "800",
+              color: "var(--color-navy-dark, #172531)",
+              marginBottom: "28px",
+              fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+            }}
+          >
+            The daily companion for confident pet care.
+          </h2>
+          <p
+            style={{
+              fontSize: "17px",
+              color: "var(--color-slate, #4B5563)",
+              lineHeight: "1.8",
+              marginBottom: "20px",
+            }}
+          >
+            PetParrk combines AI-powered symptom triage, transparent vet
+            pricing, and owner-controlled health profiles into one platform —
+            because the problem isn't that pet owners don't care enough, it's
+            that they've never had the right tools.
+          </p>
+          <p
+            style={{
+              fontSize: "17px",
+              color: "var(--color-slate, #4B5563)",
+              lineHeight: "1.8",
+            }}
+          >
+            We're not replacing vets. We're helping you get to the right vet, at
+            the right time, knowing what you'll pay. We believe that when pet
+            owners have better information, pets get better care.
+          </p>
+        </div>
+      </section>
+
+      {/* Values carousel */}
+      <section style={{ background: "#fff", padding: "80px 0" }}>
+        <div
+          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              marginBottom: "48px",
+              flexWrap: "wrap",
+              gap: "16px",
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--color-terracotta, #CF5C36)",
+                  marginBottom: "12px",
+                }}
+              >
+                What we believe
+              </p>
+              <h2
+                style={{
+                  fontSize: "clamp(24px, 3vw, 32px)",
+                  fontWeight: "800",
+                  color: "var(--color-navy-dark, #172531)",
+                  fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+                  margin: 0,
+                }}
+              >
+                Our values
+              </h2>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <button
+                className="value-carousel-btn"
+                onClick={() =>
+                  setActiveValue((v) => (v - 1 + VALUES.length) % VALUES.length)
                 }
               >
-                {deleteMsg.text}
-              </div>
-            )}
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="btn-secondary"
-                disabled={deleting}
-              >
-                Cancel
+                ←
               </button>
-              <button
-                onClick={handleDeleteAccount}
-                className="btn-danger-solid"
-                disabled={deleting}
+              <div
+                style={{ display: "flex", gap: "8px", alignItems: "center" }}
               >
-                {deleting ? "Deleting..." : "Yes, delete my account"}
+                {VALUES.map((_, i) => (
+                  <button
+                    key={i}
+                    className="value-dot"
+                    onClick={() => setActiveValue(i)}
+                    style={{
+                      background:
+                        i === activeValue
+                          ? "var(--color-navy-dark, #172531)"
+                          : "var(--color-border, #EDE8E0)",
+                    }}
+                  />
+                ))}
+              </div>
+              <button
+                className="value-carousel-btn"
+                onClick={() => setActiveValue((v) => (v + 1) % VALUES.length)}
+              >
+                →
               </button>
             </div>
           </div>
-        </div>
-      )}
 
-      <div
+          {/* Carousel track */}
+          <div style={{ overflow: "hidden" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "24px",
+                transition: "transform 0.4s cubic-bezier(0.4,0,0.2,1)",
+                transform: `translateX(calc(-${activeValue * 100}% - ${activeValue * 24}px))`,
+              }}
+            >
+              {VALUES.map((val, i) => (
+                <div
+                  key={val.title}
+                  style={{
+                    minWidth: "100%",
+                    background: "var(--color-cream, #F5F0E8)",
+                    borderRadius: "20px",
+                    padding: "48px",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <div style={{ fontSize: "48px", marginBottom: "20px" }}>
+                    {val.emoji}
+                  </div>
+                  <h3
+                    style={{
+                      fontSize: "clamp(22px, 3vw, 28px)",
+                      fontWeight: "800",
+                      color: "var(--color-navy-dark, #172531)",
+                      marginBottom: "16px",
+                      fontFamily:
+                        "var(--font-urbanist, 'Urbanist', sans-serif)",
+                    }}
+                  >
+                    {val.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "17px",
+                      color: "var(--color-slate, #4B5563)",
+                      lineHeight: "1.8",
+                      maxWidth: "600px",
+                      margin: 0,
+                    }}
+                  >
+                    {val.body}
+                  </p>
+                  <div
+                    style={{
+                      marginTop: "32px",
+                      fontSize: "14px",
+                      color: "var(--color-muted, #9CA3AF)",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {i + 1} of {VALUES.length}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Vision CTA */}
+      <section
         style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          padding: "20px",
-          fontFamily: "system-ui, sans-serif",
-          minHeight: "calc(100vh - 64px)",
+          background: "var(--color-navy-mid, #2C4657)",
+          padding: "80px 0",
         }}
       >
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "24px",
-          }}
-        >
-          <Link
-            href="/"
-            style={{
-              color: "#2d6a4f",
-              fontSize: "14px",
-              textDecoration: "none",
-            }}
-          >
-            ← Back to all vets
-          </Link>
-          
-        </div>
-
-        <h1 style={{ margin: "0 0 20px 0", fontSize: "1.4rem", color: "#111" }}>
-          ⚙️ Account Settings
-        </h1>
-
-        <div className="section">
-          <h2 style={{ margin: "0 0 12px 0", fontSize: "1rem", color: "#111" }}>
-            Account Info
-          </h2>
-          <p style={{ margin: "0 0 12px 0", fontSize: "14px" }}>
-            <span style={{ color: "#888" }}>Email: </span>
-            <span style={{ color: "#333" }}>{session.user.email}</span>
-          </p>
-          <Link
-            href="/profile"
-            style={{
-              fontSize: "13px",
-              color: "#2d6a4f",
-              textDecoration: "none",
-              fontWeight: "600",
-            }}
-          >
-            👤 Edit my profile →
-          </Link>
-        </div>
-
-        {isGoogleUser && (
-          <div className="section">
-            <h2
-              style={{ margin: "0 0 8px 0", fontSize: "1rem", color: "#111" }}
-            >
-              Google Account
-            </h2>
-            <p style={{ margin: 0, fontSize: "14px", color: "#555" }}>
-              You signed in with Google. To change your email or password, visit
-              your{" "}
-              <a
-                href="https://myaccount.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#2d6a4f" }}
-              >
-                Google account settings
-              </a>
-              .
-            </p>
-          </div>
-        )}
-
-        {!isGoogleUser && (
-          <div className="section">
-            <h2
-              style={{ margin: "0 0 12px 0", fontSize: "1rem", color: "#111" }}
-            >
-              Change Email
-            </h2>
-            {emailMsg && (
-              <div
-                className={
-                  emailMsg.type === "success" ? "msg-success" : "msg-error"
-                }
-              >
-                {emailMsg.text}
-              </div>
-            )}
-            <div className="field">
-              <label className="label">New Email Address</label>
-              <input
-                className="input"
-                type="email"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                placeholder="Enter new email"
-              />
-            </div>
-            <button
-              onClick={handleChangeEmail}
-              className="btn-primary"
-              disabled={savingEmail}
-            >
-              {savingEmail ? "Sending..." : "Update Email"}
-            </button>
-          </div>
-        )}
-
-        {!isGoogleUser && (
-          <div className="section">
-            <h2
-              style={{ margin: "0 0 12px 0", fontSize: "1rem", color: "#111" }}
-            >
-              Change Password
-            </h2>
-            {passwordMsg && (
-              <div
-                className={
-                  passwordMsg.type === "success" ? "msg-success" : "msg-error"
-                }
-              >
-                {passwordMsg.text}
-              </div>
-            )}
-            <div className="field">
-              <label className="label">New Password</label>
-              <input
-                className="input"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 8 characters"
-              />
-            </div>
-            <div className="field">
-              <label className="label">Confirm New Password</label>
-              <input
-                className="input"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repeat new password"
-              />
-            </div>
-            <button
-              onClick={handleChangePassword}
-              className="btn-primary"
-              disabled={savingPassword}
-            >
-              {savingPassword ? "Updating..." : "Update Password"}
-            </button>
-          </div>
-        )}
-
-        <div className="section">
-          <h2 style={{ margin: "0 0 8px 0", fontSize: "1rem", color: "#111" }}>
-            Sign Out
-          </h2>
-          <p style={{ margin: "0 0 12px 0", fontSize: "14px", color: "#555" }}>
-            Sign out of your PetParrk account on this device.
-          </p>
-          <button onClick={handleSignOut} className="btn-secondary">
-            Sign Out
-          </button>
-        </div>
-
-        <div className="section-danger">
-          <h2
-            style={{ margin: "0 0 8px 0", fontSize: "1rem", color: "#c62828" }}
-          >
-            ⚠️ Danger Zone
-          </h2>
-          <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#555" }}>
-            Permanently delete your account, your profile, and all your pet
-            records. This action cannot be undone.
-          </p>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="btn-danger"
-          >
-            Delete my account
-          </button>
-        </div>
-
-        <footer
-          style={{
-            marginTop: "40px",
-            borderTop: "1px solid #ddd",
-            paddingTop: "24px",
-            paddingBottom: "40px",
+            maxWidth: "800px",
+            margin: "0 auto",
+            padding: "0 24px",
             textAlign: "center",
-            color: "#888",
-            fontSize: "13px",
           }}
         >
           <p
             style={{
-              margin: "0 0 8px 0",
-              fontWeight: "bold",
-              color: "#2d6a4f",
-              fontSize: "15px",
+              fontSize: "11px",
+              fontWeight: "700",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-gold, #EFC88B)",
+              marginBottom: "16px",
             }}
           >
-            🐾 PetParrk
+            Where we're going
           </p>
-          <p style={{ margin: "0" }}>
-            Questions?{" "}
-            <a
-              href="mailto:bkalthompson@gmail.com"
-              style={{ color: "#2d6a4f", textDecoration: "none" }}
+          <h2
+            style={{
+              fontSize: "clamp(24px, 4vw, 38px)",
+              fontWeight: "800",
+              color: "#fff",
+              lineHeight: "1.2",
+              marginBottom: "20px",
+              fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+            }}
+          >
+            Every pet owner's trusted companion for confident, informed care.
+          </h2>
+          <p
+            style={{
+              fontSize: "17px",
+              color: "rgba(255,255,255,0.7)",
+              lineHeight: "1.7",
+              marginBottom: "36px",
+            }}
+          >
+            We're starting in Oakland and Berkeley and expanding across the Bay
+            Area and beyond. If you're a pet owner, a vet, or someone who thinks
+            this problem matters — we'd love to hear from you.
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: "12px",
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <Link
+              href="/vets"
+              style={{
+                padding: "14px 32px",
+                background: "var(--color-terracotta, #CF5C36)",
+                color: "#fff",
+                borderRadius: "12px",
+                fontSize: "15px",
+                fontWeight: "700",
+                textDecoration: "none",
+                fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+              }}
             >
-              bkalthompson@gmail.com
-            </a>
-          </p>
-        </footer>
-      </div>
+              Find a Vet
+            </Link>
+            <Link
+              href="/contact"
+              style={{
+                padding: "13px 32px",
+                background: "transparent",
+                color: "#fff",
+                border: "2px solid rgba(255,255,255,0.35)",
+                borderRadius: "12px",
+                fontSize: "15px",
+                fontWeight: "700",
+                textDecoration: "none",
+                fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+              }}
+            >
+              Get in Touch
+            </Link>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
