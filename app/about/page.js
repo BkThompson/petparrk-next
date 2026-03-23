@@ -1,27 +1,88 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
+const VALUES = [
+  {
+    emoji: "🐾",
+    title: "Pet Owners First",
+    body: "Every decision we make starts with one question: does this help the pet owner? Not the advertiser, not us — the person trying to do right by their pet.",
+  },
+  {
+    emoji: "🔍",
+    title: "Transparency Always",
+    body: "Honest pricing, clear information, no hidden agendas. We show you where our data comes from and we never charge you to access information that should always have been available.",
+  },
+  {
+    emoji: "🌱",
+    title: "Prevention Over Reaction",
+    body: "The best vet visit is the one you were prepared for. We're building tools that help you stay ahead — not just tools for when things go wrong.",
+  },
+  {
+    emoji: "🤝",
+    title: "Community Over Competition",
+    body: "We're not replacing vets — we're helping you work with them better. Great vets deserve to be found. Pet owners deserve to find them.",
+  },
+  {
+    emoji: "🔓",
+    title: "Accessibility for All",
+    body: "Pet care shouldn't be a privilege. We're keeping the core platform free and fighting to make information that's always existed behind phone calls available to everyone.",
+  },
+];
+
+const PROBLEMS = [
+  {
+    number: "01",
+    title: "Is this an emergency?",
+    subtitle: "Decision paralysis at 2am",
+    body: "Your puppy is vomiting at 2am. Is it an emergency? Do you spend $500+ at the ER, or wait until morning and risk being wrong? Google gives you conflicting, scary results. ChatGPT gives you generic advice that doesn't know your dog. There's no affordable, instant, trustworthy answer — so you panic or you guess.",
+  },
+  {
+    number: "02",
+    title: "What will this actually cost?",
+    subtitle: "Bill shock and price opacity",
+    body: 'You call five vets asking for a teeth cleaning price. Three refuse to quote without seeing your dog. One gives a range so wide it\'s useless. You pick the vet who gave you a number — $450 — and the final bill is $780. Pre-anesthesia bloodwork. IV fluids. Medication. Each charge was "medically necessary" but never mentioned. You were already committed before you found out.',
+  },
+  {
+    number: "03",
+    title: "Where is everything?",
+    subtitle: "Scattered records, overwhelmed owners",
+    body: "Vaccination records in a PDF from the breeder. Vet notes locked in a system you can't access. Training advice in bookmarks. Health questions spread across Reddit, Facebook groups, and Google. If you're a new pet owner, the information you need is everywhere and nowhere at the same time.",
+  },
+];
+
 export default function AboutPage() {
+  const [activeValue, setActiveValue] = useState(0);
+
   return (
     <>
       <style>{`
-        .about-value-card {
-          background: #fff;
-          border: 1px solid var(--color-border, #EDE8E0);
-          border-radius: 16px;
-          padding: 24px;
-          box-shadow: 0 2px 8px rgba(23,37,49,0.05);
+        .value-carousel-btn {
+          width: 40px; height: 40px; border-radius: 50%;
+          border: 1.5px solid var(--color-border, #EDE8E0);
+          background: #fff; cursor: pointer; display: flex;
+          align-items: center; justify-content: center;
+          font-size: 18px; transition: all 0.15s ease;
+          flex-shrink: 0;
         }
-        .about-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 20px;
+        .value-carousel-btn:hover {
+          background: var(--color-navy-dark, #172531);
+          border-color: var(--color-navy-dark, #172531);
+          color: #fff;
         }
-        .about-problem-card {
-          background: #fff;
-          border: 1px solid var(--color-border, #EDE8E0);
-          border-radius: 16px;
-          padding: 28px 24px;
-          box-shadow: 0 2px 8px rgba(23,37,49,0.05);
+        .value-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          border: none; cursor: pointer; padding: 0;
+          transition: all 0.2s ease;
+        }
+        .problem-number {
+          font-size: clamp(64px, 10vw, 100px);
+          font-weight: 800;
+          color: var(--color-border, #EDE8E0);
+          line-height: 1;
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+          user-select: none;
         }
       `}</style>
 
@@ -72,9 +133,9 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Mission section */}
+      {/* Mission — wide text */}
       <section
-        style={{ background: "var(--color-cream, #F5F0E8)", padding: "72px 0" }}
+        style={{ background: "var(--color-cream, #F5F0E8)", padding: "80px 0" }}
       >
         <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 24px" }}>
           <p
@@ -91,63 +152,63 @@ export default function AboutPage() {
           </p>
           <h2
             style={{
-              fontSize: "clamp(26px, 4vw, 40px)",
+              fontSize: "clamp(28px, 4vw, 44px)",
               fontWeight: "800",
               color: "var(--color-navy-dark, #172531)",
-              lineHeight: "1.2",
-              marginBottom: "24px",
+              lineHeight: "1.15",
+              marginBottom: "28px",
               fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
             }}
           >
-            Pet care shouldn't feel like a guessing game.
+            Pet care shouldn't feel like a guessing game.
           </h2>
           <p
             style={{
-              fontSize: "17px",
+              fontSize: "18px",
               color: "var(--color-slate, #4B5563)",
               lineHeight: "1.8",
               marginBottom: "20px",
             }}
           >
-            PetParrk started with a simple frustration — the kind every pet
-            owner knows. You call a vet, ask about pricing, and hear "it
-            depends." You search online and find conflicting, scary information.
-            You wonder if what your pet is doing is normal or an emergency. And
-            every time, you're left guessing.
+            PetParrk started with a frustration every pet owner knows. You call
+            a vet, ask about pricing, and hear "it depends." You search online
+            and find conflicting, scary results. You wonder if what your pet is
+            doing is normal or an emergency — and every time, you're left
+            guessing.
           </p>
           <p
             style={{
-              fontSize: "17px",
+              fontSize: "18px",
               color: "var(--color-slate, #4B5563)",
               lineHeight: "1.8",
               marginBottom: "20px",
             }}
           >
-            We built PetParrk to change that. Starting in the East Bay — Oakland
-            and Berkeley — we're building a platform that gives pet owners real
-            information: real prices from real vets, AI-powered guidance when
-            you're not sure what's wrong, and a place to track your pet's health
+            We built PetParrk to change that. Starting in the East Bay, we're
+            building a platform that gives pet owners real information: real
+            prices from real vets, AI-powered guidance when you're not sure
+            what's wrong, and a place to build and own your pet's health history
             over time.
           </p>
           <p
             style={{
-              fontSize: "17px",
+              fontSize: "18px",
               color: "var(--color-slate, #4B5563)",
               lineHeight: "1.8",
             }}
           >
-            No paywalls. No ads. No surprises. Just honest, transparent tools to
-            help you make better decisions for your pet.
+            No surprises. No gatekeeping. Just honest, transparent tools to help
+            you make better decisions for your pet — every single day.
           </p>
         </div>
       </section>
 
-      {/* Problems we solve */}
-      <section style={{ background: "#fff", padding: "72px 0" }}>
+      {/* Problems — alternating layout */}
+      <section style={{ background: "#fff", padding: "80px 0" }}>
         <div
           style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
         >
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <div style={{ maxWidth: "800px", marginBottom: "60px" }}>
             <p
               style={{
                 fontSize: "11px",
@@ -162,164 +223,280 @@ export default function AboutPage() {
             </p>
             <h2
               style={{
-                fontSize: "clamp(24px, 3vw, 32px)",
+                fontSize: "clamp(26px, 3vw, 36px)",
                 fontWeight: "800",
                 color: "var(--color-navy-dark, #172531)",
                 fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
               }}
             >
-              Three things that shouldn't be this hard
+              Three things that shouldn't be this hard.
             </h2>
           </div>
-          <div className="about-grid">
-            {[
-              {
-                emoji: "💸",
-                title: "Knowing what you'll pay",
-                body: "Vet prices vary wildly and are almost never published upfront. Most pet owners only find out what something costs after it's already done. We publish real, verified prices so you can compare before you go.",
-              },
-              {
-                emoji: "🤔",
-                title: "Knowing when to worry",
-                body: "Is your dog vomiting because they ate grass, or is it something serious? At 2am, there's no good answer. Our symptom checker gives you instant triage guidance — not a diagnosis, but real direction when you need it most.",
-              },
-              {
-                emoji: "📋",
-                title: "Keeping it all together",
-                body: "Vaccination records, vet notes, health history — it's scattered across paper files, PDFs, and your vet's system that you can't access. We give you one place to build and own your pet's health story.",
-              },
-            ].map((item) => (
-              <div key={item.title} className="about-problem-card">
-                <div style={{ fontSize: "36px", marginBottom: "16px" }}>
-                  {item.emoji}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            {PROBLEMS.map((p, i) => (
+              <div
+                key={p.number}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "120px 1fr",
+                  gap: "32px",
+                  padding: "48px 0",
+                  borderTop: "1px solid var(--color-border, #EDE8E0)",
+                  alignItems: "start",
+                }}
+              >
+                <div className="problem-number">{p.number}</div>
+                <div style={{ paddingTop: "8px" }}>
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--color-muted, #9CA3AF)",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    {p.subtitle}
+                  </p>
+                  <h3
+                    style={{
+                      fontSize: "clamp(20px, 2.5vw, 26px)",
+                      fontWeight: "800",
+                      color: "var(--color-navy-dark, #172531)",
+                      marginBottom: "16px",
+                      fontFamily:
+                        "var(--font-urbanist, 'Urbanist', sans-serif)",
+                    }}
+                  >
+                    {p.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "16px",
+                      color: "var(--color-slate, #4B5563)",
+                      lineHeight: "1.8",
+                      maxWidth: "640px",
+                      margin: 0,
+                    }}
+                  >
+                    {p.body}
+                  </p>
                 </div>
-                <h3
-                  style={{
-                    fontSize: "18px",
-                    fontWeight: "700",
-                    color: "var(--color-navy-dark, #172531)",
-                    marginBottom: "10px",
-                    fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
-                  }}
-                >
-                  {item.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--color-slate, #4B5563)",
-                    lineHeight: "1.7",
-                    margin: 0,
-                  }}
-                >
-                  {item.body}
-                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Values */}
+      {/* Our answer */}
       <section
-        style={{ background: "var(--color-cream, #F5F0E8)", padding: "72px 0" }}
+        style={{ background: "var(--color-cream, #F5F0E8)", padding: "80px 0" }}
       >
+        <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 24px" }}>
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-terracotta, #CF5C36)",
+              marginBottom: "16px",
+            }}
+          >
+            Our answer
+          </p>
+          <h2
+            style={{
+              fontSize: "clamp(26px, 3vw, 36px)",
+              fontWeight: "800",
+              color: "var(--color-navy-dark, #172531)",
+              marginBottom: "28px",
+              fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+            }}
+          >
+            The daily companion for confident pet care.
+          </h2>
+          <p
+            style={{
+              fontSize: "17px",
+              color: "var(--color-slate, #4B5563)",
+              lineHeight: "1.8",
+              marginBottom: "20px",
+            }}
+          >
+            PetParrk combines AI-powered symptom triage, transparent vet
+            pricing, and owner-controlled health profiles into one platform —
+            because the problem isn't that pet owners don't care enough, it's
+            that they've never had the right tools.
+          </p>
+          <p
+            style={{
+              fontSize: "17px",
+              color: "var(--color-slate, #4B5563)",
+              lineHeight: "1.8",
+            }}
+          >
+            We're not replacing vets. We're helping you get to the right vet, at
+            the right time, knowing what you'll pay. We believe that when pet
+            owners have better information, pets get better care.
+          </p>
+        </div>
+      </section>
+
+      {/* Values carousel */}
+      <section style={{ background: "#fff", padding: "80px 0" }}>
         <div
           style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
         >
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
-            <p
-              style={{
-                fontSize: "11px",
-                fontWeight: "700",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--color-terracotta, #CF5C36)",
-                marginBottom: "12px",
-              }}
-            >
-              What we believe
-            </p>
-            <h2
-              style={{
-                fontSize: "clamp(24px, 3vw, 32px)",
-                fontWeight: "800",
-                color: "var(--color-navy-dark, #172531)",
-                fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
-              }}
-            >
-              Our values
-            </h2>
-          </div>
-          <div className="about-grid">
-            {[
-              {
-                emoji: "🐾",
-                title: "Pet owners first",
-                body: "Every decision we make starts with one question: does this help the pet owner? Not the vet, not the advertiser, not us.",
-              },
-              {
-                emoji: "🔍",
-                title: "Transparency always",
-                body: "Honest pricing, clear information, no hidden agendas. We show our work and tell you where our data comes from.",
-              },
-              {
-                emoji: "🌱",
-                title: "Prevention over reaction",
-                body: "The best vet visit is the one you didn't need to panic about. We're building tools that help you stay ahead.",
-              },
-              {
-                emoji: "🤝",
-                title: "Community over competition",
-                body: "We're not replacing vets — we're helping you work with them better. Great vets deserve to be found. Pet owners deserve to find them.",
-              },
-              {
-                emoji: "🔓",
-                title: "Accessibility for all",
-                body: "Pet care shouldn't be a privilege. We're keeping the core platform free and fighting to make information that's always existed behind phone calls available to everyone.",
-              },
-            ].map((item) => (
-              <div key={item.title} className="about-value-card">
-                <div style={{ fontSize: "28px", marginBottom: "12px" }}>
-                  {item.emoji}
-                </div>
-                <h3
-                  style={{
-                    fontSize: "16px",
-                    fontWeight: "700",
-                    color: "var(--color-navy-dark, #172531)",
-                    marginBottom: "8px",
-                    fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
-                  }}
-                >
-                  {item.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--color-slate, #4B5563)",
-                    lineHeight: "1.7",
-                    margin: 0,
-                  }}
-                >
-                  {item.body}
-                </p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              marginBottom: "48px",
+              flexWrap: "wrap",
+              gap: "16px",
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--color-terracotta, #CF5C36)",
+                  marginBottom: "12px",
+                }}
+              >
+                What we believe
+              </p>
+              <h2
+                style={{
+                  fontSize: "clamp(24px, 3vw, 32px)",
+                  fontWeight: "800",
+                  color: "var(--color-navy-dark, #172531)",
+                  fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+                  margin: 0,
+                }}
+              >
+                Our values
+              </h2>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <button
+                className="value-carousel-btn"
+                onClick={() =>
+                  setActiveValue((v) => (v - 1 + VALUES.length) % VALUES.length)
+                }
+              >
+                ←
+              </button>
+              <div
+                style={{ display: "flex", gap: "8px", alignItems: "center" }}
+              >
+                {VALUES.map((_, i) => (
+                  <button
+                    key={i}
+                    className="value-dot"
+                    onClick={() => setActiveValue(i)}
+                    style={{
+                      background:
+                        i === activeValue
+                          ? "var(--color-navy-dark, #172531)"
+                          : "var(--color-border, #EDE8E0)",
+                    }}
+                  />
+                ))}
               </div>
-            ))}
+              <button
+                className="value-carousel-btn"
+                onClick={() => setActiveValue((v) => (v + 1) % VALUES.length)}
+              >
+                →
+              </button>
+            </div>
+          </div>
+
+          {/* Carousel track */}
+          <div style={{ overflow: "hidden", borderRadius: "20px" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "0",
+                transition: "transform 0.4s cubic-bezier(0.4,0,0.2,1)",
+                transform: `translateX(-${activeValue * 100}%)`,
+                willChange: "transform",
+              }}
+            >
+              {VALUES.map((val, i) => (
+                <div
+                  key={val.title}
+                  style={{
+                    minWidth: "100%",
+                    flexShrink: 0,
+                    background: "var(--color-cream, #F5F0E8)",
+                    borderRadius: "20px",
+                    padding: "clamp(28px, 5vw, 56px)",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <div style={{ fontSize: "52px", marginBottom: "20px" }}>
+                    {val.emoji}
+                  </div>
+                  <h3
+                    style={{
+                      fontSize: "clamp(20px, 3vw, 28px)",
+                      fontWeight: "800",
+                      color: "var(--color-navy-dark, #172531)",
+                      marginBottom: "16px",
+                      fontFamily:
+                        "var(--font-urbanist, 'Urbanist', sans-serif)",
+                    }}
+                  >
+                    {val.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "17px",
+                      color: "var(--color-slate, #4B5563)",
+                      lineHeight: "1.8",
+                      maxWidth: "600px",
+                      margin: "0 0 32px",
+                    }}
+                  >
+                    {val.body}
+                  </p>
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      color: "var(--color-muted, #9CA3AF)",
+                      fontWeight: "700",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    {String(i + 1).padStart(2, "0")} /{" "}
+                    {String(VALUES.length).padStart(2, "0")}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Vision + CTA */}
+      {/* Vision CTA */}
       <section
         style={{
           background: "var(--color-navy-mid, #2C4657)",
-          padding: "72px 0",
+          padding: "80px 0",
         }}
       >
         <div
           style={{
-            maxWidth: "720px",
+            maxWidth: "800px",
             margin: "0 auto",
             padding: "0 24px",
             textAlign: "center",
@@ -339,7 +516,7 @@ export default function AboutPage() {
           </p>
           <h2
             style={{
-              fontSize: "clamp(24px, 4vw, 36px)",
+              fontSize: "clamp(24px, 4vw, 38px)",
               fontWeight: "800",
               color: "#fff",
               lineHeight: "1.2",
@@ -351,15 +528,15 @@ export default function AboutPage() {
           </h2>
           <p
             style={{
-              fontSize: "16px",
+              fontSize: "17px",
               color: "rgba(255,255,255,0.7)",
               lineHeight: "1.7",
               marginBottom: "36px",
             }}
           >
             We're starting in Oakland and Berkeley and expanding across the Bay
-            Area and beyond. If you're a pet owner, a vet, or just someone who
-            thinks this problem matters — we'd love to hear from you.
+            Area and beyond. If you're a pet owner, a vet, or someone who thinks
+            this problem matters — we'd love to hear from you.
           </p>
           <div
             style={{
@@ -390,7 +567,7 @@ export default function AboutPage() {
                 padding: "13px 32px",
                 background: "transparent",
                 color: "#fff",
-                border: "2px solid rgba(255,255,255,0.4)",
+                border: "2px solid rgba(255,255,255,0.35)",
                 borderRadius: "12px",
                 fontSize: "15px",
                 fontWeight: "700",

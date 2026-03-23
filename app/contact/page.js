@@ -59,8 +59,9 @@ export default function ContactPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "80px",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(min(100%, 480px), 1fr))",
+              gap: "60px",
               alignItems: "start",
             }}
           >
@@ -185,6 +186,7 @@ export default function ContactPage() {
                     fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
                     fontWeight: "700",
                     fontSize: "15px",
+                    border: "2px solid var(--color-navy-dark, #172531)",
                   }}
                 >
                   <span>✉️</span> info@petparrk.com
@@ -196,9 +198,9 @@ export default function ContactPage() {
                     alignItems: "center",
                     gap: "12px",
                     padding: "15px 24px",
-                    background: "transparent",
-                    color: "var(--color-navy-dark, #172531)",
-                    border: "1.5px solid var(--color-border, #EDE8E0)",
+                    background: "var(--color-terracotta, #CF5C36)",
+                    color: "#fff",
+                    border: "2px solid var(--color-terracotta, #CF5C36)",
                     borderRadius: "12px",
                     textDecoration: "none",
                     fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
@@ -212,7 +214,7 @@ export default function ContactPage() {
             </div>
 
             {/* Right — image placeholder */}
-            <div style={{ position: "sticky", top: "88px" }}>
+            <div style={{ position: "relative" }}>
               {/* Main image placeholder */}
               <div
                 style={{
