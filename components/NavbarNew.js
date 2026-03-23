@@ -705,27 +705,29 @@ export default function NavbarNew() {
                   )}
                 </button>
 
-                {(showDropdown || isDropdownClosing) && (
-                  <div
-                    className={`pp-dropdown${isDropdownClosing ? " closing" : ""}`}
-                  >
-                    {DROPDOWN_LINKS.map(({ href, label, icon }) => (
-                      <Link
-                        key={href}
-                        href={href}
-                        className="pp-dd-link"
-                        onClick={() => closeDropdown()}
-                      >
-                        <span style={{ fontSize: "16px" }}>{icon}</span>
-                        {label}
-                      </Link>
-                    ))}
-                    <hr className="pp-dd-divider" />
-                    <button className="pp-dd-signout" onClick={handleSignOut}>
-                      Sign Out
-                    </button>
-                  </div>
-                )}
+                {(showDropdown || isDropdownClosing) &&
+                  typeof window !== "undefined" &&
+                  window.innerWidth >= 768 && (
+                    <div
+                      className={`pp-dropdown${isDropdownClosing ? " closing" : ""}`}
+                    >
+                      {DROPDOWN_LINKS.map(({ href, label, icon }) => (
+                        <Link
+                          key={href}
+                          href={href}
+                          className="pp-dd-link"
+                          onClick={() => closeDropdown()}
+                        >
+                          <span style={{ fontSize: "16px" }}>{icon}</span>
+                          {label}
+                        </Link>
+                      ))}
+                      <hr className="pp-dd-divider" />
+                      <button className="pp-dd-signout" onClick={handleSignOut}>
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
               </div>
             ) : (
               <Link href="/auth" className="pp-signin-btn">

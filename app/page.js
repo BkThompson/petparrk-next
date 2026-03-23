@@ -262,7 +262,7 @@ export default function Home() {
             <input
               type="text"
               className="hero-search"
-              placeholder="Search by vet name or neighborhood..."
+              placeholder="Search vets..."
               value={heroSearch}
               onChange={(e) => setHeroSearch(e.target.value)}
             />
