@@ -262,7 +262,7 @@ export default function Home() {
             <input
               type="text"
               className="hero-search"
-              placeholder="Search vets by name..."
+              placeholder="Search by vet name or neighborhood..."
               value={heroSearch}
               onChange={(e) => setHeroSearch(e.target.value)}
             />
@@ -576,6 +576,27 @@ export default function Home() {
                   </div>
                 );
               })}
+            </div>
+            {/* See all vets — below cards on both desktop and mobile */}
+            <div style={{ textAlign: "center", marginTop: "32px" }}>
+              <Link
+                href="/vets"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "15px",
+                  fontWeight: "700",
+                  color: "var(--color-terracotta, #CF5C36)",
+                  textDecoration: "none",
+                  padding: "12px 28px",
+                  border: "2px solid var(--color-terracotta, #CF5C36)",
+                  borderRadius: "12px",
+                  transition: "background 0.15s ease",
+                }}
+              >
+                See all vets →
+              </Link>
             </div>
           </div>
         </section>

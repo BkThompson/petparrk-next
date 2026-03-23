@@ -222,7 +222,11 @@ function VetsContent() {
       if (priceRange === "over125") return examPrice > 125;
       return true;
     })
-    .filter((v) => v.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(
+      (v) =>
+        v.name.toLowerCase().includes(search.toLowerCase()) ||
+        (v.neighborhood || "").toLowerCase().includes(search.toLowerCase()),
+    )
     .sort((a, b) => {
       if (sortBy === "az") return a.name.localeCompare(b.name);
       const aExam = prices[a.id]?.find(
@@ -382,7 +386,7 @@ function VetsContent() {
               <input
                 type="text"
                 className="dir-search"
-                placeholder="Search vets by name..."
+                placeholder="Search by vet name or neighborhood..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{ flex: "1", minWidth: "200px" }}
