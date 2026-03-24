@@ -295,7 +295,7 @@ export default function ContactPage() {
       <section
         style={{
           background: "var(--color-navy-dark, #172531)",
-          padding: "60px 0",
+          padding: "60px 0 0",
         }}
       >
         <div className="pp-container-text" style={{ textAlign: "center" }}>
@@ -329,13 +329,12 @@ export default function ContactPage() {
             Find a Vet →
           </Link>
         </div>
-        {/* Gradient divider — matches homepage trust strip */}
         <div
           style={{
             height: "1px",
             background:
               "linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.2) 20%, rgba(255,255,255,0.2) 80%, rgba(255,255,255,0))",
-            margin: "40px 24px 0",
+            margin: "0 24px",
           }}
         />
       </section>
