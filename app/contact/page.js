@@ -295,10 +295,16 @@ export default function ContactPage() {
       <section
         style={{
           background: "var(--color-navy-dark, #172531)",
-          padding: "60px 0 0",
+          paddingTop: "48px",
+          paddingBottom: "0",
+          paddingLeft: "20px",
+          paddingRight: "20px",
         }}
       >
-        <div className="pp-container-text" style={{ textAlign: "center" }}>
+        <div
+          className="pp-container-text"
+          style={{ textAlign: "center", paddingBottom: "48px" }}
+        >
           <p
             style={{
               fontSize: "17px",
