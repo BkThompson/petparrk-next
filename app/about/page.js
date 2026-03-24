@@ -2,27 +2,27 @@ import Link from "next/link";
 
 const VALUES = [
   {
-    emoji: "🐾",
+    number: "01",
     title: "Pet Owners First",
     body: "Every decision we make starts with one question: does this help the pet owner? Not the advertiser, not us — the person trying to do right by their pet.",
   },
   {
-    emoji: "🔍",
+    number: "02",
     title: "Transparency Always",
     body: "Honest pricing, clear information, no hidden agendas. We show you where our data comes from and we never charge you to access information that should always have been available.",
   },
   {
-    emoji: "🌱",
+    number: "03",
     title: "Prevention Over Reaction",
     body: "The best vet visit is the one you were prepared for. We're building tools that help you stay ahead — not just tools for when things go wrong.",
   },
   {
-    emoji: "🤝",
+    number: "04",
     title: "Community Over Competition",
     body: "We're not replacing vets — we're helping you work with them better. Great vets deserve to be found. Pet owners deserve to find them.",
   },
   {
-    emoji: "🔓",
+    number: "05",
     title: "Accessibility for All",
     body: "Pet care shouldn't be a privilege. We're keeping the core platform free and fighting to make information that's always existed behind phone calls available to everyone.",
   },
@@ -30,22 +30,25 @@ const VALUES = [
 
 const PROBLEMS = [
   {
-    number: "01",
+    label: "Decision Paralysis",
     title: "Is this an emergency?",
-    subtitle: "Decision paralysis at 2am",
-    body: "Your puppy is vomiting at 2am. Is it an emergency? Do you spend $500+ at the ER, or wait until morning and risk being wrong? Google gives you conflicting, scary results. ChatGPT gives you generic advice that doesn't know your dog. There's no affordable, instant, trustworthy answer — so you panic or you guess.",
+    body: "Your puppy is vomiting at 2am. Is it an emergency? Do you spend $500+ at the ER, or wait until morning and risk being wrong? Google gives you conflicting, scary results. There's no affordable, instant, trustworthy answer — so you panic or you guess.",
+    emoji: "🌙",
+    imageAlt: "Pet owner at night worried about sick pet",
   },
   {
-    number: "02",
+    label: "Price Opacity",
     title: "What will this actually cost?",
-    subtitle: "Bill shock and price opacity",
-    body: 'You call five vets asking for a teeth cleaning price. Three refuse to quote without seeing your dog. One gives a range so wide it\'s useless. You pick the vet who gave you a number — $450 — and the final bill is $780. Pre-anesthesia bloodwork. IV fluids. Medication. Each charge was "medically necessary" but never mentioned. You were already committed before you found out.',
+    body: "You call five vets asking for a teeth cleaning price. Three refuse to quote without seeing your dog. You pick the one who gave you a number — $450 — and the final bill is $780. Pre-anesthesia bloodwork. IV fluids. Medication. Each charge was 'medically necessary' but never mentioned upfront.",
+    emoji: "💸",
+    imageAlt: "Shocked pet owner looking at vet bill",
   },
   {
-    number: "03",
+    label: "Information Overload",
     title: "Where is everything?",
-    subtitle: "Scattered records, overwhelmed owners",
-    body: "Vaccination records in a PDF from the breeder. Vet notes locked in a system you can't access. Training advice in bookmarks. Health questions spread across Reddit, Facebook groups, and Google. If you're a new pet owner, the information you need is everywhere and nowhere at the same time.",
+    body: "Vaccination records in a PDF. Vet notes locked in a system you can't access. Health questions spread across Reddit and Facebook groups. If you're a new pet owner, the information you need is everywhere and nowhere at the same time.",
+    emoji: "📂",
+    imageAlt: "Scattered pet health records and documents",
   },
 ];
 
@@ -53,53 +56,56 @@ export default function AboutPage() {
   return (
     <>
       <style>{`
-        /* Problem zigzag rows */
+        /* Problems section */
         .problem-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 64px;
           align-items: center;
+          padding: 72px 0;
+          border-top: 1px solid var(--color-border, #EDE8E0);
         }
-        .problem-row-reverse {
-          direction: rtl;
+        .problem-row:last-child { border-bottom: 1px solid var(--color-border, #EDE8E0); }
+        .problem-row-reverse .problem-text { order: 2; }
+        .problem-row-reverse .problem-image { order: 1; }
+        .problem-text-inner {
+          border-left: 3px solid var(--color-terracotta, #CF5C36);
+          padding-left: 24px;
         }
-        .problem-row-reverse > * {
-          direction: ltr;
-        }
-        .problem-text { }
-        .problem-image-slot { }
-        .problem-number {
-          font-size: clamp(56px, 8vw, 96px);
-          font-weight: 800;
-          color: var(--color-border, #EDE8E0);
-          line-height: 1;
-          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
-          user-select: none;
+        .problem-image-box {
+          width: 100%;
+          aspect-ratio: 4/3;
+          background: linear-gradient(135deg, var(--color-cream, #F5F0E8) 0%, #E2D9CE 100%);
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          gap: 10px;
         }
         @media (max-width: 768px) {
           .problem-row, .problem-row-reverse {
             grid-template-columns: 1fr;
-            direction: ltr;
-            gap: 32px;
+            gap: 28px;
+            padding: 40px 0;
           }
-          .problem-image-slot { order: -1; }
-          .problem-number { font-size: 48px; }
+          .problem-row-reverse .problem-text { order: unset; }
+          .problem-row-reverse .problem-image { order: unset; }
+          .problem-image { display: none; }
         }
 
         /* Values — Stripe editorial */
         .value-stripe-row {
           display: grid;
-          grid-template-columns: 160px 1fr;
+          grid-template-columns: 140px 1fr;
           gap: 48px;
           padding: 48px 0;
           border-top: 1px solid var(--color-border, #EDE8E0);
           align-items: start;
         }
-        .value-stripe-row:last-child {
-          border-bottom: 1px solid var(--color-border, #EDE8E0);
-        }
+        .value-stripe-row:last-child { border-bottom: 1px solid var(--color-border, #EDE8E0); }
         .value-stripe-number {
-          font-size: clamp(72px, 10vw, 120px);
+          font-size: clamp(72px, 9vw, 110px);
           font-weight: 800;
           line-height: 1;
           color: var(--color-border, #EDE8E0);
@@ -107,14 +113,11 @@ export default function AboutPage() {
           user-select: none;
           padding-top: 4px;
         }
-        .value-stripe-content {
-          padding-top: 12px;
-        }
         .value-stripe-title {
-          font-size: clamp(22px, 3vw, 30px);
+          font-size: clamp(20px, 2.5vw, 28px);
           font-weight: 800;
           color: var(--color-navy-dark, #172531);
-          margin: 0 0 14px 0;
+          margin: 0 0 12px;
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
           line-height: 1.2;
         }
@@ -123,16 +126,12 @@ export default function AboutPage() {
           color: var(--color-slate, #4B5563);
           line-height: 1.8;
           margin: 0;
-          max-width: 640px;
+          max-width: 600px;
         }
         @media (max-width: 640px) {
-          .value-stripe-row {
-            grid-template-columns: 64px 1fr;
-            gap: 20px;
-            padding: 32px 0;
-          }
-          .value-stripe-number { font-size: 56px; }
-          .value-stripe-title { font-size: 20px; }
+          .value-stripe-row { grid-template-columns: 56px 1fr; gap: 16px; padding: 32px 0; }
+          .value-stripe-number { font-size: 48px; }
+          .value-stripe-title { font-size: 18px; }
           .value-stripe-body { font-size: 15px; }
         }
       `}</style>
@@ -146,9 +145,7 @@ export default function AboutPage() {
           boxSizing: "border-box",
         }}
       >
-        <div
-          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
-        >
+        <div className="pp-container">
           <p
             style={{
               fontSize: "11px",
@@ -184,11 +181,11 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Mission — wide text */}
+      {/* Mission */}
       <section
         style={{ background: "var(--color-cream, #F5F0E8)", padding: "80px 0" }}
       >
-        <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 24px" }}>
+        <div className="pp-container-text">
           <p
             style={{
               fontSize: "11px",
@@ -211,7 +208,7 @@ export default function AboutPage() {
               fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
             }}
           >
-            Pet care shouldn't feel like a guessing game.
+            Pet care shouldn't feel like a guessing game.
           </h2>
           <p
             style={{
@@ -254,12 +251,10 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Problems — alternating zigzag layout */}
+      {/* Problems */}
       <section style={{ background: "#fff", padding: "80px 0" }}>
-        <div
-          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
-        >
-          <div style={{ maxWidth: "800px", marginBottom: "72px" }}>
+        <div className="pp-container">
+          <div style={{ maxWidth: "900px", marginBottom: "64px" }}>
             <p
               style={{
                 fontSize: "11px",
@@ -278,104 +273,76 @@ export default function AboutPage() {
                 fontWeight: "800",
                 color: "var(--color-navy-dark, #172531)",
                 fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+                margin: 0,
               }}
             >
               Three things that shouldn't be this hard.
             </h2>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-            {PROBLEMS.map((p, i) => {
-              const imageRight = i % 2 === 0;
-              return (
-                <div
-                  key={p.number}
-                  style={{
-                    borderTop: "1px solid var(--color-border, #EDE8E0)",
-                    padding: "64px 0",
-                  }}
-                >
-                  {/* Desktop: two column zigzag. Mobile: stacked */}
-                  <div
-                    className={`problem-row${imageRight ? "" : " problem-row-reverse"}`}
+          {PROBLEMS.map((p, i) => (
+            <div
+              key={p.title}
+              className={`problem-row${i % 2 !== 0 ? " problem-row-reverse" : ""}`}
+            >
+              <div className="problem-text">
+                <div className="problem-text-inner">
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--color-terracotta, #CF5C36)",
+                      marginBottom: "10px",
+                    }}
                   >
-                    {/* Text side */}
-                    <div className="problem-text">
-                      <div className="problem-number">{p.number}</div>
-                      <p
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: "700",
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                          color: "var(--color-muted, #9CA3AF)",
-                          marginBottom: "8px",
-                          marginTop: "16px",
-                        }}
-                      >
-                        {p.subtitle}
-                      </p>
-                      <h3
-                        style={{
-                          fontSize: "clamp(20px, 2.5vw, 26px)",
-                          fontWeight: "800",
-                          color: "var(--color-navy-dark, #172531)",
-                          marginBottom: "16px",
-                          fontFamily:
-                            "var(--font-urbanist, 'Urbanist', sans-serif)",
-                        }}
-                      >
-                        {p.title}
-                      </h3>
-                      <p
-                        style={{
-                          fontSize: "16px",
-                          color: "var(--color-slate, #4B5563)",
-                          lineHeight: "1.8",
-                          margin: 0,
-                        }}
-                      >
-                        {p.body}
-                      </p>
-                    </div>
-                    {/* Image placeholder side */}
-                    <div className="problem-image-slot">
-                      <div
-                        style={{
-                          width: "100%",
-                          aspectRatio: "4/3",
-                          background:
-                            "linear-gradient(135deg, var(--color-cream, #F5F0E8) 0%, #E8E0D4 100%)",
-                          borderRadius: "20px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexDirection: "column",
-                          gap: "12px",
-                        }}
-                      >
-                        <div style={{ fontSize: "48px" }}>
-                          {i === 0 ? "🌙" : i === 1 ? "💸" : "📂"}
-                        </div>
-                        <p
-                          style={{
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            color: "var(--color-muted, #9CA3AF)",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.08em",
-                            margin: 0,
-                          }}
-                        >
-                          Photo coming soon
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                    {p.label}
+                  </p>
+                  <h3
+                    style={{
+                      fontSize: "clamp(20px, 2.5vw, 28px)",
+                      fontWeight: "800",
+                      color: "var(--color-navy-dark, #172531)",
+                      marginBottom: "16px",
+                      fontFamily:
+                        "var(--font-urbanist, 'Urbanist', sans-serif)",
+                      lineHeight: "1.2",
+                    }}
+                  >
+                    {p.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "16px",
+                      color: "var(--color-slate, #4B5563)",
+                      lineHeight: "1.8",
+                      margin: 0,
+                    }}
+                  >
+                    {p.body}
+                  </p>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+              <div className="problem-image">
+                <div className="problem-image-box">
+                  <div style={{ fontSize: "52px" }}>{p.emoji}</div>
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      color: "var(--color-muted, #9CA3AF)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      margin: 0,
+                    }}
+                  >
+                    Photo coming soon
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -383,7 +350,7 @@ export default function AboutPage() {
       <section
         style={{ background: "var(--color-cream, #F5F0E8)", padding: "80px 0" }}
       >
-        <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 24px" }}>
+        <div className="pp-container-text">
           <p
             style={{
               fontSize: "11px",
@@ -428,18 +395,16 @@ export default function AboutPage() {
             }}
           >
             We're not replacing vets. We're helping you get to the right vet, at
-            the right time, knowing what you'll pay. We believe that when pet
-            owners have better information, pets get better care.
+            the right time, knowing what you'll pay. When pet owners have better
+            information, pets get better care.
           </p>
         </div>
       </section>
 
-      {/* Values — Stripe editorial style */}
+      {/* Values — Stripe style */}
       <section style={{ background: "#fff", padding: "80px 0" }}>
-        <div
-          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
-        >
-          <div style={{ marginBottom: "64px" }}>
+        <div className="pp-container">
+          <div style={{ maxWidth: "900px", marginBottom: "64px" }}>
             <p
               style={{
                 fontSize: "11px",
@@ -464,15 +429,10 @@ export default function AboutPage() {
               Our values
             </h2>
           </div>
-
-          {VALUES.map((val, i) => (
+          {VALUES.map((val) => (
             <div key={val.title} className="value-stripe-row">
-              {/* Large faded number */}
-              <div className="value-stripe-number">
-                {String(i + 1).padStart(2, "0")}
-              </div>
-              {/* Content */}
-              <div className="value-stripe-content">
+              <div className="value-stripe-number">{val.number}</div>
+              <div style={{ paddingTop: "12px" }}>
                 <h3 className="value-stripe-title">{val.title}</h3>
                 <p className="value-stripe-body">{val.body}</p>
               </div>
@@ -488,14 +448,7 @@ export default function AboutPage() {
           padding: "80px 0",
         }}
       >
-        <div
-          style={{
-            maxWidth: "800px",
-            margin: "0 auto",
-            padding: "0 24px",
-            textAlign: "center",
-          }}
-        >
+        <div className="pp-container-text" style={{ textAlign: "center" }}>
           <p
             style={{
               fontSize: "11px",

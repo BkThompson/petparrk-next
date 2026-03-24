@@ -759,3 +759,25 @@ body > div {
   box-sizing: border-box;
   width: 100%;
 }
+
+/* ── Standard page containers ────────────────────
+   Use these consistently across ALL pages.
+   .pp-container      → grid/card pages (1280px)
+   .pp-container-text → text-heavy pages (900px)
+   Never use hardcoded maxWidth inline when 
+   these classes will do.                          */
+.pp-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.pp-container-text {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
+  width: 100%;
+}

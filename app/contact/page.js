@@ -3,6 +3,45 @@ import Link from "next/link";
 export default function ContactPage() {
   return (
     <>
+      <style>{`
+        .contact-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 80px;
+          align-items: start;
+        }
+        .contact-images { display: block; }
+        @media (max-width: 768px) {
+          .contact-grid { grid-template-columns: 1fr; gap: 48px; }
+          .contact-images { display: none; }
+        }
+        .contact-reason {
+          border-left: 3px solid var(--color-terracotta, #CF5C36);
+          padding-left: 20px;
+        }
+        .contact-btn-primary {
+          display: inline-flex; align-items: center; gap: 10px;
+          padding: 16px 24px; border-radius: 12px;
+          text-decoration: none; font-weight: 700; font-size: 15px;
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+          background: var(--color-navy-dark, #172531); color: #fff;
+          border: 2px solid var(--color-navy-dark, #172531);
+          transition: opacity 0.15s ease;
+        }
+        .contact-btn-primary:hover { opacity: 0.88; }
+        .contact-btn-secondary {
+          display: inline-flex; align-items: center; gap: 10px;
+          padding: 16px 24px; border-radius: 12px;
+          text-decoration: none; font-weight: 700; font-size: 15px;
+          font-family: var(--font-urbanist, 'Urbanist', sans-serif);
+          background: transparent;
+          color: var(--color-navy-dark, #172531);
+          border: 2px solid var(--color-navy-dark, #172531);
+          transition: background 0.15s ease;
+        }
+        .contact-btn-secondary:hover { background: rgba(23,37,49,0.05); }
+      `}</style>
+
       {/* Page header */}
       <div
         style={{
@@ -12,9 +51,7 @@ export default function ContactPage() {
           boxSizing: "border-box",
         }}
       >
-        <div
-          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
-        >
+        <div className="pp-container">
           <p
             style={{
               fontSize: "11px",
@@ -53,19 +90,9 @@ export default function ContactPage() {
       <section
         style={{ background: "var(--color-cream, #F5F0E8)", padding: "80px 0" }}
       >
-        <div
-          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit, minmax(min(100%, 480px), 1fr))",
-              gap: "60px",
-              alignItems: "start",
-            }}
-          >
-            {/* Left — text content */}
+        <div className="pp-container">
+          <div className="contact-grid">
+            {/* Left — text */}
             <div>
               <p
                 style={{
@@ -81,10 +108,10 @@ export default function ContactPage() {
               </p>
               <h2
                 style={{
-                  fontSize: "clamp(26px, 3vw, 36px)",
+                  fontSize: "clamp(24px, 3vw, 34px)",
                   fontWeight: "800",
                   color: "var(--color-navy-dark, #172531)",
-                  marginBottom: "24px",
+                  marginBottom: "20px",
                   fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
                   lineHeight: "1.2",
                 }}
@@ -104,12 +131,11 @@ export default function ContactPage() {
                 everything and respond to as many messages as we can.
               </p>
 
-              {/* Contact reasons */}
               <div
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: "32px",
+                  gap: "28px",
                   marginBottom: "48px",
                 }}
               >
@@ -131,13 +157,7 @@ export default function ContactPage() {
                     body: "Visited a vet recently? Help the community by submitting what you paid from that vet's profile page.",
                   },
                 ].map((item) => (
-                  <div
-                    key={item.label}
-                    style={{
-                      borderLeft: "3px solid var(--color-terracotta, #CF5C36)",
-                      paddingLeft: "20px",
-                    }}
-                  >
+                  <div key={item.label} className="contact-reason">
                     <p
                       style={{
                         fontSize: "15px",
@@ -164,7 +184,6 @@ export default function ContactPage() {
                 ))}
               </div>
 
-              {/* Email CTAs */}
               <div
                 style={{
                   display: "flex",
@@ -174,67 +193,40 @@ export default function ContactPage() {
               >
                 <a
                   href="mailto:info@petparrk.com"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "16px 24px",
-                    background: "var(--color-navy-dark, #172531)",
-                    color: "#fff",
-                    borderRadius: "12px",
-                    textDecoration: "none",
-                    fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
-                    fontWeight: "700",
-                    fontSize: "15px",
-                    border: "2px solid var(--color-navy-dark, #172531)",
-                  }}
+                  className="contact-btn-primary"
                 >
-                  <span>✉️</span> info@petparrk.com
+                  ✉️ info@petparrk.com
                 </a>
                 <a
                   href="mailto:support@petparrk.com"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "15px 24px",
-                    background: "var(--color-terracotta, #CF5C36)",
-                    color: "#fff",
-                    border: "2px solid var(--color-terracotta, #CF5C36)",
-                    borderRadius: "12px",
-                    textDecoration: "none",
-                    fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
-                    fontWeight: "700",
-                    fontSize: "15px",
-                  }}
+                  className="contact-btn-secondary"
                 >
-                  <span>🛟</span> support@petparrk.com
+                  💬 support@petparrk.com
                 </a>
               </div>
             </div>
 
-            {/* Right — image placeholder */}
-            <div style={{ position: "relative" }}>
-              {/* Main image placeholder */}
+            {/* Right — image placeholders, hidden on mobile */}
+            <div className="contact-images">
+              {/* Main large placeholder */}
               <div
                 style={{
                   width: "100%",
                   aspectRatio: "4/5",
                   background:
-                    "linear-gradient(135deg, #2C4657 0%, #172531 100%)",
+                    "linear-gradient(160deg, #2C4657 0%, #172531 100%)",
                   borderRadius: "20px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: "16px",
                   overflow: "hidden",
-                  position: "relative",
                 }}
               >
                 <div
                   style={{
                     textAlign: "center",
-                    color: "rgba(255,255,255,0.3)",
+                    color: "rgba(255,255,255,0.25)",
                   }}
                 >
                   <div style={{ fontSize: "64px", marginBottom: "12px" }}>
@@ -242,41 +234,18 @@ export default function ContactPage() {
                   </div>
                   <p
                     style={{
-                      fontSize: "13px",
+                      fontSize: "12px",
                       fontWeight: "600",
-                      letterSpacing: "0.05em",
+                      letterSpacing: "0.08em",
                       textTransform: "uppercase",
+                      margin: 0,
                     }}
                   >
                     Photo coming soon
                   </p>
                 </div>
-                {/* Decorative overlay */}
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "24px",
-                    left: "24px",
-                    right: "24px",
-                  }}
-                >
-                  <p
-                    style={{
-                      color: "rgba(255,255,255,0.9)",
-                      fontSize: "18px",
-                      fontWeight: "800",
-                      fontFamily:
-                        "var(--font-urbanist, 'Urbanist', sans-serif)",
-                      lineHeight: "1.3",
-                      margin: 0,
-                    }}
-                  >
-                    "Real prices. Real vets. No surprises."
-                  </p>
-                </div>
               </div>
-
-              {/* Two smaller image placeholders */}
+              {/* Two smaller placeholders */}
               <div
                 style={{
                   display: "grid",
@@ -284,9 +253,12 @@ export default function ContactPage() {
                   gap: "16px",
                 }}
               >
-                {["🐶", "🐱"].map((emoji, i) => (
+                {[
+                  { emoji: "🐶", label: "Dog" },
+                  { emoji: "🐱", label: "Cat" },
+                ].map((item) => (
                   <div
-                    key={i}
+                    key={item.label}
                     style={{
                       aspectRatio: "1",
                       background: "var(--color-border, #EDE8E0)",
@@ -294,10 +266,23 @@ export default function ContactPage() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: "40px",
+                      flexDirection: "column",
+                      gap: "8px",
                     }}
                   >
-                    {emoji}
+                    <div style={{ fontSize: "36px" }}>{item.emoji}</div>
+                    <p
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        color: "var(--color-muted, #9CA3AF)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        margin: 0,
+                      }}
+                    >
+                      Photo coming soon
+                    </p>
                   </div>
                 ))}
               </div>
@@ -313,14 +298,7 @@ export default function ContactPage() {
           padding: "60px 0",
         }}
       >
-        <div
-          style={{
-            maxWidth: "800px",
-            margin: "0 auto",
-            padding: "0 24px",
-            textAlign: "center",
-          }}
-        >
+        <div className="pp-container-text" style={{ textAlign: "center" }}>
           <p
             style={{
               fontSize: "17px",
