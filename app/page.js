@@ -210,19 +210,6 @@ export default function Home() {
             boxSizing: "border-box",
           }}
         >
-          <p
-            className="anim-1"
-            style={{
-              fontSize: "11px",
-              fontWeight: "700",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--color-gold, #EFC88B)",
-              marginBottom: "16px",
-            }}
-          >
-            San Francisco Bay Area
-          </p>
           <h1
             className="anim-2"
             style={{
