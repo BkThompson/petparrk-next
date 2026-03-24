@@ -150,7 +150,7 @@ export default function ContactPage() {
                   },
                   {
                     label: "Press & media",
-                    body: "Writing about pet care, health tech, or Bay Area startups? Reach out and we'll get back to you quickly.",
+                    body: "Writing about pet care, health tech, or consumer startups? Reach out and we'll get back to you quickly.",
                   },
                   {
                     label: "Submit a price",
@@ -296,7 +296,8 @@ export default function ContactPage() {
         style={{
           height: "1px",
           background:
-            "linear-gradient(to right, var(--color-cream, #F5F0E8), #C8BFB3 25%, #C8BFB3 75%, var(--color-cream, #F5F0E8))",
+            "linear-gradient(to right, transparent, rgba(23,37,49,0.15) 20%, rgba(23,37,49,0.15) 80%, transparent)",
+          margin: "0 24px",
         }}
       />
 
