@@ -291,16 +291,6 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Gradient divider */}
-      <div
-        style={{
-          height: "1px",
-          background:
-            "linear-gradient(to right, transparent, rgba(23,37,49,0.15) 20%, rgba(23,37,49,0.15) 80%, transparent)",
-          margin: "0 24px",
-        }}
-      />
-
       {/* Bottom CTA */}
       <section
         style={{
@@ -339,6 +329,15 @@ export default function ContactPage() {
             Find a Vet →
           </Link>
         </div>
+        {/* Gradient divider — matches homepage trust strip */}
+        <div
+          style={{
+            height: "1px",
+            background:
+              "linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.2) 20%, rgba(255,255,255,0.2) 80%, rgba(255,255,255,0))",
+            margin: "40px 24px 0",
+          }}
+        />
       </section>
     </>
   );
