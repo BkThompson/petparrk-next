@@ -291,6 +291,15 @@ export default function ContactPage() {
         </div>
       </section>
 
+      {/* Gradient divider */}
+      <div
+        style={{
+          height: "1px",
+          background:
+            "linear-gradient(to right, var(--color-cream, #F5F0E8), #C8BFB3 25%, #C8BFB3 75%, var(--color-cream, #F5F0E8))",
+        }}
+      />
+
       {/* Bottom CTA */}
       <section
         style={{

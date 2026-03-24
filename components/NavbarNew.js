@@ -231,9 +231,9 @@ export default function NavbarNew() {
           list-style: none;
           position: relative;
         }
+        .pp-nav { box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
         @media (min-width: 768px) {
           .pp-nav-links { display: flex; }
-          .pp-nav { box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
         }
 
         /* Sliding indicator bar */

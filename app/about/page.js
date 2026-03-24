@@ -32,23 +32,20 @@ const PROBLEMS = [
   {
     label: "Decision Paralysis",
     title: "Is this an emergency?",
-    body: "Your puppy is vomiting at 2am. Is it an emergency? Do you spend $500+ at the ER, or wait until morning and risk being wrong? Google gives you conflicting, scary results. There's no affordable, instant, trustworthy answer — so you panic or you guess.",
+    body: "It's late. Your pet isn't acting like themselves. You don't know if this is something that can wait until morning or something that can't. You want a clear answer from someone who knows your pet — not a list of possibilities that leaves you more worried than when you started.",
     emoji: "🌙",
-    imageAlt: "Pet owner at night worried about sick pet",
   },
   {
     label: "Price Opacity",
     title: "What will this actually cost?",
-    body: "You call five vets asking for a teeth cleaning price. Three refuse to quote without seeing your dog. You pick the one who gave you a number — $450 — and the final bill is $780. Pre-anesthesia bloodwork. IV fluids. Medication. Each charge was 'medically necessary' but never mentioned upfront.",
+    body: "You ask for a price before you go. You get a range so wide it's useless, or a number that turns out to be just the starting point. By the time you find out the real cost, you're already committed. That's not your fault. It's a broken system.",
     emoji: "💸",
-    imageAlt: "Shocked pet owner looking at vet bill",
   },
   {
     label: "Information Overload",
     title: "Where is everything?",
-    body: "Vaccination records in a PDF. Vet notes locked in a system you can't access. Health questions spread across Reddit and Facebook groups. If you're a new pet owner, the information you need is everywhere and nowhere at the same time.",
+    body: "Records at one vet. Notes at another. Reminders on your phone. Advice from six different places. New pet owners especially feel this — there's so much to know and no single place to put it all.",
     emoji: "📂",
-    imageAlt: "Scattered pet health records and documents",
   },
 ];
 
@@ -56,7 +53,6 @@ export default function AboutPage() {
   return (
     <>
       <style>{`
-        /* Problems section */
         .problem-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -93,8 +89,6 @@ export default function AboutPage() {
           .problem-row-reverse .problem-image { order: unset; }
           .problem-image { display: none; }
         }
-
-        /* Values — Stripe editorial */
         .value-stripe-row {
           display: grid;
           grid-template-columns: 140px 1fr;
@@ -181,7 +175,7 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Mission */}
+      {/* Mission — answer woven in */}
       <section
         style={{ background: "var(--color-cream, #F5F0E8)", padding: "80px 0" }}
       >
@@ -200,7 +194,7 @@ export default function AboutPage() {
           </p>
           <h2
             style={{
-              fontSize: "clamp(28px, 4vw, 44px)",
+              fontSize: "clamp(28px, 4vw, 42px)",
               fontWeight: "800",
               color: "var(--color-navy-dark, #172531)",
               lineHeight: "1.15",
@@ -208,7 +202,8 @@ export default function AboutPage() {
               fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
             }}
           >
-            Pet care shouldn't feel like a guessing game.
+            Pet care is one of the most emotional decisions you'll ever make —
+            and somehow one of the least supported.
           </h2>
           <p
             style={{
@@ -218,11 +213,12 @@ export default function AboutPage() {
               marginBottom: "20px",
             }}
           >
-            PetParrk started with a frustration every pet owner knows. You call
-            a vet, ask about pricing, and hear "it depends." You search online
-            and find conflicting, scary results. You wonder if what your pet is
-            doing is normal or an emergency — and every time, you're left
-            guessing.
+            When your pet isn't acting like themselves in the middle of the
+            night, you're not looking for a search result. You're looking for
+            someone to tell you it's okay — or that it's not — and what to do
+            either way. When you get a vet bill that's twice what you expected,
+            you don't just feel surprised. You feel like you were set up to
+            fail.
           </p>
           <p
             style={{
@@ -232,11 +228,10 @@ export default function AboutPage() {
               marginBottom: "20px",
             }}
           >
-            We built PetParrk to change that. Starting in the East Bay, we're
-            building a platform that gives pet owners real information: real
-            prices from real vets, AI-powered guidance when you're not sure
-            what's wrong, and a place to build and own your pet's health history
-            over time.
+            We built PetParrk because pet owners deserve better than that. Real
+            prices, so you're never shocked at checkout. Instant guidance, so
+            you're never left guessing. A place to keep your pet's health story,
+            so you're never starting from scratch at a new vet.
           </p>
           <p
             style={{
@@ -245,8 +240,8 @@ export default function AboutPage() {
               lineHeight: "1.8",
             }}
           >
-            No surprises. No gatekeeping. Just honest, transparent tools to help
-            you make better decisions for your pet — every single day.
+            We started in Oakland. We're building for every pet owner who has
+            ever felt like the system wasn't built for them.
           </p>
         </div>
       </section>
@@ -346,63 +341,10 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Our answer */}
+      {/* Values */}
       <section
         style={{ background: "var(--color-cream, #F5F0E8)", padding: "80px 0" }}
       >
-        <div className="pp-container-text">
-          <p
-            style={{
-              fontSize: "11px",
-              fontWeight: "700",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--color-terracotta, #CF5C36)",
-              marginBottom: "16px",
-            }}
-          >
-            Our answer
-          </p>
-          <h2
-            style={{
-              fontSize: "clamp(26px, 3vw, 36px)",
-              fontWeight: "800",
-              color: "var(--color-navy-dark, #172531)",
-              marginBottom: "28px",
-              fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
-            }}
-          >
-            The daily companion for confident pet care.
-          </h2>
-          <p
-            style={{
-              fontSize: "17px",
-              color: "var(--color-slate, #4B5563)",
-              lineHeight: "1.8",
-              marginBottom: "20px",
-            }}
-          >
-            PetParrk combines AI-powered symptom triage, transparent vet
-            pricing, and owner-controlled health profiles into one platform —
-            because the problem isn't that pet owners don't care enough, it's
-            that they've never had the right tools.
-          </p>
-          <p
-            style={{
-              fontSize: "17px",
-              color: "var(--color-slate, #4B5563)",
-              lineHeight: "1.8",
-            }}
-          >
-            We're not replacing vets. We're helping you get to the right vet, at
-            the right time, knowing what you'll pay. When pet owners have better
-            information, pets get better care.
-          </p>
-        </div>
-      </section>
-
-      {/* Values — Stripe style */}
-      <section style={{ background: "#fff", padding: "80px 0" }}>
         <div className="pp-container">
           <div style={{ maxWidth: "900px", marginBottom: "64px" }}>
             <p
