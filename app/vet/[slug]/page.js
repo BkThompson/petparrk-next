@@ -47,10 +47,11 @@ export default function VetPage() {
   const [vet, setVet] = useState(null);
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
   const [allPrices, setAllPrices] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
   const [showPricingModal, setShowPricingModal] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [shareConfirmed, setShareConfirmed] = useState(false);
   const [formData, setFormData] = useState({
     vet_name: "",
     service_name: "",
@@ -88,26 +89,36 @@ export default function VetPage() {
       setPrices(priceData || []);
       setAllPrices(allPricesData || []);
       setLoading(false);
+      if (vetData) setFormData((f) => ({ ...f, vet_name: vetData.name }));
     }
     fetchData();
   }, [slug]);
 
   useEffect(() => {
     if (!session || !vet) return;
-    async function checkSaved() {
-      const { data } = await supabase
-        .from("saved_vets")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .eq("vet_id", vet.id)
-        .single();
-      setIsSaved(!!data);
-    }
-    checkSaved();
+    supabase
+      .from("saved_vets")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .eq("vet_id", vet.id)
+      .single()
+      .then(({ data }) => setIsSaved(!!data));
   }, [session, vet]);
 
+  // IntersectionObserver for chart animation
   useEffect(() => {
-    if (!loading) setTimeout(() => setChartVisible(true), 500);
+    if (!chartRef.current || loading) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setChartVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 },
+    );
+    observer.observe(chartRef.current);
+    return () => observer.disconnect();
   }, [loading]);
 
   async function toggleSave() {
@@ -132,7 +143,22 @@ export default function VetPage() {
     }
   }
 
-  const handleSubmit = async () => {
+  async function handleShare() {
+    const url = window.location.href;
+    if (navigator.share) {
+      await navigator.share({
+        title: vet.name,
+        text: `Check out ${vet.name} on PetParrk`,
+        url,
+      });
+    } else {
+      await navigator.clipboard.writeText(url);
+      setShareConfirmed(true);
+      setTimeout(() => setShareConfirmed(false), 2000);
+    }
+  }
+
+  async function handleSubmit() {
     if (!formData.vet_name || !formData.service_name || !formData.price_paid) {
       setFormStatus("error");
       return;
@@ -152,13 +178,17 @@ export default function VetPage() {
     }
     setFormStatus("success");
     setFormData({
-      vet_name: "",
+      vet_name: vet?.name || "",
       service_name: "",
       price_paid: "",
       visit_date: "",
       submitter_note: "",
     });
-  };
+  }
+
+  function toggleRow(id) {
+    setExpandedRows((prev) => ({ [id]: !prev[id] }));
+  }
 
   function formatPrice(low, high, priceType) {
     if (!low && low !== 0) return "Call for quote";
@@ -194,24 +224,6 @@ export default function VetPage() {
     return notes.split(" / ").map((n) => n.trim());
   }
 
-  async function handleShare() {
-    const url = window.location.href;
-    if (navigator.share) {
-      await navigator.share({
-        title: vet.name,
-        text: `Check out ${vet.name} on PetParrk`,
-        url,
-      });
-    } else {
-      await navigator.clipboard.writeText(url);
-      alert("Link copied to clipboard!");
-    }
-  }
-
-  function toggleRow(id) {
-    setExpandedRows((prev) => ({ [id]: !prev[id] }));
-  }
-
   const lastVerified =
     prices.length > 0
       ? prices
@@ -220,8 +232,65 @@ export default function VetPage() {
           ?.created_at
       : null;
 
-  if (loading) return <p style={{ padding: "20px" }}>Loading...</p>;
-  if (!vet) return <p style={{ padding: "20px" }}>Vet not found.</p>;
+  if (loading)
+    return (
+      <div
+        style={{
+          minHeight: "calc(100vh - 64px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: "32px", marginBottom: "12px" }}>🐾</div>
+          <p
+            style={{
+              color: "var(--color-muted, #9CA3AF)",
+              fontSize: "14px",
+              fontFamily: "var(--font-urbanist, system-ui)",
+            }}
+          >
+            Loading vet profile…
+          </p>
+        </div>
+      </div>
+    );
+
+  if (!vet)
+    return (
+      <div
+        style={{
+          minHeight: "calc(100vh - 64px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: "32px", marginBottom: "12px" }}>😕</div>
+          <p
+            style={{
+              color: "var(--color-muted, #9CA3AF)",
+              fontSize: "14px",
+              fontFamily: "var(--font-urbanist, system-ui)",
+            }}
+          >
+            Vet not found.
+          </p>
+          <Link
+            href="/vets"
+            style={{
+              color: "var(--color-terracotta, #CF5C36)",
+              fontSize: "14px",
+              fontWeight: "700",
+            }}
+          >
+            ← Back to all vets
+          </Link>
+        </div>
+      </div>
+    );
 
   const hoursLines = parseHours(vet.hours);
   const locationLine = [vet.neighborhood, vet.city].filter(Boolean).join(" · ");
@@ -229,33 +298,70 @@ export default function VetPage() {
   return (
     <>
       <style>{`
+        /* Save button */
         @keyframes heartPop {
           0%   { transform: scale(1); }
           40%  { transform: scale(1.5); }
           70%  { transform: scale(0.85); }
           100% { transform: scale(1); }
         }
-        .save-btn { transition: transform 0.1s; background: none; border: none; cursor: pointer; padding: 0; font-size: 22px; line-height: 1; }
+        .save-btn { background: none; border: none; cursor: pointer; padding: 0; font-size: 24px; line-height: 1; transition: transform 0.1s; }
         .save-btn:hover { transform: scale(1.15); }
         .save-animating { animation: heartPop 0.4s ease forwards; }
+
+        /* Accordion */
         .expand-btn {
-          width: 26px; height: 26px; border-radius: 50%;
-          border: 1.5px solid #2d6a4f; background: #fff; color: #2d6a4f;
-          font-size: 18px; font-weight: 400; line-height: 0;
-          cursor: pointer; padding: 0; user-select: none;
+          width: 28px; height: 28px; border-radius: 50%;
+          border: 1.5px solid var(--color-terracotta, #CF5C36);
+          background: transparent; color: var(--color-terracotta, #CF5C36);
+          font-size: 18px; line-height: 0; cursor: pointer; padding: 0;
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0; transition: background 0.2s ease, color 0.2s ease;
         }
-        .expand-btn:hover { background: #2d6a4f; color: #fff; }
-        .accordion-wrap { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .expand-btn:hover { background: var(--color-terracotta, #CF5C36); color: #fff; }
+        .accordion-wrap { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease; }
         .accordion-wrap.open { grid-template-rows: 1fr; opacity: 1; }
         .accordion-inner { overflow: hidden; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; animation: mFadeIn 0.15s ease; }
-        @keyframes mFadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .modal-box { background: #fff; border-radius: 14px; padding: 24px; max-width: 420px; width: 100%; animation: mSlideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes mSlideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Pricing modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; animation: fadeIn 0.15s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-box { background: #fff; border-radius: 16px; padding: 28px; max-width: 440px; width: 100%; animation: slideUp 0.2s cubic-bezier(0.4,0,0.2,1); }
+        @keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Submit price bottom sheet */
+        .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: flex-end; animation: fadeIn 0.2s ease; }
+        .sheet-box { background: #fff; border-radius: 20px 20px 0 0; padding: 28px 24px 40px; width: 100%; max-height: 90vh; overflow-y: auto; animation: sheetUp 0.3s cubic-bezier(0.4,0,0.2,1); }
+        @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .sheet-handle { width: 40px; height: 4px; background: var(--color-border, #EDE8E0); border-radius: 4px; margin: 0 auto 20px; }
+
+        /* Form inputs */
+        .pp-form-input {
+          width: 100%; padding: 12px 14px; border-radius: 10px;
+          border: 1.5px solid var(--color-border, #EDE8E0);
+          font-size: 15px; font-family: var(--font-urbanist, system-ui);
+          outline: none; box-sizing: border-box; background: #fff;
+          transition: border-color 0.15s ease; color: var(--color-navy-dark, #172531);
+        }
+        .pp-form-input:focus { border-color: var(--color-terracotta, #CF5C36); }
+
+        /* Price row hover */
+        .price-row { transition: background 0.15s ease; border-radius: 10px; }
+        .price-row:hover { background: var(--color-cream, #F5F0E8); }
+
+        /* Share confirmation */
+        .share-btn { background: none; border: none; cursor: pointer; color: var(--color-terracotta, #CF5C36); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 0; font-family: var(--font-urbanist, system-ui); transition: opacity 0.15s; }
+        .share-btn:hover { opacity: 0.75; }
+
+        /* Info grid */
+        .info-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+
+        @media (max-width: 768px) {
+          .vet-header-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
+      {/* Pricing info modal */}
       {showPricingModal && (
         <div
           className="modal-overlay"
@@ -267,10 +373,18 @@ export default function VetPage() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "flex-start",
-                marginBottom: "12px",
+                marginBottom: "16px",
               }}
             >
-              <h3 style={{ margin: 0, fontSize: "16px", color: "#111" }}>
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: "17px",
+                  fontWeight: "800",
+                  color: "var(--color-navy-dark, #172531)",
+                  fontFamily: "var(--font-urbanist, system-ui)",
+                }}
+              >
                 About our pricing data
               </h3>
               <button
@@ -279,10 +393,10 @@ export default function VetPage() {
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  padding: "0 0 0 12px",
-                  fontSize: "20px",
+                  fontSize: "22px",
                   color: "#aaa",
                   lineHeight: 1,
+                  padding: "0 0 0 12px",
                   flexShrink: 0,
                 }}
               >
@@ -291,22 +405,22 @@ export default function VetPage() {
             </div>
             <p
               style={{
-                margin: "0 0 12px 0",
-                fontSize: "14px",
-                color: "#444",
-                lineHeight: "1.6",
+                margin: "0 0 12px",
+                fontSize: "15px",
+                color: "var(--color-slate, #4B5563)",
+                lineHeight: "1.7",
               }}
             >
-              Prices shown are estimates and may have changed. PetParrk is not
-              responsible for discrepancies between listed prices and what you
-              are charged.
+              Prices shown are estimates based on community submissions and may
+              have changed. PetParrk is not responsible for discrepancies
+              between listed prices and what you are charged.
             </p>
             <p
               style={{
                 margin: 0,
-                fontSize: "14px",
-                color: "#444",
-                lineHeight: "1.6",
+                fontSize: "15px",
+                color: "var(--color-slate, #4B5563)",
+                lineHeight: "1.7",
               }}
             >
               Always confirm pricing directly with your vet before booking your
@@ -316,240 +430,542 @@ export default function VetPage() {
         </div>
       )}
 
+      {/* Submit a Price bottom sheet */}
+      {showSubmitModal && (
+        <div
+          className="sheet-overlay"
+          onClick={() => {
+            setShowSubmitModal(false);
+            setFormStatus(null);
+          }}
+        >
+          <div className="sheet-box" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet-handle" />
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "6px",
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    margin: "0 0 4px",
+                    fontSize: "20px",
+                    fontWeight: "800",
+                    color: "var(--color-navy-dark, #172531)",
+                    fontFamily: "var(--font-urbanist, system-ui)",
+                  }}
+                >
+                  Submit a Price
+                </h3>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    color: "var(--color-muted, #9CA3AF)",
+                  }}
+                >
+                  Help other pet owners know what to expect.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowSubmitModal(false);
+                  setFormStatus(null);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "22px",
+                  color: "#aaa",
+                  lineHeight: 1,
+                  padding: "0 0 0 12px",
+                  flexShrink: 0,
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div
+              style={{
+                height: "1px",
+                background: "var(--color-border, #EDE8E0)",
+                margin: "16px 0 20px",
+              }}
+            />
+
+            {formStatus === "success" ? (
+              <div style={{ textAlign: "center", padding: "32px 0" }}>
+                <div style={{ fontSize: "48px", marginBottom: "16px" }}>🎉</div>
+                <h4
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: "800",
+                    color: "var(--color-navy-dark, #172531)",
+                    margin: "0 0 8px",
+                    fontFamily: "var(--font-urbanist, system-ui)",
+                  }}
+                >
+                  Thank you!
+                </h4>
+                <p
+                  style={{
+                    fontSize: "15px",
+                    color: "var(--color-slate, #4B5563)",
+                    lineHeight: "1.7",
+                    margin: "0 0 24px",
+                  }}
+                >
+                  Your submission is under review. Once verified it will help
+                  pet owners in your community make better decisions.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowSubmitModal(false);
+                    setFormStatus(null);
+                  }}
+                  style={{
+                    padding: "12px 28px",
+                    background: "var(--color-terracotta, #CF5C36)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "12px",
+                    fontSize: "15px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-urbanist, system-ui)",
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <>
+                {[
+                  {
+                    field: "vet_name",
+                    label: "Vet Name",
+                    required: true,
+                    type: "text",
+                    placeholder: vet.name,
+                  },
+                  {
+                    field: "service_name",
+                    label: "Service",
+                    required: true,
+                    type: "text",
+                    placeholder: "e.g. Doctor Exam, Dental Cleaning",
+                  },
+                  {
+                    field: "price_paid",
+                    label: "Price Paid ($)",
+                    required: true,
+                    type: "number",
+                    placeholder: "e.g. 85",
+                  },
+                  {
+                    field: "visit_date",
+                    label: "Date of Visit",
+                    required: false,
+                    type: "date",
+                    placeholder: "",
+                  },
+                  {
+                    field: "submitter_note",
+                    label: "Notes",
+                    required: false,
+                    type: "text",
+                    placeholder: "Anything else that would help others?",
+                  },
+                ].map(({ field, label, required, type, placeholder }) => (
+                  <div key={field} style={{ marginBottom: "16px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: "700",
+                        color: "var(--color-slate, #4B5563)",
+                        marginBottom: "6px",
+                        fontFamily: "var(--font-urbanist, system-ui)",
+                      }}
+                    >
+                      {label}{" "}
+                      {required && (
+                        <span
+                          style={{ color: "var(--color-terracotta, #CF5C36)" }}
+                        >
+                          *
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      type={type}
+                      value={formData[field]}
+                      onChange={(e) =>
+                        setFormData({ ...formData, [field]: e.target.value })
+                      }
+                      placeholder={placeholder}
+                      className="pp-form-input"
+                    />
+                  </div>
+                ))}
+
+                {formStatus === "error" && (
+                  <div
+                    style={{
+                      background: "#FCEAEA",
+                      color: "#C94040",
+                      borderRadius: "8px",
+                      padding: "10px 14px",
+                      fontSize: "14px",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    Please fill in all required fields.
+                  </div>
+                )}
+
+                <button
+                  onClick={handleSubmit}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    background: "var(--color-terracotta, #CF5C36)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "12px",
+                    fontSize: "15px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-urbanist, system-ui)",
+                    marginTop: "4px",
+                  }}
+                >
+                  Submit Price
+                </button>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--color-muted, #9CA3AF)",
+                    textAlign: "center",
+                    marginTop: "12px",
+                    lineHeight: "1.6",
+                  }}
+                >
+                  All submissions are reviewed before going live. We never share
+                  your personal information.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Page header */}
       <div
         style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          padding: "20px",
-          fontFamily: "var(--font, system-ui, sans-serif)",
-          minHeight: "100vh",
+          background: "var(--color-navy-dark, #172531)",
+          padding: "56px 0",
+          minHeight: "180px",
           boxSizing: "border-box",
         }}
       >
-        {/* Top nav */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px",
-          }}
-        >
+        <div className="pp-container">
           <Link
             href="/vets"
             style={{
-              color: "#2d6a4f",
-              fontSize: "14px",
+              fontSize: "13px",
+              fontWeight: "600",
+              color: "rgba(255,255,255,0.55)",
               textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              marginBottom: "16px",
+              transition: "color 0.15s",
             }}
           >
             ← Back to all vets
           </Link>
-        </div>
-
-        {/* Vet Info Card */}
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #ddd",
-            borderRadius: "12px",
-            padding: "20px",
-            marginBottom: "16px",
-          }}
-        >
-          {/* Name + heart */}
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "flex-start",
-              marginBottom: "8px",
+              gap: "16px",
             }}
           >
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "1.4rem",
-                color: "#111",
-                lineHeight: "1.3",
-                flex: 1,
-              }}
-            >
-              {vet.name}
-            </h1>
-            <button
-              onClick={toggleSave}
-              title={isSaved ? "Remove from saved" : "Save this vet"}
-              className={`save-btn${saveAnimating ? " save-animating" : ""}`}
-              style={{ marginLeft: "12px", flexShrink: 0 }}
-            >
-              {isSaved ? "❤️" : "🤍"}
-            </button>
-          </div>
-
-          {/* Badges */}
-          <div
-            style={{
-              display: "flex",
-              gap: "6px",
-              flexWrap: "wrap",
-              marginBottom: "14px",
-            }}
-          >
-            {(Array.isArray(vet.vet_type) ? vet.vet_type : [vet.vet_type])
-              .filter(Boolean)
-              .map((t) => (
-                <span
-                  key={t}
-                  style={{
-                    fontSize: "11px",
-                    background: "#e8f5e9",
-                    color: "#2d6a4f",
-                    padding: "4px 10px",
-                    borderRadius: "12px",
-                  }}
-                >
-                  {t}
-                </span>
-              ))}
-            {vet.ownership && (
-              <span
+            <div style={{ flex: 1 }}>
+              {/* Badges */}
+              <div
                 style={{
-                  fontSize: "11px",
-                  background: "#f0f0f0",
-                  color: "#555",
-                  padding: "4px 10px",
-                  borderRadius: "12px",
+                  display: "flex",
+                  gap: "6px",
+                  flexWrap: "wrap",
+                  marginBottom: "10px",
                 }}
               >
-                {vet.ownership}
-              </span>
-            )}
+                {(Array.isArray(vet.vet_type) ? vet.vet_type : [vet.vet_type])
+                  .filter(Boolean)
+                  .map((t) => (
+                    <span
+                      key={t}
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        background: "rgba(239,200,139,0.15)",
+                        color: "var(--color-gold, #EFC88B)",
+                        padding: "4px 10px",
+                        borderRadius: "20px",
+                        border: "1px solid rgba(239,200,139,0.3)",
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                {vet.ownership && (
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      background: "rgba(255,255,255,0.08)",
+                      color: "rgba(255,255,255,0.6)",
+                      padding: "4px 10px",
+                      borderRadius: "20px",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                    }}
+                  >
+                    {vet.ownership}
+                  </span>
+                )}
+              </div>
+              <h1
+                style={{
+                  margin: "0 0 6px",
+                  fontSize: "clamp(22px, 4vw, 36px)",
+                  fontWeight: "800",
+                  color: "#fff",
+                  fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
+                  lineHeight: "1.15",
+                }}
+              >
+                {vet.name}
+              </h1>
+              {locationLine && (
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "15px",
+                    color: "rgba(255,255,255,0.6)",
+                  }}
+                >
+                  {locationLine}
+                </p>
+              )}
+            </div>
+            {/* Save + Share */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                flexShrink: 0,
+                paddingTop: "4px",
+              }}
+            >
+              <button
+                onClick={handleShare}
+                className="share-btn"
+                title="Share this vet"
+              >
+                {shareConfirmed ? "✓ Copied!" : "🔗 Share"}
+              </button>
+              <button
+                onClick={toggleSave}
+                title={isSaved ? "Remove from saved" : "Save this vet"}
+                className={`save-btn${saveAnimating ? " save-animating" : ""}`}
+              >
+                {isSaved ? "❤️" : "🤍"}
+              </button>
+            </div>
           </div>
+        </div>
+      </div>
 
-          {locationLine && (
-            <p style={{ margin: "0 0 6px 0", fontSize: "14px", color: "#555" }}>
-              {locationLine}
+      <div
+        className="pp-container"
+        style={{ padding: "32px 24px 80px", boxSizing: "border-box" }}
+      >
+        {/* Info grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "16px",
+            marginBottom: "24px",
+          }}
+        >
+          {/* Contact card */}
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "16px",
+              padding: "24px",
+              border: "1px solid var(--color-border, #EDE8E0)",
+              boxShadow: "0 2px 8px rgba(23,37,49,0.05)",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--color-muted, #9CA3AF)",
+                marginBottom: "14px",
+              }}
+            >
+              Contact
             </p>
-          )}
-
-          {vet.address && (
-            <div style={{ margin: "0 0 6px 0", fontSize: "14px" }}>
+            {vet.address && (
               <a
                 href={`https://maps.google.com/?q=${encodeURIComponent(vet.address + " " + (vet.city || "") + " CA " + (vet.zip_code || ""))}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#2d6a4f", textDecoration: "none" }}
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  color: "var(--color-terracotta, #CF5C36)",
+                  textDecoration: "none",
+                  marginBottom: "8px",
+                  lineHeight: "1.5",
+                }}
               >
-                <span style={{ display: "block" }}>{vet.address}</span>
-                <span style={{ display: "block" }}>
-                  {vet.city}, CA {vet.zip_code} ↗
-                </span>
+                📍 {vet.address}, {vet.city}, CA {vet.zip_code} ↗
               </a>
-            </div>
-          )}
-
-          {vet.phone && (
-            <p style={{ margin: "0 0 6px 0", fontSize: "14px" }}>
+            )}
+            {vet.phone && (
               <a
                 href={`tel:${vet.phone}`}
-                style={{ color: "#2d6a4f", textDecoration: "none" }}
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  color: "var(--color-terracotta, #CF5C36)",
+                  textDecoration: "none",
+                  marginBottom: "8px",
+                }}
               >
-                {formatPhone(vet.phone)}
+                📞 {formatPhone(vet.phone)}
               </a>
-            </p>
-          )}
-
-          {vet.website && (
-            <p style={{ margin: "0 0 14px 0", fontSize: "14px" }}>
+            )}
+            {vet.website && (
               <a
                 href={`https://${vet.website}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#2d6a4f", textDecoration: "none" }}
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  color: "var(--color-terracotta, #CF5C36)",
+                  textDecoration: "none",
+                }}
               >
-                {vet.website} ↗
+                🌐 {vet.website} ↗
               </a>
-            </p>
-          )}
+            )}
+          </div>
 
+          {/* Details card */}
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-              fontSize: "14px",
-              marginBottom: "16px",
+              background: "#fff",
+              borderRadius: "16px",
+              padding: "24px",
+              border: "1px solid var(--color-border, #EDE8E0)",
+              boxShadow: "0 2px 8px rgba(23,37,49,0.05)",
             }}
           >
-            <div>
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--color-muted, #9CA3AF)",
+                marginBottom: "14px",
+              }}
+            >
+              Details
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               <span
-                style={{ color: "#888", display: "block", marginBottom: "2px" }}
+                className="info-pill"
+                style={{
+                  background: vet.carecredit ? "#EDFAF3" : "#FEF2F2",
+                  color: vet.carecredit ? "#1A6641" : "#C94040",
+                }}
               >
-                CareCredit
+                {vet.carecredit ? "✅" : "❌"} CareCredit
               </span>
-              <strong style={{ color: "#111" }}>
-                {vet.carecredit ? "✅ Accepted" : "❌ Not accepted"}
-              </strong>
-            </div>
-            <div>
               {vet.accepting_new_patients !== null && (
-                <>
-                  <span
-                    style={{
-                      color: "#888",
-                      display: "block",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    New Patients
-                  </span>
-                  <strong
-                    style={{
-                      color: vet.accepting_new_patients ? "#2d6a4f" : "#c62828",
-                    }}
-                  >
-                    {vet.accepting_new_patients
-                      ? "✅ Accepting"
-                      : "❌ Not Accepting"}
-                  </strong>
-                </>
+                <span
+                  className="info-pill"
+                  style={{
+                    background: vet.accepting_new_patients
+                      ? "#EDFAF3"
+                      : "#FEF2F2",
+                    color: vet.accepting_new_patients ? "#1A6641" : "#C94040",
+                  }}
+                >
+                  {vet.accepting_new_patients ? "✅" : "❌"} New Patients
+                </span>
               )}
             </div>
           </div>
 
+          {/* Hours card */}
           {hoursLines.length > 0 && (
-            <div style={{ fontSize: "14px", marginBottom: "16px" }}>
-              <span
-                style={{ color: "#888", display: "block", marginBottom: "4px" }}
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: "16px",
+                padding: "24px",
+                border: "1px solid var(--color-border, #EDE8E0)",
+                boxShadow: "0 2px 8px rgba(23,37,49,0.05)",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "var(--color-muted, #9CA3AF)",
+                  marginBottom: "14px",
+                }}
               >
                 Hours
-              </span>
+              </p>
               {hoursLines.map((line, i) => (
-                <div key={i} style={{ color: "#333" }}>
+                <p
+                  key={i}
+                  style={{
+                    margin: "0 0 4px",
+                    fontSize: "14px",
+                    color: "var(--color-slate, #4B5563)",
+                    lineHeight: "1.5",
+                  }}
+                >
                   {line}
-                </div>
+                </p>
               ))}
             </div>
           )}
-
-          <button
-            onClick={handleShare}
-            style={{
-              background: "none",
-              border: "none",
-              padding: "0",
-              color: "#2d6a4f",
-              fontSize: "13px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
-          >
-            🔗{" "}
-            <span style={{ textDecoration: "underline" }}>Share this vet</span>
-          </button>
         </div>
 
         {/* Price Comparison Chart */}
@@ -558,27 +974,35 @@ export default function VetPage() {
             ref={chartRef}
             style={{
               background: "#fff",
-              borderRadius: "12px",
-              padding: "24px",
-              marginBottom: "24px",
-              border: "1px solid #e0e0e0",
+              borderRadius: "16px",
+              padding: "28px",
+              marginBottom: "20px",
+              border: "1px solid var(--color-border, #EDE8E0)",
+              boxShadow: "0 2px 8px rgba(23,37,49,0.05)",
             }}
           >
-            <h3
-              style={{
-                margin: "0 0 4px 0",
-                fontSize: "18px",
-                color: "#111",
-                fontWeight: "700",
-              }}
-            >
-              Price Comparison
-            </h3>
-            <p
-              style={{ margin: "0 0 20px 0", fontSize: "13px", color: "#888" }}
-            >
-              How this vet compares to the East Bay average
-            </p>
+            <div style={{ marginBottom: "20px" }}>
+              <h3
+                style={{
+                  margin: "0 0 4px",
+                  fontSize: "18px",
+                  fontWeight: "800",
+                  color: "var(--color-navy-dark, #172531)",
+                  fontFamily: "var(--font-urbanist, system-ui)",
+                }}
+              >
+                Price Comparison
+              </h3>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "13px",
+                  color: "var(--color-muted, #9CA3AF)",
+                }}
+              >
+                How this vet compares to the East Bay average
+              </p>
+            </div>
             {prices.map((price) => {
               if (price.price_type === "starting") return null;
               const serviceName = price.services?.name;
@@ -603,20 +1027,20 @@ export default function VetPage() {
               const vetWidth = Math.round((vetPrice / max) * 100);
               const avgWidth = Math.round((avg / max) * 100);
               return (
-                <div key={price.id} style={{ marginBottom: "20px" }}>
+                <div key={price.id} style={{ marginBottom: "24px" }}>
                   <div
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      marginBottom: "8px",
+                      marginBottom: "10px",
                     }}
                   >
                     <span
                       style={{
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        color: "#333",
+                        fontSize: "14px",
+                        fontWeight: "700",
+                        color: "var(--color-navy-dark, #172531)",
                       }}
                     >
                       {serviceName}
@@ -624,11 +1048,11 @@ export default function VetPage() {
                     <span
                       style={{
                         fontSize: "11px",
-                        fontWeight: "600",
-                        padding: "2px 8px",
+                        fontWeight: "700",
+                        padding: "3px 10px",
                         borderRadius: "20px",
-                        background: isCheaper ? "#e8f5e9" : "#fdecea",
-                        color: isCheaper ? "#2d6a4f" : "#c0392b",
+                        background: isCheaper ? "#EDFAF3" : "#FEF2F2",
+                        color: isCheaper ? "#1A6641" : "#C94040",
                       }}
                     >
                       {isCheaper ? "✓ Below average" : "↑ Above average"}
@@ -639,29 +1063,32 @@ export default function VetPage() {
                       label: "This vet",
                       width: vetWidth,
                       value: vetPrice,
-                      color: isCheaper ? "#2d6a4f" : "#e05c5c",
+                      color: isCheaper
+                        ? "var(--color-navy-mid, #2C4657)"
+                        : "var(--color-terracotta, #CF5C36)",
                     },
                     {
                       label: "East Bay avg",
                       width: avgWidth,
                       value: avg,
-                      color: "#bbb",
+                      color: "var(--color-border, #EDE8E0)",
                     },
                   ].map((bar) => (
-                    <div key={bar.label} style={{ marginBottom: "6px" }}>
+                    <div key={bar.label} style={{ marginBottom: "8px" }}>
                       <div
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: "8px",
+                          gap: "10px",
                         }}
                       >
                         <span
                           style={{
-                            fontSize: "11px",
-                            color: "#666",
+                            fontSize: "12px",
+                            color: "var(--color-muted, #9CA3AF)",
                             width: "80px",
                             flexShrink: 0,
+                            fontWeight: "600",
                           }}
                         >
                           {bar.label}
@@ -669,9 +1096,9 @@ export default function VetPage() {
                         <div
                           style={{
                             flex: 1,
-                            background: "#f0f0f0",
-                            borderRadius: "4px",
-                            height: "20px",
+                            background: "var(--color-cream, #F5F0E8)",
+                            borderRadius: "6px",
+                            height: "22px",
                             overflow: "hidden",
                           }}
                         >
@@ -680,19 +1107,24 @@ export default function VetPage() {
                               width: chartVisible ? `${bar.width}%` : "0%",
                               height: "100%",
                               background: bar.color,
-                              borderRadius: "4px",
-                              transition: "width 0.8s ease",
+                              borderRadius: "6px",
+                              transition:
+                                "width 0.9s cubic-bezier(0.4,0,0.2,1)",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "flex-end",
-                              paddingRight: "6px",
+                              paddingRight: "8px",
+                              boxSizing: "border-box",
                             }}
                           >
                             <span
                               style={{
                                 fontSize: "11px",
-                                color: "#fff",
-                                fontWeight: "600",
+                                color:
+                                  bar.color === "var(--color-border, #EDE8E0)"
+                                    ? "var(--color-slate, #4B5563)"
+                                    : "#fff",
+                                fontWeight: "700",
                                 whiteSpace: "nowrap",
                               }}
                             >
@@ -706,7 +1138,7 @@ export default function VetPage() {
                   <div
                     style={{
                       height: "1px",
-                      background: "#f0f0f0",
+                      background: "var(--color-border, #EDE8E0)",
                       marginTop: "16px",
                     }}
                   />
@@ -722,26 +1154,32 @@ export default function VetPage() {
           <div
             style={{
               background: "#fff",
-              border: "1px solid #ddd",
-              borderRadius: "12px",
-              padding: "24px",
-              marginBottom: "8px",
+              border: "1px solid var(--color-border, #EDE8E0)",
+              borderRadius: "16px",
+              padding: "40px 24px",
+              marginBottom: "20px",
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: "28px", marginBottom: "12px" }}>🚫</div>
+            <div style={{ fontSize: "32px", marginBottom: "12px" }}>🚫</div>
             <h3
-              style={{ margin: "0 0 8px 0", fontSize: "16px", color: "#111" }}
+              style={{
+                margin: "0 0 8px",
+                fontSize: "18px",
+                fontWeight: "800",
+                color: "var(--color-navy-dark, #172531)",
+                fontFamily: "var(--font-urbanist, system-ui)",
+              }}
             >
               Not currently accepting new patients
             </h3>
             <p
               style={{
-                margin: "0 0 16px 0",
-                fontSize: "14px",
-                color: "#666",
-                lineHeight: "1.6",
-                maxWidth: "320px",
+                margin: "0 0 20px",
+                fontSize: "15px",
+                color: "var(--color-slate, #4B5563)",
+                lineHeight: "1.7",
+                maxWidth: "340px",
                 marginLeft: "auto",
                 marginRight: "auto",
               }}
@@ -754,13 +1192,14 @@ export default function VetPage() {
                 href={`tel:${vet.phone}`}
                 style={{
                   display: "inline-block",
-                  padding: "10px 24px",
-                  background: "#2d6a4f",
+                  padding: "12px 28px",
+                  background: "var(--color-terracotta, #CF5C36)",
                   color: "#fff",
-                  borderRadius: "8px",
-                  fontSize: "14px",
+                  borderRadius: "12px",
+                  fontSize: "15px",
                   textDecoration: "none",
-                  fontWeight: "600",
+                  fontWeight: "700",
+                  fontFamily: "var(--font-urbanist, system-ui)",
                 }}
               >
                 Call to check availability
@@ -771,10 +1210,11 @@ export default function VetPage() {
           <div
             style={{
               background: "#fff",
-              border: "1px solid #ddd",
-              borderRadius: "12px",
-              padding: "20px",
+              border: "1px solid var(--color-border, #EDE8E0)",
+              borderRadius: "16px",
+              padding: "24px 28px",
               marginBottom: "8px",
+              boxShadow: "0 2px 8px rgba(23,37,49,0.05)",
             }}
           >
             <div
@@ -782,10 +1222,18 @@ export default function VetPage() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: "2px",
+                marginBottom: "4px",
               }}
             >
-              <h2 style={{ margin: 0, fontSize: "1.1rem", color: "#111" }}>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: "18px",
+                  fontWeight: "800",
+                  color: "var(--color-navy-dark, #172531)",
+                  fontFamily: "var(--font-urbanist, system-ui)",
+                }}
+              >
                 Pricing
               </h2>
               <button
@@ -794,22 +1242,23 @@ export default function VetPage() {
                   background: "none",
                   border: "none",
                   padding: 0,
-                  fontSize: "12px",
-                  color: "#2d6a4f",
+                  fontSize: "13px",
+                  color: "var(--color-terracotta, #CF5C36)",
                   textDecoration: "underline",
                   cursor: "pointer",
+                  fontFamily: "var(--font-urbanist, system-ui)",
+                  fontWeight: "600",
                 }}
               >
                 About these prices
               </button>
             </div>
-
             {lastVerified && (
               <p
                 style={{
-                  margin: "0 0 16px 0",
-                  fontSize: "11px",
-                  color: "#bbb",
+                  margin: "0 0 20px",
+                  fontSize: "12px",
+                  color: "var(--color-muted, #9CA3AF)",
                 }}
               >
                 Last verified {formatVerifiedDate(lastVerified)}
@@ -817,7 +1266,13 @@ export default function VetPage() {
             )}
 
             {prices.filter((p) => p.price_low !== null).length === 0 ? (
-              <p style={{ color: "#999", fontStyle: "italic" }}>
+              <p
+                style={{
+                  color: "var(--color-muted, #9CA3AF)",
+                  fontStyle: "italic",
+                  fontSize: "15px",
+                }}
+              >
                 No pricing available yet.
               </p>
             ) : (
@@ -832,11 +1287,12 @@ export default function VetPage() {
                   return (
                     <div key={p.id}>
                       <div
+                        className="price-row"
                         onClick={
                           accordionCopy ? () => toggleRow(p.id) : undefined
                         }
                         style={{
-                          padding: "12px 0",
+                          padding: "14px 10px",
                           cursor: accordionCopy ? "pointer" : "default",
                         }}
                       >
@@ -848,7 +1304,13 @@ export default function VetPage() {
                           }}
                         >
                           <div style={{ flex: 1 }}>
-                            <span style={{ fontSize: "14px", color: "#111" }}>
+                            <span
+                              style={{
+                                fontSize: "15px",
+                                fontWeight: "600",
+                                color: "var(--color-navy-dark, #172531)",
+                              }}
+                            >
                               {p.services?.name}
                             </span>
                             {!accordionCopy &&
@@ -856,9 +1318,9 @@ export default function VetPage() {
                                 <p
                                   key={j}
                                   style={{
-                                    margin: "2px 0 0 0",
+                                    margin: "2px 0 0",
                                     fontSize: "12px",
-                                    color: "#888",
+                                    color: "var(--color-muted, #9CA3AF)",
                                   }}
                                 >
                                   {note}
@@ -869,15 +1331,15 @@ export default function VetPage() {
                             style={{
                               display: "flex",
                               alignItems: "center",
-                              gap: "10px",
-                              marginLeft: "12px",
+                              gap: "12px",
+                              marginLeft: "16px",
                             }}
                           >
                             <span
                               style={{
-                                fontSize: "14px",
-                                fontWeight: "bold",
-                                color: "#111",
+                                fontSize: "15px",
+                                fontWeight: "800",
+                                color: "var(--color-navy-dark, #172531)",
                                 whiteSpace: "nowrap",
                               }}
                             >
@@ -894,11 +1356,7 @@ export default function VetPage() {
                                   e.stopPropagation();
                                   toggleRow(p.id);
                                 }}
-                                aria-label={
-                                  isExpanded
-                                    ? "Collapse details"
-                                    : "Expand details"
-                                }
+                                aria-label={isExpanded ? "Collapse" : "Expand"}
                               >
                                 {isExpanded ? "−" : "+"}
                               </button>
@@ -914,23 +1372,23 @@ export default function VetPage() {
                           <div className="accordion-inner">
                             <div
                               style={{
-                                background: "#f9f9f7",
-                                borderRadius: "8px",
+                                background: "var(--color-cream, #F5F0E8)",
+                                borderRadius: "12px",
                                 padding: "20px",
                                 marginBottom: "8px",
                                 display: "flex",
                                 flexDirection: "column",
-                                gap: "16px",
+                                gap: "14px",
                               }}
                             >
                               {noteLines.length > 0 && (
                                 <div>
                                   <p
                                     style={{
-                                      margin: "0 0 8px 0",
+                                      margin: "0 0 6px",
                                       fontSize: "11px",
                                       fontWeight: "700",
-                                      color: "#555",
+                                      color: "var(--color-muted, #9CA3AF)",
                                       textTransform: "uppercase",
                                       letterSpacing: "0.05em",
                                     }}
@@ -941,9 +1399,9 @@ export default function VetPage() {
                                     <p
                                       key={j}
                                       style={{
-                                        margin: "0 0 4px 0",
+                                        margin: "0 0 4px",
                                         fontSize: "13px",
-                                        color: "#444",
+                                        color: "var(--color-slate, #4B5563)",
                                         lineHeight: "1.6",
                                       }}
                                     >
@@ -955,10 +1413,10 @@ export default function VetPage() {
                               <div>
                                 <p
                                   style={{
-                                    margin: "0 0 8px 0",
+                                    margin: "0 0 6px",
                                     fontSize: "11px",
                                     fontWeight: "700",
-                                    color: "#555",
+                                    color: "var(--color-muted, #9CA3AF)",
                                     textTransform: "uppercase",
                                     letterSpacing: "0.05em",
                                   }}
@@ -969,7 +1427,7 @@ export default function VetPage() {
                                   style={{
                                     margin: 0,
                                     fontSize: "13px",
-                                    color: "#444",
+                                    color: "var(--color-slate, #4B5563)",
                                     lineHeight: "1.6",
                                   }}
                                 >
@@ -982,7 +1440,13 @@ export default function VetPage() {
                       )}
 
                       {!isLast && (
-                        <div style={{ height: "1px", background: "#f0f0f0" }} />
+                        <div
+                          style={{
+                            height: "1px",
+                            background: "var(--color-border, #EDE8E0)",
+                            margin: "0 10px",
+                          }}
+                        />
                       )}
                     </div>
                   );
@@ -991,17 +1455,18 @@ export default function VetPage() {
           </div>
         )}
 
+        {/* Pricing disclaimer */}
         {!(
           vet.accepting_new_patients === false &&
           !prices.some((p) => p.is_verified && p.price_low)
         ) && (
           <p
             style={{
-              fontSize: "11px",
-              color: "#bbb",
+              fontSize: "12px",
+              color: "var(--color-muted, #9CA3AF)",
               textAlign: "center",
-              margin: "0 0 16px 0",
-              lineHeight: "1.5",
+              margin: "0 0 28px",
+              lineHeight: "1.6",
             }}
           >
             Prices are estimates and may have changed.{" "}
@@ -1011,8 +1476,8 @@ export default function VetPage() {
                 background: "none",
                 border: "none",
                 padding: 0,
-                fontSize: "11px",
-                color: "#bbb",
+                fontSize: "12px",
+                color: "var(--color-muted, #9CA3AF)",
                 textDecoration: "underline",
                 cursor: "pointer",
               }}
@@ -1022,155 +1487,64 @@ export default function VetPage() {
           </p>
         )}
 
-        {/* Submit a Price */}
-        <div style={{ textAlign: "center", marginBottom: "16px" }}>
+        {/* Submit a Price CTA */}
+        <div
+          style={{
+            background: "var(--color-cream, #F5F0E8)",
+            borderRadius: "16px",
+            padding: "24px 28px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "16px",
+            flexWrap: "wrap",
+            border: "1px solid var(--color-border, #EDE8E0)",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                margin: "0 0 4px",
+                fontSize: "15px",
+                fontWeight: "700",
+                color: "var(--color-navy-dark, #172531)",
+                fontFamily: "var(--font-urbanist, system-ui)",
+              }}
+            >
+              Visited {vet.name}?
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "14px",
+                color: "var(--color-slate, #4B5563)",
+              }}
+            >
+              Help other pet owners by sharing what you paid.
+            </p>
+          </div>
           <button
             onClick={() => {
-              setShowForm(!showForm);
+              setShowSubmitModal(true);
               setFormStatus(null);
             }}
             style={{
-              padding: "10px 24px",
-              backgroundColor: "#2d6a4f",
+              padding: "12px 24px",
+              background: "var(--color-terracotta, #CF5C36)",
               color: "#fff",
               border: "none",
-              borderRadius: "8px",
+              borderRadius: "12px",
               fontSize: "14px",
+              fontWeight: "700",
               cursor: "pointer",
+              fontFamily: "var(--font-urbanist, system-ui)",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
             }}
           >
-            {showForm ? "Cancel" : "💰 Submit a Price"}
+            Submit a Price
           </button>
-          {showForm && (
-            <div
-              style={{
-                marginTop: "20px",
-                background: "#fff",
-                border: "1px solid #ddd",
-                borderRadius: "12px",
-                padding: "20px",
-                textAlign: "left",
-              }}
-            >
-              <h3 style={{ margin: "0 0 16px 0", color: "#111" }}>
-                Submit a Vet Price
-              </h3>
-              {[
-                "vet_name",
-                "service_name",
-                "price_paid",
-                "visit_date",
-                "submitter_note",
-              ].map((field) => (
-                <div key={field} style={{ marginBottom: "12px" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "13px",
-                      color: "#555",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    {field === "vet_name"
-                      ? "Vet Name *"
-                      : field === "service_name"
-                        ? "Service *"
-                        : field === "price_paid"
-                          ? "Price Paid ($) *"
-                          : field === "visit_date"
-                            ? "Date of Visit (optional)"
-                            : "Notes (optional)"}
-                  </label>
-                  <input
-                    type={
-                      field === "price_paid"
-                        ? "number"
-                        : field === "visit_date"
-                          ? "date"
-                          : "text"
-                    }
-                    value={formData[field]}
-                    onChange={(e) =>
-                      setFormData({ ...formData, [field]: e.target.value })
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #ccc",
-                      fontSize: "14px",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-              ))}
-              {formStatus === "error" && (
-                <p style={{ color: "red", fontSize: "13px" }}>
-                  Please fill in all required fields.
-                </p>
-              )}
-              {formStatus === "success" && (
-                <p style={{ color: "green", fontSize: "13px" }}>
-                  Thanks! Your submission is under review.
-                </p>
-              )}
-              <button
-                onClick={handleSubmit}
-                style={{
-                  padding: "10px 24px",
-                  backgroundColor: "#2d6a4f",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                }}
-              >
-                Submit
-              </button>
-            </div>
-          )}
         </div>
-
-        {/* Footer */}
-        <footer
-          style={{
-            marginTop: "60px",
-            borderTop: "1px solid #ddd",
-            paddingTop: "24px",
-            paddingBottom: "40px",
-            textAlign: "center",
-            color: "#888",
-            fontSize: "13px",
-          }}
-        >
-          <p
-            style={{
-              margin: "0 0 8px 0",
-              fontWeight: "bold",
-              color: "#2d6a4f",
-              fontSize: "15px",
-            }}
-          >
-            🐾 PetParrk
-          </p>
-          <p style={{ margin: "0 0 8px 0" }}>
-            Real prices. Real vets. No surprises.
-          </p>
-          <p style={{ margin: "0 0 8px 0" }}>
-            Pricing data is verified by our team. Always call to confirm before
-            your visit.
-          </p>
-          <p style={{ margin: "0" }}>
-            Questions or feedback?{" "}
-            <a
-              href="mailto:bkalthompson@gmail.com"
-              style={{ color: "#2d6a4f", textDecoration: "none" }}
-            >
-              bkalthompson@gmail.com
-            </a>
-          </p>
-        </footer>
       </div>
     </>
   );
