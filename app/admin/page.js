@@ -2594,7 +2594,13 @@ export default function AdminPage() {
                             </div>
                           </div>
                           <div className="vet-row-buttons">
-                            <span className={`badge badge-${vet.status}`}>
+                            <span
+                              className={`badge badge-${vet.status}`}
+                              style={{
+                                padding: "4px 14px",
+                                boxSizing: "border-box",
+                              }}
+                            >
                               {vet.status === "active" ? "Active" : "Inactive"}
                             </span>
                             {vet.status === "active" ? (
