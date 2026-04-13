@@ -1032,9 +1032,9 @@ export default function AdminPage() {
   }
 
   // ── Vet actions ───────────────────────────────────────────────────
-  function startEditVet(vet) {
+  function startEditVet(vet, overrides = {}) {
     setEditingVet(vet.id);
-    setVetForm({ ...vet });
+    setVetForm({ ...vet, ...overrides });
     setVetVerifyChecks({
       address: false,
       phone: false,
@@ -2597,14 +2597,23 @@ export default function AdminPage() {
                             <span className={`badge badge-${vet.status}`}>
                               {vet.status === "active" ? "Active" : "Inactive"}
                             </span>
-                            <button
-                              className="adm-btn adm-btn-gray"
-                              onClick={() => toggleVetStatus(vet)}
-                            >
-                              {vet.status === "active"
-                                ? "Deactivate"
-                                : "Activate"}
-                            </button>
+                            {vet.status === "active" ? (
+                              <button
+                                className="adm-btn adm-btn-gray"
+                                onClick={() => toggleVetStatus(vet)}
+                              >
+                                Deactivate
+                              </button>
+                            ) : (
+                              <button
+                                className="adm-btn adm-btn-gray"
+                                onClick={() =>
+                                  startEditVet(vet, { status: "active" })
+                                }
+                              >
+                                Activate
+                              </button>
+                            )}
                             <button
                               className="adm-btn adm-btn-outline"
                               onClick={() =>
