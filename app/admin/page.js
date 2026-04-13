@@ -220,6 +220,15 @@ export default function AdminPage() {
   const [unverifiedPrices, setUnverifiedPrices] = useState([]);
   const [unverifiedLoading, setUnverifiedLoading] = useState(true);
 
+  // Verification checklist (shown when activating a vet)
+  const [vetVerifyChecks, setVetVerifyChecks] = useState({
+    address: false,
+    phone: false,
+    website: false,
+    hours: false,
+    neighborhood: false,
+  });
+
   // Stats
   const [stats, setStats] = useState({
     activeVets: 0,
@@ -1026,6 +1035,13 @@ export default function AdminPage() {
   function startEditVet(vet) {
     setEditingVet(vet.id);
     setVetForm({ ...vet });
+    setVetVerifyChecks({
+      address: false,
+      phone: false,
+      website: false,
+      hours: false,
+      neighborhood: false,
+    });
   }
 
   async function saveVet() {
@@ -2926,11 +2942,161 @@ export default function AdminPage() {
                                 }
                               />
                             </div>
+                            {/* ── Verification checklist — only shown when activating ── */}
+                            {vetForm.status === "active" && (
+                              <div
+                                style={{
+                                  background: "#fff8e1",
+                                  border: "1px solid #ffe082",
+                                  borderRadius: "10px",
+                                  padding: "14px 16px",
+                                  marginBottom: "12px",
+                                }}
+                              >
+                                <p
+                                  style={{
+                                    margin: "0 0 10px 0",
+                                    fontSize: "13px",
+                                    fontWeight: "700",
+                                    color: "#e65100",
+                                  }}
+                                >
+                                  ⚠️ Before activating, verify each field is
+                                  correct:
+                                </p>
+                                {[
+                                  {
+                                    key: "address",
+                                    label: "Address & ZIP verified",
+                                    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((vetForm.address || "") + " " + (vetForm.city || "") + " CA " + (vetForm.zip_code || ""))}`,
+                                    linkLabel: "📍 Open in Google Maps",
+                                  },
+                                  {
+                                    key: "phone",
+                                    label: "Phone number verified",
+                                    href: vetForm.website
+                                      ? `https://${vetForm.website}`
+                                      : `https://www.google.com/search?q=${encodeURIComponent((vetForm.name || "") + " " + (vetForm.city || "") + " CA phone")}`,
+                                    linkLabel: "🌐 Check website",
+                                  },
+                                  {
+                                    key: "website",
+                                    label: "Website verified",
+                                    href: vetForm.website
+                                      ? `https://${vetForm.website}`
+                                      : `https://www.google.com/search?q=${encodeURIComponent((vetForm.name || "") + " " + (vetForm.city || "") + " CA website")}`,
+                                    linkLabel: "🌐 Open website",
+                                  },
+                                  {
+                                    key: "hours",
+                                    label: "Hours verified",
+                                    href: vetForm.website
+                                      ? `https://${vetForm.website}`
+                                      : `https://www.google.com/search?q=${encodeURIComponent((vetForm.name || "") + " " + (vetForm.city || "") + " CA hours")}`,
+                                    linkLabel: "🕐 Check website",
+                                  },
+                                  {
+                                    key: "neighborhood",
+                                    label: "Neighborhood verified",
+                                    href: `https://gemini.google.com/app?q=${encodeURIComponent("What neighborhood is " + (vetForm.address || "") + ", " + (vetForm.city || "") + ", CA in?")}`,
+                                    linkLabel: "💬 Ask Gemini",
+                                  },
+                                ].map(({ key, label, href, linkLabel }) => (
+                                  <div
+                                    key={key}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "space-between",
+                                      marginBottom: "8px",
+                                      gap: "8px",
+                                    }}
+                                  >
+                                    <label
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px",
+                                        fontSize: "13px",
+                                        cursor: "pointer",
+                                        flex: 1,
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={!!vetVerifyChecks[key]}
+                                        onChange={(e) =>
+                                          setVetVerifyChecks((prev) => ({
+                                            ...prev,
+                                            [key]: e.target.checked,
+                                          }))
+                                        }
+                                      />
+                                      <span
+                                        style={{
+                                          color: vetVerifyChecks[key]
+                                            ? "#2d6a4f"
+                                            : "#555",
+                                          fontWeight: vetVerifyChecks[key]
+                                            ? "700"
+                                            : "400",
+                                        }}
+                                      >
+                                        {vetVerifyChecks[key] ? "✅ " : ""}
+                                        {label}
+                                      </span>
+                                    </label>
+                                    <a
+                                      href={href}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      style={{
+                                        fontSize: "12px",
+                                        color: "#1565c0",
+                                        textDecoration: "none",
+                                        fontWeight: "600",
+                                        whiteSpace: "nowrap",
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      {linkLabel}
+                                    </a>
+                                  </div>
+                                ))}
+                                {!Object.values(vetVerifyChecks).every(
+                                  Boolean,
+                                ) && (
+                                  <p
+                                    style={{
+                                      margin: "10px 0 0 0",
+                                      fontSize: "12px",
+                                      color: "#e65100",
+                                      fontWeight: "600",
+                                    }}
+                                  >
+                                    Check all boxes above to enable Save
+                                    Changes.
+                                  </p>
+                                )}
+                              </div>
+                            )}
                             <div style={{ display: "flex", gap: "8px" }}>
                               <button
                                 className="adm-btn adm-btn-green"
                                 onClick={saveVet}
-                                disabled={vetSaving}
+                                disabled={
+                                  vetSaving ||
+                                  (vetForm.status === "active" &&
+                                    !Object.values(vetVerifyChecks).every(
+                                      Boolean,
+                                    ))
+                                }
+                                title={
+                                  vetForm.status === "active" &&
+                                  !Object.values(vetVerifyChecks).every(Boolean)
+                                    ? "Complete the verification checklist first"
+                                    : ""
+                                }
                               >
                                 {vetSaving ? "Saving..." : "Save Changes"}
                               </button>
