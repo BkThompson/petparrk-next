@@ -2985,16 +2985,16 @@ export default function AdminPage() {
                                     label: "Phone number verified",
                                     href: vetForm.website
                                       ? `https://${vetForm.website}`
-                                      : `https://www.google.com/search?q=${encodeURIComponent((vetForm.name || "") + " " + (vetForm.city || "") + " CA phone")}`,
-                                    linkLabel: "🌐 Check website",
+                                      : `https://www.google.com/search?q=${encodeURIComponent((vetForm.name || "") + " " + (vetForm.city || "") + " CA phone number")}`,
+                                    linkLabel: vetForm.website
+                                      ? "🌐 Check vet website"
+                                      : "🔍 Search Google",
                                   },
                                   {
                                     key: "website",
                                     label: "Website verified",
-                                    href: vetForm.website
-                                      ? `https://${vetForm.website}`
-                                      : `https://www.google.com/search?q=${encodeURIComponent((vetForm.name || "") + " " + (vetForm.city || "") + " CA website")}`,
-                                    linkLabel: "🌐 Open website",
+                                    href: `https://www.google.com/search?q=${encodeURIComponent((vetForm.name || "") + " " + (vetForm.city || "") + " CA official website")}`,
+                                    linkLabel: "🔍 Search Google",
                                   },
                                   {
                                     key: "hours",
@@ -3002,13 +3002,15 @@ export default function AdminPage() {
                                     href: vetForm.website
                                       ? `https://${vetForm.website}`
                                       : `https://www.google.com/search?q=${encodeURIComponent((vetForm.name || "") + " " + (vetForm.city || "") + " CA hours")}`,
-                                    linkLabel: "🕐 Check website",
+                                    linkLabel: vetForm.website
+                                      ? "🌐 Check vet website"
+                                      : "🔍 Search Google",
                                   },
                                   {
                                     key: "neighborhood",
                                     label: "Neighborhood verified",
-                                    href: `https://gemini.google.com/app?q=${encodeURIComponent("What neighborhood is " + (vetForm.address || "") + ", " + (vetForm.city || "") + ", CA in?")}`,
-                                    linkLabel: "💬 Ask Gemini",
+                                    href: `https://www.google.com/search?q=${encodeURIComponent("What neighborhood is " + (vetForm.address || "") + " " + (vetForm.city || "") + " CA in?")}`,
+                                    linkLabel: "🔍 Search Google",
                                   },
                                 ].map(({ key, label, href, linkLabel }) => (
                                   <div
