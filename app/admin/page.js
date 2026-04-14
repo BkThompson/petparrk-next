@@ -1325,10 +1325,14 @@ export default function AdminPage() {
   }
   function formatPrice(low, high, type) {
     if (!low) return "—";
-    if (type === "starting") return `$${Number(low).toLocaleString()}+`;
-    if (type === "range" && high)
-      return `$${Number(low).toLocaleString()}–$${Number(high).toLocaleString()}`;
-    return `$${Number(low).toLocaleString()}`;
+    const fmt = (n) =>
+      Number(n).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    if (type === "starting") return `$${fmt(low)}+`;
+    if (type === "range" && high) return `$${fmt(low)}–$${fmt(high)}`;
+    return `$${fmt(low)}`;
   }
 
   const filteredSubs = submissions.filter((s) =>
@@ -3244,7 +3248,23 @@ export default function AdminPage() {
                       </p>
                       <button
                         className="adm-btn adm-btn-green"
-                        onClick={() => setShowAddPrice(!showAddPrice)}
+                        onClick={() => {
+                          setShowAddPrice(!showAddPrice);
+                          setAddPriceForm({
+                            service_id: "",
+                            price_low: "",
+                            price_high: "",
+                            price_type: "exact",
+                            includes_bloodwork: false,
+                            includes_xrays: false,
+                            includes_anesthesia: false,
+                            species: "",
+                            species_other: "",
+                            call_for_quote: false,
+                            notes: "",
+                          });
+                          setAddPriceError(false);
+                        }}
                       >
                         {showAddPrice ? "Cancel" : "+ Add Price"}
                       </button>
@@ -3294,6 +3314,12 @@ export default function AdminPage() {
                             <select
                               className="adm-input"
                               value={addPriceForm.price_type}
+                              disabled={!!addPriceForm.call_for_quote}
+                              style={
+                                addPriceForm.call_for_quote
+                                  ? { opacity: 0.4, pointerEvents: "none" }
+                                  : {}
+                              }
                               onChange={(e) =>
                                 setAddPriceForm({
                                   ...addPriceForm,
@@ -3311,7 +3337,21 @@ export default function AdminPage() {
                             <input
                               className="adm-input"
                               type="number"
+                              step="0.01"
                               value={addPriceForm.price_low}
+                              disabled={!!addPriceForm.call_for_quote}
+                              style={
+                                addPriceForm.call_for_quote
+                                  ? { opacity: 0.4, pointerEvents: "none" }
+                                  : addPriceError &&
+                                      !addPriceForm.price_low &&
+                                      !addPriceForm.call_for_quote
+                                    ? {
+                                        borderColor: "#c62828",
+                                        borderWidth: "2px",
+                                      }
+                                    : {}
+                              }
                               onChange={(e) => {
                                 setAddPriceError(false);
                                 setAddPriceForm({
@@ -3319,17 +3359,7 @@ export default function AdminPage() {
                                   price_low: e.target.value,
                                 });
                               }}
-                              placeholder="e.g. 65"
-                              style={
-                                addPriceError &&
-                                !addPriceForm.price_low &&
-                                !addPriceForm.call_for_quote
-                                  ? {
-                                      borderColor: "#c62828",
-                                      borderWidth: "2px",
-                                    }
-                                  : {}
-                              }
+                              placeholder="e.g. 65.00"
                             />
                           </div>
                           <div>
@@ -3337,7 +3367,14 @@ export default function AdminPage() {
                             <input
                               className="adm-input"
                               type="number"
+                              step="0.01"
                               value={addPriceForm.price_high}
+                              disabled={!!addPriceForm.call_for_quote}
+                              style={
+                                addPriceForm.call_for_quote
+                                  ? { opacity: 0.4, pointerEvents: "none" }
+                                  : {}
+                              }
                               onChange={(e) =>
                                 setAddPriceForm({
                                   ...addPriceForm,
@@ -3765,6 +3802,15 @@ export default function AdminPage() {
                                     <select
                                       className="adm-input"
                                       value={priceForm.price_type || "exact"}
+                                      disabled={!!priceForm.call_for_quote}
+                                      style={
+                                        priceForm.call_for_quote
+                                          ? {
+                                              opacity: 0.4,
+                                              pointerEvents: "none",
+                                            }
+                                          : {}
+                                      }
                                       onChange={(e) =>
                                         setPriceForm({
                                           ...priceForm,
@@ -3784,7 +3830,17 @@ export default function AdminPage() {
                                     <input
                                       className="adm-input"
                                       type="number"
+                                      step="0.01"
                                       value={priceForm.price_low}
+                                      disabled={!!priceForm.call_for_quote}
+                                      style={
+                                        priceForm.call_for_quote
+                                          ? {
+                                              opacity: 0.4,
+                                              pointerEvents: "none",
+                                            }
+                                          : {}
+                                      }
                                       onChange={(e) =>
                                         setPriceForm({
                                           ...priceForm,
@@ -3800,7 +3856,17 @@ export default function AdminPage() {
                                     <input
                                       className="adm-input"
                                       type="number"
+                                      step="0.01"
                                       value={priceForm.price_high}
+                                      disabled={!!priceForm.call_for_quote}
+                                      style={
+                                        priceForm.call_for_quote
+                                          ? {
+                                              opacity: 0.4,
+                                              pointerEvents: "none",
+                                            }
+                                          : {}
+                                      }
                                       onChange={(e) =>
                                         setPriceForm({
                                           ...priceForm,
@@ -5320,6 +5386,15 @@ export default function AdminPage() {
                                         <select
                                           className="adm-input"
                                           value={p.price_type}
+                                          disabled={!!p.call_for_quote}
+                                          style={
+                                            p.call_for_quote
+                                              ? {
+                                                  opacity: 0.4,
+                                                  pointerEvents: "none",
+                                                }
+                                              : {}
+                                          }
                                           onChange={(e) =>
                                             updateCallPrice(
                                               i,
@@ -5340,7 +5415,24 @@ export default function AdminPage() {
                                         <input
                                           className="adm-input"
                                           type="number"
+                                          step="0.01"
                                           value={p.price_low}
+                                          disabled={!!p.call_for_quote}
+                                          style={
+                                            p.call_for_quote
+                                              ? {
+                                                  opacity: 0.4,
+                                                  pointerEvents: "none",
+                                                }
+                                              : callSpeciesError &&
+                                                  !p.price_low &&
+                                                  !p.call_for_quote
+                                                ? {
+                                                    borderColor: "#c62828",
+                                                    borderWidth: "2px",
+                                                  }
+                                                : {}
+                                          }
                                           onChange={(e) => {
                                             setCallSpeciesError(false);
                                             updateCallPrice(
@@ -5349,17 +5441,7 @@ export default function AdminPage() {
                                               e.target.value,
                                             );
                                           }}
-                                          placeholder="e.g. 65"
-                                          style={
-                                            callSpeciesError &&
-                                            !p.price_low &&
-                                            !p.call_for_quote
-                                              ? {
-                                                  borderColor: "#c62828",
-                                                  borderWidth: "2px",
-                                                }
-                                              : {}
-                                          }
+                                          placeholder="e.g. 65.00"
                                         />
                                       </div>
                                       <div>
@@ -5369,7 +5451,17 @@ export default function AdminPage() {
                                         <input
                                           className="adm-input"
                                           type="number"
+                                          step="0.01"
                                           value={p.price_high}
+                                          disabled={!!p.call_for_quote}
+                                          style={
+                                            p.call_for_quote
+                                              ? {
+                                                  opacity: 0.4,
+                                                  pointerEvents: "none",
+                                                }
+                                              : {}
+                                          }
                                           onChange={(e) =>
                                             updateCallPrice(
                                               i,
@@ -5541,6 +5633,29 @@ export default function AdminPage() {
                                             </button>
                                           ))}
                                         </div>
+                                        <label
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "6px",
+                                            fontSize: "13px",
+                                            cursor: "pointer",
+                                            marginTop: "8px",
+                                          }}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={!!p.call_for_quote}
+                                            onChange={(e) =>
+                                              updateCallPrice(
+                                                i,
+                                                "call_for_quote",
+                                                e.target.checked,
+                                              )
+                                            }
+                                          />
+                                          Call for quote
+                                        </label>
                                       </div>
                                     </div>
                                     <div
@@ -5599,6 +5714,7 @@ export default function AdminPage() {
                                             includes_xrays: false,
                                             includes_anesthesia: false,
                                             species: "",
+                                            call_for_quote: false,
                                             notes: "",
                                           };
                                           setCallPrices(u);
@@ -5795,9 +5911,9 @@ export default function AdminPage() {
                                               ? "Call for quote"
                                               : [
                                                   row.price_low &&
-                                                    `$${parseFloat(row.price_low).toFixed(0)}`,
+                                                    `$${parseFloat(row.price_low).toFixed(2)}`,
                                                   row.price_high &&
-                                                    `– $${parseFloat(row.price_high).toFixed(0)}`,
+                                                    `– $${parseFloat(row.price_high).toFixed(2)}`,
                                                 ]
                                                   .filter(Boolean)
                                                   .join(" ")}
@@ -5965,6 +6081,15 @@ export default function AdminPage() {
                                                 value={
                                                   row.price_type || "exact"
                                                 }
+                                                disabled={!!row.call_for_quote}
+                                                style={
+                                                  row.call_for_quote
+                                                    ? {
+                                                        opacity: 0.4,
+                                                        pointerEvents: "none",
+                                                      }
+                                                    : {}
+                                                }
                                                 onChange={(e) => {
                                                   const u = [
                                                     ...callReviewPrices,
@@ -5993,7 +6118,17 @@ export default function AdminPage() {
                                               <input
                                                 className="adm-input"
                                                 type="number"
+                                                step="0.01"
                                                 value={row.price_low || ""}
+                                                disabled={!!row.call_for_quote}
+                                                style={
+                                                  row.call_for_quote
+                                                    ? {
+                                                        opacity: 0.4,
+                                                        pointerEvents: "none",
+                                                      }
+                                                    : {}
+                                                }
                                                 onChange={(e) => {
                                                   const u = [
                                                     ...callReviewPrices,
@@ -6004,7 +6139,7 @@ export default function AdminPage() {
                                                   };
                                                   setCallReviewPrices(u);
                                                 }}
-                                                placeholder="e.g. 65"
+                                                placeholder="e.g. 65.00"
                                               />
                                             </div>
                                             <div>
@@ -6014,7 +6149,17 @@ export default function AdminPage() {
                                               <input
                                                 className="adm-input"
                                                 type="number"
+                                                step="0.01"
                                                 value={row.price_high || ""}
+                                                disabled={!!row.call_for_quote}
+                                                style={
+                                                  row.call_for_quote
+                                                    ? {
+                                                        opacity: 0.4,
+                                                        pointerEvents: "none",
+                                                      }
+                                                    : {}
+                                                }
                                                 onChange={(e) => {
                                                   const u = [
                                                     ...callReviewPrices,
