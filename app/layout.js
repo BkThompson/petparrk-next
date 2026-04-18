@@ -44,7 +44,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={urbanist.variable}>
+    <html
+      lang="en"
+      className={urbanist.variable}
+      style={{ scrollbarGutter: "stable" }}
+    >
       <head>
         <meta
           name="google-site-verification"

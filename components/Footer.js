@@ -8,6 +8,18 @@ export default function Footer() {
         padding: "48px 0 40px",
       }}
     >
+      <style>{`
+        .footer-link {
+          display: block;
+          font-size: 13px;
+          color: rgba(255,255,255,0.6);
+          text-decoration: none;
+          margin-bottom: 8px;
+          transition: color 0.15s;
+        }
+        .footer-link:hover { color: #fff; }
+      `}</style>
+
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}>
         <div
           style={{
@@ -17,6 +29,7 @@ export default function Footer() {
             marginBottom: "40px",
           }}
         >
+          {/* Brand */}
           <div>
             <div
               style={{
@@ -42,12 +55,14 @@ export default function Footer() {
               No surprises.
             </p>
           </div>
+
+          {/* Product */}
           <div>
             <div
               style={{
                 fontSize: "11px",
                 fontWeight: "700",
-                color: "var(--color-gold, #EFC88B)",
+                color: "var(--color-gold,#EFC88B)",
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
                 marginBottom: "12px",
@@ -58,29 +73,21 @@ export default function Footer() {
             {[
               ["Find a Vet", "/vets"],
               ["Symptom Checker", "/symptom-checker"],
-              ["How It Works", "/how-it-works"],
+              ["Pet Health Card", "/profile"],
             ].map(([label, href]) => (
-              <Link
-                key={href}
-                href={href}
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  color: "rgba(255,255,255,0.6)",
-                  textDecoration: "none",
-                  marginBottom: "8px",
-                }}
-              >
+              <Link key={href} href={href} className="footer-link">
                 {label}
               </Link>
             ))}
           </div>
+
+          {/* Company */}
           <div>
             <div
               style={{
                 fontSize: "11px",
                 fontWeight: "700",
-                color: "var(--color-gold, #EFC88B)",
+                color: "var(--color-gold,#EFC88B)",
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
                 marginBottom: "12px",
@@ -90,30 +97,22 @@ export default function Footer() {
             </div>
             {[
               ["About", "/about"],
+              ["How It Works", "/how-it-works"],
               ["Contact", "/contact"],
-              ["Press", "/press"],
             ].map(([label, href]) => (
-              <Link
-                key={href}
-                href={href}
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  color: "rgba(255,255,255,0.6)",
-                  textDecoration: "none",
-                  marginBottom: "8px",
-                }}
-              >
+              <Link key={href} href={href} className="footer-link">
                 {label}
               </Link>
             ))}
           </div>
+
+          {/* Legal */}
           <div>
             <div
               style={{
                 fontSize: "11px",
                 fontWeight: "700",
-                color: "var(--color-gold, #EFC88B)",
+                color: "var(--color-gold,#EFC88B)",
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
                 marginBottom: "12px",
@@ -124,40 +123,40 @@ export default function Footer() {
             {[
               ["Privacy Policy", "/privacy-policy"],
               ["Terms of Service", "/terms"],
-              ["Your Privacy Choices", "/privacy-policy"],
+              ["Code of Conduct", "/code-of-conduct"],
+              ["Accessibility", "/accessibility"],
+              ["Do Not Sell My Information", "/do-not-sell"],
             ].map(([label, href]) => (
-              <Link
-                key={label}
-                href={href}
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  color: "rgba(255,255,255,0.6)",
-                  textDecoration: "none",
-                  marginBottom: "8px",
-                }}
-              >
+              <Link key={label} href={href} className="footer-link">
                 {label}
               </Link>
             ))}
           </div>
         </div>
+
+        {/* Bottom bar */}
         <div
           style={{
             borderTop: "1px solid rgba(255,255,255,0.1)",
             paddingTop: "24px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "8px",
           }}
         >
           <p
             style={{
               fontSize: "13px",
               color: "rgba(255,255,255,0.4)",
-              margin: "0 0 2px",
+              margin: 0,
             }}
           >
             © 2026 PetParrk. Prices are community-sourced and verified by our
             team.
           </p>
+          {/* 
           <p
             style={{
               fontSize: "13px",
@@ -167,6 +166,7 @@ export default function Footer() {
           >
             Always call to confirm before your visit.
           </p>
+          */}
         </div>
       </div>
     </footer>

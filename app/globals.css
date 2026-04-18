@@ -109,6 +109,11 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  scrollbar-gutter: stable;
+}
+
+html.sheet-open {
+  overflow: hidden;
 }
 
 body {
@@ -743,11 +748,13 @@ select {
 
 /* ── Prevent layout shift on page navigation ────
    Ensures consistent content start position       */
+/*
 main,
 #__next > div,
 body > div {
   min-height: calc(100vh - 64px);
 }
+  */
 
 /* ── Global container padding ────────────────────
    Ensures content never touches screen edges.

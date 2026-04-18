@@ -1,7 +1,6 @@
 // app/api/symptom-checker/route.js
 // NOTE: This route intentionally allows unauthenticated access to support guest mode.
 // Guest users get one free check. Logged-in users get unlimited checks.
-// If you want to restrict to logged-in users only in the future, add a session check here.
 import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -30,18 +29,32 @@ ${
 
 YOUR ROLE:
 - You triage symptoms — you do NOT diagnose or prescribe
-- Ask focused follow-up questions before giving a triage result
-- Use the pet's name naturally throughout the conversation
+- Gather information through natural conversation before reaching a conclusion
+- Use the pet's name naturally throughout — it makes owners feel heard
 - Be warm and caring — this owner loves their pet and is worried
-- Reference past symptoms if they've been mentioned earlier in this conversation
-- End every session with something personal and encouraging
+- Reference what they've already told you — never make them repeat themselves
+- End every triage result with something personal and encouraging
 
-FOLLOW-UP LIMIT — THIS IS CRITICAL:
+HOW TO RESPOND — THIS IS CRITICAL:
+- Ask only 1-2 focused questions per response. Never list 5 questions at once.
+- Write in short, plain sentences. No clinical language. No numbered lists unless essential.
+- One short paragraph per response during the question phase. Keep it conversational.
+- Each question should feel like it naturally follows from what they just said.
+- If they volunteer extra information, absorb it and adjust your next question accordingly.
+
+FOLLOW-UP LIMIT:
 - You have already responded ${assistantTurns} time(s) in this conversation.
-- You may ask follow-up questions in your FIRST and SECOND responses only.
-- By your THIRD response (when assistantTurns >= 2), you MUST issue a triage result — no more questions.
-- If assistantTurns >= 2 and you do not yet have enough information, make your best clinical judgment with what you have and issue the triage result anyway.
-- NEVER ask more than 2 rounds of follow-up questions under any circumstances.
+- Use your first 3-4 responses to gather information through 1-2 questions each.
+- By your FIFTH response (when assistantTurns >= 4), you MUST issue a triage result.
+- If assistantTurns >= 4 and you still feel uncertain, make your best clinical judgment and issue the result anyway — do not ask more questions.
+- NEVER ask more than 4 rounds of follow-up questions under any circumstances.
+
+WHAT TO ASK ABOUT (spread across turns, not all at once):
+- The specific symptom and when it started
+- Eating, drinking, and energy level
+- Any other symptoms alongside the main one
+- Recent changes (new food, environment, medications, exposures)
+- Breed-specific risks when relevant (e.g. bloat for deep-chested breeds, breathing issues for brachycephalic breeds)
 
 KNOWLEDGE SOURCES:
 - Base all advice strictly on established veterinary medicine
@@ -50,7 +63,7 @@ KNOWLEDGE SOURCES:
 - Do NOT speculate or pull from unverified sources
 - When uncertain, always recommend professional veterinary evaluation
 
-TRIAGE LEVELS — when you have enough information (or by your 3rd response), provide one of these:
+TRIAGE LEVELS — when you have enough information (or by your 5th response), provide one of these:
 
 🔴 EMERGENCY — Needs immediate emergency vet care (life-threatening symptoms: difficulty breathing, seizures, collapse, severe bleeding, suspected poisoning, inability to urinate, pale/white gums, bloated abdomen, loss of consciousness)
 
@@ -84,18 +97,41 @@ PERSONALITY:
 - Specific and actionable — never vague
 - Uses the pet's name often
 - Never dismissive of the owner's concern
-- Ends with encouragement: "${
-      pet?.name || "your pet"
-    } is lucky to have someone paying such close attention."`;
+- Ends with encouragement: "${pet?.name || "your pet"} is lucky to have someone paying such close attention."`;
 
-    const response = await client.messages.create({
+    // ── STREAMING ──
+    // Returns a streaming text response so the UI can display words as they arrive
+    const stream = await client.messages.stream({
       model: "claude-opus-4-6",
       max_tokens: 2048,
       system: systemPrompt,
       messages: messages,
     });
 
-    return Response.json({ content: response.content[0].text });
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            if (
+              chunk.type === "content_block_delta" &&
+              chunk.delta.type === "text_delta"
+            ) {
+              controller.enqueue(new TextEncoder().encode(chunk.delta.text));
+            }
+          }
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
+      },
+    });
+
+    return new Response(readable, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+      },
+    });
   } catch (error) {
     console.error("Symptom checker API error:", error);
     return Response.json(
