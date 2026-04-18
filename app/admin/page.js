@@ -220,6 +220,10 @@ export default function AdminPage() {
   const [unverifiedPrices, setUnverifiedPrices] = useState([]);
   const [unverifiedLoading, setUnverifiedLoading] = useState(true);
 
+  // Google Sheets sync
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
+
   // Verification checklist (shown when activating a vet)
   const [vetVerifyChecks, setVetVerifyChecks] = useState({
     address: false,
@@ -384,6 +388,26 @@ export default function AdminPage() {
   async function rejectUnverifiedPrice(id) {
     await supabase.from("vet_prices").delete().eq("id", id);
     setUnverifiedPrices((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  async function syncFromSheets(dryRun = false) {
+    setSyncLoading(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch(
+        `/api/sync-sheets${dryRun ? "?dry_run=true" : ""}`,
+      );
+      const data = await res.json();
+      setSyncResult(data);
+      if (!dryRun) {
+        fetchCallQueue();
+        fetchUnverifiedPrices();
+        fetchStats();
+      }
+    } catch (err) {
+      setSyncResult({ error: err.message });
+    }
+    setSyncLoading(false);
   }
 
   async function fetchCallQueue() {
@@ -4220,6 +4244,151 @@ export default function AdminPage() {
                 const activeQueue = showAllVets ? fullCallQueue : callQueue;
                 return (
                   <div>
+                    {/* ── Google Sheets Sync ── */}
+                    <div
+                      style={{
+                        background: "#f0f7f4",
+                        border: "1px solid #c8e6c9",
+                        borderRadius: "10px",
+                        padding: "14px 16px",
+                        marginBottom: "20px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: "10px",
+                      }}
+                    >
+                      <div>
+                        <p
+                          style={{
+                            margin: "0 0 2px 0",
+                            fontSize: "13px",
+                            fontWeight: "700",
+                            color: "#2d6a4f",
+                          }}
+                        >
+                          📊 Sync from VA Google Sheets
+                        </p>
+                        <p
+                          style={{ margin: 0, fontSize: "12px", color: "#555" }}
+                        >
+                          Pulls completed calls (Called - Got Prices) from
+                          NorCal & SoCal sheets
+                        </p>
+                      </div>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          className="adm-btn adm-btn-gray"
+                          onClick={() => syncFromSheets(true)}
+                          disabled={syncLoading}
+                        >
+                          Preview
+                        </button>
+                        <button
+                          className="adm-btn adm-btn-green"
+                          onClick={() => syncFromSheets(false)}
+                          disabled={syncLoading}
+                        >
+                          {syncLoading ? "Syncing..." : "⟳ Sync Now"}
+                        </button>
+                      </div>
+                    </div>
+                    {/* Sync result */}
+                    {syncResult && (
+                      <div
+                        style={{
+                          background: syncResult.error ? "#fff0f0" : "#f9f9f9",
+                          border: `1px solid ${syncResult.error ? "#ffcdd2" : "#e8e8e8"}`,
+                          borderRadius: "8px",
+                          padding: "12px 16px",
+                          marginBottom: "16px",
+                          fontSize: "13px",
+                          color: syncResult.error ? "#c62828" : "#333",
+                        }}
+                      >
+                        {syncResult.error ? (
+                          <p style={{ margin: 0 }}>
+                            ❌ Error: {syncResult.error}
+                          </p>
+                        ) : (
+                          <>
+                            <p
+                              style={{
+                                margin: "0 0 4px 0",
+                                fontWeight: "700",
+                                color: "#2d6a4f",
+                              }}
+                            >
+                              {syncResult.dryRun
+                                ? "📋 Preview (nothing saved)"
+                                : "✅ Sync complete"}
+                            </p>
+                            <p style={{ margin: "0 0 2px 0" }}>
+                              • Rows with prices:{" "}
+                              <strong>{syncResult.processed}</strong>
+                            </p>
+                            <p style={{ margin: "0 0 2px 0" }}>
+                              • Vets matched in DB:{" "}
+                              <strong>{syncResult.matched}</strong>
+                            </p>
+                            <p style={{ margin: "0 0 2px 0" }}>
+                              • Prices added:{" "}
+                              <strong>{syncResult.pricesAdded}</strong>
+                            </p>
+                            <p style={{ margin: "0 0 2px 0" }}>
+                              • Call notes added:{" "}
+                              <strong>{syncResult.notesAdded}</strong>
+                            </p>
+                            {syncResult.notFound?.length > 0 && (
+                              <details style={{ marginTop: "8px" }}>
+                                <summary
+                                  style={{
+                                    cursor: "pointer",
+                                    color: "#e65100",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  ⚠️ {syncResult.notFound.length} vets not found
+                                  in DB
+                                </summary>
+                                <ul
+                                  style={{
+                                    margin: "6px 0 0 0",
+                                    paddingLeft: "18px",
+                                  }}
+                                >
+                                  {syncResult.notFound
+                                    .slice(0, 20)
+                                    .map((n, i) => (
+                                      <li
+                                        key={i}
+                                        style={{
+                                          fontSize: "12px",
+                                          color: "#666",
+                                        }}
+                                      >
+                                        {n}
+                                      </li>
+                                    ))}
+                                  {syncResult.notFound.length > 20 && (
+                                    <li
+                                      style={{
+                                        fontSize: "12px",
+                                        color: "#aaa",
+                                      }}
+                                    >
+                                      ...and {syncResult.notFound.length - 20}{" "}
+                                      more
+                                    </li>
+                                  )}
+                                </ul>
+                              </details>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
                     {callQueueLoading && (
                       <p style={{ color: "#888", fontSize: "14px" }}>
                         Loading call queue...
