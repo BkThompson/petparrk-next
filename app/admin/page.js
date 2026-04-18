@@ -26,7 +26,7 @@ const VET_TYPES = [
   "Holistic",
   "Low-Cost / Non-Profit",
 ];
-const OWNERSHIP_TYPES = ["Independent", "Corporate"];
+const OWNERSHIP_TYPES = ["Independent", "Corporate", "Other"];
 const STATUS_TYPES = ["active", "inactive", "pending"];
 const PRICE_TYPES = ["exact", "range", "starting"];
 
@@ -100,6 +100,8 @@ export default function AdminPage() {
   const [pendingVetsLoading, setPendingVetsLoading] = useState(true);
   const [editingPendingVet, setEditingPendingVet] = useState(null);
   const [pendingVetForm, setPendingVetForm] = useState({});
+  const [pendingVetFilter, setPendingVetFilter] = useState("all");
+  const [pendingVetsWithPrices, setPendingVetsWithPrices] = useState(new Set());
 
   // Vets
   const [vets, setVets] = useState([]);
@@ -231,6 +233,7 @@ export default function AdminPage() {
     website: false,
     hours: false,
     neighborhood: false,
+    ownership: false,
   });
 
   // Stats
@@ -333,12 +336,42 @@ export default function AdminPage() {
 
   async function fetchPendingVets() {
     setPendingVetsLoading(true);
-    const { data } = await supabase
-      .from("pending_vets")
-      .select("*")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false });
-    setPendingVets(data || []);
+
+    // Paginate to load all pending vets (Supabase max 1000 per request)
+    let allPendingVets = [];
+    let from = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data: page } = await supabase
+        .from("pending_vets")
+        .select("*")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (!page || page.length === 0) break;
+      allPendingVets = allPendingVets.concat(page);
+      if (page.length < pageSize) break;
+      from += pageSize;
+    }
+    setPendingVets(allPendingVets);
+
+    // Check which pending vets have prices via pending_vet_id (paginate all)
+    let allPriceData = [];
+    let priceFrom = 0;
+    while (true) {
+      const { data: pricePage } = await supabase
+        .from("vet_prices")
+        .select("pending_vet_id")
+        .not("pending_vet_id", "is", null)
+        .range(priceFrom, priceFrom + 999);
+      if (!pricePage || pricePage.length === 0) break;
+      allPriceData = allPriceData.concat(pricePage);
+      if (pricePage.length < 1000) break;
+      priceFrom += 1000;
+    }
+    const vetIdsWithPrices = new Set(allPriceData.map((p) => p.pending_vet_id));
+    setPendingVetsWithPrices(vetIdsWithPrices);
+
     setPendingVetsLoading(false);
   }
 
@@ -403,6 +436,7 @@ export default function AdminPage() {
         fetchCallQueue();
         fetchUnverifiedPrices();
         fetchStats();
+        fetchPendingVets();
       }
     } catch (err) {
       setSyncResult({ error: err.message });
@@ -1036,6 +1070,22 @@ export default function AdminPage() {
       alert("Error approving: " + error.message);
       return;
     }
+
+    // ── Get the new vet's integer ID ──
+    const { data: newVet } = await supabase
+      .from("vets")
+      .select("id")
+      .eq("slug", slug)
+      .single();
+
+    // ── Migrate prices from pending_vet_id to vet_id ──
+    if (newVet) {
+      await supabase
+        .from("vet_prices")
+        .update({ vet_id: newVet.id, pending_vet_id: null })
+        .eq("pending_vet_id", vet.id);
+    }
+
     await supabase
       .from("pending_vets")
       .update({ status: "approved" })
@@ -1065,6 +1115,7 @@ export default function AdminPage() {
       website: false,
       hours: false,
       neighborhood: false,
+      ownership: false,
     });
   }
 
@@ -2033,6 +2084,28 @@ export default function AdminPage() {
                     </p>
                   </div>
                 </div>
+                {/* Price filter buttons */}
+                <div className="filter-bar" style={{ marginBottom: "12px" }}>
+                  {[
+                    { key: "all", label: `All (${pendingVets.length})` },
+                    {
+                      key: "has_prices",
+                      label: `✅ Has Prices (${pendingVets.filter((v) => pendingVetsWithPrices.has(v.id)).length})`,
+                    },
+                    {
+                      key: "no_prices",
+                      label: `⏳ No Prices Yet (${pendingVets.filter((v) => !pendingVetsWithPrices.has(v.id)).length})`,
+                    },
+                  ].map((f) => (
+                    <button
+                      key={f.key}
+                      className={`adm-btn ${pendingVetFilter === f.key ? "adm-btn-green" : "adm-btn-gray"}`}
+                      onClick={() => setPendingVetFilter(f.key)}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
                 <input
                   className="adm-input"
                   value={pendingVetSearch}
@@ -2052,13 +2125,19 @@ export default function AdminPage() {
                   </div>
                 )}
                 {pendingVets
-                  .filter(
-                    (v) =>
+                  .filter((v) => {
+                    const matchesSearch =
                       !pendingVetSearch.trim() ||
                       v.name
                         .toLowerCase()
-                        .includes(pendingVetSearch.toLowerCase()),
-                  )
+                        .includes(pendingVetSearch.toLowerCase());
+                    const hasPrices = pendingVetsWithPrices.has(v.id);
+                    const matchesFilter =
+                      pendingVetFilter === "all" ||
+                      (pendingVetFilter === "has_prices" && hasPrices) ||
+                      (pendingVetFilter === "no_prices" && !hasPrices);
+                    return matchesSearch && matchesFilter;
+                  })
                   .map((vet) => (
                     <div key={vet.id} className="pending-vet-card">
                       <div
@@ -2429,7 +2508,11 @@ export default function AdminPage() {
                         <label className="field-label">Ownership</label>
                         <select
                           className="adm-input"
-                          value={addVetForm.ownership}
+                          value={
+                            addVetForm.ownership?.startsWith("Other:")
+                              ? "Other"
+                              : addVetForm.ownership || ""
+                          }
                           onChange={(e) =>
                             setAddVetForm({
                               ...addVetForm,
@@ -2437,10 +2520,32 @@ export default function AdminPage() {
                             })
                           }
                         >
+                          <option value="">— Select —</option>
                           {OWNERSHIP_TYPES.map((t) => (
                             <option key={t}>{t}</option>
                           ))}
                         </select>
+                        {(addVetForm.ownership === "Other" ||
+                          addVetForm.ownership?.startsWith("Other:")) && (
+                          <input
+                            className="adm-input"
+                            style={{ marginTop: "6px" }}
+                            placeholder="Describe ownership type..."
+                            value={
+                              addVetForm.ownership?.startsWith("Other:")
+                                ? addVetForm.ownership.replace("Other: ", "")
+                                : ""
+                            }
+                            onChange={(e) =>
+                              setAddVetForm({
+                                ...addVetForm,
+                                ownership: e.target.value
+                                  ? `Other: ${e.target.value}`
+                                  : "Other",
+                              })
+                            }
+                          />
+                        )}
                       </div>
                     </div>
                     <div
@@ -2868,7 +2973,11 @@ export default function AdminPage() {
                                 <label className="field-label">Ownership</label>
                                 <select
                                   className="adm-input"
-                                  value={vetForm.ownership || ""}
+                                  value={
+                                    vetForm.ownership?.startsWith("Other:")
+                                      ? "Other"
+                                      : vetForm.ownership || ""
+                                  }
                                   onChange={(e) =>
                                     setVetForm({
                                       ...vetForm,
@@ -2876,10 +2985,35 @@ export default function AdminPage() {
                                     })
                                   }
                                 >
+                                  <option value="">— Select —</option>
                                   {OWNERSHIP_TYPES.map((t) => (
                                     <option key={t}>{t}</option>
                                   ))}
                                 </select>
+                                {(vetForm.ownership === "Other" ||
+                                  vetForm.ownership?.startsWith("Other:")) && (
+                                  <input
+                                    className="adm-input"
+                                    style={{ marginTop: "6px" }}
+                                    placeholder="Describe ownership type..."
+                                    value={
+                                      vetForm.ownership?.startsWith("Other:")
+                                        ? vetForm.ownership.replace(
+                                            "Other: ",
+                                            "",
+                                          )
+                                        : ""
+                                    }
+                                    onChange={(e) =>
+                                      setVetForm({
+                                        ...vetForm,
+                                        ownership: e.target.value
+                                          ? `Other: ${e.target.value}`
+                                          : "Other",
+                                      })
+                                    }
+                                  />
+                                )}
                               </div>
                             </div>
                             <div
@@ -3044,6 +3178,13 @@ export default function AdminPage() {
                                     key: "neighborhood",
                                     label: "Neighborhood verified",
                                     href: `https://www.google.com/search?q=${encodeURIComponent("What neighborhood is " + (vetForm.address || "") + " " + (vetForm.city || "") + " CA in?")}`,
+                                    linkLabel: "🔍 Search Google",
+                                  },
+                                  {
+                                    key: "ownership",
+                                    label:
+                                      "Ownership verified (Corporate or Independent)",
+                                    href: `https://www.google.com/search?q=${encodeURIComponent("Is " + (vetForm.name || "") + " " + (vetForm.city || "") + " CA corporate or independently owned vet?")}`,
                                     linkLabel: "🔍 Search Google",
                                   },
                                 ].map(({ key, label, href, linkLabel }) => (
@@ -4294,7 +4435,6 @@ export default function AdminPage() {
                         </button>
                       </div>
                     </div>
-                    {/* Sync result */}
                     {syncResult && (
                       <div
                         style={{

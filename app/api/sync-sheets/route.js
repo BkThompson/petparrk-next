@@ -128,12 +128,31 @@ export async function GET(req) {
   });
 
   // Load existing vets and pending_vets for matching
+  // Load all existing vets and pending_vets for matching (no row limit)
+  // Load all existing vets
   const { data: existingVets } = await supabase
     .from("vets")
-    .select("id, name, phone");
-  const { data: existingPending } = await supabase
-    .from("pending_vets")
-    .select("id, name, phone");
+    .select("id, name, phone")
+    .limit(10000);
+
+  // Load ALL pending_vets by paginating (Supabase max is 1000 per request)
+  let existingPending = [];
+  let from = 0;
+  const pageSize = 1000;
+  while (true) {
+    const { data: page } = await supabase
+      .from("pending_vets")
+      .select("id, name, phone")
+      .range(from, from + pageSize - 1);
+    if (!page || page.length === 0) break;
+    existingPending = existingPending.concat(page);
+    if (page.length < pageSize) break;
+    from += pageSize;
+  }
+
+  console.log(
+    `Sync: Loaded ${existingVets?.length} vets, ${existingPending.length} pending vets`,
+  );
 
   const results = {
     processed: 0,
@@ -156,13 +175,17 @@ export async function GET(req) {
 
     for (const row of rows) {
       const callStatus = (row[COL.callStatus] || "").trim();
+      const name = (row[COL.name] || "").trim();
+
+      // Skip the example row
+      if (name === "Example Animal Hospital" || row[COL.number] === "EX")
+        continue;
 
       // Only process rows where VA got prices
       if (callStatus !== "Called - Got Prices") continue;
 
       results.processed++;
 
-      const name = (row[COL.name] || "").trim();
       const phone = (row[COL.phone] || "").trim();
       const notes = (row[COL.notes] || "").trim();
       const callNotes = (row[COL.callNotes] || "").trim();
@@ -243,25 +266,40 @@ export async function GET(req) {
         const serviceId = serviceMap[normalize(svc.name)];
         if (!serviceId) continue;
 
+        // Build the correct ID field based on which table the vet is in
+        const isPending = vetTable === "pending_vets";
+        const priceIdField = isPending ? "pending_vet_id" : "vet_id";
+
         // Check if price already exists for this vet + service
         const { data: existingPrice } = await supabase
           .from("vet_prices")
           .select("id")
-          .eq("vet_id", vetId)
+          .eq(priceIdField, vetId)
           .eq("service_id", serviceId)
           .maybeSingle();
 
         if (existingPrice) continue; // Don't overwrite existing prices
 
-        const { error } = await supabase.from("vet_prices").insert({
-          vet_id: vetId,
+        const pricePayload = {
           service_id: serviceId,
           price_low: priceVal,
           price_type: "exact",
-          is_verified: false, // Susan still needs to verify
+          is_verified: true,
           source: `VA Call Sheet - ${sheet.region}`,
           notes: notes || null,
-        });
+        };
+
+        // Set the correct ID field
+        if (isPending) {
+          pricePayload.pending_vet_id = vetId;
+          pricePayload.vet_id = null;
+        } else {
+          pricePayload.vet_id = vetId;
+        }
+
+        const { error } = await supabase
+          .from("vet_prices")
+          .insert(pricePayload);
 
         if (error) {
           results.errors.push(`${name} - ${svc.name}: ${error.message}`);
