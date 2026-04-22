@@ -148,13 +148,15 @@ export default function SymptomCheckerHomePage() {
           box-shadow: none;
         }
 
-        .sc-pet-card { border:1px solid ${C.border}; border-radius:14px; padding:20px 24px; display:flex; align-items:center; gap:16px; cursor:pointer; transition:background 0.15s; background:${C.white}; position:relative; overflow:hidden; }
+
+        .sc-pet-card { border:1px solid ${C.border}; border-radius:14px; padding:20px 24px; display:flex; align-items:center; gap:16px; transition:background 0.15s; background:${C.white}; position:relative; }
         .sc-pet-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:${C.terracotta}; opacity:0; transition:opacity 0.15s; border-radius:0 2px 2px 0; }
-        .sc-pet-card:hover { background:#fafaf8; }
-        .sc-pet-card:hover::before { opacity:1; }
+        
+
 
         /* Vertical divider desktop — inset */
         .sc-vdiv { width:1px; background:${C.border}; align-self:stretch; margin:4px 0; flex-shrink:0; }
+
 
         /* Stats desktop */
         .sc-stats { display:flex; flex-direction:column; gap:6px; flex-shrink:0; min-width:130px; padding-left:4px; }
@@ -162,14 +164,24 @@ export default function SymptomCheckerHomePage() {
         .sc-stat-label { font-size:13px; font-weight:600; color:${C.muted}; }
         .sc-stat-value { font-size:13px; font-weight:600; color:${C.navyDark}; }
 
+
         /* Mobile stats — hidden on desktop */
         .sc-mob-stats { display:none; }
+        .sc-top-row { display:contents; } /* transparent on desktop, becomes flex on mobile */
+
+        /* Chevron — start new check */
+        .sc-chevron { background:none; border:none; cursor:pointer; padding:0 0 0 12px; font-size:36px; font-weight:300; color:${C.terracotta}; display:flex; align-items:center; flex-shrink:0; line-height:1; transition:color 0.2s, transform 0.2s; }
+        .sc-chevron:hover { color:#a8471d; transform:translateX(4px); }
+        .sc-lastcheck:hover { color:#a8471d !important; }
+
 
         @media(max-width:600px) {
-          .sc-pet-card { flex-wrap:wrap; padding:10px 18px; align-items:center; }
+          .sc-pet-card { display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto; padding:20px 20px 20px 24px; align-items:center; column-gap:12px; }
           .sc-vdiv { display:none; }
           .sc-stats { display:none; }
-          .sc-mob-stats { display:flex; gap:20px; width:100%; padding-top:10px; border-top:1px solid ${C.border}; margin-left:66px; margin-right:0; }
+          .sc-chevron { grid-column:2; grid-row:1 / span 2; align-self:center; padding:0; }
+          .sc-top-row { display:flex; align-items:center; gap:16px; grid-column:1; }
+          .sc-mob-stats { display:flex; gap:20px; grid-column:1; padding-top:10px; border-top:1px solid ${C.border}; margin-left:66px; margin-right:24px}
         .sc-mob-stats .sc-stat { flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-start; }
         .sc-mob-stats .sc-stat-label { font-size:13px; font-weight:600; text-transform:capitalize; color:${C.muted}; white-space:nowrap; }
         .sc-mob-stats .sc-stat-value { font-size:13px; font-weight:600; color:${C.navyDark}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -185,6 +197,7 @@ export default function SymptomCheckerHomePage() {
         .sc-btn-outline { height:48px; padding:0 28px; background:transparent; color:${C.navyDark}; border:2px solid ${C.navyDark}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
         .sc-btn-outline:hover { background:${C.navyDark}; color:#fff; }
 
+
         .sc-header { min-height:393px; height:393px; overflow:hidden; }
         @media(max-width:768px) {
           .sc-header { min-height:368px !important; height:368px !important; }
@@ -194,10 +207,12 @@ export default function SymptomCheckerHomePage() {
           .sc-btn-row { flex-direction:column !important; }
         }
 
+
         .sch-arrow-link { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; text-decoration: none; transition: gap 0.2s ease; }
         .sch-arrow-link:hover { gap: 8px; }
         .sch-arrow-link .arr-icon { display: inline-block; transition: transform 0.2s ease; }
         .sch-arrow-link:hover .arr-icon { transform: translateX(3px); }
+
 
       `}</style>
 
@@ -563,104 +578,130 @@ export default function SymptomCheckerHomePage() {
                                   : "🐾";
                         const lastCheck = lastChecks[pet.id];
                         return (
-                          <div
-                            key={pet.id}
-                            className="sc-pet-card"
-                            onClick={() => startNewCheck(pet)}
-                          >
-                            {/* Avatar */}
-                            <div
-                              style={{
-                                width: "52px",
-                                height: "52px",
-                                borderRadius: "50%",
-                                background: C.cream,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                overflow: "hidden",
-                                flexShrink: 0,
-                                fontSize: "22px",
-                                border: `2px solid ${C.border}`,
-                              }}
-                            >
-                              {pet.photo_url ? (
-                                <img
-                                  src={pet.photo_url}
-                                  alt={pet.name}
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                  }}
-                                />
-                              ) : (
-                                emoji
-                              )}
-                            </div>
+                          <div key={pet.id} className="sc-pet-card">
+                            {/* Top row wrapper: avatar + info (col1 row1 in mobile grid) */}
+                            <div className="sc-top-row">
+                              {/* Avatar */}
+                              <div
+                                style={{
+                                  width: "52px",
+                                  height: "52px",
+                                  borderRadius: "50%",
+                                  background: C.cream,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  overflow: "hidden",
+                                  flexShrink: 0,
+                                  fontSize: "22px",
+                                  border: `2px solid ${C.border}`,
+                                }}
+                              >
+                                {pet.photo_url ? (
+                                  <img
+                                    src={pet.photo_url}
+                                    alt={pet.name}
+                                    style={{
+                                      width: "100%",
+                                      height: "100%",
+                                      objectFit: "cover",
+                                    }}
+                                  />
+                                ) : (
+                                  emoji
+                                )}
+                              </div>
 
-                            {/* Left: name, breed, last check */}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p
-                                style={{
-                                  margin: 0,
-                                  fontWeight: "700",
-                                  fontSize: "16px",
-                                  color: C.navyDark,
-                                  fontFamily: "var(--font-urbanist,system-ui)",
-                                }}
-                              >
-                                {pet.name}
-                              </p>
-                              <p
-                                style={{
-                                  margin: "2px 0 0",
-                                  fontSize: "13px",
-                                  fontWeight: "600",
-                                  color: C.muted,
-                                }}
-                              >
-                                {[pet.species, pet.breed]
-                                  .filter(Boolean)
-                                  .join(" · ")}
-                              </p>
-                              {lastCheck &&
-                                (() => {
-                                  const e =
-                                    lastCheck.triage_result === "EMERGENCY"
-                                      ? "🔴"
-                                      : lastCheck.triage_result === "SEE_VET"
-                                        ? "🟡"
-                                        : "🟢";
-                                  const l =
-                                    lastCheck.triage_result === "EMERGENCY"
-                                      ? "Emergency"
-                                      : lastCheck.triage_result === "SEE_VET"
-                                        ? "See vet soon"
-                                        : "Monitor at home";
-                                  const d = new Date(
-                                    lastCheck.created_at,
-                                  ).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                  });
-                                  return (
-                                    <p
-                                      style={{
-                                        margin: "4px 0 0",
-                                        fontSize: "12px",
-                                        fontWeight: "600",
-                                        color: C.terracotta,
-                                        /* textDecoration: "underline",
-                                        textDecorationStyle: "dotted",
-                                        textUnderlineOffset: "2px",*/
-                                      }}
-                                    >
-                                      {e} {l} · {d}
-                                    </p>
-                                  );
-                                })()}
+                              {/* Left: name, breed, last check */}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontWeight: "700",
+                                    fontSize: "16px",
+                                    color: C.navyDark,
+                                    fontFamily:
+                                      "var(--font-urbanist,system-ui)",
+                                  }}
+                                >
+                                  {pet.name}
+                                </p>
+                                <p
+                                  style={{
+                                    margin: "2px 0 0",
+                                    fontSize: "13px",
+                                    fontWeight: "600",
+                                    color: C.muted,
+                                  }}
+                                >
+                                  {[pet.species, pet.breed]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </p>
+                                {lastCheck &&
+                                  (() => {
+                                    const e =
+                                      lastCheck.triage_result === "EMERGENCY"
+                                        ? "🔴"
+                                        : lastCheck.triage_result === "SEE_VET"
+                                          ? "🟡"
+                                          : "🟢";
+                                    const l =
+                                      lastCheck.triage_result === "EMERGENCY"
+                                        ? "Emergency"
+                                        : lastCheck.triage_result === "SEE_VET"
+                                          ? "See vet soon"
+                                          : "Monitor at home";
+                                    const d = new Date(
+                                      lastCheck.created_at,
+                                    ).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                    });
+                                    return (
+                                      <p
+                                        className="sc-lastcheck"
+                                        onClick={(ev) => {
+                                          ev.stopPropagation();
+                                          try {
+                                            const t = JSON.parse(
+                                              lastCheck.transcript || "[]",
+                                            );
+                                            sessionStorage.setItem(
+                                              SESSION_KEY,
+                                              JSON.stringify({
+                                                selectedPet: pet,
+                                                messages: t,
+                                                triageResult:
+                                                  lastCheck.triage_result,
+                                                differentials:
+                                                  lastCheck.differentials || [],
+                                                guestMode: false,
+                                                freeCheckUsed: false,
+                                              }),
+                                            );
+                                          } catch (err) {}
+                                          router.push("/symptom-checker/chat");
+                                        }}
+                                        style={{
+                                          margin: "4px 0 0",
+                                          fontSize: "12px",
+                                          fontWeight: "600",
+                                          color: C.terracotta,
+                                          //textDecoration: "underline",
+                                          //textDecorationStyle: "dotted",
+                                          textUnderlineOffset: "2px",
+                                          cursor: "pointer",
+                                          display: "inline-block",
+                                        }}
+                                      >
+                                        {e} {l} · {d}
+                                      </p>
+                                    );
+                                  })()}
+                              </div>
                             </div>
+                            {/* end sc-top-row */}
 
                             {/* Vertical divider — desktop only, inset top/bottom */}
                             <div className="sc-vdiv" />
@@ -740,6 +781,14 @@ export default function SymptomCheckerHomePage() {
                                 </div>
                               )}
                             </div>
+                            {/* Chevron — start new check */}
+                            <button
+                              className="sc-chevron"
+                              onClick={() => startNewCheck(pet)}
+                              aria-label="Start check"
+                            >
+                              &#8250;
+                            </button>
                           </div>
                         );
                       })}

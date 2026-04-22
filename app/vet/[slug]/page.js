@@ -505,6 +505,7 @@ export default function VetPage() {
           <p style={{ color: C.muted, fontSize: "14px" }}>Vet not found.</p>
           <Link
             href="/vets"
+            className="nav-link-dark"
             style={{ color: C.terracotta, fontSize: "14px", fontWeight: "700" }}
           >
             ← Back to all vets
@@ -563,24 +564,14 @@ export default function VetPage() {
         .submit-cta-btn:hover{background:#fff;color:${C.terracotta};}
         .submit-price-btn{width:100%;padding:14px;background:${C.terracotta};color:#fff;border:2px solid ${C.terracotta};border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:background 0.2s,color 0.2s;}
         .submit-price-btn:hover{background:#fff;color:${C.terracotta};}
+        .toaster-create-btn{display:block;padding:14px;background:${C.terracotta};color:#fff;border:2px solid ${C.terracotta};border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;transition:background 0.18s,color 0.18s;}
+        .toaster-create-btn:hover{background:#fff;color:${C.terracotta};}
+        .toaster-signin-btn{display:block;padding:14px;background:transparent;color:${C.navyDark};border:2px solid ${C.navyDark};border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;transition:background 0.18s,color 0.18s;}
+        .toaster-signin-btn:hover{background:${C.navyDark};color:#fff;}
         .chart-row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;}
-
-
-
-
-
-
-
 
         /* Header */
         .vet-header{background:${C.navyDark};min-height:393px;padding:80px 0 88px;position:relative;overflow:hidden;box-sizing:border-box;border-bottom:1px solid rgba(255,255,255,0.07);}
-
-
-
-
-
-
-
 
         /* Info strip */
         .info-2col{display:grid;grid-template-columns:1fr 1fr;}
@@ -592,13 +583,6 @@ export default function VetPage() {
         .info-div-right{padding:0 20px;}
         /* Mobile-only divider — shown only when stacked */
         .info-mob-div{display:none;height:1px;background:${C.border};margin:0 20px;}
-
-
-
-
-
-
-
 
         @media(max-width:768px){
           .vet-header{min-height:338px;padding:80px 0 88px;}
@@ -621,6 +605,8 @@ export default function VetPage() {
           .seg-group{flex-wrap:wrap!important;}
         }
         @media(max-width:375px){.entry-card{padding:14px;}}
+      
+        .nav-link-dark:hover { color:#172531 !important; }
       `}</style>
 
       {/* Pricing modal */}
@@ -749,35 +735,14 @@ export default function VetPage() {
                     }}
                   >
                     <Link
-                      href={`/auth?redirect=${encodeURIComponent(returnUrl)}`}
-                      style={{
-                        display: "block",
-                        padding: "14px",
-                        background: C.terracotta,
-                        color: "#fff",
-                        borderRadius: "12px",
-                        fontSize: "15px",
-                        fontWeight: "700",
-                        textDecoration: "none",
-                        textAlign: "center",
-                      }}
+                      href={`/auth?redirect=${encodeURIComponent(returnUrl)}&tab=signup`}
+                      className="toaster-create-btn"
                     >
                       Create free account
                     </Link>
                     <Link
                       href={`/auth?redirect=${encodeURIComponent(returnUrl)}`}
-                      style={{
-                        display: "block",
-                        padding: "14px",
-                        background: "transparent",
-                        color: C.navyDark,
-                        borderRadius: "12px",
-                        fontSize: "15px",
-                        fontWeight: "700",
-                        textDecoration: "none",
-                        textAlign: "center",
-                        border: `1.5px solid ${C.border}`,
-                      }}
+                      className="toaster-signin-btn"
                     >
                       Sign in
                     </Link>
@@ -1510,10 +1475,10 @@ export default function VetPage() {
             <div style={{ marginBottom: "20px" }}>
               <Link
                 href="/vets"
+                className="nav-link-dark"
                 style={{
                   fontSize: "13px",
                   fontWeight: "600",
-                  color: C.terracotta,
                   textDecoration: "none",
                   display: "inline-flex",
                   alignItems: "center",
@@ -1839,7 +1804,6 @@ export default function VetPage() {
                                   borderRadius: "5px",
                                   height: "30px",
                                   overflow: "hidden",
-                                  position: "relative",
                                 }}
                               >
                                 <div
@@ -1859,35 +1823,17 @@ export default function VetPage() {
                                     boxSizing: "border-box",
                                   }}
                                 >
-                                  {bar.width > 15 && (
-                                    <span
-                                      style={{
-                                        fontSize: "13px",
-                                        color: "#fff",
-                                        fontWeight: "700",
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      ${bar.value.toLocaleString()}
-                                    </span>
-                                  )}
-                                </div>
-                                {bar.width <= 15 && (
                                   <span
                                     style={{
-                                      position: "absolute",
-                                      left: `calc(${bar.width}% + 6px)`,
-                                      top: "50%",
-                                      transform: "translateY(-50%)",
                                       fontSize: "13px",
-                                      color: bar.barColor,
+                                      color: "#fff",
                                       fontWeight: "700",
                                       whiteSpace: "nowrap",
                                     }}
                                   >
-                                    — ${bar.value.toLocaleString()}
+                                    ${bar.value.toLocaleString()}
                                   </span>
-                                )}
+                                </div>
                               </div>
                             </div>
                           </div>

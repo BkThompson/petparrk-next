@@ -179,6 +179,16 @@ a:hover {
   opacity: 0.8;
 }
 
+/* ── Slug Page - "Back to all vets" link  ─────────── */
+.nav-link-dark {
+  color: #cf5c36;
+}
+
+.nav-link-dark:hover {
+  color: #2c4657;
+  opacity: 1;
+}
+
 /* ── Prevent iOS auto-zoom on inputs ─────────── */
 input:not([type="checkbox"]):not([type="radio"]),
 textarea,

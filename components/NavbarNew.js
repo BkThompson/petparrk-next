@@ -24,21 +24,18 @@ function PawMark({ size = 28 }) {
   );
 }
 
-// Desktop nav links — unchanged
 const NAV_LINKS = [
   { href: "/vets", label: "Find a Vet" },
   { href: "/symptom-checker", label: "Symptom Checker" },
   { href: "/how-it-works", label: "How It Works" },
 ];
 
-// Desktop account dropdown links
 const DROPDOWN_LINKS = [
   { href: "/profile", label: "My Profile", icon: "👤" },
   { href: "/saved", label: "Saved Vets", icon: "❤️" },
   { href: "/account", label: "Account Settings", icon: "⚙️" },
 ];
 
-// Mobile hamburger — secondary links only (tab bar handles primary)
 const MOBILE_SECONDARY_LINKS = [
   { href: "/how-it-works", label: "How It Works" },
   { href: "/about", label: "About" },
@@ -82,7 +79,20 @@ export default function NavbarNew() {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) {
+        // Verify the user still exists server-side.
+        // getSession() only reads from local storage — getUser() checks against Supabase.
+        // If the account was deleted, this will return an error and we sign out immediately.
+        const { error } = await supabase.auth.getUser();
+        if (error) {
+          await supabase.auth.signOut();
+          setSession(null);
+          return;
+        }
+      }
+      setSession(data.session);
+    });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
@@ -202,11 +212,14 @@ export default function NavbarNew() {
         }
         @media (min-width: 768px) { .pp-nav-inner { padding: 0 40px; } }
 
+
         .pp-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
         .pp-logo-text { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.02em; font-family: var(--font,'Urbanist',sans-serif); }
 
+
         .pp-nav-links { display: none; align-items: center; gap: 32px; list-style: none; position: relative; }
         @media (min-width: 768px) { .pp-nav-links { display: flex; } }
+
 
         .pp-nav-indicator {
           position: absolute; bottom: -4px; height: 2px;
@@ -216,6 +229,7 @@ export default function NavbarNew() {
         }
         .pp-nav-indicator.visible { opacity: 1; }
 
+
         .pp-nav-link { font-size: 14px; color: rgba(255,255,255,0.6); text-decoration: none; font-family: var(--font,'Urbanist',sans-serif); white-space: nowrap; padding-bottom: 8px; transition: color 0.15s ease; position: relative; }
         .pp-nav-link span { display: block; font-weight: 500; }
         .pp-nav-link span::before { content: attr(data-label); font-weight: 700; visibility: hidden; height: 0; display: block; overflow: hidden; pointer-events: none; user-select: none; }
@@ -223,19 +237,27 @@ export default function NavbarNew() {
         .pp-nav-link.active { color: #EFC88B; }
         .pp-nav-link.active span { font-weight: 700; }
 
+
         .pp-nav-right { display: flex; align-items: center; gap: 12px; min-width: 120px; justify-content: flex-end; }
+
 
         .pp-signin-btn { display: none; }
         @media (min-width: 768px) {
           .pp-signin-btn {
             display: inline-flex; align-items: center; justify-content: center;
-            padding: 8px 18px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.35);
-            background: transparent; color: #fff; font-size: 14px; font-weight: 600;
+            padding: 8px 18px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.35);
+            background: transparent; color: #fff; font-size: 14px; font-weight: 700;
             font-family: var(--font-urbanist,'Urbanist',sans-serif); text-decoration: none;
-            cursor: pointer; transition: border-color 0.15s, background 0.15s; white-space: nowrap;
+            cursor: pointer; transition: border-color 0.2s, background 0.2s; white-space: nowrap;
           }
           .pp-signin-btn:hover { border-color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.06); }
         }
+        .pp-get-started-btn { display: none; }
+        @media (min-width: 768px) {
+          .pp-get-started-btn { display: inline-flex; align-items: center; }
+          .pp-get-started-btn:hover { background: #fff !important; color: #CF5C36 !important; }
+        }
+
 
         .pp-avatar-btn {
           width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
@@ -244,6 +266,7 @@ export default function NavbarNew() {
           transition: border-color 0.15s, transform 0.15s; flex-shrink: 0; font-family: var(--font,'Urbanist',sans-serif);
         }
         .pp-avatar-btn:hover { border-color: rgba(255,255,255,0.5); transform: scale(1.05); }
+
 
         .pp-dropdown {
           position: absolute; top: calc(100% + 8px); right: 0;
@@ -256,13 +279,14 @@ export default function NavbarNew() {
         @keyframes ddFadeIn  { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
         @keyframes ddFadeOut { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-6px); } }
 
+
         .pp-dd-link { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.85); text-decoration: none; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.12s, color 0.12s; }
         .pp-dd-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
         .pp-dd-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0; }
         .pp-dd-signout { display: block; width: 100%; padding: 11px 16px; text-align: left; background: none; border: none; font-size: 14px; font-weight: 500; color: #CF5C36; cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.12s; }
         .pp-dd-signout:hover { background: rgba(207,92,54,0.12); }
 
-        /* Hamburger — mobile only, always visible regardless of auth state */
+
         .pp-hamburger { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 36px; height: 36px; background: none; border: none; cursor: pointer; padding: 0; z-index: 310; flex-shrink: 0; border-radius: 6px; }
         .pp-hamburger:hover { background: rgba(255,255,255,0.08); }
         @media (min-width: 768px) { .pp-hamburger { display: none !important; } }
@@ -271,12 +295,13 @@ export default function NavbarNew() {
         .pp-hamburger.open .pp-hamburger-line:nth-child(2) { opacity: 0; transform: scaleX(0); }
         .pp-hamburger.open .pp-hamburger-line:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        /* Mobile overlay */
+
         .pp-mobile-overlay { position: fixed; inset: 0; z-index: 99; background: var(--color-navy-dark,#172531); display: flex; flex-direction: column; padding: 88px 32px 48px; overflow-y: auto; animation: mobileSlideIn 0.3s ease forwards; }
         @media (min-width: 768px) { .pp-mobile-overlay { display: none !important; } }
         .pp-mobile-overlay.closing { animation: mobileSlideOut 0.22s ease forwards; }
         @keyframes mobileSlideIn  { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
         @keyframes mobileSlideOut { from { opacity:1; transform:translateY(0); }    to { opacity:0; transform:translateY(-12px); } }
+
 
         .pp-mobile-links { display: flex; flex-direction: column; gap: 4px; flex: 1;}
         .pp-mobile-link { display: flex; align-items: center; gap: 14px; padding: 14px 0; font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.75); text-decoration: none; font-family: var(--font,'Urbanist',sans-serif); transition: color 0.15s; animation: mobileLinkFadeIn 0.35s ease both; }
@@ -289,6 +314,7 @@ export default function NavbarNew() {
         .pp-mobile-link:nth-child(4) { animation-delay: 0.20s; }
         .pp-mobile-link:nth-child(5) { animation-delay: 0.25s; }
 
+
         .pp-mobile-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0 16px; }
         .pp-mobile-signup-btn { display: block; width: 100%; padding: 14px 0; text-align: center; background: var(--color-terracotta,#CF5C36); border: 2px solid var(--color-terracotta,#CF5C36); border-radius: 12px; font-size: 16px; font-weight: 700; color: #fff; text-decoration: none; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin-bottom: 8px; transition: background 0.2s, color 0.2s; }
         .pp-mobile-signup-btn:hover { background: #fff; color: var(--color-terracotta,#CF5C36); }
@@ -297,7 +323,7 @@ export default function NavbarNew() {
         .pp-mobile-signout { display: block; width: 100%; padding: 14px 0; text-align: center; background: rgba(207,92,54,0.15); border: 1.5px solid rgba(207,92,54,0.5); border-radius: 12px; font-size: 16px; font-weight: 700; color: #CF5C36; cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.15s; }
         .pp-mobile-signout:hover { background: rgba(207,92,54,0.25); }
 
-        /* Mobile section label */
+
         .pp-mobile-section-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 2px; }
       `}</style>
 
@@ -308,7 +334,6 @@ export default function NavbarNew() {
             <span className="pp-logo-text">PetParrk</span>
           </Link>
 
-          {/* Desktop nav links */}
           <ul
             className="pp-nav-links"
             ref={navLinksRef}
@@ -336,7 +361,6 @@ export default function NavbarNew() {
           </ul>
 
           <div className="pp-nav-right">
-            {/* Desktop: sign in or avatar dropdown */}
             {session === undefined ? null : session ? (
               <div ref={dropdownRef} style={{ position: "relative" }}>
                 <button
@@ -389,12 +413,32 @@ export default function NavbarNew() {
                 )}
               </div>
             ) : (
-              <Link href="/auth" className="pp-signin-btn">
-                Sign In
-              </Link>
+              <>
+                <Link href="/auth" className="pp-signin-btn">
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth?tab=signup"
+                  className="pp-get-started-btn"
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "12px",
+                    border: "2px solid #CF5C36",
+                    background: "var(--color-terracotta,#CF5C36)",
+                    color: "#fff",
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    textDecoration: "none",
+                    whiteSpace: "nowrap",
+                    fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
+                    transition: "background 0.2s, color 0.2s",
+                  }}
+                >
+                  Get Started
+                </Link>
+              </>
             )}
 
-            {/* Hamburger — always visible on mobile */}
             <button
               className={`pp-hamburger${mobileOpen && !isClosing ? " open" : ""}`}
               onClick={toggleMobileMenu}
@@ -409,7 +453,6 @@ export default function NavbarNew() {
         </div>
       </nav>
 
-      {/* Mobile overlay — full sitemap */}
       {(mobileOpen || isClosing) && (
         <div
           className={`pp-mobile-overlay${isClosing ? " closing" : ""}`}
@@ -417,7 +460,6 @@ export default function NavbarNew() {
           aria-label="Navigation menu"
         >
           <div className="pp-mobile-links">
-            {/* Product */}
             <p className="pp-mobile-section-label">Product</p>
             {[
               ["/vets", "Find a Vet"],
@@ -435,7 +477,6 @@ export default function NavbarNew() {
 
             <div className="pp-mobile-divider" />
 
-            {/* Explore */}
             <p className="pp-mobile-section-label">Explore</p>
             {[
               ["/how-it-works", "How It Works"],
@@ -453,7 +494,6 @@ export default function NavbarNew() {
 
             <div className="pp-mobile-divider" />
 
-            {/* Auth */}
             {session ? (
               <>
                 <p className="pp-mobile-section-label">Account</p>

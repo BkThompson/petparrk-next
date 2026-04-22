@@ -153,8 +153,7 @@ export default function Footer() {
               margin: 0,
             }}
           >
-            © 2026 PetParrk. Prices are community-sourced and verified by our
-            team.
+            © 2026 PetParrk, LLC.
           </p>
           {/* 
           <p
@@ -165,6 +164,8 @@ export default function Footer() {
             }}
           >
             Always call to confirm before your visit.
+            Prices are community-sourced and verified by our
+            team.
           </p>
           */}
         </div>

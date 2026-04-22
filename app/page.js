@@ -509,13 +509,19 @@ export default function Home() {
         @keyframes floatBR2{ 0%,100%{transform:translate(0px,0px) scale(1)} 40%{transform:translate(18px,-22px)  scale(1.08)} 75%{transform:translate(-12px,15px) scale(0.94)} }
 
 
+
+
         .anim-1{animation:fadeSlideUp 0.9s 0.10s ease both}
         .anim-2{animation:fadeSlideUp 0.9s 0.28s ease both}
         .anim-3{animation:fadeSlideUp 0.9s 0.48s ease both}
         .anim-4{animation:fadeSlideUp 0.9s 0.68s ease both}
 
 
+
+
         @media (max-width: 768px) { .hero-float { animation: none !important; } }
+
+
 
 
         .reveal-up    { opacity:0; transform:translateY(40px);  transition:opacity 1.2s cubic-bezier(0.22,1,0.36,1),transform 1.2s cubic-bezier(0.22,1,0.36,1); }
@@ -524,6 +530,8 @@ export default function Home() {
         .reveal-scale { opacity:0; transform:scale(0.93);       transition:opacity 1.2s cubic-bezier(0.22,1,0.36,1),transform 1.2s cubic-bezier(0.22,1,0.36,1); }
         .reveal-up.visible,.reveal-left.visible,.reveal-right.visible,.reveal-scale.visible { opacity:1; transform:translateY(0) translateX(0) scale(1); }
         .reveal-delay-1{transition-delay:0.12s} .reveal-delay-2{transition-delay:0.26s} .reveal-delay-3{transition-delay:0.40s}
+
+
 
 
         .hero-input-wrap { position:relative; }
@@ -539,6 +547,8 @@ export default function Home() {
         }
 
 
+
+
         .pillar-card-outer { position:relative; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgba(239,200,139,0.55) 0%,rgba(207,92,54,0.25) 12%,rgba(255,255,255,0.04) 28%,transparent 42%,transparent 58%,rgba(255,255,255,0.04) 72%,rgba(207,92,54,0.2) 88%,rgba(239,200,139,0.45) 100%); transition:transform 0.3s; }
         .pillar-card-outer:hover { transform:translateY(-4px); }
         .pillar-card { background:linear-gradient(160deg,rgba(42,62,78,0.98) 0%,rgba(30,48,62,0.98) 40%,rgba(26,42,55,0.98) 100%); border-radius:20px; padding:36px 28px 32px; text-align:center; position:relative; overflow:hidden; display:flex; flex-direction:column; height:100%; box-sizing:border-box; transition:background 0.3s,box-shadow 0.3s; }
@@ -550,9 +560,13 @@ export default function Home() {
         .pillar-icon-wrap.pillar-icon-2 { background:rgba(80,140,80,0.14)!important; border:1px solid rgba(80,140,80,0.25); }
 
 
+
+
         .step-card { padding:32px 0; display:grid; grid-template-columns:72px 1fr; gap:20px; align-items:start; }
         .step-card+.step-card { border-top:1px solid rgba(255,255,255,0.07); }
         .step-number { font-size:clamp(44px,6vw,60px); font-weight:800; line-height:1; color:rgba(239,200,139,0.15); font-family:var(--font-urbanist,'Urbanist',sans-serif); user-select:none; }
+
+
 
 
         /* ── VET CARDS — match Find a Vet page exactly ── */
@@ -560,6 +574,8 @@ export default function Home() {
         .vet-card-outer:hover { transform:translateY(-3px); }
         .vet-card-outer:hover .vet-card-inner { box-shadow:0 0 0 1.5px rgba(239,200,139,0.9),0 16px 48px rgba(23,37,49,0.13); }
         .vet-card-inner { border-radius:17px; padding:24px; background:#fff; display:flex; flex-direction:column; height:100%; box-sizing:border-box; transition:box-shadow 0.25s; }
+
+
 
 
         .heart-btn { transition:transform 0.15s; border:none; background:none; cursor:pointer; padding:0; font-size:20px; line-height:1; }
@@ -575,6 +591,8 @@ export default function Home() {
         .pillars-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
         .vets-grid    { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; align-items:stretch; }
         @media(max-width:900px){ .pillars-grid{ grid-template-columns:1fr; } }
+
+
 
 
         .btn-primary {
@@ -599,8 +617,12 @@ export default function Home() {
         .btn-outline-dark:hover { background:var(--color-navy-dark,#172531); color:#fff; }
 
 
+
+
         @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
         .skeleton { background:linear-gradient(90deg,#f0ece4 25%,#e8e0d4 50%,#f0ece4 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:18px; }
+
+
 
 
         @media(max-width:640px){
@@ -747,7 +769,7 @@ export default function Home() {
                 onChange={(e) => setHeroSearch(e.target.value)}
               />
               <button type="submit" className="hero-btn">
-                Search
+                {heroSearch.trim() ? "Search" : "Browse All Vets"}
               </button>
             </div>
           </form>
@@ -1384,3 +1406,4 @@ export default function Home() {
     </>
   );
 }
+Home;

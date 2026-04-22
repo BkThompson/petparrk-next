@@ -18,6 +18,9 @@ function AuthPageContent() {
   const [successMsg, setSuccessMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Read tab and redirect query params
+  const redirectTo = searchParams.get("redirect") || "/";
+
   // Read tab query param on mount — supports ?tab=signup
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -26,7 +29,7 @@ function AuthPageContent() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.push("/");
+      if (data.session) router.push(redirectTo);
     });
   }, []);
 
@@ -47,9 +50,10 @@ function AuthPageContent() {
 
   async function handleGoogleSignIn() {
     setError("");
+    const callbackUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: callbackUrl },
     });
     if (error) setError(error.message);
   }
@@ -64,7 +68,7 @@ function AuthPageContent() {
     });
     setLoading(false);
     if (error) setError(error.message);
-    else router.push("/");
+    else router.push(redirectTo);
   }
 
   async function handleSignUp(e) {
@@ -82,15 +86,18 @@ function AuthPageContent() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
+      },
     });
     setLoading(false);
     if (error) setError(error.message);
     else {
-      setSuccessMsg(
-        "✅ Account created! Check your email to confirm, then sign in.",
-      );
       switchMode("signin");
+      setSuccessMsg(
+        "✅ Account created! Check your email and click the confirmation link to get started.",
+      );
     }
   }
 
@@ -132,13 +139,13 @@ function AuthPageContent() {
     padding: "13px",
     background: loading ? "#aaa" : "var(--color-terracotta, #CF5C36)",
     color: "#fff",
-    border: "none",
+    border: "2px solid var(--color-terracotta, #CF5C36)",
     borderRadius: "10px",
     fontSize: "15px",
     fontWeight: "700",
     cursor: loading ? "not-allowed" : "pointer",
     fontFamily: "var(--font-urbanist, system-ui)",
-    transition: "opacity 0.15s",
+    transition: "background 0.18s, color 0.18s",
   };
 
   const googleBtn = {
@@ -373,12 +380,18 @@ function AuthPageContent() {
         <style>{`
           @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
           .auth-form-content { animation: fadeIn 0.2s ease; }
+          .auth-primary-btn:hover:not(:disabled) { background: #fff !important; color: var(--color-terracotta, #CF5C36) !important; border: 2px solid var(--color-terracotta, #CF5C36) !important; }
+          .auth-google-btn:hover { border-color: var(--color-navy-dark, #172531) !important; background: var(--color-navy-dark, #172531) !important; color: #fff !important; }
         `}</style>
 
         {/* SIGN IN */}
         {mode === "signin" && (
           <div className="auth-form-content">
-            <button style={googleBtn} onClick={handleGoogleSignIn}>
+            <button
+              className="auth-google-btn"
+              style={googleBtn}
+              onClick={handleGoogleSignIn}
+            >
               <GoogleIcon /> Continue with Google
             </button>
             {divider}
@@ -417,7 +430,12 @@ function AuthPageContent() {
                   Forgot password?
                 </button>
               </div>
-              <button type="submit" style={primaryBtn} disabled={loading}>
+              <button
+                type="submit"
+                className="auth-primary-btn"
+                style={primaryBtn}
+                disabled={loading}
+              >
                 {loading ? "Signing in…" : "Sign In"}
               </button>
             </form>
@@ -427,7 +445,11 @@ function AuthPageContent() {
         {/* SIGN UP */}
         {mode === "signup" && (
           <div className="auth-form-content">
-            <button style={googleBtn} onClick={handleGoogleSignIn}>
+            <button
+              className="auth-google-btn"
+              style={googleBtn}
+              onClick={handleGoogleSignIn}
+            >
               <GoogleIcon /> Continue with Google
             </button>
             {divider}
@@ -479,7 +501,12 @@ function AuthPageContent() {
                   style={inputStyle}
                 />
               </div>
-              <button type="submit" style={primaryBtn} disabled={loading}>
+              <button
+                type="submit"
+                className="auth-primary-btn"
+                style={primaryBtn}
+                disabled={loading}
+              >
                 {loading ? "Creating account…" : "Create Account"}
               </button>
               <p
@@ -521,7 +548,12 @@ function AuthPageContent() {
                   style={inputStyle}
                 />
               </div>
-              <button type="submit" style={primaryBtn} disabled={loading}>
+              <button
+                type="submit"
+                className="auth-primary-btn"
+                style={primaryBtn}
+                disabled={loading}
+              >
                 {loading ? "Sending…" : "Send Reset Link"}
               </button>
             </form>

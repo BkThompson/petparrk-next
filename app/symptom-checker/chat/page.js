@@ -17,7 +17,7 @@ const C = {
   cream: "#F5F0E8",
   white: "#FFFFFF",
   slate: "#4B5563",
-  muted: "#9CA3AF",
+  muted: "#717A86",
   border: "#EDE8E0",
   success: "#2A7D4F",
   error: "#C94040",
@@ -71,20 +71,20 @@ const DURATIONS = [
   {
     id: "just_now",
     label: "Just started",
-    emoji: "⚡",
+    emoji: "🕐",
     desc: "Less than an hour ago",
   },
-  { id: "today", label: "Today", emoji: "📅", desc: "Started sometime today" },
+  { id: "today", label: "Today", emoji: "🌤️", desc: "Started sometime today" },
   {
     id: "few_days",
     label: "2–3 days",
-    emoji: "📆",
+    emoji: "📅",
     desc: "Been going on a couple days",
   },
   {
     id: "week_plus",
     label: "A week or more",
-    emoji: "📋",
+    emoji: "🗓️",
     desc: "Ongoing for a while",
   },
 ];
@@ -123,9 +123,6 @@ function PetChip({ selectedPet, onStartOver }) {
   return (
     <div
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
         marginBottom: "14px",
         padding: "10px 14px",
         background: "#fff",
@@ -135,81 +132,84 @@ function PetChip({ selectedPet, onStartOver }) {
         cursor: "default",
       }}
     >
-      <div
-        style={{
-          width: "32px",
-          height: "32px",
-          borderRadius: "50%",
-          background: C.cream,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          fontSize: "16px",
-          border: `1.5px solid ${C.border}`,
-          flexShrink: 0,
-        }}
-      >
-        {selectedPet.photo_url ? (
-          <img
-            src={selectedPet.photo_url}
-            alt={selectedPet.name}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        ) : selectedPet.species === "Dog" ? (
-          "🐶"
-        ) : (
-          "🐾"
-        )}
-      </div>
-      <div style={{ flex: 1 }}>
-        <p
+      {/* Top row: avatar + name + desktop actions */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div
           style={{
-            margin: 0,
-            fontWeight: "700",
-            fontSize: "13px",
-            color: C.navyDark,
-            fontFamily: "var(--font-urbanist,system-ui)",
+            width: "32px",
+            height: "32px",
+            borderRadius: "50%",
+            background: C.cream,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+            fontSize: "16px",
+            border: `1.5px solid ${C.border}`,
+            flexShrink: 0,
           }}
         >
-          Checking on {selectedPet.name}
-        </p>
-        <p style={{ margin: 0, fontSize: "11px", color: C.muted }}>
-          {[selectedPet.species, selectedPet.breed].filter(Boolean).join(" · ")}
-        </p>
+          {selectedPet.photo_url ? (
+            <img
+              src={selectedPet.photo_url}
+              alt={selectedPet.name}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : selectedPet.species === "Dog" ? (
+            "🐶"
+          ) : (
+            "🐾"
+          )}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p className="pc-name">Checking on {selectedPet.name}</p>
+          <p style={{ margin: 0, fontSize: "13px", color: C.muted }}>
+            {[selectedPet.species, selectedPet.breed]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        </div>
+        {/* Desktop: actions stay in the top row */}
+        <div className="pc-desk-actions">
+          <span
+            style={{
+              fontSize: "12px",
+              background: C.cream,
+              padding: "4px 10px",
+              borderRadius: "20px",
+              color: C.navyDark,
+              fontWeight: "700",
+              border: `1px solid ${C.border}`,
+              whiteSpace: "nowrap",
+            }}
+          >
+            Triage
+          </span>
+          <button onClick={onStartOver} className="start-over-btn">
+            ↩ Start over
+          </button>
+        </div>
       </div>
-      <span
-        style={{
-          fontSize: "10px",
-          background: C.cream,
-          padding: "3px 8px",
-          borderRadius: "20px",
-          color: C.navyDark,
-          fontWeight: "700",
-          border: `1px solid ${C.border}`,
-          whiteSpace: "nowrap",
-        }}
-      >
-        🩺 Triage
-      </span>
-      <button
-        onClick={onStartOver}
-        style={{
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          fontSize: "11px",
-          color: C.terracotta,
-          fontWeight: "700",
-          padding: 0,
-          fontFamily: "var(--font-urbanist,system-ui)",
-          whiteSpace: "nowrap",
-          flexShrink: 0,
-          marginLeft: "4px",
-        }}
-      >
-        ↩ Start over
-      </button>
+      {/* Mobile: actions on second row, indented past avatar */}
+      <div className="pc-mob-actions">
+        <span
+          style={{
+            fontSize: "12px",
+            background: C.cream,
+            padding: "4px 10px",
+            borderRadius: "20px",
+            color: C.navyDark,
+            fontWeight: "700",
+            border: `1px solid ${C.border}`,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Triage
+        </span>
+        <button onClick={onStartOver} className="start-over-btn">
+          ↩ Start over
+        </button>
+      </div>
     </div>
   );
 }
@@ -513,16 +513,14 @@ export default function SymptomCheckerChatPage() {
             if (guestMode) setFreeCheckUsed(true);
           }
           if (session && selectedPet && newTriage)
-            await supabase
-              .from("symptom_checks")
-              .insert({
-                pet_id: selectedPet.id,
-                owner_id: session.user.id,
-                triage_result: newTriage,
-                differentials: parsedDiffs,
-                transcript: JSON.stringify([greetMsg, firstMsg, aMsg]),
-                created_at: new Date().toISOString(),
-              });
+            await supabase.from("symptom_checks").insert({
+              pet_id: selectedPet.id,
+              owner_id: session.user.id,
+              triage_result: newTriage,
+              differentials: parsedDiffs,
+              transcript: JSON.stringify([greetMsg, firstMsg, aMsg]),
+              created_at: new Date().toISOString(),
+            });
         },
       );
     } catch (e) {
@@ -575,16 +573,14 @@ export default function SymptomCheckerChatPage() {
             if (guestMode) setFreeCheckUsed(true);
           }
           if (session && selectedPet && full.includes("[TRIAGE_RESULT:"))
-            await supabase
-              .from("symptom_checks")
-              .insert({
-                pet_id: selectedPet.id,
-                owner_id: session.user.id,
-                triage_result: newTriage,
-                differentials: parsedDiffs,
-                transcript: JSON.stringify([...updated, aMsg]),
-                created_at: new Date().toISOString(),
-              });
+            await supabase.from("symptom_checks").insert({
+              pet_id: selectedPet.id,
+              owner_id: session.user.id,
+              triage_result: newTriage,
+              differentials: parsedDiffs,
+              transcript: JSON.stringify([...updated, aMsg]),
+              created_at: new Date().toISOString(),
+            });
         },
       );
     } catch (e) {
@@ -631,13 +627,60 @@ export default function SymptomCheckerChatPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "14px",
               flexShrink: 0,
               marginRight: "8px",
               marginTop: "2px",
             }}
           >
-            🤖
+            <svg
+              width="16"
+              height="16"
+              viewBox="-1.5 -1 21 25"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+            >
+              <circle cx="9" cy="1.5" r="1.5" fill="white" />
+              <line
+                x1="9"
+                y1="3"
+                x2="9"
+                y2="7"
+                stroke="white"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+              />
+              <rect
+                x="0"
+                y="7"
+                width="18"
+                height="15"
+                rx="4"
+                stroke="white"
+                strokeWidth="1.3"
+              />
+              <circle
+                cx="0"
+                cy="14.5"
+                r="2.2"
+                stroke="white"
+                strokeWidth="1.2"
+              />
+              <circle
+                cx="18"
+                cy="14.5"
+                r="2.2"
+                stroke="white"
+                strokeWidth="1.2"
+              />
+              <circle cx="4.5" cy="12" r="2.2" fill="white" />
+              <circle cx="13.5" cy="12" r="2.2" fill="white" />
+              <path
+                d="M3 16.5 Q9 20 15 16.5"
+                stroke="white"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+              />
+            </svg>
           </div>
         )}
         <div
@@ -934,18 +977,8 @@ export default function SymptomCheckerChatPage() {
                         {vet.phone && (
                           <a
                             href={`tel:${vet.phone}`}
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              height: "40px",
-                              padding: "0 18px",
-                              background: cfg.color,
-                              color: "#fff",
-                              borderRadius: "10px",
-                              fontSize: "14px",
-                              fontWeight: "700",
-                              textDecoration: "none",
-                            }}
+                            className="triage-phone-btn"
+                            style={{ background: cfg.color }}
                           >
                             {vet.phone}
                           </a>
@@ -980,39 +1013,14 @@ export default function SymptomCheckerChatPage() {
                 flexWrap: "wrap",
               }}
             >
-              <button
-                onClick={resetSession}
-                style={{
-                  height: "40px",
-                  padding: "0 20px",
-                  background: "#fff",
-                  border: `1.5px solid ${C.border}`,
-                  borderRadius: "10px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  fontWeight: "700",
-                  fontFamily: "var(--font-urbanist,system-ui)",
-                  color: C.navyDark,
-                }}
-              >
+              <button onClick={resetSession} className="triage-outline-btn">
                 Start New Check
               </button>
               {session && (
                 <Link
                   href="/profile"
-                  style={{
-                    height: "40px",
-                    padding: "0 20px",
-                    background: cfg.color,
-                    color: "#fff",
-                    borderRadius: "10px",
-                    fontSize: "14px",
-                    textDecoration: "none",
-                    fontWeight: "700",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    fontFamily: "var(--font-urbanist,system-ui)",
-                  }}
+                  className="triage-primary-btn"
+                  style={{ background: cfg.color }}
                 >
                   View Pet Profile
                 </Link>
@@ -1038,12 +1046,19 @@ export default function SymptomCheckerChatPage() {
     return (
       <>
         <style>{`
-          .g-card{border:1.5px solid ${C.border};border-radius:14px;padding:16px 18px;cursor:pointer;background:#fff;display:flex;align-items:center;gap:14px;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
-          .g-card:hover{border-color:${C.terracotta};box-shadow:0 4px 14px rgba(207,92,54,0.12);transform:translateY(-1px);}
-          .g-dur{border:1.5px solid ${C.border};border-radius:14px;padding:18px;cursor:pointer;background:#fff;display:flex;flex-direction:column;align-items:flex-start;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;color:${C.navyDark};}
-          .g-dur:hover{border-color:${C.terracotta};box-shadow:0 4px 14px rgba(207,92,54,0.12);transform:translateY(-1px);}
+          .g-card{border:1.5px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:#fff;display:flex;align-items:center;gap:14px;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
+          .g-dur{border:1.5px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:#fff;display:flex;flex-direction:column;align-items:center;text-align:center;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;color:${C.navyDark};}
+          .g-dur:hover{border-color:${C.terracotta};background:#fafaf8;}
+          .g-card:hover{border-color:${C.terracotta};background:#fafaf8;}
+          .g-sev:hover{border-color:${C.terracotta};background:#fafaf8;}
           .g-sev{border:1.5px solid ${C.border};border-radius:14px;padding:18px 20px;cursor:pointer;background:#fff;transition:border-color 0.15s,background 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
-          .g-sev:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(23,37,49,0.08);}
+          
+        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:14px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:0; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
+        .back-btn:hover { color:#172531 !important; outline:none !important; box-shadow:none !important; }
+        .back-btn:active { color:#172531 !important; outline:none !important; box-shadow:none !important; }
+        .back-btn:focus { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
+        .back-btn:focus-visible { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
+        .back-btn:focus:not(:focus-visible) { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; }
         `}</style>
         {/* Full viewport height, no header */}
         <div
@@ -1058,8 +1073,9 @@ export default function SymptomCheckerChatPage() {
             style={{
               flex: 1,
               overflowY: "auto",
-              padding: "32px 24px 40px",
+              padding: "30px 24px 40px",
               boxSizing: "border-box",
+              //scrollbarGutter: "stable",
             }}
           >
             <div
@@ -1069,30 +1085,21 @@ export default function SymptomCheckerChatPage() {
                 fontFamily: "var(--font-urbanist,system-ui,sans-serif)",
               }}
             >
-              <div style={{ marginBottom: "20px" }}>
+              <div style={{ marginBottom: "30px", paddingTop: "0px" }}>
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.currentTarget.blur();
                     if (guidedStep === 1) router.push("/symptom-checker");
                     else {
                       setStepDirection(-1);
                       setGuidedStep((s) => s - 1);
                     }
                   }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: C.terracotta,
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    padding: 0,
-                    fontFamily: "var(--font-urbanist,system-ui)",
-                    fontWeight: "700",
-                  }}
+                  className="back-btn"
                 >
                   ← Back
                 </button>
               </div>
-              <PetChip selectedPet={selectedPet} onStartOver={resetSession} />
               <div style={{ marginBottom: "28px" }}>
                 <div
                   style={{
@@ -1113,7 +1120,15 @@ export default function SymptomCheckerChatPage() {
                   >
                     Step {stepNum} of 3
                   </span>
-                  <span style={{ fontSize: "12px", color: C.muted }}>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      color: C.muted,
+                    }}
+                  >
                     {stepNum === 1
                       ? "Area"
                       : stepNum === 2
@@ -1210,15 +1225,6 @@ export default function SymptomCheckerChatPage() {
                             {area.desc}
                           </p>
                         </div>
-                        <span
-                          style={{
-                            color: C.terracotta,
-                            fontSize: "16px",
-                            flexShrink: 0,
-                          }}
-                        >
-                          →
-                        </span>
                       </div>
                     ))}
                   </motion.div>
@@ -1257,7 +1263,7 @@ export default function SymptomCheckerChatPage() {
                       style={{
                         display: "grid",
                         gridTemplateColumns: "1fr 1fr",
-                        gap: "12px",
+                        gap: "10px",
                       }}
                     >
                       {DURATIONS.map((d) => (
@@ -1332,10 +1338,18 @@ export default function SymptomCheckerChatPage() {
                         className="g-sev"
                         onClick={() => selectSeverity(s.id)}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = s.color;
+                          e.currentTarget.style.borderColor = s.border;
                           e.currentTarget.style.background = s.bg;
                         }}
                         onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = C.border;
+                          e.currentTarget.style.background = "#fff";
+                        }}
+                        onTouchStart={(e) => {
+                          e.currentTarget.style.borderColor = s.border;
+                          e.currentTarget.style.background = s.bg;
+                        }}
+                        onTouchEnd={(e) => {
                           e.currentTarget.style.borderColor = C.border;
                           e.currentTarget.style.background = "#fff";
                         }}
@@ -1373,16 +1387,6 @@ export default function SymptomCheckerChatPage() {
                               {s.desc}
                             </p>
                           </div>
-                          <span
-                            style={{
-                              marginLeft: "auto",
-                              color: C.muted,
-                              fontSize: "16px",
-                              flexShrink: 0,
-                            }}
-                          >
-                            →
-                          </span>
                         </div>
                       </div>
                     ))}
@@ -1422,20 +1426,48 @@ export default function SymptomCheckerChatPage() {
         }
         .chat-messages {
           flex: 1;
-          overflow-y: auto;
-          padding: 20px 24px;
-          scrollbar-width: thin;
-          scrollbar-color: ${C.border} transparent;
+          overflow-y: scroll;
+          padding: 30px 24px 20px;
+          scrollbar-width: none;
         }
-        .chat-messages::-webkit-scrollbar { width: 4px; }
-        .chat-messages::-webkit-scrollbar-track { background: transparent; }
-        .chat-messages::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 4px; }
+        .chat-messages::-webkit-scrollbar { display: none; }
         .chat-footer {
           border-top: 1px solid ${C.border};
           padding: 12px 24px 16px;
           background: ${C.cream};
           flex-shrink: 0;
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         /* Auto-expanding textarea with icons inside */
         .chat-input-wrap {
@@ -1447,9 +1479,19 @@ export default function SymptomCheckerChatPage() {
           display: flex;
           align-items: flex-end;
         }
+        /* Remove ALL focus styling on the input wrapper — eliminates orange square on all browsers */
         .chat-input-wrap:focus-within {
-          border-color: ${C.terracotta};
-          box-shadow: 0 0 0 3px rgba(207,92,54,0.08);
+          border-color: ${C.border};
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        .chat-input-wrap:focus-within * {
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        .chat-textarea:focus {
+          outline: none !important;
+          box-shadow: none !important;
         }
         .chat-input-wrap.recording {
           border-color: ${C.terracotta};
@@ -1459,6 +1501,7 @@ export default function SymptomCheckerChatPage() {
           padding: 13px 16px 13px 16px;
           border: none;
           background: transparent;
+          -webkit-tap-highlight-color: transparent;
           font-size: 15px;
           font-family: var(--font-urbanist, system-ui, sans-serif);
           color: ${C.navyDark};
@@ -1471,6 +1514,37 @@ export default function SymptomCheckerChatPage() {
           box-sizing: border-box;
         }
         .chat-textarea::placeholder { color: ${C.muted}; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         /* Icon buttons inside the input — sit at bottom-right */
         .input-icons {
@@ -1502,32 +1576,111 @@ export default function SymptomCheckerChatPage() {
         .mic-btn:hover { background: ${C.cream}; color: ${C.navyDark}; }
         .mic-btn:focus { outline: none; }
         .mic-btn.recording-active { color: ${C.terracotta}; }
+        .triage-outline-btn { height:40px; padding:0 20px; background:#fff; border:1.5px solid ${C.border}; border-radius:10px; font-size:14px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); color:${C.navyDark}; transition:background 0.15s,color 0.15s,border-color 0.15s; }
+        .triage-outline-btn:hover { background:${C.navyDark}; color:#fff; border-color:${C.navyDark}; }
+        .triage-primary-btn { height:40px; padding:0 20px; border-radius:10px; font-size:14px; font-weight:700; font-family:var(--font-urbanist,system-ui); color:#fff; text-decoration:none; display:inline-flex; align-items:center; transition:filter 0.15s; }
+        .triage-primary-btn:hover { filter:brightness(0.85); }
+        .triage-phone-btn { display:inline-flex; align-items:center; height:40px; padding:0 18px; border-radius:10px; font-size:14px; font-weight:700; color:#fff; text-decoration:none; transition:filter 0.15s; }
+        .triage-phone-btn:hover { filter:brightness(0.85); }
+        .start-over-btn { background:none; border:none; cursor:pointer; font-size:13px; color:${C.muted}; font-weight:600; padding:0; font-family:var(--font-urbanist,system-ui); white-space:nowrap; flex-shrink:0; margin-left:4px; transition:color 0.15s; text-decoration:none; }
+        .start-over-btn:hover { color:${C.terracotta}; text-decoration:underline; text-underline-offset:2px; }
+        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:14px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:0; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
+        .back-btn:link, .back-btn:visited { color:${C.terracotta} !important; }
+        .back-btn:hover { color:#172531 !important; outline:none !important; box-shadow:none !important; }
+        .back-btn:active { color:#172531 !important; outline:none !important; box-shadow:none !important; }
+        .back-btn:focus { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
+        .back-btn:focus-visible { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
+        .back-btn:focus:not(:focus-visible) { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; }
+        .pc-name { margin:0; font-weight:700; font-size:16px; color:${C.navyDark}; font-family:var(--font-urbanist,system-ui); }
+        .pc-desk-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+        .pc-mob-actions { display:none; }
+        @media(max-width:600px) {
+          .pc-name { font-size:18px; }
+          .pc-desk-actions { display:none; }
+          .pc-mob-actions { display:flex; align-items:center; gap:8px; margin-top:8px; padding-top:8px; margin-left:42px; border-top:1px solid ${C.border}; }
+        }
+        /* Send button — always visible. Gray when empty, navyMid when has content */
         .send-icon-btn {
-          background: transparent;
-          color: transparent;
-          opacity: 0;
+          background: rgba(155,165,175,0.25);
+          color: rgba(120,130,140,0.7);
+          opacity: 1;
           pointer-events: none;
           outline: none;
-          transition: opacity 0.2s, background 0.15s, color 0.15s;
+          box-shadow: none;
+          transition: background 0.2s, color 0.2s;
         }
         .send-icon-btn.visible {
-          background: ${C.terracotta};
+          background: #CF5C36;
           color: #fff;
-          opacity: 1;
           pointer-events: auto;
+          cursor: pointer;
         }
-        .send-icon-btn:hover { background: #a8471d; }
+        .send-icon-btn.visible:hover { background: #a8471d; }
         .send-icon-btn:focus { outline: none; box-shadow: none; }
-        .send-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         @keyframes dotBounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-5px);opacity:1} }
         .dot-bounce { width:7px;height:7px;border-radius:50%;background:${C.muted};display:inline-block;animation:dotBounce 1.2s infinite ease-in-out; }
+      
+        .scc-arrow-btn { background:none; border:none; cursor:pointer; padding:0; display:inline-flex; align-items:center; flex-shrink:0; }
+        .scc-arrow { display:inline-block; font-size:16px; color:${C.terracotta}; font-weight:700; transition:transform 0.2s ease; }
+        .scc-arrow-btn:hover .scc-arrow { transform:translateX(4px); }
+      
+        .sv-arrow { font-size: 16px; font-weight: 700; color: ${C.terracotta}; background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 3px; transition: gap 0.2s ease; }
+        .sv-arrow:hover { gap: 7px; }
+        .sv-arrow .sv-arrow-icon { display: inline-block; transition: transform 0.2s ease; }
+        .sv-arrow:hover .sv-arrow-icon { transform: translateX(3px); }
       `}</style>
 
       <div className="chat-shell">
         {/* Scrollable messages area */}
         <div ref={messagesAreaRef} className="chat-messages">
           <div style={{ maxWidth: "768px", margin: "0 auto" }}>
+            <div style={{ marginBottom: "30px", paddingTop: "0px" }}>
+              <button
+                onClick={(e) => {
+                  e.currentTarget.blur();
+                  setGuidedStep(3);
+                  setMessages([]);
+                  setTriageResult(null);
+                  setDifferentials([]);
+                  setTriageMounted(false);
+                }}
+                className="back-btn"
+              >
+                ← Back
+              </button>
+            </div>
             <PetChip selectedPet={selectedPet} onStartOver={resetSession} />
             {/* Triage card — at top of messages, auto-scrolled to on appearance */}
             {triageResult && renderTriageCard()}
@@ -1627,7 +1780,7 @@ export default function SymptomCheckerChatPage() {
                     <svg
                       width="11"
                       height="11"
-                      viewBox="0 0 12 12"
+                      viewBox="0 0 11 13.5"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                       style={{ display: "block" }}
