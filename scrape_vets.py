@@ -10,11 +10,12 @@ import time
 import json
 import re
 import sys
+import os
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-GOOGLE_API_KEY  = "AIzaSyBOhz7dVKLKUA_Xjcc9iNkn2Sb52-gRG4Q"
-SUPABASE_URL    = "https://zkpnaaqmketspxcyvejd.supabase.co"
-SUPABASE_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprcG5hYXFta2V0c3B4Y3l2ZWpkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTc5MTUwOSwiZXhwIjoyMDg3MzY3NTA5fQ.ZQaN5aT65Nwh7kleFCVBs6m1HTmVulfLSo3xNvSrkbw"
+GOOGLE_API_KEY = os.environ.get("GOOGLE_PLACES_API_KEY")
+SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
 PLACES_URL      = "https://maps.googleapis.com/maps/api/place/textsearch/json"
 DETAILS_URL     = "https://maps.googleapis.com/maps/api/place/details/json"
