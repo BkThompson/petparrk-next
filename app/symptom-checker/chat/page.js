@@ -1556,7 +1556,7 @@ export default function SymptomCheckerChatPage() {
           align-self: flex-end;
         }
         .icon-btn {
-          width: 24px; height: 24px;
+          width: 34px; height: 34px;
           border-radius: 50%;
           border: none;
           cursor: pointer;
@@ -1778,9 +1778,9 @@ export default function SymptomCheckerChatPage() {
                     title="Send"
                   >
                     <svg
-                      width="11"
-                      height="11"
-                      viewBox="0 0 11 13.5"
+                      width="21"
+                      height="21"
+                      viewBox="0 0 13 14"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                       style={{ display: "block" }}

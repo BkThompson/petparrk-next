@@ -14,6 +14,7 @@ const TABS = [
   "Prices",
   "Call Sheet",
   "Users",
+  "Pets",
   "Symptom Logs",
   "Team",
 ];
@@ -161,6 +162,12 @@ export default function AdminPage() {
   const [usersLoading, setUsersLoading] = useState(true);
   const [userSearch, setUserSearch] = useState("");
 
+  // Pets
+  const [pets, setPets] = useState([]);
+  const [petsLoading, setPetsLoading] = useState(false);
+  const [petSearch, setPetSearch] = useState("");
+  const [savingSexId, setSavingSexId] = useState(null);
+
   // Symptom Logs
   const [symptomLogs, setSymptomLogs] = useState([]);
   const [symptomLoading, setSymptomLoading] = useState(true);
@@ -281,6 +288,7 @@ export default function AdminPage() {
     fetchVets();
     fetchServices();
     fetchUsers();
+    fetchPets();
     fetchSymptomLogs();
     fetchStats();
     fetchCallQueue();
@@ -395,6 +403,49 @@ export default function AdminPage() {
       .order("created_at", { ascending: false });
     setUsers(data || []);
     setUsersLoading(false);
+  }
+
+  async function fetchPets() {
+    setPetsLoading(true);
+    const { data: petsData } = await supabase
+      .from("pets")
+      .select("id, name, species, breed, birthday, weight_lbs, sex, owner_id")
+      .order("created_at", { ascending: false });
+
+    if (!petsData?.length) {
+      setPets([]);
+      setPetsLoading(false);
+      return;
+    }
+
+    // Get unique owner IDs and fetch their names from profiles
+    const ownerIds = [
+      ...new Set(petsData.map((p) => p.owner_id).filter(Boolean)),
+    ];
+    const { data: profilesData } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", ownerIds);
+
+    const profileMap = {};
+    (profilesData || []).forEach((p) => {
+      profileMap[p.id] = p.full_name;
+    });
+
+    setPets(
+      petsData.map((pet) => ({
+        ...pet,
+        ownerName: profileMap[pet.owner_id] || null,
+      })),
+    );
+    setPetsLoading(false);
+  }
+
+  async function updatePetSex(petId, sex) {
+    setSavingSexId(petId);
+    await supabase.from("pets").update({ sex }).eq("id", petId);
+    setPets((prev) => prev.map((p) => (p.id === petId ? { ...p, sex } : p)));
+    setSavingSexId(null);
   }
 
   async function fetchUnverifiedPrices() {
@@ -1108,7 +1159,26 @@ export default function AdminPage() {
   // ── Vet actions ───────────────────────────────────────────────────
   function startEditVet(vet, overrides = {}) {
     setEditingVet(vet.id);
-    setVetForm({ ...vet, ...overrides });
+    // Clean vet_type on load — strip brackets/quotes from any malformed entries
+    const rawType = vet.vet_type;
+    const cleanedType = Array.isArray(rawType)
+      ? rawType
+          .map((t) =>
+            String(t)
+              .replace(/[\[\]"'\\]/g, "")
+              .trim(),
+          )
+          .filter(Boolean)
+      : typeof rawType === "string"
+        ? rawType
+            .replace(/[\[\]"'\\]/g, "")
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [];
+    // Deduplicate
+    const dedupedType = [...new Set(cleanedType)];
+    setVetForm({ ...vet, ...overrides, vet_type: dedupedType });
     setVetVerifyChecks({
       address: false,
       phone: false,
@@ -6902,6 +6972,190 @@ export default function AdminPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── PETS ── */}
+            {tab === "Pets" && (
+              <div>
+                <div className="section-header">
+                  <h2 style={{ margin: 0, fontSize: "1rem", color: "#111" }}>
+                    Pets{" "}
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        color: "#888",
+                        fontWeight: "400",
+                      }}
+                    >
+                      ({pets.length} total)
+                    </span>
+                  </h2>
+                </div>
+                <input
+                  className="adm-input"
+                  value={petSearch}
+                  onChange={(e) => setPetSearch(e.target.value)}
+                  placeholder="Search by pet name or owner..."
+                  style={{ marginBottom: "14px", maxWidth: "300px" }}
+                />
+                {petsLoading && (
+                  <p style={{ color: "#888", fontSize: "14px" }}>Loading...</p>
+                )}
+                <div
+                  style={{
+                    background: "#fff",
+                    border: "1px solid #e8e8e8",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  {/* Table header */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1.2fr",
+                      padding: "10px 16px",
+                      background: "#f9f9f9",
+                      borderBottom: "1px solid #e8e8e8",
+                    }}
+                  >
+                    {[
+                      "Pet Name",
+                      "Owner",
+                      "Species / Breed",
+                      "Age",
+                      "Weight",
+                      "Sex",
+                    ].map((h) => (
+                      <span
+                        key={h}
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "#888",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                        }}
+                      >
+                        {h}
+                      </span>
+                    ))}
+                  </div>
+                  {pets
+                    .filter((p) => {
+                      const q = petSearch.toLowerCase();
+                      return (
+                        !q ||
+                        p.name?.toLowerCase().includes(q) ||
+                        p.ownerName?.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((pet) => {
+                      const ageYrs = pet.birthday
+                        ? Math.floor(
+                            (Date.now() - new Date(pet.birthday)) /
+                              (365.25 * 24 * 3600 * 1000),
+                          )
+                        : null;
+                      const ageLabel =
+                        ageYrs === null
+                          ? "—"
+                          : ageYrs < 1
+                            ? "< 1 yr"
+                            : ageYrs === 1
+                              ? "1 yr"
+                              : `${ageYrs} yrs`;
+                      return (
+                        <div
+                          key={pet.id}
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1.2fr",
+                            padding: "12px 16px",
+                            borderBottom: "1px solid #f0f0f0",
+                            alignItems: "center",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: "600",
+                              color: "#111",
+                            }}
+                          >
+                            {pet.name || "—"}
+                          </span>
+                          <span style={{ fontSize: "13px", color: "#666" }}>
+                            {pet.ownerName || "—"}
+                          </span>
+                          <span style={{ fontSize: "13px", color: "#666" }}>
+                            {[pet.species, pet.breed]
+                              .filter(Boolean)
+                              .join(" · ") || "—"}
+                          </span>
+                          <span style={{ fontSize: "13px", color: "#666" }}>
+                            {ageLabel}
+                          </span>
+                          <span style={{ fontSize: "13px", color: "#666" }}>
+                            {pet.weight_lbs ? `${pet.weight_lbs} lbs` : "—"}
+                          </span>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <select
+                              className="adm-input"
+                              style={{ fontSize: "13px", padding: "5px 8px" }}
+                              value={pet.sex || ""}
+                              onChange={(e) =>
+                                updatePetSex(pet.id, e.target.value || null)
+                              }
+                              disabled={savingSexId === pet.id}
+                            >
+                              <option value="">— Select —</option>
+                              <option value="Male">Male</option>
+                              <option value="Female">Female</option>
+                              <option value="Male (neutered)">
+                                Male (neutered)
+                              </option>
+                              <option value="Female (spayed)">
+                                Female (spayed)
+                              </option>
+                              <option value="Unknown">Unknown</option>
+                            </select>
+                            {savingSexId === pet.id && (
+                              <span style={{ fontSize: "12px", color: "#888" }}>
+                                Saving...
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {pets.filter((p) => {
+                    const q = petSearch.toLowerCase();
+                    return (
+                      !q ||
+                      p.name?.toLowerCase().includes(q) ||
+                      p.ownerName?.toLowerCase().includes(q)
+                    );
+                  }).length === 0 && (
+                    <p
+                      style={{
+                        color: "#bbb",
+                        fontSize: "14px",
+                        padding: "20px",
+                        textAlign: "center",
+                      }}
+                    >
+                      No pets found.
+                    </p>
+                  )}
                 </div>
               </div>
             )}

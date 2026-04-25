@@ -104,35 +104,51 @@ if (
   document.head.appendChild(l);
 }
 
-const BAY_PINS = [
-  { lng: -122.035, lat: 37.725, color: "#CF5C36", delay: 400 },
-  { lng: -122.156, lat: 37.726, color: "#CF5C36", delay: 750 },
-  { lng: -122.082, lat: 37.43, color: "#CF5C36", delay: 1100 },
-  { lng: -121.922, lat: 37.699, color: "#EFC88B", delay: 1450 },
-  { lng: -121.95, lat: 37.99, color: "#EFC88B", delay: 1800 },
-  { lng: -122.434, lat: 37.591, color: "#CF5C36", delay: 2150 },
-  { lng: -122.418, lat: 37.686, color: "#EFC88B", delay: 2500 },
-  { lng: -122.255, lat: 37.878, color: "#EFC88B", delay: 2850 },
-  { lng: -122.223, lat: 37.805, color: "#CF5C36", delay: 3200 },
-  { lng: -122.265, lat: 37.532, color: "#EFC88B", delay: 3550 },
-  { lng: -122.065, lat: 37.905, color: "#CF5C36", delay: 3900 },
-  { lng: -122.232, lat: 37.84, color: "#CF5C36", delay: 4250 },
-  { lng: -121.988, lat: 37.51, color: "#EFC88B", delay: 4600 },
-  { lng: -122.117, lat: 37.74, color: "#EFC88B", delay: 4950 },
-  { lng: -122.02, lat: 37.938, color: "#EFC88B", delay: 5300 },
-  { lng: -122.466, lat: 37.952, color: "#EFC88B", delay: 5650 },
-  { lng: -122.27, lat: 37.813, color: "#EFC88B", delay: 6000 },
-  { lng: -122.447, lat: 37.76, color: "#CF5C36", delay: 6350 },
-  { lng: -122.089, lat: 37.668, color: "#EFC88B", delay: 6700 },
-  { lng: -121.978, lat: 37.952, color: "#CF5C36", delay: 7050 },
-  { lng: -122.432, lat: 37.804, color: "#CF5C36", delay: 7400 },
-  { lng: -121.776, lat: 37.682, color: "#CF5C36", delay: 7750 },
-  { lng: -122.458, lat: 37.532, color: "#EFC88B", delay: 8100 },
-  { lng: -122.355, lat: 37.568, color: "#CF5C36", delay: 8450 },
-  { lng: -121.822, lat: 37.7, color: "#EFC88B", delay: 8800 },
-  { lng: -122.499, lat: 38.088, color: "#CF5C36", delay: 9150 },
-  { lng: -122.416, lat: 37.774, color: "#EFC88B", delay: 9500 },
-  { lng: -121.96, lat: 37.67, color: "#CF5C36", delay: 9850 },
+const CA_PINS = [
+  // NorCal — Bay Area
+  { lng: -122.416, lat: 37.774, color: "#CF5C36", delay: 400 },
+  { lng: -122.255, lat: 37.878, color: "#EFC88B", delay: 750 },
+  { lng: -122.434, lat: 37.591, color: "#CF5C36", delay: 1100 },
+  { lng: -122.065, lat: 37.905, color: "#EFC88B", delay: 1450 },
+  { lng: -121.988, lat: 37.51, color: "#CF5C36", delay: 1800 },
+  // NorCal — Sacramento
+  { lng: -121.494, lat: 38.581, color: "#EFC88B", delay: 2150 },
+  { lng: -121.352, lat: 38.756, color: "#CF5C36", delay: 2500 },
+  // NorCal — Wine Country / North Bay
+  { lng: -122.499, lat: 38.441, color: "#EFC88B", delay: 2850 },
+  { lng: -122.267, lat: 38.298, color: "#CF5C36", delay: 3200 },
+  // Central CA — Fresno / Central Valley
+  { lng: -119.787, lat: 36.737, color: "#CF5C36", delay: 3550 },
+  { lng: -118.762, lat: 35.841, color: "#EFC88B", delay: 3900 },
+  { lng: -120.997, lat: 37.638, color: "#CF5C36", delay: 4250 },
+  { lng: -121.334, lat: 36.988, color: "#EFC88B", delay: 4600 },
+  { lng: -119.082, lat: 36.412, color: "#CF5C36", delay: 4950 },
+  { lng: -120.423, lat: 37.302, color: "#EFC88B", delay: 5300 },
+  { lng: -118.201, lat: 35.214, color: "#CF5C36", delay: 5650 },
+  // NorCal — Chico / Redding
+  { lng: -121.837, lat: 39.728, color: "#CF5C36", delay: 6000 },
+  { lng: -122.391, lat: 40.586, color: "#EFC88B", delay: 6350 },
+  // SoCal — Los Angeles
+  { lng: -118.243, lat: 34.052, color: "#CF5C36", delay: 6700 },
+  { lng: -118.445, lat: 34.064, color: "#EFC88B", delay: 7050 },
+  { lng: -118.127, lat: 34.095, color: "#CF5C36", delay: 7400 },
+  // SoCal — Orange County
+  { lng: -117.826, lat: 33.675, color: "#EFC88B", delay: 7750 },
+  { lng: -117.924, lat: 33.812, color: "#CF5C36", delay: 8100 },
+  // SoCal — San Diego
+  { lng: -117.161, lat: 32.716, color: "#EFC88B", delay: 8450 },
+  { lng: -117.074, lat: 32.602, color: "#CF5C36", delay: 8800 },
+  { lng: -116.971, lat: 33.498, color: "#CF5C36", delay: 9150 },
+  // SoCal — Inland Empire
+  { lng: -117.375, lat: 33.953, color: "#EFC88B", delay: 9500 },
+  { lng: -116.999, lat: 34.055, color: "#CF5C36", delay: 9850 },
+  { lng: -117.588, lat: 34.106, color: "#EFC88B", delay: 10200 },
+  // SoCal — Santa Barbara / Ventura
+  { lng: -119.698, lat: 34.42, color: "#EFC88B", delay: 10550 },
+  { lng: -119.177, lat: 34.274, color: "#CF5C36", delay: 10900 },
+  // NorCal — Peninsula / South Bay
+  { lng: -122.025, lat: 37.354, color: "#CF5C36", delay: 11250 },
+  { lng: -122.057, lat: 37.175, color: "#EFC88B", delay: 11600 },
 ];
 
 function MapHeader({ isMobile, onReady }) {
@@ -168,8 +184,8 @@ function MapHeader({ isMobile, onReady }) {
         map = new mbgl.Map({
           container: mapDivRef.current,
           style: "mapbox://styles/mapbox/dark-v11",
-          center: [-121.5, 37.5],
-          zoom: 5.0,
+          center: [-98.0, 39.5],
+          zoom: 3.0,
           pitch: 0,
           bearing: 0,
           interactive: false,
@@ -183,8 +199,8 @@ function MapHeader({ isMobile, onReady }) {
         map.on("load", () => {
           setTimeout(() => {
             map.flyTo({
-              center: [-122.4, 37.68],
-              zoom: 9.4,
+              center: [-119.5, 35.7],
+              zoom: 5.4,
               pitch: 20,
               bearing: -8,
               duration: FLY_DUR,
@@ -211,7 +227,7 @@ function MapHeader({ isMobile, onReady }) {
               const H = pinDivRef.current.clientHeight;
               const mb = map.getBounds();
 
-              const visiblePins = BAY_PINS.filter((pin) => {
+              const visiblePins = CA_PINS.filter((pin) => {
                 const pt = map.project([pin.lng, pin.lat]);
                 return (
                   pt.x > 20 &&
@@ -225,15 +241,21 @@ function MapHeader({ isMobile, onReady }) {
                 );
               });
 
-              visiblePins.forEach((pin, idx) => {
+              // Pre-filter tooClose pins so every timeout fires a real pin drop
+              const pinsToShow = [];
+              visiblePins.forEach((pin) => {
+                const pt = map.project([pin.lng, pin.lat]);
+                const tooClose = pinsToShow.some((p) => {
+                  const pp = map.project([p.lng, p.lat]);
+                  return Math.hypot(pp.x - pt.x, pp.y - pt.y) < 20;
+                });
+                if (!tooClose) pinsToShow.push(pin);
+              });
+
+              pinsToShow.forEach((pin, idx) => {
                 setTimeout(() => {
                   if (!pinDivRef.current || !map || destroyed) return;
                   const pt = map.project([pin.lng, pin.lat]);
-                  const tooClose = placedPins.some((p) => {
-                    const pp = map.project([p.lng, p.lat]);
-                    return Math.hypot(pp.x - pt.x, pp.y - pt.y) < 20;
-                  });
-                  if (tooClose) return;
 
                   const el = document.createElement("div");
                   el.style.cssText = `
@@ -260,7 +282,7 @@ function MapHeader({ isMobile, onReady }) {
                 () => {
                   onReady?.();
                 },
-                visiblePins.length * 350 + 600,
+                pinsToShow.length * 350 + 600,
               );
             });
           }, FLY_DELAY);
@@ -291,7 +313,7 @@ function MapHeader({ isMobile, onReady }) {
         }}
       >
         <img
-          src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-122.28,37.68,9.0,0/1200x340@2x?access_token=${MAPBOX_TOKEN}`}
+          src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-124.0,36.9.2,4.2,0/1200x340@2x?access_token=${MAPBOX_TOKEN}`}
           alt=""
           style={{
             width: "100%",
@@ -511,7 +533,7 @@ function VetsContent() {
         prices[v.id]?.find((p) => p.services?.name === "Doctor Exam")
           ?.price_low ?? null;
       if (priceRange === "noprice")
-        return !prices[v.id] || prices[v.id].length === 0;
+        return !prices[v.id] || prices[v.id].every((p) => !p.price_low);
       if (ep === null) return false;
       if (priceRange === "under75") return ep < 75;
       if (priceRange === "75to125") return ep >= 75 && ep <= 125;
@@ -643,7 +665,7 @@ function VetsContent() {
                 marginBottom: "12px",
               }}
             >
-              San Francisco Bay Area
+              California
             </p>
             <h1
               style={{
@@ -669,7 +691,7 @@ function VetsContent() {
             >
               {loading
                 ? "Loading…"
-                : `${vets.length} verified vets across the Bay Area`}
+                : `${vets.length} verified vets across California`}
             </p>
           </div>
         </div>
@@ -981,9 +1003,18 @@ function VetsContent() {
                           ✕ Not Accepting
                         </span>
                       )}
-                      {(Array.isArray(vet.vet_type)
+                      {(typeof vet.vet_type === "string"
                         ? vet.vet_type
-                        : [vet.vet_type]
+                            .replace(/[\[\]"']/g, "")
+                            .split(",")
+                            .map((t) => t.trim())
+                        : Array.isArray(vet.vet_type)
+                          ? vet.vet_type.map((t) =>
+                              String(t)
+                                .replace(/[\[\]"']/g, "")
+                                .trim(),
+                            )
+                          : []
                       )
                         .filter(Boolean)
                         .map((t) => (

@@ -86,10 +86,15 @@ function formatPhone(p) {
 }
 function formatPrice(low, high, type) {
   if (!low && low !== 0) return "Call for quote";
-  if (type === "starting") return `$${Number(low).toLocaleString()}+`;
-  if (type === "range" && low !== high)
-    return `$${Number(low).toLocaleString()}–$${Number(high).toLocaleString()}`;
-  return `$${Number(low).toLocaleString()}`;
+  function fmt(n) {
+    const num = Number(n);
+    return num % 1 === 0
+      ? `$${num.toLocaleString()}`
+      : `$${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  if (type === "starting") return `${fmt(low)}+`;
+  if (type === "range" && low !== high) return `${fmt(low)}–${fmt(high)}`;
+  return fmt(low);
 }
 function formatVerifiedDate(d) {
   if (!d) return null;
@@ -98,8 +103,221 @@ function formatVerifiedDate(d) {
     year: "numeric",
   });
 }
+
+// ── Region helper — determines which regional average to compare against ──────
+const SOCAL_CITIES = new Set([
+  "Los Angeles",
+  "Long Beach",
+  "Glendale",
+  "Pasadena",
+  "Torrance",
+  "Burbank",
+  "Inglewood",
+  "Compton",
+  "Carson",
+  "El Monte",
+  "Downey",
+  "West Covina",
+  "Pomona",
+  "Norwalk",
+  "Palmdale",
+  "Lancaster",
+  "Santa Clarita",
+  "Thousand Oaks",
+  "Simi Valley",
+  "Santa Monica",
+  "Culver City",
+  "Beverly Hills",
+  "West Hollywood",
+  "Van Nuys",
+  "Chatsworth",
+  "Encino",
+  "Reseda",
+  "North Hollywood",
+  "Woodland Hills",
+  "Tarzana",
+  "Calabasas",
+  "Malibu",
+  "Manhattan Beach",
+  "Redondo Beach",
+  "Hermosa Beach",
+  "El Segundo",
+  "Hawthorne",
+  "Gardena",
+  "Lomita",
+  "Whittier",
+  "La Mirada",
+  "Cerritos",
+  "Lakewood",
+  "Signal Hill",
+  "Bellflower",
+  "Paramount",
+  "Lynwood",
+  "South Gate",
+  "Huntington Park",
+  "Maywood",
+  "Bell",
+  "Commerce",
+  "Montebello",
+  "Pico Rivera",
+  "La Puente",
+  "Azusa",
+  "Covina",
+  "Glendora",
+  "San Dimas",
+  "La Verne",
+  "Claremont",
+  "Upland",
+  "Monrovia",
+  "Arcadia",
+  "Temple City",
+  "San Gabriel",
+  "Rosemead",
+  "Alhambra",
+  "Monterey Park",
+  "Altadena",
+  "Anaheim",
+  "Santa Ana",
+  "Irvine",
+  "Garden Grove",
+  "Huntington Beach",
+  "Fullerton",
+  "Orange",
+  "Costa Mesa",
+  "Mission Viejo",
+  "Westminster",
+  "Newport Beach",
+  "Buena Park",
+  "Lake Forest",
+  "Tustin",
+  "Yorba Linda",
+  "San Clemente",
+  "Laguna Niguel",
+  "Laguna Beach",
+  "Dana Point",
+  "San Juan Capistrano",
+  "Aliso Viejo",
+  "Rancho Santa Margarita",
+  "Brea",
+  "Placentia",
+  "La Habra",
+  "Cypress",
+  "Los Alamitos",
+  "Seal Beach",
+  "Fountain Valley",
+  "Stanton",
+  "San Diego",
+  "Chula Vista",
+  "Oceanside",
+  "Escondido",
+  "Carlsbad",
+  "El Cajon",
+  "Vista",
+  "San Marcos",
+  "Encinitas",
+  "National City",
+  "La Mesa",
+  "Santee",
+  "Spring Valley",
+  "Poway",
+  "Lemon Grove",
+  "Coronado",
+  "Del Mar",
+  "Solana Beach",
+  "La Jolla",
+  "San Bernardino",
+  "Riverside",
+  "Fontana",
+  "Moreno Valley",
+  "Ontario",
+  "Rancho Cucamonga",
+  "Corona",
+  "Victorville",
+  "Rialto",
+  "Murrieta",
+  "Temecula",
+  "Hesperia",
+  "Chino",
+  "Chino Hills",
+  "Redlands",
+  "Highland",
+  "Colton",
+  "Loma Linda",
+  "Yucaipa",
+  "Perris",
+  "Hemet",
+  "Lake Elsinore",
+  "Menifee",
+  "Wildomar",
+  "Norco",
+  "Eastvale",
+  "Jurupa Valley",
+  "Oxnard",
+  "Ventura",
+  "Camarillo",
+  "Santa Barbara",
+  "Goleta",
+  "Lompoc",
+  "Santa Maria",
+  "Palm Springs",
+  "Palm Desert",
+  "Cathedral City",
+  "Indio",
+  "Coachella",
+  "Apple Valley",
+  "Barstow",
+]);
+
+const CENTRAL_CA_CITIES = new Set([
+  "Fresno",
+  "Clovis",
+  "Bakersfield",
+  "Stockton",
+  "Modesto",
+  "Turlock",
+  "Merced",
+  "Visalia",
+  "Tulare",
+  "Hanford",
+  "Porterville",
+  "Madera",
+  "Dinuba",
+  "Selma",
+  "Lodi",
+  "Tracy",
+  "Manteca",
+  "Ripon",
+  "Atwater",
+  "Los Banos",
+  "Chico",
+  "Redding",
+  "Red Bluff",
+  "Yuba City",
+  "Marysville",
+]);
+
+function getRegion(city) {
+  if (!city) return "California";
+  if (SOCAL_CITIES.has(city)) return "SoCal";
+  if (CENTRAL_CA_CITIES.has(city)) return "Central CA";
+  return "NorCal";
+}
+
+function getRegionFull(city) {
+  if (!city) return "California";
+  if (SOCAL_CITIES.has(city)) return "Southern California";
+  if (CENTRAL_CA_CITIES.has(city)) return "Central California";
+  return "Northern California";
+}
 function parseHours(s) {
   if (!s) return [];
+  // First try splitting by newline — handles multi-day formats
+  const byNewline = s
+    .split(/[\r\n]+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (byNewline.length > 1) return byNewline;
+  // Single line — try comma-based day splitting
   if (s.includes(",")) {
     const DAY =
       /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon-Fri|Sat-Sun|Weekday|Weekend|Emergency|Daily)/i;
@@ -125,6 +343,68 @@ function parseNotes(n) {
   return n.split(" / ").map((x) => x.trim());
 }
 
+// Fix #8 — renders a single hours line, handles split hours without comma
+function HoursLine({ line }) {
+  const splitMatch = line.match(/^([A-Za-z][^:]*:\s*)(.+?),\s*(\d.+)$/);
+  if (splitMatch) {
+    const day = splitMatch[1].replace(/:\s*$/, "").trim();
+    const firstTime = splitMatch[2];
+    const secondTime = splitMatch[3];
+    return (
+      <div style={{ display: "flex", fontSize: "13px", lineHeight: "1.7" }}>
+        <span
+          style={{
+            width: "77px",
+            flexShrink: 0,
+            fontWeight: "600",
+            color: C.navyDark,
+          }}
+        >
+          {day}
+        </span>
+        <span
+          style={{ display: "flex", flexDirection: "column", color: C.slate }}
+        >
+          <span style={{ whiteSpace: "nowrap" }}>{firstTime}</span>
+          <span style={{ whiteSpace: "nowrap" }}>{secondTime}</span>
+        </span>
+      </div>
+    );
+  }
+  const colonIdx = line.indexOf(":");
+  if (colonIdx > -1) {
+    const day = line.slice(0, colonIdx).trim();
+    const time = line.slice(colonIdx + 1).trim();
+    return (
+      <div style={{ display: "flex", fontSize: "13px", lineHeight: "1.7" }}>
+        <span
+          style={{
+            width: "77px",
+            flexShrink: 0,
+            fontWeight: "600",
+            color: C.navyDark,
+          }}
+        >
+          {day}
+        </span>
+        <span style={{ color: C.slate, whiteSpace: "nowrap" }}>{time}</span>
+      </div>
+    );
+  }
+  return (
+    <span
+      style={{
+        fontSize: "13px",
+        color: C.slate,
+        lineHeight: "1.7",
+        display: "block",
+      }}
+    >
+      {line}
+    </span>
+  );
+}
+
 function HoursDisplay({ lines }) {
   if (lines.length === 0)
     return (
@@ -136,91 +416,52 @@ function HoursDisplay({ lines }) {
     const mid = Math.ceil(lines.length / 2);
     return (
       <>
-        <div className="hours-2col" style={{ display: "flex", gap: "16px" }}>
+        {/* Desktop — two side-by-side columns */}
+        <div className="hours-2col" style={{ display: "flex", gap: "0" }}>
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: "3px",
+              gap: "2px",
               flex: 1,
+              paddingRight: "12px",
             }}
           >
             {lines.slice(0, mid).map((l, i) => (
-              <span
-                key={i}
-                style={{
-                  fontSize: "13px",
-                  color: C.slate,
-                  lineHeight: "1.6",
-                  display: "block",
-                  overflowWrap: "break-word",
-                }}
-              >
-                {l}
-              </span>
+              <HoursLine key={i} line={l} />
             ))}
           </div>
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: "3px",
+              gap: "2px",
               flex: 1,
+              paddingLeft: "12px",
+              borderLeft: `1px solid ${C.border}`,
             }}
           >
             {lines.slice(mid).map((l, i) => (
-              <span
-                key={i}
-                style={{
-                  fontSize: "13px",
-                  color: C.slate,
-                  lineHeight: "1.6",
-                  display: "block",
-                  overflowWrap: "break-word",
-                }}
-              >
-                {l}
-              </span>
+              <HoursLine key={i} line={l} />
             ))}
           </div>
         </div>
+        {/* Mobile — single column */}
         <div
           className="hours-1col"
-          style={{ display: "none", flexDirection: "column", gap: "3px" }}
+          style={{ display: "none", flexDirection: "column", gap: "2px" }}
         >
           {lines.map((l, i) => (
-            <span
-              key={i}
-              style={{
-                fontSize: "13px",
-                color: C.slate,
-                lineHeight: "1.6",
-                display: "block",
-                overflowWrap: "break-word",
-              }}
-            >
-              {l}
-            </span>
+            <HoursLine key={i} line={l} />
           ))}
         </div>
       </>
     );
   }
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
       {lines.map((l, i) => (
-        <span
-          key={i}
-          style={{
-            fontSize: "14px",
-            color: C.slate,
-            lineHeight: "1.5",
-            display: "block",
-            overflowWrap: "break-word",
-          }}
-        >
-          {l}
-        </span>
+        <HoursLine key={i} line={l} />
       ))}
     </div>
   );
@@ -295,7 +536,7 @@ export default function VetPage() {
         .eq("vet_id", vetData?.id);
       const { data: allPricesData } = await supabase
         .from("vet_prices")
-        .select("*, services(id,name)");
+        .select("*, services(id,name), vets(city)");
       setVet(vetData);
       setPrices(priceData || []);
       setAllPrices(allPricesData || []);
@@ -461,12 +702,14 @@ export default function VetPage() {
   const visibleChartPrices = prices.filter((price) => {
     if (price.price_type === "starting") return false;
     const vp = price.price_low || price.price_paid;
+    const vetRegion = getRegion(vet?.city);
     const all = allPrices.filter(
       (p) =>
         p.services?.name === price.services?.name &&
         p.price_low &&
         p.services?.id !== 8 &&
-        p.price_type !== "starting",
+        p.price_type !== "starting" &&
+        getRegion(p.vets?.city) === vetRegion,
     );
     return vp && all.length > 0;
   });
@@ -570,8 +813,10 @@ export default function VetPage() {
         .toaster-signin-btn:hover{background:${C.navyDark};color:#fff;}
         .chart-row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;}
 
+
         /* Header */
         .vet-header{background:${C.navyDark};min-height:393px;padding:80px 0 88px;position:relative;overflow:hidden;box-sizing:border-box;border-bottom:1px solid rgba(255,255,255,0.07);}
+
 
         /* Info strip */
         .info-2col{display:grid;grid-template-columns:1fr 1fr;}
@@ -583,6 +828,7 @@ export default function VetPage() {
         .info-div-right{padding:0 20px;}
         /* Mobile-only divider — shown only when stacked */
         .info-mob-div{display:none;height:1px;background:${C.border};margin:0 20px;}
+
 
         @media(max-width:768px){
           .vet-header{min-height:338px;padding:80px 0 88px;}
@@ -1426,7 +1672,19 @@ export default function VetPage() {
               flexWrap: "wrap",
             }}
           >
-            {(Array.isArray(vet.vet_type) ? vet.vet_type : [vet.vet_type])
+            {(typeof vet.vet_type === "string"
+              ? vet.vet_type
+                  .replace(/[\[\]"']/g, "")
+                  .split(",")
+                  .map((t) => t.trim())
+              : Array.isArray(vet.vet_type)
+                ? vet.vet_type.map((t) =>
+                    String(t)
+                      .replace(/[\[\]"']/g, "")
+                      .trim(),
+                  )
+                : []
+            )
               .filter(Boolean)
               .map((t) => (
                 <span
@@ -1710,18 +1968,21 @@ export default function VetPage() {
                     color: C.muted,
                   }}
                 >
-                  How this vet compares to the Bay Area average
+                  How this vet compares to the {getRegionFull(vet?.city)}{" "}
+                  average
                 </p>
                 {prices.map((price) => {
                   if (price.price_type === "starting") return null;
                   const serviceName = price.services?.name;
                   const vetPrice = price.price_low || price.price_paid;
+                  const vetRegion = getRegion(vet?.city);
                   const allForSvc = allPrices.filter(
                     (p) =>
                       p.services?.name === serviceName &&
                       p.price_low &&
                       p.services?.id !== 8 &&
-                      p.price_type !== "starting",
+                      p.price_type !== "starting" &&
+                      getRegion(p.vets?.city) === vetRegion,
                   );
                   const avg =
                     allForSvc.length > 0
@@ -1731,11 +1992,32 @@ export default function VetPage() {
                         )
                       : null;
                   if (!vetPrice || !avg) return null;
-                  const isCheaper = vetPrice <= avg;
+                  const isEqual = vetPrice === avg;
+                  const isCheaper = vetPrice < avg;
                   const max = Math.max(vetPrice, avg) * 1.2;
                   const isLast =
                     visibleChartPrices[visibleChartPrices.length - 1]?.id ===
                     price.id;
+                  const badgeBg = isEqual
+                    ? "#F5F0E8"
+                    : isCheaper
+                      ? "#EDFAF3"
+                      : "#FCEAEA";
+                  const badgeColor = isEqual
+                    ? C.slate
+                    : isCheaper
+                      ? C.success
+                      : C.error;
+                  const badgeLabel = isEqual
+                    ? "≈ At average"
+                    : isCheaper
+                      ? "✓ Below average"
+                      : "↑ Above average";
+                  const barColor = isEqual
+                    ? C.muted
+                    : isCheaper
+                      ? C.success
+                      : C.error;
                   return (
                     <div key={price.id}>
                       <div style={{ marginBottom: "20px" }}>
@@ -1756,12 +2038,12 @@ export default function VetPage() {
                               fontWeight: "700",
                               padding: "3px 10px",
                               borderRadius: "20px",
-                              background: isCheaper ? "#EDFAF3" : "#FCEAEA",
-                              color: isCheaper ? C.success : C.error,
+                              background: badgeBg,
+                              color: badgeColor,
                               whiteSpace: "nowrap",
                             }}
                           >
-                            {isCheaper ? "✓ Below average" : "↑ Above average"}
+                            {badgeLabel}
                           </span>
                         </div>
                         {[
@@ -1769,10 +2051,10 @@ export default function VetPage() {
                             label: "This vet",
                             width: Math.round((vetPrice / max) * 100),
                             value: vetPrice,
-                            barColor: isCheaper ? C.success : C.error,
+                            barColor,
                           },
                           {
-                            label: "Bay Area avg",
+                            label: `${vetRegion} avg`,
                             width: Math.round((avg / max) * 100),
                             value: avg,
                             barColor: C.muted,
@@ -1803,7 +2085,8 @@ export default function VetPage() {
                                   background: "#f0ede8",
                                   borderRadius: "5px",
                                   height: "30px",
-                                  overflow: "hidden",
+                                  overflow: "visible",
+                                  position: "relative",
                                 }}
                               >
                                 <div
@@ -1819,20 +2102,49 @@ export default function VetPage() {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "flex-end",
-                                    paddingRight: "10px",
+                                    paddingRight:
+                                      bar.width >= 15 ? "10px" : "0",
                                     boxSizing: "border-box",
+                                    position: "relative",
                                   }}
                                 >
-                                  <span
-                                    style={{
-                                      fontSize: "13px",
-                                      color: "#fff",
-                                      fontWeight: "700",
-                                      whiteSpace: "nowrap",
-                                    }}
-                                  >
-                                    ${bar.value.toLocaleString()}
-                                  </span>
+                                  {bar.width >= 15 ? (
+                                    <span
+                                      style={{
+                                        fontSize: "13px",
+                                        color: "#fff",
+                                        fontWeight: "700",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      $
+                                      {Number(bar.value) % 1 === 0
+                                        ? bar.value.toLocaleString()
+                                        : bar.value.toLocaleString("en-US", {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          })}
+                                    </span>
+                                  ) : (
+                                    <span
+                                      style={{
+                                        fontSize: "13px",
+                                        color: C.navyDark,
+                                        fontWeight: "700",
+                                        whiteSpace: "nowrap",
+                                        position: "absolute",
+                                        left: "calc(100% + 6px)",
+                                      }}
+                                    >
+                                      $
+                                      {Number(bar.value) % 1 === 0
+                                        ? bar.value.toLocaleString()
+                                        : bar.value.toLocaleString("en-US", {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          })}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
