@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 function useScrollReveal(threshold = 0.08) {
   const ref = useRef(null);
@@ -168,7 +169,7 @@ const VALUES = [
   {
     number: "02",
     title: "Transparency Always",
-    body: "Honest pricing, clear information, no hidden agendas. We show you where our data comes from and we never charge you to access information that should always have been available.",
+    body: "Honest pricing. Clear information. No hidden agendas. We show you where our data comes from, and we don't charge you for what should have been free all along.",
   },
   {
     number: "03",
@@ -178,12 +179,12 @@ const VALUES = [
   {
     number: "04",
     title: "Community Over Competition",
-    body: "We're not replacing vets — we're helping you work with them better. Great vets deserve to be found. Pet owners deserve to find them.",
+    body: "Not replacing vets — helping you work with them better. Great vets deserve to be found. Pet owners deserve to find them.",
   },
   {
     number: "05",
     title: "Accessibility for All",
-    body: "Pet care shouldn't be a privilege. We're keeping the core platform free and fighting to make information that's always existed behind phone calls available to everyone.",
+    body: "Pet care shouldn't be a privilege. We're keeping the core platform free, and we're freeing information that's been trapped behind phone calls for too long.",
   },
 ];
 
@@ -197,13 +198,13 @@ const PROBLEMS = [
   {
     label: "Price Opacity",
     title: "What will this actually cost?",
-    body: "You ask for a price before you go. You get a range so wide it's useless, or a number that turns out to be just the starting point. By the time you find out the real cost, you're already committed. That's not your fault. It's a broken system.",
+    body: "You ask for a price before you go. You get a range so wide it's useless, or a number that turns out to be just the starting point. By the time you find out the real cost, you're already committed. That's not your fault — it's how the system was built.",
     emoji: "💸",
   },
   {
     label: "Information Overload",
     title: "Where is everything?",
-    body: "Records at one vet. Notes at another. Reminders on your phone. Advice from six different places. New pet owners especially feel this — there's so much to know and no single place to put it all.",
+    body: "Records at one vet. Notes at another. Reminders on your phone. Advice from six different places. Especially when you're new at this — there's no single place to keep it all straight.",
     emoji: "📂",
   },
 ];
@@ -479,12 +480,14 @@ function DogDachshund() {
 const PAGE_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap');
 
+
   @property --about-tc   { syntax:'<color>'; inherits:false; initial-value:rgba(207,92,54,0.18); }
   @property --about-gold { syntax:'<color>'; inherits:false; initial-value:rgba(239,200,139,0.22); }
   @keyframes warmBreath {
     0%,100% { --about-tc:rgba(207,92,54,0.20); --about-gold:rgba(239,200,139,0.24); }
     50%     { --about-tc:rgba(207,92,54,0.34); --about-gold:rgba(239,200,139,0.40); }
   }
+
 
   /* Desktop: animated gradient */
   .about-header-bg {
@@ -494,6 +497,7 @@ const PAGE_CSS = `
       radial-gradient(ellipse 55% 110% at 92% 50%, var(--about-gold) 0%, transparent 58%),
       #E8D9C0;
   }
+
 
   /* Tablet: same gradient, no animation — frozen at the midpoint colours */
   @media (max-width:1023px) {
@@ -506,11 +510,13 @@ const PAGE_CSS = `
     }
   }
 
+
   .about-header-hatch {
     background-image:
       repeating-linear-gradient( 45deg,rgba(100,50,15,0.022) 0px,rgba(100,50,15,0.022) 1px,transparent 1px,transparent 8px),
       repeating-linear-gradient(-45deg,rgba(100,50,15,0.015) 0px,rgba(100,50,15,0.015) 1px,transparent 1px,transparent 8px);
   }
+
 
   @keyframes bodyBob   { 0%,100%{transform:translateY(0px)} 45%{transform:translateY(-6px)} }
   @keyframes bodyBobSm { 0%,100%{transform:translateY(0px)} 45%{transform:translateY(-3px)} }
@@ -535,12 +541,14 @@ const PAGE_CSS = `
   .dach-leg-fr   { animation:legSwingB-sm 0.38s ease-in-out infinite; transform-origin:112px 50px; }
   .dach-leg-bl   { animation:legSwingB-sm 0.38s ease-in-out infinite; transform-origin:45px  48px; }
 
+
   .rv  { opacity:0; transform:translateY(40px);  transition:opacity 1.2s cubic-bezier(0.22,1,0.36,1),transform 1.2s cubic-bezier(0.22,1,0.36,1); }
   .rl  { opacity:0; transform:translateX(-40px); transition:opacity 1.2s cubic-bezier(0.22,1,0.36,1),transform 1.2s cubic-bezier(0.22,1,0.36,1); }
   .rs  { opacity:0; transform:scale(0.94);       transition:opacity 1.2s cubic-bezier(0.22,1,0.36,1),transform 1.2s cubic-bezier(0.22,1,0.36,1); }
   .rv.on,.rl.on,.rs.on { opacity:1; transform:translateY(0) translateX(0) scale(1); }
   .d1{transition-delay:.14s} .d2{transition-delay:.28s} .d3{transition-delay:.42s}
   .d4{transition-delay:.56s} .d5{transition-delay:.70s}
+
 
   .problem-row { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; padding:72px 0; border-top:1px solid var(--color-border,#EDE8E0); }
   .problem-row:last-child { border-bottom:1px solid var(--color-border,#EDE8E0); }
@@ -550,7 +558,8 @@ const PAGE_CSS = `
   .problem-image-box  { width:100%; aspect-ratio:4/3; background:linear-gradient(135deg,var(--color-cream,#F5F0E8) 0%,#E2D9CE 100%); border-radius:20px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; }
   .value-stripe-row { display:grid; grid-template-columns:140px 1fr; gap:48px; padding:48px 0; border-top:1px solid var(--color-border,#EDE8E0); align-items:start; }
   .value-stripe-row:last-child { border-bottom:1px solid var(--color-border,#EDE8E0); }
-  .vsnum { font-size:clamp(72px,9vw,110px); font-weight:800; line-height:1; color:var(--color-border,#EDE8E0); font-family:var(--font-urbanist,'Urbanist',sans-serif); user-select:none; padding-top:4px; }
+  .vsnum { font-size:clamp(76px,9vw,96px); font-weight:800; line-height:1; color:var(--color-border,#EDE8E0); font-family:var(--font-urbanist,'Urbanist',sans-serif); user-select:none; padding-top:4px; }
+
 
   .btn-tc {
     height:48px; padding:0 32px; line-height:1;
@@ -573,13 +582,16 @@ const PAGE_CSS = `
   }
   .btn-wh:hover { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.6); }
 
-  .carousel-btn { width:52px; height:52px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--color-navy-dark,#172531); font-size:40px; font-weight:300; transition:color .2s; padding:0; flex-shrink:0; line-height:1; }
+
+  .carousel-btn { width:52px; height:52px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--color-navy-dark,#172531); transition:color .2s; padding:0; flex-shrink:0; line-height:1; }
   .carousel-btn:hover { color:var(--color-terracotta,#CF5C36); }
   .carousel-track { overflow:hidden; border-radius:20px; box-shadow:0 2px 12px rgba(23,37,49,0.06); position:relative; height:280px; }
   .carousel-card  { background:#fff; border-radius:20px; padding:32px 28px; border:1px solid var(--color-border,#EDE8E0); height:280px; box-sizing:border-box; overflow:hidden; }
 
+
   .values-carousel { display:none; }
   .values-desktop  { display:block; }
+
 
   @media (max-width:768px) {
     .values-carousel { display:block; }
@@ -730,7 +742,7 @@ export default function AboutPage() {
         </p>
         <h1
           style={{
-            fontSize: "clamp(30px,5.5vw,58px)",
+            fontSize: "clamp(30px,5.5vw,56px)",
             fontWeight: "800",
             color: "#172531",
             fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -744,6 +756,7 @@ export default function AboutPage() {
         <p
           style={{
             fontSize: "17px",
+            fontWeight: 500,
             color: "#3D4F5C",
             margin: 0,
             maxWidth: "480px",
@@ -1014,7 +1027,7 @@ export default function AboutPage() {
         </p>
         <h1
           style={{
-            fontSize: "clamp(30px,5.5vw,58px)",
+            fontSize: "clamp(30px,5.5vw,56px)",
             fontWeight: "800",
             color: "#172531",
             fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -1028,6 +1041,7 @@ export default function AboutPage() {
         <p
           style={{
             fontSize: "17px",
+            fontWeight: 500,
             color: "#3D4F5C",
             margin: 0,
             maxWidth: "480px",
@@ -1067,7 +1081,7 @@ export default function AboutPage() {
             <h2
               className={`rv${missionVisible ? " on" : ""} d1`}
               style={{
-                fontSize: "clamp(28px,4vw,42px)",
+                fontSize: "clamp(28px,4vw,44px)",
                 fontWeight: "800",
                 color: "var(--color-navy-dark,#172531)",
                 lineHeight: "1.15",
@@ -1082,6 +1096,7 @@ export default function AboutPage() {
               className={`rv${missionVisible ? " on" : ""} d2`}
               style={{
                 fontSize: "18px",
+                fontWeight: 500,
                 color: "var(--color-slate,#4B5563)",
                 lineHeight: "1.8",
                 marginBottom: "20px",
@@ -1090,14 +1105,14 @@ export default function AboutPage() {
               When your pet isn't acting like themselves in the middle of the
               night, you're not looking for a search result. You're looking for
               someone to tell you it's okay — or that it's not — and what to do
-              either way. When you get a vet bill that's twice what you
-              expected, you don't just feel surprised. You feel like you were
-              set up to fail.
+              either way. When a bill comes back twice what you expected, you
+              don't just feel surprised. You feel like you were set up to fail.
             </p>
             <p
               className={`rv${missionVisible ? " on" : ""} d3`}
               style={{
                 fontSize: "18px",
+                fontWeight: 500,
                 color: "var(--color-slate,#4B5563)",
                 lineHeight: "1.8",
                 marginBottom: "20px",
@@ -1113,12 +1128,12 @@ export default function AboutPage() {
               className={`rv${missionVisible ? " on" : ""} d4`}
               style={{
                 fontSize: "18px",
+                fontWeight: 500,
                 color: "var(--color-slate,#4B5563)",
                 lineHeight: "1.8",
               }}
             >
-              We started in Oakland. We're building for every pet owner who has
-              ever felt like the system wasn't built for them.
+              For every pet owner who’s ever felt like an afterthought.
             </p>
           </div>
         </div>
@@ -1147,7 +1162,7 @@ export default function AboutPage() {
             <h2
               className={`rv${problemsVisible ? " on" : ""} d1`}
               style={{
-                fontSize: "clamp(26px,3vw,36px)",
+                fontSize: "clamp(26px,3vw,34px)",
                 fontWeight: "800",
                 color: "var(--color-navy-dark,#172531)",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -1170,7 +1185,7 @@ export default function AboutPage() {
                     style={{
                       fontSize: "11px",
                       fontWeight: "700",
-                      letterSpacing: "0.08em",
+                      letterSpacing: "0.10em",
                       textTransform: "uppercase",
                       color: "var(--color-terracotta,#CF5C36)",
                       marginBottom: "10px",
@@ -1180,7 +1195,7 @@ export default function AboutPage() {
                   </p>
                   <h3
                     style={{
-                      fontSize: "clamp(20px,2.5vw,28px)",
+                      fontSize: "clamp(22px,2.5vw,28px)",
                       fontWeight: "800",
                       color: "var(--color-navy-dark,#172531)",
                       marginBottom: "16px",
@@ -1193,6 +1208,7 @@ export default function AboutPage() {
                   <p
                     style={{
                       fontSize: "16px",
+                      fontWeight: 500,
                       color: "var(--color-slate,#4B5563)",
                       lineHeight: "1.8",
                       margin: 0,
@@ -1209,11 +1225,11 @@ export default function AboutPage() {
                   <div style={{ fontSize: "52px" }}>{p.emoji}</div>
                   <p
                     style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      color: "#9CA3AF",
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      color: "var(--color-muted, #717A86)",
                       textTransform: "uppercase",
-                      letterSpacing: "0.08em",
+                      letterSpacing: "0.10em",
                       margin: 0,
                     }}
                   >
@@ -1251,14 +1267,14 @@ export default function AboutPage() {
             <h2
               className={`rv${valuesVisible ? " on" : ""} d1`}
               style={{
-                fontSize: "clamp(24px,3vw,32px)",
+                fontSize: "clamp(26px,3vw,32px)",
                 fontWeight: "800",
                 color: "var(--color-navy-dark,#172531)",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                 margin: 0,
               }}
             >
-              Our values
+              Five things we’ll never compromise on.
             </h2>
           </div>
           <div className="values-desktop">
@@ -1271,7 +1287,7 @@ export default function AboutPage() {
                 <div style={{ paddingTop: "12px" }}>
                   <h3
                     style={{
-                      fontSize: "clamp(20px,2.5vw,28px)",
+                      fontSize: "clamp(22px,2.5vw,28px)",
                       fontWeight: "800",
                       color: "var(--color-navy-dark,#172531)",
                       margin: "0 0 12px",
@@ -1284,6 +1300,7 @@ export default function AboutPage() {
                   <p
                     style={{
                       fontSize: "17px",
+                      fontWeight: 500,
                       color: "var(--color-slate,#4B5563)",
                       lineHeight: "1.8",
                       margin: 0,
@@ -1332,7 +1349,7 @@ export default function AboutPage() {
                     </div>
                     <h3
                       style={{
-                        fontSize: "19px",
+                        fontSize: "22px",
                         fontWeight: "800",
                         color: "var(--color-navy-dark,#172531)",
                         margin: "0 0 10px",
@@ -1344,10 +1361,13 @@ export default function AboutPage() {
                     </h3>
                     <p
                       style={{
-                        fontSize: "14px",
+                        fontSize: "15px",
+                        fontWeight: 500,
                         color: "var(--color-slate,#4B5563)",
                         lineHeight: "1.7",
                         margin: 0,
+                        maxWidth: "99%",
+                        textWrap: "pretty",
                       }}
                     >
                       {VALUES[txState.from].body}
@@ -1385,7 +1405,7 @@ export default function AboutPage() {
                     </div>
                     <h3
                       style={{
-                        fontSize: "19px",
+                        fontSize: "22px",
                         fontWeight: "800",
                         color: "var(--color-navy-dark,#172531)",
                         margin: "0 0 10px",
@@ -1397,10 +1417,13 @@ export default function AboutPage() {
                     </h3>
                     <p
                       style={{
-                        fontSize: "14px",
+                        fontSize: "15px",
+                        fontWeight: 500,
                         color: "var(--color-slate,#4B5563)",
                         lineHeight: "1.7",
                         margin: 0,
+                        maxWidth: "99%",
+                        textWrap: "pretty",
                       }}
                     >
                       {VALUES[txState.to].body}
@@ -1424,7 +1447,7 @@ export default function AboutPage() {
                   </div>
                   <h3
                     style={{
-                      fontSize: "19px",
+                      fontSize: "22px",
                       fontWeight: "800",
                       color: "var(--color-navy-dark,#172531)",
                       margin: "0 0 10px",
@@ -1435,10 +1458,13 @@ export default function AboutPage() {
                   </h3>
                   <p
                     style={{
-                      fontSize: "14px",
+                      fontSize: "15px",
+                      fontWeight: 500,
                       color: "var(--color-slate,#4B5563)",
                       lineHeight: "1.7",
                       margin: 0,
+                      maxWidth: "99%",
+                      textWrap: "pretty",
                     }}
                   >
                     {VALUES[activeValue].body}
@@ -1465,7 +1491,7 @@ export default function AboutPage() {
                 }
                 aria-label="Previous"
               >
-                &#8249;
+                <ChevronLeft size={32} strokeWidth={1.5} />
               </button>
               <div
                 style={{ display: "flex", gap: "10px", alignItems: "center" }}
@@ -1503,7 +1529,7 @@ export default function AboutPage() {
                 }
                 aria-label="Next"
               >
-                &#8250;
+                <ChevronRight size={32} strokeWidth={1.5} />
               </button>
             </div>
           </div>
@@ -1549,7 +1575,7 @@ export default function AboutPage() {
             </p>
             <h2
               style={{
-                fontSize: "clamp(24px,4vw,38px)",
+                fontSize: "clamp(26px,4vw,34px)",
                 fontWeight: "800",
                 color: "#fff",
                 lineHeight: "1.2",
@@ -1562,13 +1588,15 @@ export default function AboutPage() {
             <p
               style={{
                 fontSize: "17px",
+                fontWeight: 500,
                 color: "rgba(255,255,255,0.7)",
                 lineHeight: "1.7",
                 marginBottom: "36px",
               }}
             >
-              We're starting in Oakland and Berkeley and expanding across the
-              Bay Area and beyond. If you're a pet owner, a vet, or someone who
+              From the Bay Area, expanding across California — verifying vet
+              listings, supporting good practices, and making it easier for pet
+              owners to find them. If you're a pet owner, a vet, or someone who
               thinks this problem matters — we'd love to hear from you.
             </p>
             <div

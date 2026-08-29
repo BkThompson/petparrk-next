@@ -3,7 +3,18 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
+import HomeDashboard from "../components/HomeDashboard";
 import Link from "next/link";
+import {
+  DollarSign,
+  Stethoscope,
+  ClipboardList,
+  Heart,
+  Check,
+  X,
+  ArrowRight,
+  Lock,
+} from "lucide-react";
 
 function formatPrice(low, high, type) {
   if (!low) return null;
@@ -54,7 +65,7 @@ function getVetCoords(vet) {
 
 const PILLARS = [
   {
-    icon: "💰",
+    icon: DollarSign,
     title: "Transparent Pricing",
     description:
       "Real prices from real pet owners. See what exams, dental, and surgery actually cost before you commit.",
@@ -62,7 +73,7 @@ const PILLARS = [
     href: "/vets",
   },
   {
-    icon: "🩺",
+    icon: Stethoscope,
     title: "AI Symptom Triage",
     description:
       "When your pet isn't acting like themselves, get instant guidance on what to do next — day or night.",
@@ -70,7 +81,7 @@ const PILLARS = [
     href: "/symptom-checker",
   },
   {
-    icon: "📋",
+    icon: ClipboardList,
     title: "Pet Health History",
     description:
       "One place for every vet visit, vaccine, and health note. Your pet's story, owned by you.",
@@ -496,6 +507,8 @@ export default function Home() {
   }
 
   const showCTA = session === null;
+  // Saved vets (full objects) for the logged-in dashboard strip.
+  const savedVetsList = vets.filter((v) => savedVetIds.has(v.id));
 
   return (
     <>
@@ -511,6 +524,34 @@ export default function Home() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         .anim-1{animation:fadeSlideUp 0.9s 0.10s ease both}
         .anim-2{animation:fadeSlideUp 0.9s 0.28s ease both}
         .anim-3{animation:fadeSlideUp 0.9s 0.48s ease both}
@@ -519,7 +560,71 @@ export default function Home() {
 
 
 
-        @media (max-width: 768px) { .hero-float { animation: none !important; } }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        @media (max-width: 768px) { 
+          .hero-float { 
+            animation: none !important; 
+          } 
+          .home-platform-build {
+            margin: 0 auto;
+            max-width: 90%;
+          }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -534,11 +639,39 @@ export default function Home() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         .hero-input-wrap { position:relative; }
-        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:1.5px solid rgba(255,255,255,0.1); font-size:16px; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgba(255,255,255,0.06); color:#fff; outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
+        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:1.5px solid rgba(255,255,255,0.1); font-size:16px; font-weight:500; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgba(255,255,255,0.06); color:#fff; outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
         .hero-search::placeholder { color:rgba(255,255,255,0.35); }
         .hero-search:focus { border-color:var(--color-terracotta,#CF5C36); background:rgba(255,255,255,0.09); box-shadow:0 0 0 6px rgba(207,92,54,0.08),0 0 24px rgba(207,92,54,0.12),0 8px 32px rgba(0,0,0,0.2); }
-        .hero-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); border-radius:10px; padding:12px 22px; font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,'Urbanist',sans-serif); white-space:nowrap; transition:background 0.2s,color 0.2s; }
+        .hero-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); border-radius:10px; padding:10.5px 22px; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,'Urbanist',sans-serif); white-space:nowrap; transition:background 0.2s,color 0.2s; }
         .hero-btn:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
         @media (max-width:480px) {
           .hero-input-wrap { display:flex; flex-direction:column; gap:10px; }
@@ -549,12 +682,40 @@ export default function Home() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         .pillar-card-outer { position:relative; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgba(239,200,139,0.55) 0%,rgba(207,92,54,0.25) 12%,rgba(255,255,255,0.04) 28%,transparent 42%,transparent 58%,rgba(255,255,255,0.04) 72%,rgba(207,92,54,0.2) 88%,rgba(239,200,139,0.45) 100%); transition:transform 0.3s; }
         .pillar-card-outer:hover { transform:translateY(-4px); }
         .pillar-card { background:linear-gradient(160deg,rgba(42,62,78,0.98) 0%,rgba(30,48,62,0.98) 40%,rgba(26,42,55,0.98) 100%); border-radius:20px; padding:36px 28px 32px; text-align:center; position:relative; overflow:hidden; display:flex; flex-direction:column; height:100%; box-sizing:border-box; transition:background 0.3s,box-shadow 0.3s; }
         .pillar-card-outer:hover .pillar-card { background:linear-gradient(160deg,rgba(50,72,90,0.98) 0%,rgba(38,58,74,0.98) 40%,rgba(32,52,66,0.98) 100%); box-shadow:0 20px 50px rgba(0,0,0,0.35); }
-        .pillar-link-wrap { margin-top:auto; padding-top:24px; }
-        .pillar-icon-wrap { width:68px; height:68px; border-radius:18px; margin:0 auto 22px; display:flex; align-items:center; justify-content:center; font-size:30px; position:relative; z-index:1; box-shadow:0 4px 16px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.15); }
+        .pillar-link-wrap { margin-top:auto; padding-top:14px; }
+        .pillar-icon-wrap { width:68px; height:68px; border-radius:18px; margin:0 auto 22px; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; box-shadow:0 4px 16px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.15); }
         .pillar-icon-wrap.pillar-icon-0 { background:rgba(207,92,54,0.14)!important; border:1px solid rgba(207,92,54,0.28); }
         .pillar-icon-wrap.pillar-icon-1 { background:rgba(100,160,210,0.14)!important; border:1px solid rgba(100,160,210,0.25); }
         .pillar-icon-wrap.pillar-icon-2 { background:rgba(80,140,80,0.14)!important; border:1px solid rgba(80,140,80,0.25); }
@@ -562,9 +723,65 @@ export default function Home() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         .step-card { padding:32px 0; display:grid; grid-template-columns:72px 1fr; gap:20px; align-items:start; }
         .step-card+.step-card { border-top:1px solid rgba(255,255,255,0.07); }
         .step-number { font-size:clamp(44px,6vw,60px); font-weight:800; line-height:1; color:rgba(239,200,139,0.15); font-family:var(--font-urbanist,'Urbanist',sans-serif); user-select:none; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -578,19 +795,85 @@ export default function Home() {
 
 
 
-        .heart-btn { transition:transform 0.15s; border:none; background:none; cursor:pointer; padding:0; font-size:20px; line-height:1; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        .heart-btn { transition:transform 0.15s; border:none; background:none; cursor:pointer; padding:0; line-height:1; display:inline-flex; align-items:center; justify-content:center; }
         .heart-btn:hover { transform:scale(1.2); }
         .heart-animating { animation:heartPop 0.4s ease forwards; }
-        .badge { display:inline-flex; align-items:center; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:700; white-space:nowrap; }
+        .badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:700; white-space:nowrap; }
         .badge-navy    { background:#EBF0F5; color:#2C4657; }
         .badge-success { background:#EDFAF3; color:#1A6641; }
         .badge-error   { background:#FCEAEA; color:#C94040; }
-        .price-chip { display:inline-flex; align-items:center; gap:5px; background:#F5F0E8; border-radius:8px; padding:4px 10px; font-size:13px; }
-        .price-chip-label { color:#717A86; font-weight:500; }
+        .price-chip { display:inline-flex; align-items:center; gap:5px; background:#F5F0E8; border-radius:8px; padding:4px 10px; font-size:14px; }
+        .price-chip-label { color:#717A86; font-weight:600; }
         .price-chip-value { font-weight:700; color:#CF5C36; }
+        .price-gate-wrap{position:relative}
+        .price-gate-wrap.gated{padding:10px 0 20px}
+        .price-gate-wrap.gated .price-gate-inner{filter:blur(5px);pointer-events:none;user-select:none}
+        .price-gate-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;padding:0 16px}
+        .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#172531;color:#fff;border:2px solid #172531;border-radius:12px;padding:9px 18px;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 2px 10px rgba(23,37,49,0.2);transition:background 0.15s,color 0.15s}
+        .price-gate-btn:hover{background:#fff;color:#172531;border:2px solid #172531}
+        @media(max-width:768px){
+          .price-gate-overlay{padding:0 12px}
+          .price-gate-btn{width:100%}
+        }
         .pillars-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
         .vets-grid    { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; align-items:stretch; }
         @media(max-width:900px){ .pillars-grid{ grid-template-columns:1fr; } }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -599,7 +882,7 @@ export default function Home() {
           height:50px; padding:0 36px; line-height:1;
           background:var(--color-terracotta,#CF5C36); color:#fff;
           border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px;
-          font-size:16px; font-weight:700; cursor:pointer; text-decoration:none;
+          font-size:15px; font-weight:700; cursor:pointer; text-decoration:none;
           font-family:var(--font-urbanist,'Urbanist',sans-serif);
           display:inline-flex; align-items:center; justify-content:center;
           transition:background 0.25s,color 0.25s;
@@ -609,7 +892,7 @@ export default function Home() {
           height:50px; padding:0 36px; line-height:1;
           background:transparent; color:var(--color-navy-dark,#172531);
           border:2px solid var(--color-navy-dark,#172531); border-radius:12px;
-          font-size:16px; font-weight:700; text-decoration:none;
+          font-size:15px; font-weight:700; text-decoration:none;
           font-family:var(--font-urbanist,'Urbanist',sans-serif);
           display:inline-flex; align-items:center; justify-content:center;
           transition:background 0.25s,color 0.25s;
@@ -619,15 +902,71 @@ export default function Home() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
-        .skeleton { background:linear-gradient(90deg,#f0ece4 25%,#e8e0d4 50%,#f0ece4 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:18px; }
+        .skeleton { background:linear-gradient(90deg,#F0ECE4 25%,#D9D2C2 50%,#F0ECE4 75%); background-size:200% 100%; animation:shimmer 1.8s infinite; border-radius:18px; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
         @media(max-width:640px){
           .step-card { grid-template-columns:52px 1fr; gap:14px; }
-          .step-number { font-size:36px; }
+          .step-number { font-size:32px; }
           .steps-grid { grid-template-columns:1fr!important; }
           .btn-cta-group { flex-direction:column!important; align-items:stretch!important; }
           .btn-primary,.btn-outline-dark { width:100%; box-sizing:border-box; height:50px; justify-content:center; }
@@ -678,103 +1017,111 @@ export default function Home() {
         />
 
         <div
-          style={{
-            maxWidth: "850px",
-            margin: "0 auto",
-            textAlign: "center",
-            padding: "0 24px",
-            position: "relative",
-            zIndex: 1,
-          }}
+          className="pp-container"
+          style={{ position: "relative", zIndex: 1 }}
         >
           <div
-            className="anim-1"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "rgba(239,200,139,0.08)",
-              border: "1px solid rgba(239,200,139,0.2)",
-              borderRadius: "20px",
-              padding: "7px 18px",
-              marginBottom: "32px",
+              maxWidth: "850px",
+              margin: "0 auto",
+              textAlign: "center",
             }}
           >
-            <span
+            <div
+              className="anim-1"
               style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                background: "var(--color-gold,#EFC88B)",
-                display: "inline-block",
-                boxShadow: "0 0 8px rgba(239,200,139,0.6)",
-              }}
-            />
-            <span
-              style={{
-                fontSize: "12px",
-                fontWeight: "700",
-                color: "var(--color-gold,#EFC88B)",
-                letterSpacing: "0.07em",
-                textTransform: "uppercase",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(239,200,139,0.08)",
+                border: "1px solid rgba(239,200,139,0.2)",
+                borderRadius: "20px",
+                padding: "7px 18px",
+                marginBottom: "32px",
               }}
             >
-              Vet Pricing Transparency
-            </span>
-          </div>
-
-          <h1
-            className="anim-2"
-            style={{
-              fontSize: "clamp(40px,7.5vw,72px)",
-              fontWeight: "800",
-              color: "#fff",
-              lineHeight: "1.03",
-              marginBottom: "22px",
-              fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
-              letterSpacing: "-0.025em",
-            }}
-          >
-            Know what you'll pay before{" "}
-            <span style={{ color: "var(--color-gold,#EFC88B)" }}>
-              your next vet visit.
-            </span>
-          </h1>
-
-          <p
-            className="anim-3"
-            style={{
-              fontSize: "18px",
-              color: "rgba(255,255,255,0.6)",
-              lineHeight: "1.75",
-              maxWidth: "600px",
-              margin: "0 auto 48px",
-            }}
-          >
-            PetParrk gives you real vet prices, instant symptom guidance, and a
-            health history your pet deserves.
-          </p>
-
-          <form
-            className="anim-4"
-            onSubmit={handleHeroSearch}
-            style={{ maxWidth: "580px", margin: "0 auto" }}
-          >
-            <div className="hero-input-wrap">
-              <input
-                type="text"
-                className="hero-search"
-                placeholder="Search by vet name or neighborhood..."
-                value={heroSearch}
-                onChange={(e) => setHeroSearch(e.target.value)}
+              <span
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  background: "var(--color-gold,#EFC88B)",
+                  display: "inline-block",
+                  boxShadow: "0 0 8px rgba(239,200,139,0.6)",
+                }}
               />
-              <button type="submit" className="hero-btn">
-                {heroSearch.trim() ? "Search" : "Browse All Vets"}
-              </button>
+              <span
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  color: "var(--color-gold,#EFC88B)",
+                  letterSpacing: "0.10em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Vet Pricing Transparency
+              </span>
             </div>
-          </form>
+
+            <h1
+              className="anim-2"
+              style={{
+                fontSize: "clamp(40px,7.5vw,72px)",
+                fontWeight: "800",
+                color: "#fff",
+                lineHeight: "1.03",
+                marginBottom: "22px",
+                fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
+                letterSpacing: "-0.025em",
+              }}
+            >
+              Know what you'll pay before{" "}
+              <span style={{ color: "var(--color-gold,#EFC88B)" }}>
+                your next vet visit.
+              </span>
+            </h1>
+
+            <p
+              className="anim-3"
+              style={{
+                fontSize: "18px",
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.6)",
+                lineHeight: "1.75",
+                maxWidth: "600px",
+                margin: "0 auto 48px",
+              }}
+            >
+              PetParrk gives you real vet prices, instant symptom guidance, and
+              a health history your pet deserves.
+            </p>
+
+            <form
+              className="anim-4"
+              onSubmit={handleHeroSearch}
+              style={{ maxWidth: "580px", margin: "0 auto" }}
+            >
+              <div className="hero-input-wrap">
+                <input
+                  type="text"
+                  className="hero-search"
+                  placeholder="Search by vet name or neighborhood..."
+                  value={heroSearch}
+                  onChange={(e) => setHeroSearch(e.target.value)}
+                />
+                <button type="submit" className="hero-btn">
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </section>
+
+      {/* ── LOGGED-IN DASHBOARD STRIP ────────────────────────────────── */}
+      {session ? (
+        <HomeDashboard session={session} savedVets={savedVetsList} />
+      ) : null}
 
       {/* ── VET TEASERS ──────────────────────────────────────────────── */}
       <section
@@ -788,7 +1135,7 @@ export default function Home() {
           >
             <p
               style={{
-                fontSize: "11px",
+                fontSize: "13px",
                 fontWeight: "700",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
@@ -876,9 +1223,11 @@ export default function Home() {
                           </Link>
                           <p
                             style={{
-                              fontSize: "13px",
+                              fontSize: "15px",
+                              fontWeight: "500",
                               color: "#717A86",
                               margin: 0,
+                              // letterSpacing: "0.02em",
                             }}
                           >
                             {[vet.neighborhood, vet.city]
@@ -893,7 +1242,12 @@ export default function Home() {
                             isSaved ? "Remove from saved" : "Save this vet"
                           }
                         >
-                          {isSaved ? "❤️" : "🤍"}
+                          <Heart
+                            size={22}
+                            strokeWidth={2}
+                            color="#CF5C36"
+                            fill={isSaved ? "#CF5C36" : "none"}
+                          />
                         </button>
                       </div>
                       <div
@@ -923,47 +1277,62 @@ export default function Home() {
                         )}
                         {vet.accepting_new_patients === true && (
                           <span className="badge badge-success">
-                            ✅ Accepting
+                            <Check size={12} strokeWidth={2.6} />
+                            Accepting
                           </span>
                         )}
                         {vet.accepting_new_patients === false && (
                           <span className="badge badge-error">
-                            ✕ Not Accepting
+                            <X size={12} strokeWidth={2.6} />
+                            Not Accepting
                           </span>
                         )}
                       </div>
                       <div
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          flexWrap: "wrap",
-                          marginBottom: "16px",
-                        }}
+                        className={`price-gate-wrap${!session ? " gated" : ""}`}
+                        style={{ marginBottom: "16px" }}
                       >
-                        {exam && (
-                          <span className="price-chip">
-                            <span className="price-chip-label">Exam</span>
-                            <span className="price-chip-value">
-                              {formatPrice(
-                                exam.price_low,
-                                exam.price_high,
-                                exam.price_type,
-                              )}
-                            </span>
-                          </span>
+                        {!session && (
+                          <div className="price-gate-overlay">
+                            <Link href="/auth" className="price-gate-btn">
+                              <Lock size={13} strokeWidth={2.5} />
+                              Sign up to see pricing
+                            </Link>
+                          </div>
                         )}
-                        {dental && (
-                          <span className="price-chip">
-                            <span className="price-chip-label">Dental</span>
-                            <span className="price-chip-value">
-                              {formatPrice(
-                                dental.price_low,
-                                dental.price_high,
-                                dental.price_type,
-                              )}
+                        <div
+                          className="price-gate-inner"
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {exam && (
+                            <span className="price-chip">
+                              <span className="price-chip-label">Exam</span>
+                              <span className="price-chip-value">
+                                {formatPrice(
+                                  exam.price_low,
+                                  exam.price_high,
+                                  exam.price_type,
+                                )}
+                              </span>
                             </span>
-                          </span>
-                        )}
+                          )}
+                          {dental && (
+                            <span className="price-chip">
+                              <span className="price-chip-label">Dental</span>
+                              <span className="price-chip-value">
+                                {formatPrice(
+                                  dental.price_low,
+                                  dental.price_high,
+                                  dental.price_type,
+                                )}
+                              </span>
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div
                         style={{
@@ -975,7 +1344,14 @@ export default function Home() {
                           alignItems: "center",
                         }}
                       >
-                        <span style={{ fontSize: "12px", color: "#717A86" }}>
+                        <span
+                          style={{
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            color: "#717A86",
+                            // letterSpacing: "0.02em",
+                          }}
+                        >
                           {lu
                             ? `Verified ${lu.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`
                             : ""}
@@ -983,13 +1359,21 @@ export default function Home() {
                         <Link
                           href={`/vet/${vet.slug}`}
                           style={{
-                            fontSize: "13px",
+                            fontSize: "14px",
                             fontWeight: "700",
                             color: "#CF5C36",
                             textDecoration: "none",
                           }}
                         >
-                          View profile →
+                          View profile{" "}
+                          <ArrowRight
+                            size={14}
+                            strokeWidth={2.4}
+                            style={{
+                              marginLeft: "4px",
+                              verticalAlign: "middle",
+                            }}
+                          />
                         </Link>
                       </div>
                     </div>
@@ -1005,7 +1389,7 @@ export default function Home() {
                 padding: "48px 0",
               }}
             >
-              Loading vets...
+              No vets to show yet.
             </p>
           )}
           <div
@@ -1015,13 +1399,18 @@ export default function Home() {
             <Link
               href="/vets"
               style={{
-                fontSize: "14px",
+                fontSize: "13px",
                 fontWeight: "700",
                 color: "var(--color-terracotta,#CF5C36)",
                 textDecoration: "none",
               }}
             >
-              See all vets →
+              See all vets{" "}
+              <ArrowRight
+                size={14}
+                strokeWidth={2.4}
+                style={{ marginLeft: "4px", verticalAlign: "middle" }}
+              />
             </Link>
           </div>
         </div>
@@ -1057,7 +1446,7 @@ export default function Home() {
           >
             <p
               style={{
-                fontSize: "11px",
+                fontSize: "13px",
                 fontWeight: "700",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
@@ -1083,63 +1472,77 @@ export default function Home() {
             </h2>
           </div>
           <div className="pillars-grid" style={{ alignItems: "stretch" }}>
-            {PILLARS.map((pillar, i) => (
-              <div
-                key={pillar.title}
-                className={`reveal-left${pillarsVisible ? " visible" : ""} reveal-delay-${i + 1}`}
-                style={{ height: "100%" }}
-              >
-                <div className="pillar-card-outer" style={{ height: "100%" }}>
-                  <div className="pillar-card">
-                    <div
-                      className={`pillar-icon-wrap pillar-icon-${i}`}
-                      style={{ filter: "brightness(1.35)" }}
-                    >
-                      {pillar.icon}
-                    </div>
-                    <h3
-                      style={{
-                        fontSize: "20px",
-                        fontWeight: "800",
-                        color: "#fff",
-                        marginBottom: "12px",
-                        fontFamily:
-                          "var(--font-urbanist,'Urbanist',sans-serif)",
-                        letterSpacing: "-0.01em",
-                      }}
-                    >
-                      {pillar.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: "15px",
-                        color: "rgba(255,255,255,0.55)",
-                        lineHeight: "1.75",
-                        marginBottom: "28px",
-                      }}
-                    >
-                      {pillar.description}
-                    </p>
-                    <div className="pillar-link-wrap">
-                      <Link
-                        href={pillar.href}
+            {PILLARS.map((pillar, i) => {
+              const Icon = pillar.icon;
+              return (
+                <div
+                  key={pillar.title}
+                  className={`reveal-left${pillarsVisible ? " visible" : ""} reveal-delay-${i + 1}`}
+                  style={{ height: "100%" }}
+                >
+                  <div className="pillar-card-outer" style={{ height: "100%" }}>
+                    <div className="pillar-card">
+                      <div
+                        className={`pillar-icon-wrap pillar-icon-${i}`}
+                        style={{ filter: "brightness(1.35)" }}
+                      >
+                        <Icon size={32} strokeWidth={2} color="#fff" />
+                      </div>
+                      <h3
                         style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          fontSize: "13px",
-                          fontWeight: "700",
-                          color: "var(--color-gold,#EFC88B)",
-                          textDecoration: "none",
+                          fontSize: "22px",
+                          fontWeight: "800",
+                          color: "#fff",
+                          marginBottom: "12px",
+                          fontFamily:
+                            "var(--font-urbanist,'Urbanist',sans-serif)",
+                          letterSpacing: "-0.01em",
                         }}
                       >
-                        {pillar.cta} →
-                      </Link>
+                        {pillar.title}
+                      </h3>
+                      <p
+                        class="home-platform-build"
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: 500,
+                          color: "rgba(255,255,255,0.55)",
+                          lineHeight: "1.75",
+                          /* marginBottom: "28px", */
+                          textWrap: "pretty",
+                        }}
+                      >
+                        {pillar.description}
+                      </p>
+                      <div className="pillar-link-wrap">
+                        <Link
+                          href={pillar.href}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontSize: "14px",
+                            fontWeight: "700",
+                            color: "var(--color-gold,#EFC88B)",
+                            textDecoration: "none",
+                          }}
+                        >
+                          {pillar.cta}{" "}
+                          <ArrowRight
+                            size={14}
+                            strokeWidth={2.4}
+                            style={{
+                              marginLeft: "4px",
+                              verticalAlign: "middle",
+                            }}
+                          />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1172,7 +1575,7 @@ export default function Home() {
             >
               <p
                 style={{
-                  fontSize: "11px",
+                  fontSize: "13px",
                   fontWeight: "700",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
@@ -1198,9 +1601,10 @@ export default function Home() {
               <p
                 style={{
                   fontSize: "16px",
+                  fontWeight: 500,
                   color: "rgba(255,255,255,0.5)",
                   lineHeight: "1.75",
-                  marginBottom: "36px",
+                  marginBottom: "20px",
                 }}
               >
                 Most pet owners spend hours calling vets, getting vague answers,
@@ -1219,7 +1623,12 @@ export default function Home() {
                   textDecoration: "none",
                 }}
               >
-                Learn more →
+                Learn more{" "}
+                <ArrowRight
+                  size={14}
+                  strokeWidth={2.4}
+                  style={{ marginLeft: "4px", verticalAlign: "middle" }}
+                />
               </Link>
             </div>
             <div>
@@ -1245,6 +1654,7 @@ export default function Home() {
                     <p
                       style={{
                         fontSize: "15px",
+                        fontWeight: 500,
                         color: "rgba(255,255,255,0.5)",
                         lineHeight: "1.7",
                         margin: 0,
@@ -1268,17 +1678,13 @@ export default function Home() {
         >
           <div
             ref={trustRef}
-            className={`reveal-up${trustVisible ? " visible" : ""}`}
+            className={`pp-container reveal-up${trustVisible ? " visible" : ""}`}
             style={{
-              maxWidth: "1280px",
-              margin: "0 auto",
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))",
               gap: "16px",
               textAlign: "center",
               paddingBottom: "64px",
-              paddingLeft: "24px",
-              paddingRight: "24px",
             }}
           >
             {[
@@ -1311,7 +1717,8 @@ export default function Home() {
                 </div>
                 <div
                   style={{
-                    fontSize: "14px",
+                    fontSize: "15px",
+                    fontWeight: 500,
                     color: "rgba(255,255,255,0.5)",
                     lineHeight: "1.6",
                   }}
@@ -1340,65 +1747,67 @@ export default function Home() {
             padding: "104px 0",
           }}
         >
-          <div
-            style={{
-              maxWidth: "640px",
-              margin: "0 auto",
-              textAlign: "center",
-              padding: "0 24px",
-            }}
-          >
-            <p
-              style={{
-                fontSize: "11px",
-                fontWeight: "700",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--color-terracotta,#CF5C36)",
-                marginBottom: "16px",
-              }}
-            >
-              Get started free
-            </p>
-            <h2
-              style={{
-                fontSize: "clamp(28px,4vw,44px)",
-                fontWeight: "800",
-                color: "var(--color-navy-dark,#172531)",
-                marginBottom: "18px",
-                fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
-                lineHeight: "1.1",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Your pet's health, in one place.
-            </h2>
-            <p
-              style={{
-                fontSize: "17px",
-                color: "var(--color-slate,#4B5563)",
-                lineHeight: "1.75",
-                marginBottom: "40px",
-              }}
-            >
-              Save vets, run symptom checks, and build a health history your pet
-              deserves — all for free.
-            </p>
+          <div className="pp-container">
             <div
-              className="btn-cta-group"
               style={{
-                display: "flex",
-                gap: "12px",
-                justifyContent: "center",
-                flexWrap: "wrap",
+                maxWidth: "640px",
+                margin: "0 auto",
+                textAlign: "center",
               }}
             >
-              <Link href="/auth?tab=signup" className="btn-primary">
-                Create free account
-              </Link>
-              <Link href="/auth" className="btn-outline-dark">
-                Sign in
-              </Link>
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--color-terracotta,#CF5C36)",
+                  marginBottom: "16px",
+                }}
+              >
+                Get started free
+              </p>
+              <h2
+                style={{
+                  fontSize: "clamp(28px,4vw,44px)",
+                  fontWeight: "800",
+                  color: "var(--color-navy-dark,#172531)",
+                  marginBottom: "18px",
+                  fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
+                  lineHeight: "1.1",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Your pet's health, in one place.
+              </h2>
+              <p
+                style={{
+                  fontSize: "17px",
+                  fontWeight: 500,
+                  color: "var(--color-slate,#4B5563)",
+                  lineHeight: "1.75",
+                  marginBottom: "20px",
+                }}
+              >
+                Save vets, run symptom checks, and build a health history your
+                pet deserves — all for free.
+              </p>
+              <div
+                className="btn-cta-group"
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <Link href="/auth?tab=signup" className="btn-primary">
+                  Create free account
+                </Link>
+                <Link href="/auth" className="btn-outline-dark">
+                  Sign in
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -1406,4 +1815,3 @@ export default function Home() {
     </>
   );
 }
-Home;

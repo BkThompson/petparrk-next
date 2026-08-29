@@ -4,20 +4,22 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
-
-const C = {
-  navyDark: "#172531",
-  navyMid: "#2C4657",
-  terracotta: "#CF5C36",
-  gold: "#EFC88B",
-  cream: "#F5F0E8",
-  white: "#FFFFFF",
-  slate: "#4B5563",
-  muted: "#717A86",
-  success: "#2A7D4F",
-  error: "#C94040",
-  border: "#EDE8E0",
-};
+import {
+  X,
+  Check,
+  Frown,
+  Share2,
+  Heart,
+  ArrowLeft,
+  ArrowUp,
+  Ban,
+  RefreshCw,
+  Lock,
+} from "lucide-react";
+import PageLoader from "../../../components/PageLoader";
+import { C } from "../../../lib/petTileHelpers";
+import InlineSubmitPriceForm from "../../../components/InlineSubmitPriceForm";
+import ReportPriceModal from "../../../components/ReportPriceModal";
 
 const ACCORDION_COPY = {
   4: {
@@ -42,21 +44,6 @@ const ACCORDION_COPY = {
   },
 };
 
-const EMPTY_ENTRY = {
-  service_name: "",
-  price_type: "exact",
-  price_low: "",
-  price_high: "",
-  species: "",
-  species_other: "",
-  includes_bloodwork: false,
-  includes_xrays: false,
-  includes_anesthesia: false,
-  carecredit: "",
-  accepting_new_patients: "",
-  vaccines_included: "",
-};
-
 const MAZE_SVG = encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80">` +
     `<line x1="0" y1="0" x2="30" y2="0" stroke="rgba(180,210,255,0.09)" stroke-width="1"/>` +
@@ -72,9 +59,10 @@ const MAZE_SVG = encodeURIComponent(
 );
 const MAZE_BG = `url("data:image/svg+xml,${MAZE_SVG}")`;
 
-function isVaccinePackage(n) {
-  return n && n.toLowerCase().includes("vaccine package");
-}
+// Auto-grow textarea — fits its content height as the user types AND when
+// the value is set programmatically. The useEffect on [value] fixes the
+// "content cut off after save / on reopen" issue, especially on mobile where
+// the CSS resize handle does nothing. Forwards all other textarea props.
 function formatPhone(p) {
   if (!p) return null;
   const d = p.replace(/\D/g, "");
@@ -351,16 +339,24 @@ function HoursLine({ line }) {
     const firstTime = splitMatch[2];
     const secondTime = splitMatch[3];
     return (
-      <div style={{ display: "flex", fontSize: "13px", lineHeight: "1.7" }}>
+      <div
+        style={{
+          display: "flex",
+          fontSize: "15px",
+          fontWeight: "500",
+          lineHeight: "1.7",
+        }}
+      >
         <span
           style={{
-            width: "77px",
+            width: "83px",
             flexShrink: 0,
             fontWeight: "600",
             color: C.navyDark,
+            minWidth: "88px",
           }}
         >
-          {day}
+          {day}:
         </span>
         <span
           style={{ display: "flex", flexDirection: "column", color: C.slate }}
@@ -376,25 +372,38 @@ function HoursLine({ line }) {
     const day = line.slice(0, colonIdx).trim();
     const time = line.slice(colonIdx + 1).trim();
     return (
-      <div style={{ display: "flex", fontSize: "13px", lineHeight: "1.7" }}>
+      <div
+        style={{
+          display: "flex",
+          fontSize: "15px",
+          fontWeight: "500",
+          lineHeight: "1.7",
+        }}
+      >
         <span
           style={{
-            width: "77px",
+            width: "83px",
             flexShrink: 0,
             fontWeight: "600",
             color: C.navyDark,
+            minWidth: "88px",
           }}
         >
-          {day}
+          {day}:
         </span>
-        <span style={{ color: C.slate, whiteSpace: "nowrap" }}>{time}</span>
+        <span
+          style={{ color: C.slate, whiteSpace: "nowrap", fontWeight: "500" }}
+        >
+          {time}
+        </span>
       </div>
     );
   }
   return (
     <span
       style={{
-        fontSize: "13px",
+        fontSize: "14px",
+        fontWeight: 500,
         color: C.slate,
         lineHeight: "1.7",
         display: "block",
@@ -408,7 +417,9 @@ function HoursLine({ line }) {
 function HoursDisplay({ lines }) {
   if (lines.length === 0)
     return (
-      <p style={{ fontSize: "14px", color: C.muted, margin: 0 }}>
+      <p
+        style={{ fontSize: "14px", fontWeight: 500, color: C.muted, margin: 0 }}
+      >
         Call for hours
       </p>
     );
@@ -459,7 +470,13 @@ function HoursDisplay({ lines }) {
     );
   }
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "2px",
+      }}
+    >
       {lines.map((l, i) => (
         <HoursLine key={i} line={l} />
       ))}
@@ -471,10 +488,10 @@ function InfoLabel({ children }) {
   return (
     <p
       style={{
-        fontSize: "11px",
+        fontSize: "13px",
         fontWeight: "700",
         textTransform: "uppercase",
-        letterSpacing: "0.08em",
+        letterSpacing: "0.10em",
         color: C.muted,
         margin: "0 0 10px",
       }}
@@ -492,26 +509,38 @@ export default function VetPage() {
   const [saveAnimating, setSaveAnimating] = useState(false);
   const [vet, setVet] = useState(null);
   const [prices, setPrices] = useState([]);
+  const [reviewServices, setReviewServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [allPrices, setAllPrices] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [shareConfirmed, setShareConfirmed] = useState(false);
   const [chartVisible, setChartVisible] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [sheetMounted, setSheetMounted] = useState(false);
-  const [sheetVisible, setSheetVisible] = useState(false);
-  const SHEET_DUR = 340;
-  const [visitDate, setVisitDate] = useState("");
-  const [submitterNote, setSubmitterNote] = useState("");
-  const [submitFile, setSubmitFile] = useState(null);
-  const [entries, setEntries] = useState([{ ...EMPTY_ENTRY }]);
-  const [formStatus, setFormStatus] = useState(null);
+  const [showInlineSubmit, setShowInlineSubmit] = useState(false);
+  // True once a price has been submitted through the form. Collapses the
+  // "Visited X? / Close form" header so the form's own success card stands
+  // alone instead of sitting under a stale toggle.
+  const [priceSubmitted, setPriceSubmitted] = useState(false);
+  const [reportingPrice, setReportingPrice] = useState(null); // {id, serviceName, serviceId, display}
   const [vetName, setVetName] = useState("");
   const [vetId, setVetId] = useState(null);
   const chartRef = useRef(null);
-  const fileInputRef = useRef(null);
+  const inlineSubmitRef = useRef(null);
+  const submitCtaRef = useRef(null);
   const sbWidthRef = useRef(0);
+
+  // Close the inline submit-price form and restore scroll to the trigger,
+  // so the user isn't left stranded at the bottom of the page.
+  function closeSubmitForm() {
+    setShowInlineSubmit(false);
+    setPriceSubmitted(false);
+    setTimeout(() => {
+      if (!submitCtaRef.current) return;
+      const top =
+        submitCtaRef.current.getBoundingClientRect().top + window.scrollY - 120;
+      window.scrollTo({ top, behavior: "smooth" });
+    }, 50);
+  }
 
   useEffect(() => {
     sbWidthRef.current =
@@ -538,7 +567,18 @@ export default function VetPage() {
         .from("vet_prices")
         .select("*, services(id,name), vets(city)");
       setVet(vetData);
-      setPrices(priceData || []);
+      // Prices flagged in_conflict have competing values under review — never
+      // show a contested number publicly. Filter them out of the displayed
+      // prices, and collect the affected service names to show a neutral
+      // "pricing under review" note instead.
+      const allVetPrices = priceData || [];
+      const conflicted = allVetPrices.filter((p) => p.in_conflict);
+      const cleanPrices = allVetPrices.filter((p) => !p.in_conflict);
+      const reviewServiceNames = Array.from(
+        new Set(conflicted.map((p) => p.services?.name).filter(Boolean)),
+      );
+      setPrices(cleanPrices);
+      setReviewServices(reviewServiceNames);
       setAllPrices(allPricesData || []);
       setLoading(false);
       if (vetData) {
@@ -575,35 +615,6 @@ export default function VetPage() {
     return () => obs.disconnect();
   }, [loading]);
 
-  useEffect(() => {
-    const html = document.documentElement;
-    if (sheetMounted) {
-      html.style.setProperty("--sb-width", `${sbWidthRef.current}px`);
-      html.classList.add("sheet-open");
-    } else {
-      html.classList.remove("sheet-open");
-      html.style.removeProperty("--sb-width");
-    }
-    return () => {
-      html.classList.remove("sheet-open");
-      html.style.removeProperty("--sb-width");
-    };
-  }, [sheetMounted]);
-
-  function openSheet() {
-    resetForm();
-    setSheetMounted(true);
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => setSheetVisible(true)),
-    );
-  }
-  function closeSheet() {
-    setSheetVisible(false);
-    setTimeout(() => {
-      setSheetMounted(false);
-      setFormStatus(null);
-    }, SHEET_DUR);
-  }
   async function toggleSave() {
     if (!session) {
       router.push("/auth");
@@ -639,53 +650,6 @@ export default function VetPage() {
       setTimeout(() => setShareConfirmed(false), 2000);
     }
   }
-  function updateEntry(idx, field, val) {
-    setEntries((prev) =>
-      prev.map((e, i) => (i === idx ? { ...e, [field]: val } : e)),
-    );
-  }
-  function addEntry() {
-    setEntries((prev) => [...prev, { ...EMPTY_ENTRY }]);
-  }
-  function removeEntry(idx) {
-    setEntries((prev) => prev.filter((_, i) => i !== idx));
-  }
-  async function handleSubmit() {
-    const valid = entries.every((e) => e.service_name && e.price_low);
-    if (!valid) {
-      setFormStatus("error");
-      return;
-    }
-    const rows = entries.map((e) => ({
-      vet_id: vetId,
-      vet_name: vetName,
-      service_name: e.service_name,
-      species: e.species === "other" ? e.species_other || "other" : e.species,
-      price_paid: parseFloat(e.price_low),
-      visit_date: visitDate || null,
-      submitter_note: submitterNote || null,
-    }));
-    const { error } = await supabase.from("price_submissions").insert(rows);
-    if (error) {
-      setFormStatus("error");
-      return;
-    }
-    setFormStatus("success");
-  }
-  function resetForm() {
-    setEntries([{ ...EMPTY_ENTRY }]);
-    setVisitDate("");
-    setSubmitterNote("");
-    setSubmitFile(null);
-    setFormStatus(null);
-  }
-  function validateAndSetFile(file) {
-    const ok = ["image/jpeg", "image/png", "application/pdf"].includes(
-      file.type,
-    );
-    if (!ok || file.size > 5 * 1024 * 1024) return;
-    setSubmitFile(file);
-  }
   function toggleRow(id) {
     setExpandedRows((prev) => ({ [id]: !prev[id] }));
   }
@@ -715,24 +679,7 @@ export default function VetPage() {
   });
   const pricedRows = prices.filter((p) => p.price_low !== null);
 
-  if (loading)
-    return (
-      <div
-        style={{
-          minHeight: "calc(100vh - 64px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "32px", marginBottom: "12px" }}>🐾</div>
-          <p style={{ color: C.muted, fontSize: "14px" }}>
-            Loading vet profile…
-          </p>
-        </div>
-      </div>
-    );
+  if (loading) return <PageLoader message="Loading vet profile…" />;
   if (!vet)
     return (
       <div
@@ -744,14 +691,30 @@ export default function VetPage() {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "32px", marginBottom: "12px" }}>😕</div>
-          <p style={{ color: C.muted, fontSize: "14px" }}>Vet not found.</p>
+          <div
+            style={{
+              marginBottom: "12px",
+              color: C.muted,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <Frown size={32} strokeWidth={2} />
+          </div>
+          <p style={{ color: C.muted, fontSize: "15px", fontWeight: 500 }}>
+            Vet not found.
+          </p>
           <Link
             href="/vets"
             className="nav-link-dark"
             style={{ color: C.terracotta, fontSize: "14px", fontWeight: "700" }}
           >
-            ← Back to all vets
+            <ArrowLeft
+              size={14}
+              strokeWidth={2.4}
+              style={{ marginRight: "4px", verticalAlign: "middle" }}
+            />
+            Back to all vets
           </Link>
         </div>
       </div>
@@ -766,7 +729,14 @@ export default function VetPage() {
     <>
       <style>{`
         @keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.5)}70%{transform:scale(0.85)}100%{transform:scale(1)}}
-        .save-btn{background:none;border:none;cursor:pointer;padding:0;font-size:20px;line-height:1;transition:transform 0.1s;}
+        .price-gate-wrap{position:relative}
+        .price-gate-wrap.gated{padding:10px 0 20px}
+        .price-gate-wrap.gated .price-gate-inner{filter:blur(6px);pointer-events:none;user-select:none}
+        .price-gate-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;padding:0 16px}
+        .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#172531;color:#fff;border:2px solid #172531;border-radius:12px;padding:11px 22px;font-size:15px;font-weight:700;font-family:var(--font-urbanist,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(23,37,49,0.22);transition:background 0.15s,color 0.15s}
+        .price-gate-btn:hover{background:#fff;color:#172531;border:2px solid #172531}
+        @media(max-width:768px){.price-gate-btn{width:100%}}
+        .save-btn{background:none;border:none;cursor:pointer;padding:0;line-height:1;transition:transform 0.1s;display:inline-flex;align-items:center;}
         .save-btn:hover{transform:scale(1.15);}
         .save-animating{animation:heartPop 0.4s ease forwards;}
         .acc-wrap{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 0.38s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease;}
@@ -777,46 +747,25 @@ export default function VetPage() {
         .expand-btn.is-open:hover{background:#a8471d;border-color:#a8471d;}
         .expand-icon{width:10px;height:10px;display:block;flex-shrink:0;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);user-select:none;}
         .expand-icon.open{transform:rotate(45deg);}
+        .report-price-btn{background:none;border:none;color:${C.muted};font-size:13px;font-weight:600;cursor:pointer;padding:14px 10px;text-decoration:underline;font-family:inherit;transition:color 0.15s;}
+        .report-price-btn:hover{color:${C.terracotta};}
         .price-row{padding:16px 0px;}
-        .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:1000;display:flex;align-items:flex-end;justify-content:center;transition:background ${SHEET_DUR}ms ease;pointer-events:none;}
-        .sheet-overlay.visible{background:rgba(0,0,0,0.5);pointer-events:all;}
-        .sheet-box{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:800px;max-height:92vh;overflow-y:auto;box-sizing:border-box;position:relative;transform:translateY(100%);transition:transform ${SHEET_DUR}ms cubic-bezier(0.4,0,0.2,1);}
-        .sheet-overlay.visible .sheet-box{transform:translateY(0);}
-        .sheet-header-row{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;position:sticky;top:0;z-index:10;background:#fff;}
-        .sheet-handle-bar{width:40px;height:4px;background:${C.border};border-radius:4px;}
-        .sheet-close-btn{width:32px;height:32px;border-radius:50%;background:${C.cream};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;color:${C.slate};transition:background 0.15s;flex-shrink:0;}
-        .sheet-close-btn:hover{background:${C.border};}
         .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
-        .modal-box{background:#fff;border-radius:16px;padding:28px;max-width:440px;width:100%;}
-        .pp-input{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid ${C.border};font-size:15px;font-family:var(--font-urbanist,system-ui);outline:none;box-sizing:border-box;background:#fff;transition:border-color 0.15s;color:${C.navyDark};-webkit-appearance:none;appearance:none;}
-        .pp-input:focus{border-color:${C.terracotta};}
-        .pp-label{display:block;font-size:13px;font-weight:700;color:${C.slate};margin-bottom:6px;}
-        .pp-select-wrap{position:relative;}
-        .pp-select-wrap::after{content:"▾";position:absolute;right:14px;top:50%;transform:translateY(-50%);color:${C.muted};pointer-events:none;font-size:13px;}
-        .seg-btn{flex:1;padding:10px 6px;border:1.5px solid ${C.border};border-radius:10px;background:#fff;color:${C.slate};font-weight:600;font-size:13px;cursor:pointer;transition:all 0.15s;text-align:center;}
-        .seg-btn.active{background:${C.terracotta};color:#fff;border-color:${C.terracotta};}
-        .pill-toggle{padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1.5px solid ${C.border};background:#fff;cursor:pointer;transition:all 0.15s;color:${C.slate};}
-        .pill-toggle.active{background:${C.navyDark};color:#fff;border-color:${C.navyDark};}
-        .upload-zone{border:2px dashed ${C.border};border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;}
-        .upload-zone:hover,.upload-zone.drag{border-color:${C.terracotta};background:#fffaf8;}
-        .upload-zone.has-file{border-color:${C.success};background:#f0faf4;}
-        .entry-card{background:${C.cream};border-radius:12px;padding:20px;border:1px solid ${C.border};margin-bottom:12px;}
+        .modal-box{background:#fff;border-radius:16px;padding:28px;max-width:440px;width:100%;position:relative;}
+        .modal-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border:none;background:transparent;color:${C.muted};cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;z-index:10;}
+        .modal-close:hover{background:${C.cream};color:${C.navyDark};}
         .share-btn{background:none;border:none;cursor:pointer;color:${C.muted};font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;padding:0;transition:color 0.15s;}
         .share-btn:hover{color:${C.slate};}
-        .submit-cta-btn{padding:12px 24px;background:${C.terracotta};color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.2s,color 0.2s;border:2px solid ${C.terracotta};}
+        .submit-cta-btn{padding:0 20px;height:42px;background:${C.terracotta};color:#fff;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.2s,color 0.2s;border:2px solid ${C.terracotta};font-family:var(--font-urbanist,'Urbanist',sans-serif);display:inline-flex;align-items:center;justify-content:center;}
         .submit-cta-btn:hover{background:#fff;color:${C.terracotta};}
-        .submit-price-btn{width:100%;padding:14px;background:${C.terracotta};color:#fff;border:2px solid ${C.terracotta};border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:background 0.2s,color 0.2s;}
-        .submit-price-btn:hover{background:#fff;color:${C.terracotta};}
         .toaster-create-btn{display:block;padding:14px;background:${C.terracotta};color:#fff;border:2px solid ${C.terracotta};border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;transition:background 0.18s,color 0.18s;}
         .toaster-create-btn:hover{background:#fff;color:${C.terracotta};}
         .toaster-signin-btn{display:block;padding:14px;background:transparent;color:${C.navyDark};border:2px solid ${C.navyDark};border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;transition:background 0.18s,color 0.18s;}
         .toaster-signin-btn:hover{background:${C.navyDark};color:#fff;}
         .chart-row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;}
 
-
         /* Header */
         .vet-header{background:${C.navyDark};min-height:393px;padding:80px 0 88px;position:relative;overflow:hidden;box-sizing:border-box;border-bottom:1px solid rgba(255,255,255,0.07);}
-
 
         /* Info strip */
         .info-2col{display:grid;grid-template-columns:1fr 1fr;}
@@ -828,7 +777,6 @@ export default function VetPage() {
         .info-div-right{padding:0 20px;}
         /* Mobile-only divider — shown only when stacked */
         .info-mob-div{display:none;height:1px;background:${C.border};margin:0 20px;}
-
 
         @media(max-width:768px){
           .vet-header{min-height:338px;padding:80px 0 88px;}
@@ -850,9 +798,9 @@ export default function VetPage() {
           .form-2col{grid-template-columns:1fr!important;}
           .seg-group{flex-wrap:wrap!important;}
         }
-        @media(max-width:375px){.entry-card{padding:14px;}}
+        @media(max-width:375px){}
       
-        .nav-link-dark:hover { color:#172531 !important; }
+   
       `}</style>
 
       {/* Pricing modal */}
@@ -862,45 +810,31 @@ export default function VetPage() {
           onClick={() => setShowPricingModal(false)}
         >
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div
+            <button
+              className="modal-close"
+              onClick={() => setShowPricingModal(false)}
+              aria-label="Close"
+              type="button"
+            >
+              <X size={22} strokeWidth={2.2} />
+            </button>
+            <h3
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                marginBottom: "16px",
+                margin: "0 0 16px",
+                fontSize: "17px",
+                fontWeight: "800",
+                color: C.navyDark,
+                fontFamily: "var(--font-urbanist,system-ui)",
+                paddingRight: "40px",
               }}
             >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: "17px",
-                  fontWeight: "800",
-                  color: C.navyDark,
-                  fontFamily: "var(--font-urbanist,system-ui)",
-                }}
-              >
-                About our pricing data
-              </h3>
-              <button
-                onClick={() => setShowPricingModal(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "28px",
-                  color: "#aaa",
-                  lineHeight: 1,
-                  padding: "0 0 0 12px",
-                  fontWeight: "300",
-                }}
-              >
-                ×
-              </button>
-            </div>
+              About our pricing data
+            </h3>
             <p
               style={{
                 margin: "0 0 12px",
                 fontSize: "15px",
+                fontWeight: 500,
                 color: C.slate,
                 lineHeight: "1.7",
               }}
@@ -912,667 +846,14 @@ export default function VetPage() {
               style={{
                 margin: 0,
                 fontSize: "15px",
+                fontWeight: 500,
                 color: C.slate,
                 lineHeight: "1.7",
+                textWrap: "pretty",
               }}
             >
               Always confirm pricing directly with your vet before booking.
             </p>
-          </div>
-        </div>
-      )}
-
-      {/* Sheet */}
-      {sheetMounted && (
-        <div
-          className={`sheet-overlay${sheetVisible ? " visible" : ""}`}
-          onClick={closeSheet}
-        >
-          <div className="sheet-box" onClick={(e) => e.stopPropagation()}>
-            <div className="sheet-header-row">
-              <div style={{ width: "32px" }} />
-              <div className="sheet-handle-bar" />
-              <button
-                className="sheet-close-btn"
-                onClick={closeSheet}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <div style={{ padding: "16px 24px 48px" }}>
-              {session === null ? (
-                <div style={{ textAlign: "center", padding: "16px 0 32px" }}>
-                  <div style={{ fontSize: "44px", marginBottom: "16px" }}>
-                    🐾
-                  </div>
-                  <h3
-                    style={{
-                      margin: "0 0 8px",
-                      fontSize: "20px",
-                      fontWeight: "800",
-                      color: C.navyDark,
-                      fontFamily: "var(--font-urbanist,system-ui)",
-                    }}
-                  >
-                    Create a free account
-                  </h3>
-                  <p
-                    style={{
-                      margin: "0 0 28px",
-                      fontSize: "15px",
-                      color: C.slate,
-                      lineHeight: "1.7",
-                      maxWidth: "300px",
-                      marginLeft: "auto",
-                      marginRight: "auto",
-                    }}
-                  >
-                    Join PetParrk to submit prices and help pet owners in your
-                    community.
-                  </p>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "10px",
-                      maxWidth: "300px",
-                      margin: "0 auto",
-                    }}
-                  >
-                    <Link
-                      href={`/auth?redirect=${encodeURIComponent(returnUrl)}&tab=signup`}
-                      className="toaster-create-btn"
-                    >
-                      Create free account
-                    </Link>
-                    <Link
-                      href={`/auth?redirect=${encodeURIComponent(returnUrl)}`}
-                      className="toaster-signin-btn"
-                    >
-                      Sign in
-                    </Link>
-                  </div>
-                </div>
-              ) : formStatus === "success" ? (
-                <div style={{ textAlign: "center", padding: "16px 0 32px" }}>
-                  <div style={{ fontSize: "48px", marginBottom: "16px" }}>
-                    🎉
-                  </div>
-                  <h4
-                    style={{
-                      fontSize: "20px",
-                      fontWeight: "800",
-                      color: C.navyDark,
-                      margin: "0 0 8px",
-                      fontFamily: "var(--font-urbanist,system-ui)",
-                    }}
-                  >
-                    Thank you!
-                  </h4>
-                  <p
-                    style={{
-                      fontSize: "15px",
-                      color: C.slate,
-                      lineHeight: "1.7",
-                      margin: "0 0 28px",
-                    }}
-                  >
-                    Your submission is under review.
-                  </p>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "10px",
-                      maxWidth: "300px",
-                      margin: "0 auto",
-                    }}
-                  >
-                    <button
-                      onClick={resetForm}
-                      style={{
-                        padding: "13px 32px",
-                        background: C.terracotta,
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "12px",
-                        fontSize: "15px",
-                        fontWeight: "700",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Submit another price
-                    </button>
-                    <button
-                      onClick={closeSheet}
-                      style={{
-                        padding: "13px 32px",
-                        background: "transparent",
-                        color: C.slate,
-                        border: `1.5px solid ${C.border}`,
-                        borderRadius: "12px",
-                        fontSize: "15px",
-                        fontWeight: "700",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Done
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <h3
-                    style={{
-                      margin: "0 0 4px",
-                      fontSize: "20px",
-                      fontWeight: "800",
-                      color: C.navyDark,
-                      fontFamily: "var(--font-urbanist,system-ui)",
-                    }}
-                  >
-                    Submit a Price
-                  </h3>
-                  <p
-                    style={{
-                      margin: "0 0 16px",
-                      fontSize: "14px",
-                      color: C.muted,
-                    }}
-                  >
-                    Help other pet owners know what to expect.
-                  </p>
-                  <div
-                    style={{
-                      height: "1px",
-                      background: C.border,
-                      margin: "0 0 20px",
-                    }}
-                  />
-                  <div style={{ marginBottom: "16px" }}>
-                    <label className="pp-label">Vet</label>
-                    <input
-                      type="text"
-                      value={vetName}
-                      readOnly
-                      className="pp-input"
-                      style={{
-                        background: C.cream,
-                        color: C.slate,
-                        cursor: "default",
-                      }}
-                    />
-                  </div>
-                  {entries.map((entry, idx) => (
-                    <div key={idx} className="entry-card">
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "14px",
-                        }}
-                      >
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: "13px",
-                            fontWeight: "700",
-                            color: C.muted,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.06em",
-                          }}
-                        >
-                          Service {entries.length > 1 ? idx + 1 : ""}
-                        </p>
-                        {entries.length > 1 && (
-                          <button
-                            onClick={() => removeEntry(idx)}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              fontSize: "13px",
-                              color: C.error,
-                              fontWeight: "700",
-                              padding: 0,
-                            }}
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </div>
-                      <div style={{ marginBottom: "14px" }}>
-                        <label className="pp-label">
-                          Service <span style={{ color: C.terracotta }}>*</span>
-                        </label>
-                        <div className="pp-select-wrap">
-                          <select
-                            value={entry.service_name}
-                            onChange={(e) =>
-                              updateEntry(idx, "service_name", e.target.value)
-                            }
-                            className="pp-input"
-                          >
-                            <option value="">— Select —</option>
-                            <optgroup label="Exam">
-                              <option>Annual Wellness Exam</option>
-                              <option>Doctor Exam</option>
-                              <option>Vet Tech Exam</option>
-                            </optgroup>
-                            <optgroup label="Vaccine">
-                              <option>Bordetella Vaccine</option>
-                              <option>Canine Influenza Vaccine</option>
-                              <option>DHPP Vaccine</option>
-                              <option>FeLV Vaccine</option>
-                              <option>FVRCP Vaccine</option>
-                              <option>Leptospirosis Vaccine</option>
-                              <option>Rabies Vaccine</option>
-                              <option>Vaccine Package — Cat</option>
-                              <option>Vaccine Package — Dog</option>
-                            </optgroup>
-                            <optgroup label="Dental">
-                              <option>Dental Cleaning</option>
-                              <option>Dental Cleaning (No Anesthesia)</option>
-                            </optgroup>
-                            <optgroup label="Surgery">
-                              <option>Neuter</option>
-                              <option>Spay</option>
-                            </optgroup>
-                            <optgroup label="Emergency">
-                              <option>Emergency Visit</option>
-                              <option>Urgent Care Visit</option>
-                            </optgroup>
-                          </select>
-                        </div>
-                      </div>
-                      {isVaccinePackage(entry.service_name) && (
-                        <div style={{ marginBottom: "14px" }}>
-                          <label className="pp-label">Vaccines Included</label>
-                          <input
-                            type="text"
-                            value={entry.vaccines_included || ""}
-                            onChange={(e) =>
-                              updateEntry(
-                                idx,
-                                "vaccines_included",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="e.g. Rabies, DHPP, Bordetella…"
-                            className="pp-input"
-                          />
-                          <p
-                            style={{
-                              margin: "4px 0 0",
-                              fontSize: "12px",
-                              color: C.muted,
-                            }}
-                          >
-                            This will display publicly on the vet profile.
-                          </p>
-                        </div>
-                      )}
-                      <div style={{ marginBottom: "14px" }}>
-                        <label className="pp-label">
-                          Price Type{" "}
-                          <span style={{ color: C.terracotta }}>*</span>
-                        </label>
-                        <div
-                          className="seg-group"
-                          style={{ display: "flex", gap: "8px" }}
-                        >
-                          {["exact", "range", "starting"].map((type) => (
-                            <button
-                              key={type}
-                              onClick={() =>
-                                updateEntry(idx, "price_type", type)
-                              }
-                              className={`seg-btn${entry.price_type === type ? " active" : ""}`}
-                            >
-                              {type.charAt(0).toUpperCase() + type.slice(1)}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div
-                        className="form-2col"
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns:
-                            entry.price_type === "range" ? "1fr 1fr" : "1fr",
-                          gap: "12px",
-                          marginBottom: "14px",
-                        }}
-                      >
-                        <div>
-                          <label className="pp-label">
-                            {entry.price_type === "range"
-                              ? "Price Low ($)"
-                              : "Price ($)"}{" "}
-                            <span style={{ color: C.terracotta }}>*</span>
-                          </label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 85"
-                            value={entry.price_low}
-                            onChange={(e) =>
-                              updateEntry(idx, "price_low", e.target.value)
-                            }
-                            className="pp-input"
-                          />
-                        </div>
-                        {entry.price_type === "range" && (
-                          <div>
-                            <label className="pp-label">
-                              Price High ($){" "}
-                              <span style={{ color: C.terracotta }}>*</span>
-                            </label>
-                            <input
-                              type="number"
-                              placeholder="e.g. 200"
-                              value={entry.price_high}
-                              onChange={(e) =>
-                                updateEntry(idx, "price_high", e.target.value)
-                              }
-                              className="pp-input"
-                            />
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ marginBottom: "14px" }}>
-                        <label className="pp-label">Species</label>
-                        <div className="pp-select-wrap">
-                          <select
-                            value={entry.species}
-                            onChange={(e) =>
-                              updateEntry(idx, "species", e.target.value)
-                            }
-                            className="pp-input"
-                          >
-                            <option value="">— Select —</option>
-                            <option value="dog">Dog</option>
-                            <option value="cat">Cat</option>
-                            <option value="rabbit">Rabbit</option>
-                            <option value="bird">Bird</option>
-                            <option value="other">Other</option>
-                          </select>
-                        </div>
-                      </div>
-                      {entry.species === "other" && (
-                        <div
-                          style={{ marginTop: "10px", marginBottom: "14px" }}
-                        >
-                          <input
-                            type="text"
-                            value={entry.species_other || ""}
-                            onChange={(e) =>
-                              updateEntry(idx, "species_other", e.target.value)
-                            }
-                            placeholder="e.g. Guinea pig, bird…"
-                            className="pp-input"
-                          />
-                        </div>
-                      )}
-                      <div style={{ marginBottom: "14px" }}>
-                        <label className="pp-label">Includes</label>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "8px",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          {[
-                            { key: "includes_bloodwork", label: "Bloodwork" },
-                            { key: "includes_xrays", label: "X-Rays" },
-                            { key: "includes_anesthesia", label: "Anesthesia" },
-                          ].map(({ key, label }) => (
-                            <button
-                              key={key}
-                              onClick={() => updateEntry(idx, key, !entry[key])}
-                              className={`pill-toggle${entry[key] ? " active" : ""}`}
-                            >
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div
-                        className="form-2col"
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr",
-                          gap: "12px",
-                        }}
-                      >
-                        <div>
-                          <label className="pp-label">CareCredit</label>
-                          <div className="pp-select-wrap">
-                            <select
-                              value={entry.carecredit}
-                              onChange={(e) =>
-                                updateEntry(idx, "carecredit", e.target.value)
-                              }
-                              className="pp-input"
-                            >
-                              <option value="">— Select —</option>
-                              <option value="yes">Yes</option>
-                              <option value="no">No</option>
-                              <option value="unknown">Unknown</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="pp-label">
-                            Accepting New Patients
-                          </label>
-                          <div className="pp-select-wrap">
-                            <select
-                              value={entry.accepting_new_patients}
-                              onChange={(e) =>
-                                updateEntry(
-                                  idx,
-                                  "accepting_new_patients",
-                                  e.target.value,
-                                )
-                              }
-                              className="pp-input"
-                            >
-                              <option value="">— Select —</option>
-                              <option value="yes">Yes</option>
-                              <option value="no">No</option>
-                              <option value="unknown">Unknown</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <button
-                    onClick={addEntry}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      background: "transparent",
-                      color: C.terracotta,
-                      border: `1.5px dashed ${C.terracotta}`,
-                      borderRadius: "12px",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      cursor: "pointer",
-                      marginBottom: "20px",
-                    }}
-                  >
-                    + Add another service
-                  </button>
-                  <div style={{ marginBottom: "16px" }}>
-                    <label className="pp-label">Date of Visit</label>
-                    <input
-                      type="date"
-                      value={visitDate}
-                      onChange={(e) => setVisitDate(e.target.value)}
-                      className="pp-input"
-                      style={{ textAlign: "left" }}
-                    />
-                  </div>
-                  <div style={{ marginBottom: "16px" }}>
-                    <label className="pp-label">Notes</label>
-                    <textarea
-                      value={submitterNote}
-                      onChange={(e) => setSubmitterNote(e.target.value)}
-                      placeholder="Anything else that would help others?"
-                      className="pp-input"
-                      rows={3}
-                      style={{ resize: "vertical" }}
-                    />
-                  </div>
-                  <div style={{ marginBottom: "20px" }}>
-                    <label className="pp-label">
-                      Receipt or Invoice{" "}
-                      <span style={{ fontWeight: "400", color: C.muted }}>
-                        (optional · JPG, PNG, PDF · max 5MB)
-                      </span>
-                    </label>
-                    <div
-                      className={`upload-zone${submitFile ? " has-file" : isDragging ? " drag" : ""}`}
-                      onClick={() => fileInputRef.current?.click()}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setIsDragging(true);
-                      }}
-                      onDragLeave={() => setIsDragging(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsDragging(false);
-                        const f = e.dataTransfer.files?.[0];
-                        if (f) validateAndSetFile(f);
-                      }}
-                    >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".jpg,.jpeg,.png,.pdf"
-                        style={{ display: "none" }}
-                        onChange={(e) => {
-                          if (e.target.files?.[0])
-                            validateAndSetFile(e.target.files[0]);
-                        }}
-                      />
-                      {submitFile ? (
-                        <>
-                          <div
-                            style={{ fontSize: "24px", marginBottom: "8px" }}
-                          >
-                            📎
-                          </div>
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: "14px",
-                              fontWeight: "700",
-                              color: C.navyDark,
-                              overflowWrap: "break-word",
-                              wordBreak: "break-all",
-                            }}
-                          >
-                            {submitFile.name}
-                          </p>
-                          <p
-                            style={{
-                              margin: "4px 0 0",
-                              fontSize: "13px",
-                              color: C.muted,
-                            }}
-                          >
-                            Tap to change.
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <div
-                            style={{ fontSize: "24px", marginBottom: "8px" }}
-                          >
-                            📄
-                          </div>
-                          <p
-                            style={{
-                              margin: "0 0 4px",
-                              fontSize: "14px",
-                              fontWeight: "600",
-                              color: C.slate,
-                            }}
-                          >
-                            Drag and drop, or tap to upload.
-                          </p>
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: "13px",
-                              color: C.muted,
-                            }}
-                          >
-                            JPG, PNG, or PDF — max 5MB.
-                          </p>
-                        </>
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        background: C.cream,
-                        borderRadius: "8px",
-                        padding: "10px 14px",
-                        marginTop: "10px",
-                        border: `1px solid ${C.border}`,
-                      }}
-                    >
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "13px",
-                          color: C.navyDark,
-                          lineHeight: "1.6",
-                        }}
-                      >
-                        <strong>Before uploading:</strong> Remove or black out
-                        any account numbers, card numbers, or billing details.
-                        We only use the service name and price.
-                      </p>
-                    </div>
-                  </div>
-                  {formStatus === "error" && (
-                    <div
-                      style={{
-                        background: "#FCEAEA",
-                        color: C.error,
-                        borderRadius: "8px",
-                        padding: "10px 14px",
-                        fontSize: "14px",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      Please select a service and enter a price for each entry.
-                    </div>
-                  )}
-                  <button onClick={handleSubmit} className="submit-price-btn">
-                    Submit{" "}
-                    {entries.length > 1 ? `${entries.length} Prices` : "Price"}
-                  </button>
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      color: C.muted,
-                      textAlign: "center",
-                      marginTop: "12px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    All submissions are reviewed before going live.
-                  </p>
-                </>
-              )}
-            </div>
           </div>
         </div>
       )}
@@ -1657,6 +938,7 @@ export default function VetPage() {
               style={{
                 margin: "0 0 16px",
                 fontSize: "17px",
+                fontWeight: 500,
                 color: "rgba(255,255,255,0.6)",
                 overflowWrap: "break-word",
               }}
@@ -1690,7 +972,7 @@ export default function VetPage() {
                 <span
                   key={t}
                   style={{
-                    fontSize: "11px",
+                    fontSize: "13px",
                     fontWeight: "700",
                     background: "rgba(239,200,139,0.16)",
                     color: C.gold,
@@ -1705,7 +987,7 @@ export default function VetPage() {
             {vet.ownership && (
               <span
                 style={{
-                  fontSize: "11px",
+                  fontSize: "13px",
                   fontWeight: "700",
                   background: "rgba(255,255,255,0.07)",
                   color: "rgba(255,255,255,0.5)",
@@ -1727,9 +1009,13 @@ export default function VetPage() {
       <div style={{ background: C.cream }}>
         <div
           className="pp-container"
-          style={{ padding: "24px 24px 80px", boxSizing: "border-box" }}
+          style={{
+            paddingTop: "24px",
+            paddingBottom: "80px",
+            boxSizing: "border-box",
+          }}
         >
-          <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+          <div className="pp-container-text">
             <div style={{ marginBottom: "20px" }}>
               <Link
                 href="/vets"
@@ -1743,7 +1029,12 @@ export default function VetPage() {
                   gap: "6px",
                 }}
               >
-                ← Back to all vets
+                <ArrowLeft
+                  size={14}
+                  strokeWidth={2.4}
+                  style={{ marginRight: "4px", verticalAlign: "middle" }}
+                />
+                Back to all vets
               </Link>
             </div>
 
@@ -1774,21 +1065,31 @@ export default function VetPage() {
                 }}
               >
                 <button onClick={handleShare} className="share-btn">
-                  🔗 {shareConfirmed ? "Copied!" : "Share"}
+                  <Share2
+                    size={16}
+                    strokeWidth={2.2}
+                    style={{ marginRight: "4px", verticalAlign: "middle" }}
+                  />
+                  {shareConfirmed ? "Copied!" : "Share"}
                 </button>
                 <button
                   onClick={toggleSave}
                   className={`save-btn${saveAnimating ? " save-animating" : ""}`}
                   title={isSaved ? "Remove from saved" : "Save this vet"}
                 >
-                  {isSaved ? "❤️" : "🤍"}
+                  <Heart
+                    size={22}
+                    strokeWidth={2}
+                    fill={isSaved ? "#CF5C36" : "none"}
+                    color={isSaved ? "#CF5C36" : C.muted}
+                  />
                 </button>
               </div>
 
               {/* Row 1 */}
               <div className="info-2col">
                 {/* Address */}
-                <div style={{ padding: "20px 24px 0", position: "relative" }}>
+                <div style={{ padding: "20px 20px 0", position: "relative" }}>
                   <div className="v-div" />
                   <InfoLabel>Location</InfoLabel>
                   {vet.address && (
@@ -1797,10 +1098,10 @@ export default function VetPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
-                        fontSize: "14px",
+                        fontSize: "15px",
                         color: C.terracotta,
                         textDecoration: "none",
-                        fontWeight: "500",
+                        fontWeight: "600",
                         display: "block",
                         lineHeight: "1.6",
                         overflowWrap: "break-word",
@@ -1818,7 +1119,8 @@ export default function VetPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
-                        fontSize: "14px",
+                        fontSize: "15px",
+                        fontWeight: "600",
                         color: C.terracotta,
                         textDecoration: "none",
                         display: "block",
@@ -1836,7 +1138,7 @@ export default function VetPage() {
                   />
                 </div>
                 {/* Hours */}
-                <div style={{ padding: "20px 24px" }}>
+                <div style={{ padding: "20px 20px" }}>
                   <InfoLabel>Hours</InfoLabel>
                   <HoursDisplay lines={hoursLines} />
                 </div>
@@ -1855,15 +1157,15 @@ export default function VetPage() {
               {/* Row 2 */}
               <div className="info-2col">
                 {/* Call + Website */}
-                <div style={{ padding: "20px 24px 0", position: "relative" }}>
+                <div style={{ padding: "20px 20px 0", position: "relative" }}>
                   <div className="v-div" />
                   <InfoLabel>Call</InfoLabel>
                   {vet.phone && (
                     <a
                       href={`tel:${vet.phone}`}
                       style={{
-                        fontSize: "14px",
-                        fontWeight: "400",
+                        fontSize: "15px",
+                        fontWeight: "600",
                         color: C.navyDark,
                         textDecoration: "none",
                         display: "block",
@@ -1881,13 +1183,13 @@ export default function VetPage() {
                   />
                 </div>
                 {/* Details — last section, no divider after */}
-                <div style={{ padding: "20px 24px" }}>
+                <div style={{ padding: "20px 20px" }}>
                   <InfoLabel>Details</InfoLabel>
                   <div
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: "8px",
+                      gap: "10px",
                     }}
                   >
                     <span
@@ -1897,15 +1199,19 @@ export default function VetPage() {
                         gap: "6px",
                         padding: "4px 10px",
                         borderRadius: "20px",
-                        fontSize: "13px",
-                        fontWeight: "600",
+                        fontSize: "14px",
+                        fontWeight: "700",
                         background: vet.carecredit ? "#EDFAF3" : "#FCEAEA",
                         color: vet.carecredit ? C.success : C.error,
                         width: "fit-content",
                       }}
                     >
-                      {vet.carecredit ? "✅" : "❌"} CareCredit{" "}
-                      {vet.carecredit ? "accepted" : "not accepted"}
+                      {vet.carecredit ? (
+                        <Check size={12} strokeWidth={2.6} />
+                      ) : (
+                        <X size={12} strokeWidth={2.6} />
+                      )}{" "}
+                      CareCredit {vet.carecredit ? "accepted" : "not accepted"}
                     </span>
                     {vet.accepting_new_patients !== null && (
                       <span
@@ -1915,8 +1221,8 @@ export default function VetPage() {
                           gap: "6px",
                           padding: "4px 10px",
                           borderRadius: "20px",
-                          fontSize: "13px",
-                          fontWeight: "600",
+                          fontSize: "14px",
+                          fontWeight: "700",
                           background: vet.accepting_new_patients
                             ? "#EDFAF3"
                             : "#FCEAEA",
@@ -1926,7 +1232,11 @@ export default function VetPage() {
                           width: "fit-content",
                         }}
                       >
-                        {vet.accepting_new_patients ? "✅" : "❌"}{" "}
+                        {vet.accepting_new_patients ? (
+                          <Check size={12} strokeWidth={2.6} />
+                        ) : (
+                          <X size={12} strokeWidth={2.6} />
+                        )}{" "}
                         {vet.accepting_new_patients
                           ? "Accepting"
                           : "Not accepting"}{" "}
@@ -1945,7 +1255,7 @@ export default function VetPage() {
                 style={{
                   background: C.white,
                   borderRadius: "16px",
-                  padding: "24px 28px",
+                  padding: "24px 20px",
                   marginBottom: "24px",
                   border: `1px solid ${C.border}`,
                 }}
@@ -1963,206 +1273,240 @@ export default function VetPage() {
                 </h3>
                 <p
                   style={{
-                    margin: "0 0 24px",
-                    fontSize: "14px",
+                    margin: "0 0 20px",
+                    fontSize: "15px",
+                    fontWeight: "500",
                     color: C.muted,
+                    lineHeight: "1.6",
+                    textWrap: "pretty",
+                    maxWidth: "98%",
                   }}
                 >
                   How this vet compares to the {getRegionFull(vet?.city)}{" "}
                   average
                 </p>
-                {prices.map((price) => {
-                  if (price.price_type === "starting") return null;
-                  const serviceName = price.services?.name;
-                  const vetPrice = price.price_low || price.price_paid;
-                  const vetRegion = getRegion(vet?.city);
-                  const allForSvc = allPrices.filter(
-                    (p) =>
-                      p.services?.name === serviceName &&
-                      p.price_low &&
-                      p.services?.id !== 8 &&
-                      p.price_type !== "starting" &&
-                      getRegion(p.vets?.city) === vetRegion,
-                  );
-                  const avg =
-                    allForSvc.length > 0
-                      ? Math.round(
-                          allForSvc.reduce((s, p) => s + p.price_low, 0) /
-                            allForSvc.length,
-                        )
-                      : null;
-                  if (!vetPrice || !avg) return null;
-                  const isEqual = vetPrice === avg;
-                  const isCheaper = vetPrice < avg;
-                  const max = Math.max(vetPrice, avg) * 1.2;
-                  const isLast =
-                    visibleChartPrices[visibleChartPrices.length - 1]?.id ===
-                    price.id;
-                  const badgeBg = isEqual
-                    ? "#F5F0E8"
-                    : isCheaper
-                      ? "#EDFAF3"
-                      : "#FCEAEA";
-                  const badgeColor = isEqual
-                    ? C.slate
-                    : isCheaper
-                      ? C.success
-                      : C.error;
-                  const badgeLabel = isEqual
-                    ? "≈ At average"
-                    : isCheaper
-                      ? "✓ Below average"
-                      : "↑ Above average";
-                  const barColor = isEqual
-                    ? C.muted
-                    : isCheaper
-                      ? C.success
-                      : C.error;
-                  return (
-                    <div key={price.id}>
-                      <div style={{ marginBottom: "20px" }}>
-                        <div className="chart-row-header">
-                          <span
-                            style={{
-                              fontSize: "14px",
-                              fontWeight: "700",
-                              color: C.navyDark,
-                              overflowWrap: "break-word",
-                            }}
-                          >
-                            {serviceName}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: "700",
-                              padding: "3px 10px",
-                              borderRadius: "20px",
-                              background: badgeBg,
-                              color: badgeColor,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {badgeLabel}
-                          </span>
-                        </div>
-                        {[
-                          {
-                            label: "This vet",
-                            width: Math.round((vetPrice / max) * 100),
-                            value: vetPrice,
-                            barColor,
-                          },
-                          {
-                            label: `${vetRegion} avg`,
-                            width: Math.round((avg / max) * 100),
-                            value: avg,
-                            barColor: C.muted,
-                          },
-                        ].map((bar) => (
-                          <div key={bar.label} style={{ marginBottom: "8px" }}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                              }}
-                            >
+                <div className={`price-gate-wrap${!session ? " gated" : ""}`}>
+                  {!session && (
+                    <div className="price-gate-overlay">
+                      <Link href="/auth" className="price-gate-btn">
+                        <Lock size={14} strokeWidth={2.5} />
+                        Sign up to see pricing
+                      </Link>
+                    </div>
+                  )}
+                  <div className="price-gate-inner">
+                    {prices.map((price) => {
+                      if (price.price_type === "starting") return null;
+                      const serviceName = price.services?.name;
+                      const vetPrice = price.price_low || price.price_paid;
+                      const vetRegion = getRegion(vet?.city);
+                      const allForSvc = allPrices.filter(
+                        (p) =>
+                          p.services?.name === serviceName &&
+                          p.price_low &&
+                          p.services?.id !== 8 &&
+                          p.price_type !== "starting" &&
+                          getRegion(p.vets?.city) === vetRegion,
+                      );
+                      const avg =
+                        allForSvc.length > 0
+                          ? Math.round(
+                              allForSvc.reduce((s, p) => s + p.price_low, 0) /
+                                allForSvc.length,
+                            )
+                          : null;
+                      if (!vetPrice || !avg) return null;
+                      const isEqual = vetPrice === avg;
+                      const isCheaper = vetPrice < avg;
+                      const max = Math.max(vetPrice, avg) * 1.2;
+                      const isLast =
+                        visibleChartPrices[visibleChartPrices.length - 1]
+                          ?.id === price.id;
+                      const badgeBg = isEqual
+                        ? "#F5F0E8"
+                        : isCheaper
+                          ? "#EDFAF3"
+                          : "#FCEAEA";
+                      const badgeColor = isEqual
+                        ? C.slate
+                        : isCheaper
+                          ? C.success
+                          : C.error;
+                      const badgeLabel = isEqual ? (
+                        "≈ At average"
+                      ) : isCheaper ? (
+                        <>
+                          <Check size={12} strokeWidth={2.6} /> Below average
+                        </>
+                      ) : (
+                        <>
+                          <ArrowUp size={12} strokeWidth={2.6} /> Above average
+                        </>
+                      );
+                      const barColor = isEqual
+                        ? C.muted
+                        : isCheaper
+                          ? C.success
+                          : C.error;
+                      return (
+                        <div key={price.id}>
+                          <div style={{ marginBottom: "20px" }}>
+                            <div className="chart-row-header">
+                              <span
+                                style={{
+                                  fontSize: "15px",
+                                  fontWeight: "700",
+                                  color: C.navyDark,
+                                  overflowWrap: "break-word",
+                                }}
+                              >
+                                {serviceName}
+                              </span>
                               <span
                                 style={{
                                   fontSize: "13px",
-                                  color: C.muted,
-                                  width: "84px",
-                                  flexShrink: 0,
-                                  fontWeight: "600",
+                                  fontWeight: "700",
+                                  padding: "3px 10px",
+                                  borderRadius: "20px",
+                                  background: badgeBg,
+                                  color: badgeColor,
+                                  whiteSpace: "nowrap",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                {bar.label}
+                                {badgeLabel}
                               </span>
+                            </div>
+                            {[
+                              {
+                                label: "This vet",
+                                width: Math.round((vetPrice / max) * 100),
+                                value: vetPrice,
+                                barColor,
+                              },
+                              {
+                                label: `${vetRegion} avg`,
+                                width: Math.round((avg / max) * 100),
+                                value: avg,
+                                barColor: C.muted,
+                              },
+                            ].map((bar) => (
                               <div
-                                style={{
-                                  flex: 1,
-                                  background: "#f0ede8",
-                                  borderRadius: "5px",
-                                  height: "30px",
-                                  overflow: "visible",
-                                  position: "relative",
-                                }}
+                                key={bar.label}
+                                style={{ marginBottom: "8px" }}
                               >
                                 <div
                                   style={{
-                                    width: chartVisible
-                                      ? `${bar.width}%`
-                                      : "0%",
-                                    height: "100%",
-                                    background: bar.barColor,
-                                    borderRadius: "5px",
-                                    transition:
-                                      "width 0.9s cubic-bezier(0.4,0,0.2,1)",
                                     display: "flex",
                                     alignItems: "center",
-                                    justifyContent: "flex-end",
-                                    paddingRight:
-                                      bar.width >= 15 ? "10px" : "0",
-                                    boxSizing: "border-box",
-                                    position: "relative",
+                                    gap: "10px",
                                   }}
                                 >
-                                  {bar.width >= 15 ? (
-                                    <span
+                                  <span
+                                    style={{
+                                      fontSize: "14px",
+                                      color: C.muted,
+                                      width: "84px",
+                                      flexShrink: 0,
+                                      fontWeight: "600",
+                                    }}
+                                  >
+                                    {bar.label}
+                                  </span>
+                                  <div
+                                    style={{
+                                      flex: 1,
+                                      background: "#f0ede8",
+                                      borderRadius: "5px",
+                                      height: "30px",
+                                      overflow: "visible",
+                                      position: "relative",
+                                    }}
+                                  >
+                                    <div
                                       style={{
-                                        fontSize: "13px",
-                                        color: "#fff",
-                                        fontWeight: "700",
-                                        whiteSpace: "nowrap",
+                                        width: chartVisible
+                                          ? `${bar.width}%`
+                                          : "0%",
+                                        height: "100%",
+                                        background: bar.barColor,
+                                        borderRadius: "5px",
+                                        transition:
+                                          "width 0.9s cubic-bezier(0.4,0,0.2,1)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "flex-end",
+                                        paddingRight:
+                                          bar.width >= 15 ? "10px" : "0",
+                                        boxSizing: "border-box",
+                                        position: "relative",
                                       }}
                                     >
-                                      $
-                                      {Number(bar.value) % 1 === 0
-                                        ? bar.value.toLocaleString()
-                                        : bar.value.toLocaleString("en-US", {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2,
-                                          })}
-                                    </span>
-                                  ) : (
-                                    <span
-                                      style={{
-                                        fontSize: "13px",
-                                        color: C.navyDark,
-                                        fontWeight: "700",
-                                        whiteSpace: "nowrap",
-                                        position: "absolute",
-                                        left: "calc(100% + 6px)",
-                                      }}
-                                    >
-                                      $
-                                      {Number(bar.value) % 1 === 0
-                                        ? bar.value.toLocaleString()
-                                        : bar.value.toLocaleString("en-US", {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2,
-                                          })}
-                                    </span>
-                                  )}
+                                      {bar.width >= 15 ? (
+                                        <span
+                                          style={{
+                                            fontSize: "13px",
+                                            color: "#fff",
+                                            fontWeight: "700",
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          $
+                                          {Number(bar.value) % 1 === 0
+                                            ? bar.value.toLocaleString()
+                                            : bar.value.toLocaleString(
+                                                "en-US",
+                                                {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2,
+                                                },
+                                              )}
+                                        </span>
+                                      ) : (
+                                        <span
+                                          style={{
+                                            fontSize: "13px",
+                                            color: C.navyDark,
+                                            fontWeight: "700",
+                                            whiteSpace: "nowrap",
+                                            position: "absolute",
+                                            left: "calc(100% + 6px)",
+                                          }}
+                                        >
+                                          $
+                                          {Number(bar.value) % 1 === 0
+                                            ? bar.value.toLocaleString()
+                                            : bar.value.toLocaleString(
+                                                "en-US",
+                                                {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2,
+                                                },
+                                              )}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                      {!isLast && (
-                        <div
-                          style={{
-                            height: "1px",
-                            background: C.border,
-                            marginBottom: "20px",
-                          }}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
+                          {!isLast && (
+                            <div
+                              style={{
+                                height: "1px",
+                                background: C.border,
+                                marginBottom: "20px",
+                              }}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -2171,7 +1515,7 @@ export default function VetPage() {
               style={{
                 background: C.white,
                 borderRadius: "16px",
-                padding: "24px 28px",
+                padding: "24px 20px",
                 marginBottom: "8px",
                 border: `1px solid ${C.border}`,
               }}
@@ -2179,8 +1523,15 @@ export default function VetPage() {
               {vet.accepting_new_patients === false &&
               !prices.some((p) => p.is_verified && p.price_low) ? (
                 <div style={{ textAlign: "center", padding: "24px 0" }}>
-                  <div style={{ fontSize: "32px", marginBottom: "12px" }}>
-                    🚫
+                  <div
+                    style={{
+                      marginBottom: "12px",
+                      color: C.error,
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ban size={32} strokeWidth={2} />
                   </div>
                   <h3
                     style={{
@@ -2197,6 +1548,7 @@ export default function VetPage() {
                     style={{
                       margin: "0 0 20px",
                       fontSize: "15px",
+                      fontWeight: 500,
                       color: C.slate,
                       lineHeight: "1.7",
                       maxWidth: "320px",
@@ -2211,7 +1563,7 @@ export default function VetPage() {
                       href={`tel:${vet.phone}`}
                       style={{
                         display: "inline-block",
-                        padding: "12px 28px",
+                        padding: "12px 20px",
                         background: C.terracotta,
                         color: "#fff",
                         borderRadius: "12px",
@@ -2251,7 +1603,7 @@ export default function VetPage() {
                         background: "none",
                         border: "none",
                         padding: 0,
-                        fontSize: "13px",
+                        fontSize: "14px",
                         color: C.terracotta,
                         textDecoration: "underline",
                         cursor: "pointer",
@@ -2265,180 +1617,263 @@ export default function VetPage() {
                     <p
                       style={{
                         margin: "0 0 20px",
-                        fontSize: "13px",
+                        fontSize: "14px",
+                        fontWeight: "500",
                         color: C.muted,
                       }}
                     >
                       Last verified {formatVerifiedDate(lastVerified)}
                     </p>
                   )}
-                  {pricedRows.length === 0 ? (
-                    <p
+                  {reviewServices.length > 0 && (
+                    <div
                       style={{
-                        color: C.muted,
-                        fontStyle: "italic",
-                        fontSize: "15px",
-                        padding: "16px 0",
+                        display: "flex",
+                        gap: "10px",
+                        alignItems: "flex-start",
+                        padding: "12px 14px",
+                        marginBottom: "20px",
+                        background: "#F5F0E8",
+                        border: `1px solid ${C.border}`,
+                        borderRadius: "12px",
                       }}
                     >
-                      No pricing available yet.
-                    </p>
-                  ) : (
-                    pricedRows.map((p, i, arr) => {
-                      const accordionCopy = ACCORDION_COPY[p.services?.id];
-                      const isExpanded = !!expandedRows[p.id];
-                      const noteLines = parseNotes(p.notes);
-                      const isLast = i === arr.length - 1;
-                      return (
-                        <div key={p.id}>
-                          <div className="price-row">
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
-                            >
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <span
+                      <RefreshCw
+                        size={16}
+                        strokeWidth={2.2}
+                        color={C.slate}
+                        style={{ flexShrink: 0, marginTop: "2px" }}
+                      />
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "14px",
+                          fontWeight: 500,
+                          color: C.slate,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        Pricing for{" "}
+                        <strong style={{ fontWeight: 700, color: C.navyDark }}>
+                          {reviewServices.length === 1
+                            ? reviewServices[0]
+                            : reviewServices.length === 2
+                              ? `${reviewServices[0]} and ${reviewServices[1]}`
+                              : `${reviewServices.slice(0, -1).join(", ")}, and ${reviewServices[reviewServices.length - 1]}`}
+                        </strong>{" "}
+                        {reviewServices.length === 1 ? "is" : "are"} being
+                        updated and will be back shortly.
+                      </p>
+                    </div>
+                  )}
+                  <div className={`price-gate-wrap${!session ? " gated" : ""}`}>
+                    {!session && (
+                      <div className="price-gate-overlay">
+                        <Link href="/auth" className="price-gate-btn">
+                          <Lock size={14} strokeWidth={2.5} />
+                          Sign up to see pricing
+                        </Link>
+                      </div>
+                    )}
+                    <div className="price-gate-inner">
+                      {pricedRows.length === 0 ? (
+                        <p
+                          style={{
+                            color: C.muted,
+                            fontStyle: "italic",
+                            fontSize: "15px",
+                            fontWeight: 500,
+                            padding: "16px 0",
+                          }}
+                        >
+                          No pricing available yet.
+                        </p>
+                      ) : (
+                        pricedRows.map((p, i, arr) => {
+                          const accordionCopy = ACCORDION_COPY[p.services?.id];
+                          const isExpanded = !!expandedRows[p.id];
+                          const noteLines = parseNotes(p.notes);
+                          const isLast = i === arr.length - 1;
+                          return (
+                            <div key={p.id}>
+                              <div className="price-row">
+                                <div
                                   style={{
-                                    fontSize: "15px",
-                                    fontWeight: "600",
-                                    color: C.navyDark,
-                                    overflowWrap: "break-word",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
                                   }}
                                 >
-                                  {p.services?.name}
-                                </span>
-                                {noteLines.map((note, j) => (
-                                  <p
-                                    key={j}
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <span
+                                      style={{
+                                        fontSize: "16px",
+                                        fontWeight: "600",
+                                        color: C.navyDark,
+                                        overflowWrap: "break-word",
+                                      }}
+                                    >
+                                      {p.services?.name}
+                                    </span>
+                                    {noteLines.map((note, j) => (
+                                      <p
+                                        key={j}
+                                        style={{
+                                          margin: "2px 0 0",
+                                          fontSize: "14px",
+                                          fontWeight: 500,
+                                          color: C.muted,
+                                          overflowWrap: "break-word",
+                                        }}
+                                      >
+                                        {note}
+                                      </p>
+                                    ))}
+                                  </div>
+                                  <div
                                     style={{
-                                      margin: "2px 0 0",
-                                      fontSize: "13px",
-                                      color: C.muted,
-                                      overflowWrap: "break-word",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "12px",
+                                      marginLeft: "16px",
+                                      flexShrink: 0,
                                     }}
                                   >
-                                    {note}
-                                  </p>
-                                ))}
+                                    <span
+                                      style={{
+                                        fontSize: "16px",
+                                        fontWeight: "800",
+                                        color: C.navyDark,
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {formatPrice(
+                                        p.price_low,
+                                        p.price_high,
+                                        p.price_type,
+                                      )}
+                                    </span>
+                                    {accordionCopy && (
+                                      <button
+                                        className={`expand-btn${isExpanded ? " is-open" : ""}`}
+                                        onClick={() => toggleRow(p.id)}
+                                        aria-label={
+                                          isExpanded ? "Collapse" : "Expand"
+                                        }
+                                      >
+                                        <svg
+                                          className={`expand-icon${isExpanded ? " open" : ""}`}
+                                          width="12"
+                                          height="12"
+                                          viewBox="0 0 12 12"
+                                          fill="none"
+                                          aria-hidden="true"
+                                        >
+                                          <line
+                                            x1="6"
+                                            y1="0"
+                                            x2="6"
+                                            y2="12"
+                                            stroke="currentColor"
+                                            strokeWidth="1.8"
+                                            strokeLinecap="round"
+                                          />
+                                          <line
+                                            x1="0"
+                                            y1="6"
+                                            x2="12"
+                                            y2="6"
+                                            stroke="currentColor"
+                                            strokeWidth="1.8"
+                                            strokeLinecap="round"
+                                          />
+                                        </svg>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
+                              {accordionCopy && (
+                                <div
+                                  className={`acc-wrap${isExpanded ? " open" : ""}`}
+                                >
+                                  <div className="acc-inner">
+                                    <div
+                                      style={{
+                                        background: "#f9f9f7",
+                                        borderRadius: "10px",
+                                        padding: "20px",
+                                        marginBottom: "8px",
+                                      }}
+                                    >
+                                      <p
+                                        style={{
+                                          margin: "0 0 6px",
+                                          fontSize: "11px",
+                                          fontWeight: "700",
+                                          color: C.muted,
+                                          textTransform: "uppercase",
+                                          letterSpacing: "0.10em",
+                                        }}
+                                      >
+                                        {accordionCopy.heading}
+                                      </p>
+                                      <p
+                                        style={{
+                                          margin: 0,
+                                          fontSize: "14px",
+                                          fontWeight: 500,
+                                          color: C.slate,
+                                          lineHeight: "1.6",
+                                        }}
+                                      >
+                                        {accordionCopy.body}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                               <div
                                 style={{
                                   display: "flex",
-                                  alignItems: "center",
-                                  gap: "12px",
-                                  marginLeft: "16px",
-                                  flexShrink: 0,
+                                  justifyContent: "flex-end",
+                                  marginTop: "4px",
                                 }}
                               >
-                                <span
-                                  style={{
-                                    fontSize: "15px",
-                                    fontWeight: "800",
-                                    color: C.navyDark,
-                                    whiteSpace: "nowrap",
-                                  }}
+                                <button
+                                  type="button"
+                                  className="report-price-btn"
+                                  onClick={() =>
+                                    setReportingPrice({
+                                      id: p.id,
+                                      serviceName: p.services?.name || "",
+                                      serviceId: p.service_id,
+                                      display: formatPrice(
+                                        p.price_low,
+                                        p.price_high,
+                                        p.price_type,
+                                      ),
+                                    })
+                                  }
                                 >
-                                  {formatPrice(
-                                    p.price_low,
-                                    p.price_high,
-                                    p.price_type,
-                                  )}
-                                </span>
-                                {accordionCopy && (
-                                  <button
-                                    className={`expand-btn${isExpanded ? " is-open" : ""}`}
-                                    onClick={() => toggleRow(p.id)}
-                                    aria-label={
-                                      isExpanded ? "Collapse" : "Expand"
-                                    }
-                                  >
-                                    <svg
-                                      className={`expand-icon${isExpanded ? " open" : ""}`}
-                                      width="12"
-                                      height="12"
-                                      viewBox="0 0 12 12"
-                                      fill="none"
-                                      aria-hidden="true"
-                                    >
-                                      <line
-                                        x1="6"
-                                        y1="0"
-                                        x2="6"
-                                        y2="12"
-                                        stroke="currentColor"
-                                        strokeWidth="1.8"
-                                        strokeLinecap="round"
-                                      />
-                                      <line
-                                        x1="0"
-                                        y1="6"
-                                        x2="12"
-                                        y2="6"
-                                        stroke="currentColor"
-                                        strokeWidth="1.8"
-                                        strokeLinecap="round"
-                                      />
-                                    </svg>
-                                  </button>
-                                )}
+                                  Report incorrect price
+                                </button>
                               </div>
-                            </div>
-                          </div>
-                          {accordionCopy && (
-                            <div
-                              className={`acc-wrap${isExpanded ? " open" : ""}`}
-                            >
-                              <div className="acc-inner">
+                              {!isLast && (
                                 <div
                                   style={{
-                                    background: "#f9f9f7",
-                                    borderRadius: "10px",
-                                    padding: "20px",
-                                    marginBottom: "8px",
+                                    height: "1px",
+                                    background: C.border,
+                                    margin: "0",
                                   }}
-                                >
-                                  <p
-                                    style={{
-                                      margin: "0 0 6px",
-                                      fontSize: "12px",
-                                      fontWeight: "700",
-                                      color: C.muted,
-                                      textTransform: "uppercase",
-                                      letterSpacing: "0.05em",
-                                    }}
-                                  >
-                                    {accordionCopy.heading}
-                                  </p>
-                                  <p
-                                    style={{
-                                      margin: 0,
-                                      fontSize: "14px",
-                                      color: C.slate,
-                                      lineHeight: "1.6",
-                                    }}
-                                  >
-                                    {accordionCopy.body}
-                                  </p>
-                                </div>
-                              </div>
+                                />
+                              )}
                             </div>
-                          )}
-                          {!isLast && (
-                            <div
-                              style={{
-                                height: "1px",
-                                background: C.border,
-                                margin: "0",
-                              }}
-                            />
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
                 </>
               )}
             </div>
@@ -2450,10 +1885,10 @@ export default function VetPage() {
               <p
                 style={{
                   fontSize: "13px",
+                  fontWeight: "500",
                   color: C.muted,
                   textAlign: "center",
-                  margin: "0 0 24px",
-                  lineHeight: "1.6",
+                  margin: "24px 0 20px",
                 }}
               >
                 Prices are estimates and may have changed.{" "}
@@ -2464,9 +1899,11 @@ export default function VetPage() {
                     border: "none",
                     padding: 0,
                     fontSize: "13px",
+                    fontWeight: "600",
                     color: C.muted,
                     textDecoration: "underline",
                     cursor: "pointer",
+                    fontFamily: "var(--font-urbanist,system-ui)",
                   }}
                 >
                   Learn more.
@@ -2479,8 +1916,9 @@ export default function VetPage() {
               style={{
                 background: C.white,
                 borderRadius: "16px",
-                padding: "24px 28px",
+                padding: "24px 20px",
                 border: `1px solid ${C.border}`,
+                display: priceSubmitted ? "none" : "block",
               }}
             >
               <div
@@ -2488,7 +1926,7 @@ export default function VetPage() {
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
-                  alignItems: "center",
+                  alignItems: "flex-start",
                   gap: "16px",
                   flexWrap: "wrap",
                 }}
@@ -2497,7 +1935,7 @@ export default function VetPage() {
                   <p
                     style={{
                       margin: "0 0 4px",
-                      fontSize: "15px",
+                      fontSize: "16px",
                       fontWeight: "700",
                       color: C.navyDark,
                       fontFamily: "var(--font-urbanist,system-ui)",
@@ -2506,18 +1944,78 @@ export default function VetPage() {
                   >
                     Visited {vet.name}?
                   </p>
-                  <p style={{ margin: 0, fontSize: "14px", color: C.slate }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "15px",
+                      fontWeight: 500,
+                      color: C.slate,
+                    }}
+                  >
                     Help other pet owners by sharing what you paid.
                   </p>
                 </div>
-                <button onClick={openSheet} className="submit-cta-btn">
-                  Submit a Price
+                <button
+                  ref={submitCtaRef}
+                  onClick={() => {
+                    // Contributing prices requires an account — send logged-out
+                    // users to sign up instead of opening a form that would fail
+                    // at the database (RLS requires auth.uid()).
+                    if (!session) {
+                      router.push("/auth");
+                      return;
+                    }
+                    if (showInlineSubmit) {
+                      closeSubmitForm();
+                    } else {
+                      setShowInlineSubmit(true);
+                      setTimeout(() => {
+                        if (!inlineSubmitRef.current) return;
+                        const top =
+                          inlineSubmitRef.current.getBoundingClientRect().top +
+                          window.scrollY -
+                          80;
+                        window.scrollTo({ top, behavior: "smooth" });
+                      }, 150);
+                    }
+                  }}
+                  className="submit-cta-btn"
+                >
+                  {!session
+                    ? "Sign up to submit a price"
+                    : showInlineSubmit
+                      ? "Close form"
+                      : "Submit a vet price"}
                 </button>
               </div>
+            </div>
+
+            {/* ── INLINE SUBMIT FORM ── */}
+            <div ref={inlineSubmitRef}>
+              {showInlineSubmit && (
+                <InlineSubmitPriceForm
+                  C={C}
+                  session={session}
+                  vetId={vetId}
+                  vetName={vetName}
+                  onClose={closeSubmitForm}
+                  onSubmitted={() => setPriceSubmitted(true)}
+                />
+              )}
             </div>
           </div>
         </div>
       </div>
+      <ReportPriceModal
+        open={!!reportingPrice}
+        onClose={() => setReportingPrice(null)}
+        vetId={vetId}
+        vetName={vetName}
+        serviceName={reportingPrice?.serviceName}
+        serviceId={reportingPrice?.serviceId}
+        vetPriceId={reportingPrice?.id}
+        currentPrice={reportingPrice?.display}
+      />
     </>
   );
 }

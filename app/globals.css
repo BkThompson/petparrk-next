@@ -163,7 +163,7 @@ h6 {
 }
 
 p {
-  line-height: 1.7;
+  line-height: 1.6;
   color: var(--color-ink);
 }
 
@@ -175,8 +175,17 @@ a {
     opacity var(--transition-fast);
 }
 
-a:hover {
+/* a:hover {
   opacity: 0.8;
+} */
+
+/* ── Custom Color & Opacity Override */
+.see-all-vets-link:hover,
+.reveal-up a:hover,
+.nav-link-dark:hover,
+a.pc-add-link:hover {
+  color: #172531 !important;
+  opacity: 1;
 }
 
 /* ── Slug Page - "Back to all vets" link  ─────────── */
@@ -184,8 +193,30 @@ a:hover {
   color: #cf5c36;
 }
 
-.nav-link-dark:hover {
-  color: #2c4657;
+a.pc-add-link:hover {
+  text-decoration: none;
+}
+
+p.sv-meta-phone a {
+  color: #172531 !important;
+  font-weight: 500 !important;
+}
+
+/* ── Custom Opacity Override */
+a.pp-stat-link,
+a.pce-share-btn--secondary,
+a.pp-signin-btn,
+a.pp-edit-full-link:hover,
+a.pp-utility-link:hover,
+a.bt:hover,
+a.eb-s:hover,
+a.btn-tc:hover,
+a.btn-tc:hover,
+a.acc-btn-ghost:hover,
+.pc-hub-add:hover,
+.bc:hover,
+.btn-wh:hover,
+.pcc-btn:hover {
   opacity: 1;
 }
 
@@ -283,15 +314,15 @@ select {
 /* ── Form Inputs ─────────────────────────────── */
 .input {
   width: 100%;
-  height: 48px;
+  height: 44px;
   padding: 12px 16px;
-  border: 1.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-white);
   color: var(--color-ink);
   font-family: var(--font);
   font-size: 15px;
-  font-weight: 400;
+  font-weight: 500;
   outline: none;
   transition:
     border-color var(--transition-fast),
@@ -321,14 +352,15 @@ select {
 
 .label {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--color-slate);
   margin-bottom: 6px;
 }
 
 .field-error {
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--color-error);
   margin-top: 4px;
 }
@@ -340,7 +372,7 @@ select {
   gap: 4px;
   padding: 4px 10px;
   border-radius: var(--radius-md);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -769,12 +801,49 @@ body > div {
 /* ── Global container padding ────────────────────
    Ensures content never touches screen edges.
    Inner containers always get 24px horizontal.    */
+
 .pp-container {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px;
   box-sizing: border-box;
   width: 100%;
+}
+
+.pp-container-mixed {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* ── Symptom checker chat shell + guided steps mobile gutter — 16px ── */
+/* Uses !important to beat inline padding shorthand on .guided-scroll. */
+/* These rules live in globals.css (not styled-jsx) for guaranteed cascade. */
+@media (max-width: 768px) {
+  .chat-messages {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .chat-footer {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .guided-scroll {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* When a text container is nested inside a page container, the outer
+   already provides the gutter — strip horizontal padding from the inner
+   so they don't stack. Preserves the inner's max-width constraint. */
+.pp-container .pp-container-text,
+.pp-container-mixed .pp-container-text,
+.pp-container .pp-container-mixed {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 /* ── Standard page containers ────────────────────
@@ -783,18 +852,19 @@ body > div {
    .pp-container-text → text-heavy pages (900px)
    Never use hardcoded maxWidth inline when 
    these classes will do.                          */
-.pp-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 24px;
-  box-sizing: border-box;
-  width: 100%;
-}
-
 .pp-container-text {
   max-width: 900px;
   margin: 0 auto;
   padding: 0 24px;
   box-sizing: border-box;
   width: 100%;
+}
+
+/* ── Container mobile gutter — standard 16px across all 3 containers ── */
+@media (max-width: 768px) {
+  .pp-container,
+  .pp-container-mixed,
+  .pp-container-text {
+    padding: 0 16px;
+  }
 }

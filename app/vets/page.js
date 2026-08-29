@@ -10,6 +10,16 @@ import React, {
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
+import {
+  Heart,
+  Check,
+  X,
+  Search,
+  ChevronDown,
+  ArrowRight,
+  ArrowUp,
+  Lock,
+} from "lucide-react";
 
 function formatPrice(low, high, type) {
   if (!low) return null;
@@ -79,8 +89,7 @@ function StarField() {
   );
 }
 
-const MAPBOX_TOKEN =
-  process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
 if (
   typeof document !== "undefined" &&
@@ -372,6 +381,142 @@ function MapHeader({ isMobile, onReady }) {
   );
 }
 
+// Back-to-top button. This page uses infinite scroll over a large vet list,
+// and the search/filter controls live at the top — so getting back up is a
+// primary action, not an edge case. Matches the Hero editor's scroll-top
+// button (same size, color, threshold) so the pattern is consistent app-wide.
+// Reusable custom filter dropdown: muted prefix + bold value (Option C),
+// dark/filled when active, styled popup with click-outside + Escape to close.
+// `options` is either [{value,label}] or grouped [{group, items:[{value,label}]}].
+function FilterDropdown({
+  prefix,
+  value,
+  displayValue,
+  options,
+  grouped = false,
+  onChange,
+  active = false,
+  widthClass = "",
+  style,
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const pick = (v) => {
+    onChange(v);
+    setOpen(false);
+  };
+
+  const renderOpt = (opt) => (
+    <div
+      key={opt.value}
+      className={`fdd-opt${opt.value === value ? " sel" : ""}`}
+      onClick={() => pick(opt.value)}
+    >
+      {opt.label}
+    </div>
+  );
+
+  return (
+    <div
+      className={`fdd-wrap fbar-item ${widthClass}${open ? " open" : ""}`}
+      ref={wrapRef}
+      style={style}
+    >
+      <button
+        type="button"
+        className={`fdd-btn${active ? " fdd-active" : ""}`}
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="fdd-text">
+          {prefix && <span className="fdd-prefix">{prefix}</span>}
+          <span className="fdd-value">{displayValue}</span>
+        </span>
+        <span
+          className="fdd-chev"
+          style={{
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.2s ease",
+          }}
+        >
+          <ChevronDown size={14} strokeWidth={2.4} />
+        </span>
+      </button>
+      {open && (
+        <div className="fdd-pop" role="listbox">
+          {grouped
+            ? options.map((g) => (
+                <div key={g.group} className="fdd-group">
+                  {g.group ? (
+                    <div className="fdd-group-label">{g.group}</div>
+                  ) : null}
+                  {g.items.map(renderOpt)}
+                </div>
+              ))
+            : options.map(renderOpt)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VetsScrollTopButton() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 600);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  if (!show) return null;
+  return (
+    <button
+      type="button"
+      className="vets-scrolltop"
+      aria-label="Back to top"
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+    >
+      <ArrowUp size={20} strokeWidth={2.4} />
+      <style>{`
+        .vets-scrolltop {
+          position: fixed; right: 20px; bottom: 20px; z-index: 90;
+          width: 44px; height: 44px; border-radius: 9999px; border: none;
+          background: #172531; color: #fff;
+          display: inline-flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 6px 20px rgba(23,37,49,0.28);
+          transition: background 0.15s, transform 0.15s;
+          box-shadow: 0 6px 20px rgba(23,37,49,0.28), 0 0 0 2px rgba(255,255,255,0.9);
+        }
+        .vets-scrolltop:hover { background: #0f1a24; transform: translateY(-2px); }
+        @media (max-width: 768px) {
+          .vets-scrolltop { bottom: 20px; right: 16px; }
+        }
+      `}</style>
+    </button>
+  );
+}
+
 function VetsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -558,12 +703,19 @@ function VetsContent() {
       return ae - be;
     });
 
+  // Count filters set away from their default, for the Filters button badge.
+  const activeFilterCount =
+    (acceptingFilter !== "All" ? 1 : 0) +
+    (priceRange !== "all" ? 1 : 0) +
+    (ownership !== "All" ? 1 : 0) +
+    (vetTypeFilter !== "All" ? 1 : 0);
+
   return (
     <>
       <style>{`
         @keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.5)}70%{transform:scale(0.85)}100%{transform:scale(1)}}
         @keyframes mapPinDrop{0%{transform:translateY(-50px) scale(0.3);opacity:0}60%{transform:translateY(5px) scale(1.15);opacity:1}80%{transform:translateY(-3px) scale(0.95)}100%{transform:translateY(0) scale(1);opacity:1}}
-        .heart-btn{transition:transform 0.1s;border:none;background:none;cursor:pointer;padding:0;font-size:20px;line-height:1}
+        .heart-btn{transition:transform 0.1s;border:none;background:none;cursor:pointer;padding:0;line-height:1;display:inline-flex;align-items:center;justify-content:center}
         .heart-btn:hover{transform:scale(1.15)}
         .heart-animating{animation:heartPop 0.4s ease forwards}
         .vet-card{border-radius:16px;padding:20px;background:#fff;transition:box-shadow 0.25s,transform 0.25s;box-shadow:0 2px 12px rgba(23,37,49,0.07);border:1px solid #EDE8E0;position:relative}
@@ -571,43 +723,84 @@ function VetsContent() {
         .vet-card-outer:hover{background:#EDE8E0;transform:translateY(-3px)}
         .vet-card-outer:hover .vet-card{box-shadow:0 0 0 1.5px rgba(239,200,139,0.9),0 16px 48px rgba(23,37,49,0.13)}
         .vet-card{border-radius:17px!important;display:flex!important;flex-direction:column!important;height:100%!important;box-sizing:border-box!important}
-        .filter-pill{padding:8px 16px;border-radius:20px;border:1px solid #EDE8E0;background:#fff;color:#1A1A1A;cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font,'Urbanist',sans-serif);transition:all 0.15s;white-space:nowrap}
+        .filter-pill{display:inline-flex;align-items:center;justify-content:center;height:44px;flex-shrink:0;padding:0 18px;border-radius:9999px;border:1px solid #EDE8E0;background:#fff;color:#1A1A1A;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font,'Urbanist',sans-serif);transition:all 0.15s;white-space:nowrap;box-sizing:border-box}
         .filter-pill:hover{border-color:#172531}
         .filter-pill.active{background:#172531;color:#fff;border-color:#172531}
-        .pp-select{padding:8px 36px 8px 14px;border-radius:10px;border:1px solid #EDE8E0;font-size:14px;font-family:var(--font,'Urbanist',sans-serif);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;color:#1A1A1A;outline:none;cursor:pointer;height:38px;appearance:none;-webkit-appearance:none}
+        .sort-pill{font-size:15px}
+        .pp-select{padding:0 36px 0 14px;border-radius:12px;border:1px solid #EDE8E0;font-size:15px;font-weight:500;font-family:var(--font,'Urbanist',sans-serif);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;color:#1A1A1A;outline:none;cursor:pointer;height:44px;flex-shrink:0;appearance:none;-webkit-appearance:none}
         .pp-select:focus{border-color:#CF5C36}
-        .dir-search{width:100%;padding:12px 16px;border-radius:10px;border:1.5px solid #EDE8E0;font-size:15px;outline:none;box-sizing:border-box;font-family:var(--font,'Urbanist',sans-serif);background:#fff;transition:border-color 0.15s}
+        .dir-search{width:100%;height:44px;flex-shrink:0;padding:0 14px;border-radius:12px;border:1px solid #EDE8E0;font-size:15px;font-weight:500;outline:none;box-sizing:border-box;font-family:var(--font,'Urbanist',sans-serif);background:#fff;transition:border-color 0.15s}
         .dir-search:focus{border-color:#CF5C36}
-        .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap}
         .badge-navy{background:#EBF0F5;color:#2C4657}
         .badge-success{background:#EDFAF3;color:#1A6641}
         .badge-error{background:#FCEAEA;color:#C94040}
         .badge-terra{background:#FEF3EB;color:#8B3A1E}
-        .price-chip{display:inline-flex;align-items:center;gap:5px;background:#F5F0E8;border-radius:8px;padding:4px 10px;font-size:13px}
-        .price-chip-label{color:#717A86;font-weight:500}
+        .price-chip{display:inline-flex;align-items:center;gap:5px;background:#F5F0E8;border-radius:8px;padding:4px 10px;font-size:14px}
+        .price-chip-label{color:#717A86;font-weight:600}
         .price-chip-value{color:#CF5C36;font-weight:700}
+        /* Pricing gate for logged-out users: blur the chips + overlay a signup CTA */
+        .price-gate-wrap{position:relative}
+        .price-gate-wrap.gated{padding:10px 0 20px}
+        .price-gate-wrap.gated .price-gate-inner{filter:blur(5px);pointer-events:none;user-select:none}
+        .price-gate-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;padding:0 16px}
+        .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#172531;color:#fff;border:2px solid #172531;border-radius:12px;padding:9px 18px;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 2px 10px rgba(23,37,49,0.2);transition:background 0.15s,color 0.15s}
+        .price-gate-btn:hover{background:#fff;color:#172531;border:2px solid #172531}
+        @media(max-width:768px){
+          .price-gate-overlay{padding:0 12px}
+          .price-gate-btn{width:100%}
+        }
         .more-filters{overflow:hidden;max-height:0;opacity:0;transition:max-height 0.5s ease-in-out,opacity 0.5s ease-in-out}
-        .more-filters.open{max-height:500px;opacity:1}
-        .more-filters-inner{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
-        .filter-group{display:flex;align-items:center;gap:8px;line-height:1}
-        .filter-group-label{font-size:11px;font-weight:700;color:#717A86;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;display:flex;align-items:center;padding-top:2px}
+        .more-filters.open{max-height:600px;opacity:1;overflow:visible}
+        /* Two-row evenly-spaced filter bar. Every item is flex:1 so they share
+           width equally and shrink together (no wrapping) from desktop to tablet. */
+        .filters-row{display:flex;gap:12px;align-items:center}
+        .filters-row-2{margin-top:0}
+        .fbar-item{flex:1 1 0!important;min-width:0}
+        /* Proportional widths: search widest, filters narrowest, evenly distributed */
+        .fbar-search{flex:2.2 1 0!important}
+        .fbar-nbhd{flex:1.4 1 0!important}
+        .fbar-sort{flex:1.2 1 0!important}
+        .fbar-filters{flex:0.85 1 0!important}
+        .dir-search.fbar-item{max-width:none}
+        .filters-btn{height:44px;padding:0 16px;border-radius:12px;border:1px solid #EDE8E0;background:#fff;color:#172531;cursor:pointer;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;transition:all 0.15s}
+        .filters-btn:hover{border-color:#172531}
+        .filters-btn.open{background:#172531;color:#fff;border-color:#172531}
+        .filters-badge{background:#CF5C36;color:#fff;font-size:12px;font-weight:700;border-radius:9999px;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
+        /* Active dropdown = dark/filled. A select is "active" when its value is
+           set (handled inline via class), matching the mockup. */
+        .pp-select.fbar-active{background-color:#172531;color:#fff;border-color:#172531;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23ffffff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
+        /* Custom filter dropdown (Option C: muted prefix + bold value) */
+        .fdd-wrap{position:relative;display:flex}
+        .fdd-btn{width:100%;height:44px;padding:0 14px;border:1px solid #EDE8E0;border-radius:12px;background:#fff;color:#172531;cursor:pointer;font-family:var(--font,'Urbanist',sans-serif);font-size:15px;display:inline-flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;transition:border-color 0.15s,background 0.15s;min-width:0}
+        .fdd-btn:hover{border-color:#172531}
+        .fdd-text{display:inline-flex;align-items:baseline;gap:5px;overflow:hidden;white-space:nowrap;min-width:0}
+        .fdd-prefix{color:#717A86;font-weight:600;flex-shrink:0}
+        .fdd-value{color:#172531;font-weight:700;overflow:hidden;text-overflow:ellipsis}
+        .fdd-chev{color:#717A86;display:inline-flex;align-items:center;flex-shrink:0}
+        .fdd-btn.fdd-active{background:#172531;border-color:#172531}
+        .fdd-btn.fdd-active .fdd-prefix{color:rgba(255,255,255,0.6)}
+        .fdd-btn.fdd-active .fdd-value{color:#fff}
+        .fdd-btn.fdd-active .fdd-chev{color:rgba(255,255,255,0.7)}
+        .fdd-pop{position:absolute;top:50px;left:0;right:0;background:#fff;border:1px solid #EDE8E0;border-radius:12px;padding:6px;box-shadow:0 12px 32px rgba(23,37,49,0.14);z-index:50;max-height:320px;overflow-y:auto}
+        .fdd-opt{padding:10px 12px;border-radius:8px;font-size:15px;font-weight:500;color:#172531;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .fdd-opt:hover{background:#F5F0E8}
+        .fdd-opt.sel{background:#F5F0E8;color:#CF5C36;font-weight:700}
+        .fdd-group-label{font-size:11px;font-weight:700;color:#9aa2ab;text-transform:uppercase;letter-spacing:0.06em;padding:8px 12px 4px}
+        .fdd-group + .fdd-group{position:relative;margin-top:8px;padding-top:8px}
+        .fdd-group + .fdd-group::before{content:"";position:absolute;top:0;left:10px;right:10px;height:1px;background:#EDE8E0}
+        .clear-all-filters{background:none;border:none;color:#CF5C36;font-size:13px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);cursor:pointer;padding:8px 4px;transition:color 0.15s}
+        .clear-all-filters:hover{color:#172531}
         @media(max-width:768px){
           .vets-header{min-height:368px!important;height:368px!important;padding:80px 0 88px!important}
-          .sort-label{display:none!important}
-          .filter-group{flex-direction:column!important;align-items:flex-start!important;gap:6px!important}
-          .filter-group .filter-pill{width:100%;text-align:center;box-sizing:border-box}
-          .more-filters-inner{gap:20px!important}
-          .ownership-pills{flex-direction:column!important;width:100%!important}
-          .ownership-pills .filter-pill{width:100%!important;text-align:center!important;box-sizing:border-box!important}
-          .more-filters-inner .filter-group{width:100%!important}
-          .more-filters-inner .filter-group>div{width:100%!important;flex-direction:column!important}
-          .more-filters-inner .filter-group .filter-pill{width:100%!important;text-align:center!important;box-sizing:border-box!important}
-          .more-filters-inner .pp-select{width:100%!important;box-sizing:border-box!important}
-          .filters-row{flex-direction:column!important;align-items:stretch!important}
-          .filters-row .pp-select,.filters-row .dir-search{width:100%!important;max-width:100%!important;box-sizing:border-box}
-          .filters-row .filter-pill{flex:1;text-align:center}
-          .more-filters-inner{flex-direction:column;align-items:flex-start}
+          /* Mobile: stack every control full-width. Use width:100% + flex:none,
+             NEVER flex:1 (which would smash heights in a column). */
+          .filters-row{flex-direction:column!important;align-items:stretch!important;gap:10px!important}
+          .filters-row-2{margin-top:0!important}
+          .fbar-item{flex:none!important;width:100%!important;max-width:none!important;box-sizing:border-box}
+          .fbar-item[aria-hidden="true"]{display:none!important}
         }
+        @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+        .skeleton{background:linear-gradient(90deg,#F0ECE4 25%,#D9D2C2 50%,#F0ECE4 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:18px}
       `}</style>
 
       <div style={{ background: "#F5F0E8", minHeight: "calc(100vh - 64px)" }}>
@@ -647,19 +840,17 @@ function VetsContent() {
           />
 
           <div
+            className="pp-container"
             style={{
-              maxWidth: "1280px",
-              margin: "0 auto",
-              padding: "0 24px",
               position: "relative",
               zIndex: 4,
             }}
           >
             <p
               style={{
-                fontSize: "11px",
+                fontSize: "13px",
                 fontWeight: "700",
-                letterSpacing: "0.1em",
+                letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 color: "#EFC88B",
                 marginBottom: "12px",
@@ -683,6 +874,7 @@ function VetsContent() {
             <p
               style={{
                 fontSize: "17px",
+                fontWeight: 500,
                 color: "rgba(255,255,255,0.65)",
                 margin: 0,
                 lineHeight: "1.75",
@@ -690,17 +882,17 @@ function VetsContent() {
               }}
             >
               {loading
-                ? "Loading…"
+                ? "\u00A0"
                 : `${vets.length} verified vets across California`}
             </p>
           </div>
         </div>
 
         <div
+          className="pp-container"
           style={{
-            maxWidth: "1280px",
-            margin: "0 auto",
-            padding: "32px 24px 80px",
+            paddingTop: "32px",
+            paddingBottom: "80px",
           }}
         >
           <div
@@ -718,195 +910,195 @@ function VetsContent() {
               style={{
                 display: "flex",
                 gap: "12px",
-                flexWrap: "wrap",
                 alignItems: "center",
               }}
             >
               <input
                 type="text"
-                className="dir-search"
+                className="dir-search fbar-item fbar-search"
                 placeholder="Search by vet name or neighborhood..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{
-                  flex: "1",
-                  minWidth: "180px",
-                  maxWidth: "400px",
-                  height: "38px",
-                  boxSizing: "border-box",
-                }}
               />
 
-              {/* ── FIX: neighborhood dropdown uses neighborhood||city composite value ── */}
-              <select
-                className="pp-select"
+              {/* neighborhood dropdown uses neighborhood||city composite value */}
+              <FilterDropdown
+                prefix="Area:"
                 value={neighborhood}
-                onChange={(e) => setNeighborhood(e.target.value)}
-              >
-                <option value="All">All Neighborhoods</option>
-                {Object.entries(
-                  vets.reduce((acc, v) => {
-                    if (!v.neighborhood || !v.city) return acc;
-                    if (!acc[v.city]) acc[v.city] = new Set();
-                    acc[v.city].add(v.neighborhood);
-                    return acc;
-                  }, {}),
-                )
-                  .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([city, hoods]) => (
-                    <optgroup key={city} label={city}>
-                      {[...hoods].sort().map((h) => (
-                        <option key={h} value={`${h}||${city}`}>
-                          {h}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-              </select>
+                displayValue={
+                  neighborhood === "All" ? "All" : neighborhood.split("||")[0]
+                }
+                grouped
+                options={[
+                  {
+                    group: "",
+                    items: [{ value: "All", label: "All Neighborhoods" }],
+                  },
+                  ...Object.entries(
+                    vets.reduce((acc, v) => {
+                      if (!v.neighborhood || !v.city) return acc;
+                      if (!acc[v.city]) acc[v.city] = new Set();
+                      acc[v.city].add(v.neighborhood);
+                      return acc;
+                    }, {}),
+                  )
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([city, hoods]) => ({
+                      group: city,
+                      items: [...hoods].sort().map((h) => ({
+                        value: `${h}||${city}`,
+                        label: h,
+                      })),
+                    })),
+                ]}
+                onChange={(v) => setNeighborhood(v)}
+                active={neighborhood !== "All"}
+                widthClass="fbar-nbhd"
+              />
 
-              {[
-                { label: "Accepting Patients", value: "Yes" },
-                { label: "All Vets", value: "All" },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setAcceptingFilter(opt.value)}
-                  className={`filter-pill${acceptingFilter === opt.value ? " active" : ""}`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-              <span
-                className="sort-label"
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "700",
-                  color: "#717A86",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  whiteSpace: "nowrap",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  alignSelf: "center",
-                  lineHeight: "1",
-                  paddingBottom: "1px",
-                }}
-              >
-                Sort:
-              </span>
-              {[
-                ["price", "Cheapest"],
-                ["az", "A–Z"],
-              ].map(([val, label]) => (
-                <button
-                  key={val}
-                  onClick={() => setSortBy(val)}
-                  className={`filter-pill${sortBy === val ? " active" : ""}`}
-                >
-                  {label}
-                </button>
-              ))}
+              {/* Sort dropdown */}
+              <FilterDropdown
+                prefix="Sort:"
+                value={sortBy}
+                displayValue={sortBy === "az" ? "Name (A–Z)" : "Lowest Price"}
+                options={[
+                  { value: "price", label: "Lowest Price" },
+                  { value: "az", label: "Name (A–Z)" },
+                ]}
+                onChange={(v) => setSortBy(v)}
+                active={false}
+                widthClass="fbar-sort"
+              />
+
               <button
+                className={`filters-btn fbar-item fbar-filters${showMoreFilters ? " open" : ""}`}
                 onClick={() => setShowMoreFilters(!showMoreFilters)}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "20px",
-                  border: "1px solid #EDE8E0",
-                  background: showMoreFilters ? "#f0f0f0" : "#fff",
-                  color: "#555",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  fontWeight: "500",
-                  fontFamily: "var(--font,'Urbanist',sans-serif)",
-                  whiteSpace: "nowrap",
-                  minWidth: "130px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "6px",
-                }}
               >
-                {showMoreFilters ? "Fewer" : "More filters"}
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="filters-badge">{activeFilterCount}</span>
+                )}
                 <span
                   style={{
-                    fontSize: "10px",
-                    display: "inline-block",
+                    display: "inline-flex",
+                    alignItems: "center",
                     transform: showMoreFilters
                       ? "rotate(180deg)"
                       : "rotate(0deg)",
-                    transition: "transform 0.5s ease-in-out",
+                    transition: "transform 0.4s ease-in-out",
                   }}
                 >
-                  ▼
+                  <ChevronDown size={14} strokeWidth={2.4} />
                 </span>
               </button>
             </div>
 
             <div className={`more-filters${showMoreFilters ? " open" : ""}`}>
               <div
+                className="more-filters-pad"
                 style={{
                   paddingTop: "16px",
                   marginTop: "16px",
                   borderTop: "1px solid #EDE8E0",
                 }}
               >
-                <div className="more-filters-inner">
-                  <div className="filter-group">
-                    <span className="filter-group-label">Price</span>
-                    <div
-                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                    >
-                      {PRICE_RANGES.map((r) => (
-                        <button
-                          key={r.value}
-                          onClick={() => setPriceRange(r.value)}
-                          className={`filter-pill${priceRange === r.value ? " active" : ""}`}
-                        >
-                          {r.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="filter-group">
-                    <span className="filter-group-label">Ownership</span>
-                    <select
-                      className="pp-select"
-                      value={ownership}
-                      onChange={(e) => setOwnership(e.target.value)}
-                    >
-                      {["All", "Independent", "Corporate", "Other"].map((o) => (
-                        <option key={o} value={o}>
-                          {o}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {vetTypes.length > 2 && (
-                    <div className="filter-group">
-                      <span className="filter-group-label">Type</span>
-                      <select
-                        className="pp-select"
-                        value={vetTypeFilter}
-                        onChange={(e) => setVetTypeFilter(e.target.value)}
-                      >
-                        {vetTypes.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                <div className="filters-row filters-row-2">
+                  {/* Availability dropdown */}
+                  <FilterDropdown
+                    prefix="Availability:"
+                    value={acceptingFilter}
+                    displayValue={
+                      acceptingFilter === "Yes" ? "Accepting" : "All"
+                    }
+                    options={[
+                      { value: "All", label: "All Vets" },
+                      { value: "Yes", label: "Accepting Patients" },
+                    ]}
+                    onChange={(v) => setAcceptingFilter(v)}
+                    active={acceptingFilter !== "All"}
+                  />
+
+                  {/* Price dropdown */}
+                  <FilterDropdown
+                    prefix="Price:"
+                    value={priceRange}
+                    displayValue={
+                      priceRange === "all"
+                        ? "All"
+                        : (
+                            PRICE_RANGES.find((r) => r.value === priceRange) ||
+                            {}
+                          ).label || "All"
+                    }
+                    options={PRICE_RANGES.map((r) => ({
+                      value: r.value,
+                      label: r.label,
+                    }))}
+                    onChange={(v) => setPriceRange(v)}
+                    active={priceRange !== "all"}
+                  />
+
+                  {/* Ownership dropdown */}
+                  <FilterDropdown
+                    prefix="Ownership:"
+                    value={ownership}
+                    displayValue={ownership}
+                    options={["All", "Independent", "Corporate", "Other"].map(
+                      (o) => ({ value: o, label: o }),
+                    )}
+                    onChange={(v) => setOwnership(v)}
+                    active={ownership !== "All"}
+                  />
+
+                  {/* Type dropdown */}
+                  {vetTypes.length > 2 ? (
+                    <FilterDropdown
+                      prefix="Type:"
+                      value={vetTypeFilter}
+                      displayValue={vetTypeFilter}
+                      options={vetTypes.map((t) => ({ value: t, label: t }))}
+                      onChange={(v) => setVetTypeFilter(v)}
+                      active={vetTypeFilter !== "All"}
+                    />
+                  ) : (
+                    <div className="fbar-item" aria-hidden="true" />
                   )}
                 </div>
+                {activeFilterCount > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: "16px",
+                    }}
+                  >
+                    <button
+                      className="clear-all-filters"
+                      onClick={() => {
+                        setAcceptingFilter("All");
+                        setPriceRange("all");
+                        setOwnership("All");
+                        setVetTypeFilter("All");
+                      }}
+                    >
+                      Clear all filters
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           <p
-            style={{ color: "#717A86", fontSize: "14px", marginBottom: "16px" }}
+            style={{
+              color: "#717A86",
+              fontSize: "15px",
+              fontWeight: 500,
+              marginBottom: "16px",
+            }}
           >
             {loading
-              ? "Loading…"
+              ? "\u00A0"
               : `${filtered.length} vet${filtered.length !== 1 ? "s" : ""} found`}
           </p>
 
@@ -918,235 +1110,294 @@ function VetsContent() {
               alignItems: "stretch",
             }}
           >
-            {filtered.slice(0, visibleCount).map((vet) => {
-              const vp = prices[vet.id] || [];
-              const exam = vp.find(
-                (p) => p.services?.name === "Doctor Exam" && p.price_low,
-              );
-              const dental = vp.find(
-                (p) => p.services?.name === "Dental Cleaning" && p.price_low,
-              );
-              const spay = vp.find(
-                (p) => p.services?.name === "Spay (~40lb dog)" && p.price_low,
-              );
-              const neuter = vp.find(
-                (p) => p.services?.name === "Neuter (~40lb dog)" && p.price_low,
-              );
-              const lu = vet.last_verified
-                ? new Date(vet.last_verified + "T12:00:00")
-                : vp.length > 0
-                  ? new Date(Math.max(...vp.map((p) => new Date(p.created_at))))
-                  : null;
-              const isSaved = savedVetIds.has(vet.id);
-              return (
-                <div key={vet.id} className="vet-card-outer">
-                  <div className="vet-card">
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      <div style={{ flex: 1, paddingRight: "12px" }}>
-                        <Link
-                          href={`/vet/${vet.slug}`}
+            {loading
+              ? [1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={`sk-${i}`}
+                    className="skeleton"
+                    style={{ height: "260px" }}
+                  />
+                ))
+              : filtered.slice(0, visibleCount).map((vet) => {
+                  const vp = prices[vet.id] || [];
+                  const exam = vp.find(
+                    (p) => p.services?.name === "Doctor Exam" && p.price_low,
+                  );
+                  const dental = vp.find(
+                    (p) =>
+                      p.services?.name === "Dental Cleaning" && p.price_low,
+                  );
+                  const spay = vp.find(
+                    (p) =>
+                      p.services?.name === "Spay (~40lb dog)" && p.price_low,
+                  );
+                  const neuter = vp.find(
+                    (p) =>
+                      p.services?.name === "Neuter (~40lb dog)" && p.price_low,
+                  );
+                  const lu = vet.last_verified
+                    ? new Date(vet.last_verified + "T12:00:00")
+                    : vp.length > 0
+                      ? new Date(
+                          Math.max(...vp.map((p) => new Date(p.created_at))),
+                        )
+                      : null;
+                  const isSaved = savedVetIds.has(vet.id);
+                  return (
+                    <div key={vet.id} className="vet-card-outer">
+                      <div className="vet-card">
+                        <div
                           style={{
-                            fontSize: "16px",
-                            fontWeight: "700",
-                            color: "#172531",
-                            textDecoration: "none",
-                            fontFamily: "var(--font,'Urbanist',sans-serif)",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: "8px",
                           }}
                         >
-                          {vet.name}
-                        </Link>
-                        <p
+                          <div style={{ flex: 1, paddingRight: "12px" }}>
+                            <Link
+                              href={`/vet/${vet.slug}`}
+                              style={{
+                                fontSize: "17px",
+                                fontWeight: "700",
+                                color: "#172531",
+                                textDecoration: "none",
+                                fontFamily: "var(--font,'Urbanist',sans-serif)",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                              }}
+                            >
+                              {vet.name}
+                            </Link>
+                            <p
+                              style={{
+                                fontSize: "15px",
+                                fontWeight: "500",
+                                color: "#717A86",
+                                margin: "2px 0 0",
+                                // letterSpacing: "0.02em",
+                              }}
+                            >
+                              {[vet.neighborhood, vet.city]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => toggleSave(e, vet.id)}
+                            className={`heart-btn${animatingId === vet.id ? " heart-animating" : ""}`}
+                          >
+                            <Heart
+                              size={22}
+                              strokeWidth={2}
+                              color="#CF5C36"
+                              fill={isSaved ? "#CF5C36" : "none"}
+                            />
+                          </button>
+                        </div>
+                        <div
                           style={{
-                            fontSize: "14px",
-                            color: "#717A86",
-                            margin: "2px 0 0",
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "10px",
+                            marginBottom: "10px",
                           }}
                         >
-                          {[vet.neighborhood, vet.city]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </p>
-                      </div>
-                      <button
-                        onClick={(e) => toggleSave(e, vet.id)}
-                        className={`heart-btn${animatingId === vet.id ? " heart-animating" : ""}`}
-                      >
-                        {isSaved ? "❤️" : "🤍"}
-                      </button>
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "4px",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      {vet.accepting_new_patients === true && (
-                        <span className="badge badge-success">
-                          ✅ Accepting
-                        </span>
-                      )}
-                      {vet.accepting_new_patients === false && (
-                        <span className="badge badge-error">
-                          ✕ Not Accepting
-                        </span>
-                      )}
-                      {(typeof vet.vet_type === "string"
-                        ? vet.vet_type
-                            .replace(/[\[\]"']/g, "")
-                            .split(",")
-                            .map((t) => t.trim())
-                        : Array.isArray(vet.vet_type)
-                          ? vet.vet_type.map((t) =>
-                              String(t)
+                          {vet.accepting_new_patients === true && (
+                            <span className="badge badge-success">
+                              <Check size={12} strokeWidth={2.6} />
+                              Accepting
+                            </span>
+                          )}
+                          {vet.accepting_new_patients === false && (
+                            <span className="badge badge-error">
+                              <X size={12} strokeWidth={2.6} />
+                              Not Accepting
+                            </span>
+                          )}
+                          {(typeof vet.vet_type === "string"
+                            ? vet.vet_type
                                 .replace(/[\[\]"']/g, "")
-                                .trim(),
-                            )
-                          : []
-                      )
-                        .filter(Boolean)
-                        .map((t) => (
-                          <span key={t} className="badge badge-navy">
-                            {t}
-                          </span>
-                        ))}
-                      {vet.ownership && (
-                        <span className="badge badge-terra">
-                          {vet.ownership}
-                        </span>
-                      )}
-                    </div>
-                    {vet.phone && (
-                      <p
-                        style={{
-                          fontSize: "14px",
-                          color: "#4B5563",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        <a
-                          href={`tel:${vet.phone}`}
-                          style={{ color: "inherit", textDecoration: "none" }}
+                                .split(",")
+                                .map((t) => t.trim())
+                            : Array.isArray(vet.vet_type)
+                              ? vet.vet_type.map((t) =>
+                                  String(t)
+                                    .replace(/[\[\]"']/g, "")
+                                    .trim(),
+                                )
+                              : []
+                          )
+                            .filter(Boolean)
+                            .map((t) => (
+                              <span key={t} className="badge badge-navy">
+                                {t}
+                              </span>
+                            ))}
+                          {vet.ownership && (
+                            <span className="badge badge-terra">
+                              {vet.ownership}
+                            </span>
+                          )}
+                        </div>
+                        {vet.phone && (
+                          <p
+                            style={{
+                              fontSize: "15px",
+                              color: "#172531",
+                              marginBottom: "4px",
+                              fontWeight: "500",
+                            }}
+                          >
+                            <a
+                              href={`tel:${vet.phone}`}
+                              style={{
+                                color: "inherit",
+                                textDecoration: "none",
+                              }}
+                            >
+                              {formatPhone(vet.phone)}
+                            </a>
+                          </p>
+                        )}
+                        {!exam && !dental && !spay && !neuter ? (
+                          <p
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: 500,
+                              color: "#717A86",
+                              fontStyle: "italic",
+                              margin: "10px 0 0",
+                            }}
+                          >
+                            No pricing available
+                          </p>
+                        ) : (
+                          <div
+                            className={`price-gate-wrap${!session ? " gated" : ""}`}
+                          >
+                            {!session && (
+                              <div className="price-gate-overlay">
+                                <Link href="/auth" className="price-gate-btn">
+                                  <Lock size={13} strokeWidth={2.5} />
+                                  Sign up to see pricing
+                                </Link>
+                              </div>
+                            )}
+                            <div
+                              className="price-gate-inner"
+                              style={{
+                                display: "flex",
+                                gap: "10px",
+                                marginTop: "10px",
+                                marginBottom: "14px",
+                                flexWrap: "wrap",
+                                minHeight: "32px",
+                              }}
+                            >
+                              {exam && (
+                                <span className="price-chip">
+                                  <span className="price-chip-label">Exam</span>
+                                  <span className="price-chip-value">
+                                    {formatPrice(
+                                      exam.price_low,
+                                      exam.price_high,
+                                      exam.price_type,
+                                    )}
+                                  </span>
+                                </span>
+                              )}
+                              {dental && (
+                                <span className="price-chip">
+                                  <span className="price-chip-label">
+                                    Dental
+                                  </span>
+                                  <span className="price-chip-value">
+                                    {formatPrice(
+                                      dental.price_low,
+                                      dental.price_high,
+                                      dental.price_type,
+                                    )}
+                                  </span>
+                                </span>
+                              )}
+                              {spay && (
+                                <span className="price-chip">
+                                  <span className="price-chip-label">Spay</span>
+                                  <span className="price-chip-value">
+                                    {formatPrice(
+                                      spay.price_low,
+                                      spay.price_high,
+                                      spay.price_type,
+                                    )}
+                                  </span>
+                                </span>
+                              )}
+                              {neuter && (
+                                <span className="price-chip">
+                                  <span className="price-chip-label">
+                                    Neuter
+                                  </span>
+                                  <span className="price-chip-value">
+                                    {formatPrice(
+                                      neuter.price_low,
+                                      neuter.price_high,
+                                      neuter.price_type,
+                                    )}
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginTop: "auto",
+                            paddingTop: "14px",
+                            borderTop: "1px solid #EDE8E0",
+                          }}
                         >
-                          {formatPhone(vet.phone)}
-                        </a>
-                      </p>
-                    )}
-                    {!exam && !dental && !spay && !neuter ? (
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          color: "#717A86",
-                          fontStyle: "italic",
-                          margin: "10px 0 0",
-                        }}
-                      >
-                        No pricing available
-                      </p>
-                    ) : (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "6px",
-                          marginTop: "10px",
-                          marginBottom: "14px",
-                          flexWrap: "wrap",
-                          minHeight: "32px",
-                        }}
-                      >
-                        {exam && (
-                          <span className="price-chip">
-                            <span className="price-chip-label">Exam</span>
-                            <span className="price-chip-value">
-                              {formatPrice(
-                                exam.price_low,
-                                exam.price_high,
-                                exam.price_type,
-                              )}
-                            </span>
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: "500",
+                              color: "#717A86",
+                              // letterSpacing: "0.02em",
+                            }}
+                          >
+                            {lu
+                              ? `Verified ${lu.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`
+                              : ""}
                           </span>
-                        )}
-                        {dental && (
-                          <span className="price-chip">
-                            <span className="price-chip-label">Dental</span>
-                            <span className="price-chip-value">
-                              {formatPrice(
-                                dental.price_low,
-                                dental.price_high,
-                                dental.price_type,
-                              )}
-                            </span>
-                          </span>
-                        )}
-                        {spay && (
-                          <span className="price-chip">
-                            <span className="price-chip-label">Spay</span>
-                            <span className="price-chip-value">
-                              {formatPrice(
-                                spay.price_low,
-                                spay.price_high,
-                                spay.price_type,
-                              )}
-                            </span>
-                          </span>
-                        )}
-                        {neuter && (
-                          <span className="price-chip">
-                            <span className="price-chip-label">Neuter</span>
-                            <span className="price-chip-value">
-                              {formatPrice(
-                                neuter.price_low,
-                                neuter.price_high,
-                                neuter.price_type,
-                              )}
-                            </span>
-                          </span>
-                        )}
+                          <Link
+                            href={`/vet/${vet.slug}`}
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: "700",
+                              color: "#CF5C36",
+                              textDecoration: "none",
+                            }}
+                          >
+                            View profile{" "}
+                            <ArrowRight
+                              size={14}
+                              strokeWidth={2.4}
+                              style={{
+                                marginLeft: "4px",
+                                verticalAlign: "middle",
+                              }}
+                            />
+                          </Link>
+                        </div>
                       </div>
-                    )}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginTop: "auto",
-                        paddingTop: "14px",
-                        borderTop: "1px solid #EDE8E0",
-                      }}
-                    >
-                      <span style={{ fontSize: "12px", color: "#717A86" }}>
-                        {lu
-                          ? `Verified ${lu.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`
-                          : ""}
-                      </span>
-                      <Link
-                        href={`/vet/${vet.slug}`}
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: "700",
-                          color: "#CF5C36",
-                          textDecoration: "none",
-                        }}
-                      >
-                        View profile →
-                      </Link>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
           </div>
 
           {visibleCount < filtered.length && (
@@ -1157,6 +1408,7 @@ function VetsContent() {
                 padding: "32px",
                 color: "#717A86",
                 fontSize: "14px",
+                fontWeight: 500,
               }}
             >
               Loading more vets…
@@ -1170,7 +1422,8 @@ function VetsContent() {
                   textAlign: "center",
                   padding: "24px",
                   color: "#717A86",
-                  fontSize: "13px",
+                  fontSize: "15px",
+                  fontWeight: 500,
                 }}
               >
                 All {filtered.length} vets shown
@@ -1178,10 +1431,12 @@ function VetsContent() {
             )}
           {!loading && filtered.length === 0 && (
             <div style={{ textAlign: "center", padding: "60px 20px" }}>
-              <p style={{ fontSize: "32px", margin: "0 0 12px" }}>🔍</p>
+              <div style={{ marginBottom: "12px", color: "#717A86" }}>
+                <Search size={32} strokeWidth={1.8} />
+              </div>
               <p
                 style={{
-                  fontSize: "16px",
+                  fontSize: "18px",
                   fontWeight: "700",
                   color: "#172531",
                   margin: "0 0 8px",
@@ -1189,26 +1444,58 @@ function VetsContent() {
               >
                 No vets found
               </p>
-              <p style={{ fontSize: "14px", color: "#717A86", margin: 0 }}>
+              <p
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "#717A86",
+                  margin: 0,
+                }}
+              >
                 Try adjusting your filters
               </p>
             </div>
           )}
         </div>
       </div>
+      <VetsScrollTopButton />
     </>
+  );
+}
+
+// Skeleton grid — shown while the route/data loads. Kept identical to the
+// in-page loading state so the user sees ONE continuous skeleton instead of
+// a spinner flashing then swapping to skeletons.
+export function VetsSkeleton() {
+  return (
+    <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "40px 24px" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill,minmax(340px,1fr))",
+          gap: "20px",
+          alignItems: "stretch",
+        }}
+      >
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div
+            key={`sk-${i}`}
+            className="skeleton"
+            style={{ height: "260px" }}
+          />
+        ))}
+      </div>
+      <style>{`
+        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        .skeleton{background:linear-gradient(90deg,#F0ECE4 25%,#D9D2C2 50%,#F0ECE4 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:18px}
+      `}</style>
+    </div>
   );
 }
 
 export default function VetsPage() {
   return (
-    <Suspense
-      fallback={
-        <div style={{ padding: "40px", textAlign: "center", color: "#717A86" }}>
-          Loading…
-        </div>
-      }
-    >
+    <Suspense fallback={<VetsSkeleton />}>
       <VetsContent />
     </Suspense>
   );

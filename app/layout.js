@@ -2,8 +2,10 @@ import "./globals.css";
 import { Urbanist } from "next/font/google";
 import ToastProvider from "../components/ToastProvider";
 import NavbarWrapper from "../components/NavbarWrapper";
-import Footer from "../components/Footer";
+import FooterWrapper from "../components/FooterWrapper";
 import ScrollToTop from "../components/ScrollToTop";
+import WelcomeModal from "../components/WelcomeModal";
+import { Suspense } from "react";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -69,9 +71,14 @@ export default function RootLayout({ children }) {
         <NavbarWrapper />
         <ScrollToTop />
         <main style={{ flex: 1 }}>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            {children}
+            <Suspense fallback={null}>
+              <WelcomeModal />
+            </Suspense>
+          </ToastProvider>
         </main>
-        <Footer />
+        <FooterWrapper />
       </body>
     </html>
   );

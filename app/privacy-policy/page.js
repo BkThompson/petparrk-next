@@ -9,19 +9,18 @@ const COMPANY_ADDRESS = "[Company Address], Oakland, California";
 export default function PrivacyPolicy() {
   return (
     <>
-      <style>{`        .legal-body { background: #F5F0E8; padding: 48px 0 96px; }
-        .legal-container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+      <style>{`.legal-body { background: #F5F0E8; padding: 48px 0 96px; }
         .legal-page-title { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid #D1C9BC; }
-        .legal-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6B7280; margin-bottom: 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
-        .legal-h1 { font-size: clamp(24px,3vw,34px); font-weight: 800; color: #172531; margin: 0 0 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); letter-spacing: -0.02em; line-height: 1.15; }
-        .legal-date { font-size: 14px; color: #6B7280; margin: 0; }
+        .legal-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: #6B7280; margin-bottom: 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
+        .legal-h1 { font-size: clamp(24px,3vw,34px); font-weight: 800; color: #172531; margin: 0 0 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); letter-spacing: -0.025em; line-height: 1.15; }
+        .legal-date { font-size: 14px; font-weight: 500; color: #1F2937; margin: 0; }
         .legal-section { margin-bottom: 44px; }
-        .legal-h2 { font-size: 15px; font-weight: 700; color: #172531; text-transform: uppercase; letter-spacing: 0.07em; margin: 0 0 16px; font-family: var(--font-urbanist,'Urbanist',sans-serif); padding-bottom: 8px; }
-        .legal-h3 { font-size: 16px; font-weight: 700; color: #172531; margin: 24px 0 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
-        .legal-p { font-size: 16px; color: #1F2937; line-height: 1.85; margin: 0 0 14px; }
-        .legal-caps { font-size: 14px; color: #1F2937; line-height: 1.8; font-weight: 600; margin: 0 0 14px; }
+        .legal-h2 { font-size: 16px; font-weight: 700; color: #172531; text-transform: uppercase; letter-spacing: 0.10em; margin: 0 0 16px; font-family: var(--font-urbanist,'Urbanist',sans-serif); padding-bottom: 8px; }
+        .legal-h3 { font-size: 17px; font-weight: 700; color: #172531; margin: 24px 0 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
+        .legal-p { font-size: 16px; font-weight: 500; color: #1F2937; line-height: 1.85; margin: 0 0 14px; }
+        .legal-caps { font-size: 15px; color: #1F2937; line-height: 1.8; font-weight: 600; margin: 0 0 14px; }
         .legal-ul { margin: 10px 0 16px 22px; padding: 0; }
-        .legal-ul li { font-size: 16px; color: #1F2937; line-height: 1.85; margin-bottom: 6px; }
+        .legal-ul li { font-size: 16px; font-weight: 500; color: #1F2937; line-height: 1.85; margin-bottom: 8px; }
         .legal-divider { height: 1px; background: #D1C9BC; margin: 44px 0; }
         .legal-notice-box { background: #fff; border: 1px solid #D1C9BC; border-radius: 12px; padding: 24px 28px; margin-bottom: 32px; }
         .legal-notice-box p { font-size: 16px; color: #1F2937; line-height: 1.85; margin: 0; }
@@ -31,7 +30,7 @@ export default function PrivacyPolicy() {
 `}</style>
 
       <div className="legal-body">
-        <div className="legal-container">
+        <div className="pp-container-text">
           <div className="legal-page-title">
             <p className="legal-eyebrow">Legal</p>
             <h1 className="legal-h1">Privacy Policy</h1>
@@ -192,7 +191,33 @@ export default function PrivacyPolicy() {
               information solely to perform services on our behalf and in
               compliance with this Privacy Policy.
             </p>
-            <h3 className="legal-h3">4.3 Community-Submitted Pricing Data</h3>
+            <h3 className="legal-h3">4.3 Artificial Intelligence Processing</h3>
+            <p className="legal-p">
+              Certain features of the Service are powered by third-party
+              artificial intelligence providers. To deliver these features, we
+              transmit the content you submit to those providers for processing.
+              This includes symptom descriptions and conversation content you
+              enter into the symptom checker, pet profile and health record
+              information relevant to the request, and receipt images or
+              veterinary documents you upload.
+            </p>
+            <p className="legal-p">
+              We use these providers to generate triage guidance, prepare visit
+              summaries, extract information from documents you upload, and
+              produce cost estimates and reminders. Our AI providers process
+              this content solely to return a result to us. We do not authorize
+              them to use your content to train their models, and we do not
+              share your name, email address, or account credentials with them.
+            </p>
+            <p className="legal-p">
+              AI-generated output is informational only and is not veterinary
+              advice, diagnosis, or treatment. See our{" "}
+              <a href="/terms-of-service" className="legal-link">
+                Terms of Service
+              </a>{" "}
+              for the limitations that apply to these features.
+            </p>
+            <h3 className="legal-h3">4.4 Community-Submitted Pricing Data</h3>
             <p className="legal-p">
               Price submissions you voluntarily contribute to the PetParrk
               pricing database are displayed publicly to other users as
@@ -203,7 +228,7 @@ export default function PrivacyPolicy() {
               verification purposes and are not published.
             </p>
             <h3 className="legal-h3">
-              4.4 Affiliate Partnerships and Future Practices
+              4.5 Affiliate Partnerships and Future Practices
             </h3>
             <p className="legal-p">
               PetParrk may in the future introduce affiliate referral programs
@@ -215,7 +240,7 @@ export default function PrivacyPolicy() {
               out. We will not change our data sharing practices with respect to
               already-collected information without providing prior notice.
             </p>
-            <h3 className="legal-h3">4.5 Aggregated and De-Identified Data</h3>
+            <h3 className="legal-h3">4.6 Aggregated and De-Identified Data</h3>
             <p className="legal-p">
               We may use and disclose aggregated, de-identified data — data that
               cannot reasonably be used to identify you or your pet — for
@@ -223,7 +248,7 @@ export default function PrivacyPolicy() {
               reporting. Such data does not constitute personal information
               under applicable law.
             </p>
-            <h3 className="legal-h3">4.6 Legal Disclosures</h3>
+            <h3 className="legal-h3">4.7 Legal Disclosures</h3>
             <p className="legal-p">
               We may disclose your personal information when required by
               applicable law, regulation, legal process, or governmental
@@ -231,7 +256,7 @@ export default function PrivacyPolicy() {
               protect the rights, property, or safety of PetParrk, our users, or
               the public.
             </p>
-            <h3 className="legal-h3">4.7 Business Transfers</h3>
+            <h3 className="legal-h3">4.8 Business Transfers</h3>
             <p className="legal-p">
               If PetParrk is involved in a merger, acquisition, or sale of all
               or a portion of its assets, your personal information may be
@@ -297,6 +322,24 @@ export default function PrivacyPolicy() {
               disputes, enforce our agreements, and prevent fraud and abuse.
               When information is no longer required for these purposes, we
               delete or de-identify it.
+            </p>
+            <p className="legal-p">
+              <strong>Uploaded documents.</strong> Receipt images and veterinary
+              documents you upload are retained only as long as needed to verify
+              the information they contain. Once a submission has been reviewed
+              and either accepted or declined, we delete the underlying document
+              within ninety (90) days. Pricing information extracted from a
+              document and added to our database is retained after the document
+              is deleted, in the aggregated and anonymized form described in
+              Section 4.4.
+            </p>
+            <p className="legal-p">
+              <strong>Account deletion.</strong> If you delete your account, we
+              remove your profile, pet records, symptom checker history, and any
+              uploaded documents, subject to the legal and fraud-prevention
+              exceptions described above. Pricing data you contributed to the
+              community database remains, as it is stored in a form that does
+              not identify you.
             </p>
           </div>
 

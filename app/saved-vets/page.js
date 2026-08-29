@@ -4,6 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Heart,
+  HeartOff,
+  Search,
+  Check,
+  X,
+} from "lucide-react";
+import PageLoader from "../../components/PageLoader";
 
 const C = {
   navyDark: "#172531",
@@ -129,38 +139,20 @@ export default function SavedVets() {
       (v.city || "").toLowerCase().includes(search.toLowerCase()),
   );
 
-  if (session === undefined || loading)
-    return (
-      <div
-        style={{
-          minHeight: "calc(100vh - 64px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: C.cream,
-        }}
-      >
-        <p style={{ color: C.muted, fontSize: "14px" }}>Loading…</p>
-      </div>
-    );
+  if (session === undefined || loading) return <PageLoader for="savedVets" />;
 
   return (
     <>
       <style>{`
         @keyframes heartPop { 0%{transform:scale(1)} 40%{transform:scale(1.3)} 100%{transform:scale(1)} }
 
-
         .sv-body { background: ${C.cream}; min-height: calc(100vh - 64px); padding: 48px 0 96px; }
-        .sv-container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
 
-
-        .sv-search { width: 100%; padding: 13px 18px; border-radius: 12px; border: 1.5px solid ${C.border}; font-size: 15px; font-family: var(--font-urbanist,'Urbanist',sans-serif); background: ${C.white}; color: ${C.navyDark}; outline: none; box-sizing: border-box; transition: border-color 0.15s; }
+        .sv-search { width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid ${C.border}; font-size: 15px; font-weight: 500; font-family: var(--font-urbanist,'Urbanist',sans-serif); background: ${C.white}; color: ${C.navyDark}; outline: none; box-sizing: border-box; transition: border-color 0.15s; }
         .sv-search:focus { border-color: ${C.terracotta}; }
         .sv-search::placeholder { color: ${C.muted}; }
 
-
         .sv-list { background: ${C.white}; border: 1px solid ${C.border}; border-radius: 16px; overflow: hidden; }
-
 
         /* Row — 3 columns: left | middle | right */
         .sv-row {
@@ -177,16 +169,15 @@ export default function SavedVets() {
         .sv-row:hover { background: #fafaf8; }
         .sv-row:hover::before { opacity: 1; }
 
-
         /* Left column */
         .sv-left { padding-right: 20px; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
         .sv-name-link { text-decoration: none; display: block; }
         .sv-name-link:hover .sv-name { color: ${C.terracotta}; }
-        .sv-name { font-size: 15px; font-weight: 700; color: ${C.navyDark}; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin: 0 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .sv-meta { font-size: 13px; color: ${C.muted}; margin: 0 0 2px; line-height: 1.5; }
-        .sv-meta-link { font-size: 13px; color: ${C.terracotta}; margin: 0 0 2px; line-height: 1.5; text-decoration: none; }
+        .sv-name { font-size: 17px; font-weight: 700; color: ${C.navyDark}; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin: 0 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sv-meta { font-size: 15px; font-weight: 500; color: ${C.muted}; margin: 0 0 2px; line-height: 1.5; }
+        .sv-meta-link { font-size: 15px; font-weight: 500; color: ${C.terracotta}; margin: 0 0 2px; line-height: 1.5; text-decoration: none; }
         .sv-meta-link:hover { text-decoration: underline; }
-
+    
 
         /* Middle column — vertical divider via border-left */
         .sv-middle {
@@ -200,18 +191,15 @@ export default function SavedVets() {
           min-width: 0;
         }
 
-
         /* Accepting badge */
-        .sv-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; white-space: nowrap; width: fit-content; }
+        .sv-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 14px; font-weight: 700; white-space: nowrap; width: fit-content; }
         .sv-badge-ok { background: #EDFAF3; color: ${C.success}; }
         .sv-badge-no { background: #FCEAEA; color: ${C.error}; }
 
-
         /* Price chips */
-        .sv-chip { display: inline-flex; align-items: center; gap: 5px; background: ${C.cream}; border-radius: 6px; padding: 4px 10px; font-size: 13px; white-space: nowrap; width: fit-content; }
-        .sv-chip-label { color: ${C.muted}; font-weight: 500; }
+        .sv-chip { display: inline-flex; align-items: center; gap: 5px; background: ${C.cream}; border-radius: 8px; padding: 4px 10px; font-size: 14px; white-space: nowrap; width: fit-content; }
+        .sv-chip-label { color: ${C.muted}; font-weight: 600; }
         .sv-chip-value { color: ${C.terracotta}; font-weight: 700; }
-
 
         /* Right column — heart top, View centered */
         .sv-right {
@@ -228,25 +216,18 @@ export default function SavedVets() {
           right: 0;
         }
 
-
         /* Unsave */
         .sv-unsave { background: none; border: none; cursor: pointer; font-size: 16px; line-height: 1; padding: 0; transition: transform 0.15s; }
         .sv-unsave:hover { transform: scale(1.2); }
         .sv-unsave.removing { animation: heartPop 0.3s ease forwards; opacity: 0.5; pointer-events: none; }
 
-
-
-
-
-
         /* Empty / no results */
         .sv-empty { text-align: center; padding: 80px 24px; }
-        .sv-empty-icon { font-size: 48px; margin-bottom: 16px; }
-        .sv-empty-title { font-size: 20px; font-weight: 800; color: ${C.navyDark}; margin: 0 0 8px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
-        .sv-empty-sub { font-size: 15px; color: ${C.muted}; margin: 0 0 28px; line-height: 1.7; }
+        .sv-empty-icon { margin-bottom: 16px; }
+        .sv-empty-title { font-size: 22px; font-weight: 800; color: ${C.navyDark}; margin: 0 0 8px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
+        .sv-empty-sub { font-size: 16px; color: ${C.muted}; margin: 0 0 28px; line-height: 1.7; }
         .sv-browse-btn { display: inline-flex; align-items: center; justify-content: center; height: 48px; padding: 0 28px; background: ${C.terracotta}; color: #fff; border: 2px solid ${C.terracotta}; border-radius: 12px; font-size: 15px; font-weight: 700; text-decoration: none; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.2s, color 0.2s; }
         .sv-browse-btn:hover { background: #fff; color: ${C.terracotta}; }
-
 
         /* Mobile */
         @media(max-width: 600px) {
@@ -260,11 +241,10 @@ export default function SavedVets() {
           .sv-middle { display: none; }
           .sv-right { grid-column: 2; padding-left: 12px; }
 
-
           /* Mobile: show accepting + chips inside left column */
-          .sv-mob-extra { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-        .sv-mob-chips { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
-          .sv-name { font-size: 14px; }
+          .sv-mob-extra { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .sv-mob-chips { display: flex; flex-direction: row; flex-wrap: wrap; gap: 10px; }
+          .sv-name { font-size: 16px; }
         }
         @media(min-width: 601px) {
           .sv-mob-extra { display: none; }
@@ -274,14 +254,14 @@ export default function SavedVets() {
       `}</style>
 
       <div className="sv-body">
-        <div className="sv-container">
+        <div className="pp-container-text">
           {/* Page title */}
           <div style={{ marginBottom: "28px" }}>
             <p
               style={{
                 fontSize: "11px",
                 fontWeight: "700",
-                letterSpacing: "0.1em",
+                letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 color: C.muted,
                 marginBottom: "8px",
@@ -297,12 +277,19 @@ export default function SavedVets() {
                 color: C.navyDark,
                 margin: "0 0 4px",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
-                letterSpacing: "-0.02em",
+                letterSpacing: "-0.025em",
               }}
             >
               Saved Vets
             </h1>
-            <p style={{ fontSize: "14px", color: C.muted, margin: 0 }}>
+            <p
+              style={{
+                fontSize: "15px",
+                fontWeight: "500",
+                color: C.muted,
+                margin: 0,
+              }}
+            >
               {vets.length > 0
                 ? `${vets.length} vet${vets.length !== 1 ? "s" : ""} saved`
                 : "Your saved vets will appear here."}
@@ -326,7 +313,9 @@ export default function SavedVets() {
           {vets.length === 0 && (
             <div className="sv-list">
               <div className="sv-empty">
-                <div className="sv-empty-icon">🤍</div>
+                <div className="sv-empty-icon">
+                  <HeartOff size={48} strokeWidth={1.6} color={C.muted} />
+                </div>
                 <h2 className="sv-empty-title">No saved vets yet</h2>
                 <p className="sv-empty-sub">
                   Browse the vet directory and tap the heart icon
@@ -334,7 +323,12 @@ export default function SavedVets() {
                   on any vet to save them here.
                 </p>
                 <Link href="/vets" className="sv-browse-btn">
-                  Browse Vets →
+                  Browse Vets{" "}
+                  <ArrowRight
+                    size={14}
+                    strokeWidth={2.4}
+                    style={{ marginLeft: "4px", verticalAlign: "middle" }}
+                  />
                 </Link>
               </div>
             </div>
@@ -344,7 +338,9 @@ export default function SavedVets() {
           {vets.length > 0 && filtered.length === 0 && (
             <div className="sv-list">
               <div className="sv-empty">
-                <div className="sv-empty-icon">🔍</div>
+                <div className="sv-empty-icon">
+                  <Search size={48} strokeWidth={1.6} color={C.muted} />
+                </div>
                 <h2 className="sv-empty-title">No results</h2>
                 <p className="sv-empty-sub">No saved vets match "{search}".</p>
               </div>
@@ -385,7 +381,7 @@ export default function SavedVets() {
                         </Link>
                         {location && <p className="sv-meta">{location}</p>}
                         {vet.phone && (
-                          <p className="sv-meta">
+                          <p className="sv-meta sv-meta-phone">
                             <a
                               href={`tel:${vet.phone}`}
                               style={{ color: C.muted, textDecoration: "none" }}
@@ -403,7 +399,15 @@ export default function SavedVets() {
                             className="sv-meta-link"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {vet.website} ↗
+                            {vet.website}{" "}
+                            <ArrowUpRight
+                              size={12}
+                              strokeWidth={2.4}
+                              style={{
+                                marginLeft: "2px",
+                                verticalAlign: "middle",
+                              }}
+                            />
                           </a>
                         )}
 
@@ -411,12 +415,22 @@ export default function SavedVets() {
                         <div className="sv-mob-extra">
                           {vet.accepting_new_patients === true && (
                             <span className="sv-badge sv-badge-ok">
-                              ✅ Accepting
+                              <Check
+                                size={12}
+                                strokeWidth={2.6}
+                                style={{ marginRight: "4px" }}
+                              />
+                              Accepting
                             </span>
                           )}
                           {vet.accepting_new_patients === false && (
                             <span className="sv-badge sv-badge-no">
-                              ✕ Not Accepting
+                              <X
+                                size={12}
+                                strokeWidth={2.6}
+                                style={{ marginRight: "4px" }}
+                              />
+                              Not Accepting
                             </span>
                           )}
                           {(exam || dental) && (
@@ -454,12 +468,22 @@ export default function SavedVets() {
                       <div className="sv-middle">
                         {vet.accepting_new_patients === true && (
                           <span className="sv-badge sv-badge-ok">
-                            ✅ Accepting
+                            <Check
+                              size={12}
+                              strokeWidth={2.6}
+                              style={{ marginRight: "4px" }}
+                            />
+                            Accepting
                           </span>
                         )}
                         {vet.accepting_new_patients === false && (
                           <span className="sv-badge sv-badge-no">
-                            ✕ Not Accepting
+                            <X
+                              size={12}
+                              strokeWidth={2.6}
+                              style={{ marginRight: "4px" }}
+                            />
+                            Not Accepting
                           </span>
                         )}
                         {exam && (
@@ -497,7 +521,12 @@ export default function SavedVets() {
                             title="Remove from saved"
                             aria-label="Remove from saved"
                           >
-                            ❤️
+                            <Heart
+                              size={22}
+                              strokeWidth={2}
+                              fill={C.terracotta}
+                              color={C.terracotta}
+                            />
                           </button>
                         </div>
                       </div>
@@ -510,18 +539,23 @@ export default function SavedVets() {
 
           {/* Browse more */}
           {vets.length > 0 && (
-            <div style={{ textAlign: "right", marginTop: "20px" }}>
+            <div style={{ textAlign: "right", marginTop: "28px" }}>
               <Link
                 href="/vets"
                 className="nav-link-dark"
                 style={{
-                  fontSize: "14px",
+                  fontSize: "13px",
                   fontWeight: "700",
                   color: C.terracotta,
                   textDecoration: "none",
                 }}
               >
-                Browse more vets →
+                Browse more vets{" "}
+                <ArrowRight
+                  size={14}
+                  strokeWidth={2.4}
+                  style={{ marginLeft: "4px", verticalAlign: "middle" }}
+                />
               </Link>
             </div>
           )}

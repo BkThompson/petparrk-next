@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import PageLoader from "../../components/PageLoader";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 const C = {
@@ -136,60 +138,50 @@ export default function AccountSettings() {
     }
   }
 
-  if (session === undefined)
-    return (
-      <div
-        style={{
-          minHeight: "calc(100vh - 64px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <p style={{ color: C.muted, fontSize: "14px" }}>Loading…</p>
-      </div>
-    );
+  if (session === undefined) return <PageLoader for="accountSettings" />;
 
   return (
     <>
       <style>{`
         .acc-body { background: ${C.cream}; min-height: calc(100vh - 64px); padding: 48px 0 96px; }
-        .acc-container { max-width: 800px; margin: 0 auto; padding: 0 24px; }
+        .acc-inner { padding-left: 24px; padding-right: 24px; }
         .acc-card { background: ${C.white}; border: 1px solid ${C.border}; border-radius: 16px; padding: 28px; margin-bottom: 16px; }
-        .acc-card-title { font-size: 15px; font-weight: 700; color: ${C.navyDark}; margin: 0 0 4px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
-        .acc-card-sub { font-size: 13px; color: ${C.muted}; margin: 0 0 20px; }
-        .acc-label { display: block; font-size: 13px; font-weight: 700; color: ${C.slate}; margin-bottom: 6px; }
-        .acc-input { width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid ${C.border}; font-size: 15px; font-family: var(--font-urbanist,system-ui); outline: none; box-sizing: border-box; background: ${C.white}; color: ${C.navyDark}; transition: border-color 0.15s; -webkit-appearance: none; }
+        .acc-card-title { font-size: 16px; font-weight: 700; color: ${C.navyDark}; margin: 0 0 4px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
+        .acc-card-sub { font-size: 16px; font-weight: 500;  color: ${C.muted}; margin: 0 0 20px; }
+        .acc-label { display: block; font-size: 14px; font-weight: 600; color: ${C.slate}; margin-bottom: 6px; }
+        .acc-input { width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid ${C.border}; font-size: 15px; font-weight: 500; font-family: var(--font-urbanist,system-ui); outline: none; box-sizing: border-box; background: ${C.white}; color: ${C.navyDark}; transition: border-color 0.15s; -webkit-appearance: none; }
         .acc-input:focus { border-color: ${C.terracotta}; }
         .acc-input[readonly] { background: ${C.cream}; color: ${C.slate}; cursor: default; }
         .acc-field { margin-bottom: 16px; }
-        .acc-btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 24px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.2s, color 0.2s; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; }
+        .acc-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 24px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.2s, color 0.2s; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; }
         .acc-btn:hover { background: #fff; color: ${C.terracotta}; }
         .acc-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .acc-btn-ghost { background: transparent; color: ${C.navyDark}; border: 2px solid ${C.border}; }
         .acc-btn-ghost:hover { background: ${C.navyDark}; color: #fff; border-color: ${C.navyDark}; }
         .acc-btn-danger { background: transparent; color: ${C.error}; border: 2px solid ${C.error}; }
         .acc-btn-danger:hover { background: ${C.error}; color: #fff; }
-        .acc-msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; font-weight: 500; }
+        .acc-msg { padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; font-weight: 500; }
         .acc-msg-success { background: #EDFAF3; color: ${C.success}; }
         .acc-msg-error { background: #FCEAEA; color: ${C.error}; }
         .acc-divider { height: 1px; background: ${C.border}; margin: 20px 0; }
-        .acc-info-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: ${C.slate}; padding: 8px 0; }
-        .acc-info-label { font-weight: 600; color: ${C.muted}; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+        .acc-info-row { font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: ${C.slate}; padding: 8px 0; }
+        .acc-info-label { font-weight: 700; color: ${C.muted}; font-size: 14px; text-transform: uppercase; }
 
         /* Delete modal */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 24px; }
         .modal-box { background: #fff; border-radius: 16px; padding: 32px; max-width: 440px; width: 100%; }
-        .modal-title { font-size: 18px; font-weight: 800; color: ${C.navyDark}; margin: 0 0 8px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
-        .modal-sub { font-size: 14px; color: ${C.slate}; line-height: 1.7; margin: 0 0 24px; }
-        .modal-warning { background: #FCEAEA; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: ${C.error}; margin-bottom: 20px; font-weight: 500; line-height: 1.6; }
+        .modal-title { font-size: 20px; font-weight: 800; color: ${C.navyDark}; margin: 0 0 8px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
+        .modal-sub { font-size: 16px; color: ${C.slate}; line-height: 1.7; margin: 0 0 24px; }
+        .modal-warning { background: #FCEAEA; border-radius: 8px; padding: 12px 16px; font-size: 14px; color: ${C.error}; margin-bottom: 20px; font-weight: 500; line-height: 1.6; }
         .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
         @media(max-width: 640px) {
+          .acc-inner { padding-left: 16px; padding-right: 16px; }
           .acc-body { padding: 32px 0 80px; }
           .acc-card { padding: 20px; }
           .modal-actions { flex-direction: column; }
           .acc-btn { width: 100%; }
+          .acc-info-row { flex-direction: column; align-items: flex-start; gap: 2px; }
         }
       `}</style>
 
@@ -250,14 +242,22 @@ export default function AccountSettings() {
       )}
 
       <div className="acc-body">
-        <div className="acc-container">
+        <div
+          className="acc-inner"
+          style={{
+            width: "100%",
+            maxWidth: "560px",
+            margin: "0 auto",
+            boxSizing: "border-box",
+          }}
+        >
           {/* Page title */}
           <div style={{ marginBottom: "32px" }}>
             <p
               style={{
                 fontSize: "11px",
                 fontWeight: "700",
-                letterSpacing: "0.1em",
+                letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 color: C.muted,
                 marginBottom: "8px",
@@ -273,12 +273,19 @@ export default function AccountSettings() {
                 color: C.navyDark,
                 margin: "0 0 4px",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
-                letterSpacing: "-0.02em",
+                letterSpacing: "-0.025em",
               }}
             >
               Account Settings
             </h1>
-            <p style={{ fontSize: "14px", color: C.muted, margin: 0 }}>
+            <p
+              style={{
+                fontSize: "15px",
+                fontWeight: "500",
+                color: C.muted,
+                margin: 0,
+              }}
+            >
               Manage your account credentials and preferences.
             </p>
           </div>
@@ -288,26 +295,26 @@ export default function AccountSettings() {
             <p className="acc-card-title">Account Information</p>
             <p className="acc-card-sub">Your current account details.</p>
             <div className="acc-info-row">
-              <span className="acc-info-label">Email</span>
+              <span className="acc-info-label">Email:</span>
               <span
                 style={{
                   color: C.navyDark,
                   fontWeight: "600",
-                  fontSize: "14px",
+                  fontSize: "16px",
                 }}
               >
                 {session.user.email}
               </span>
             </div>
             <div className="acc-info-row">
-              <span className="acc-info-label">Sign-in method</span>
-              <span style={{ color: C.slate, fontSize: "14px" }}>
+              <span className="acc-info-label">Sign-in method:</span>
+              <span style={{ color: C.navyDark, fontSize: "16px" }}>
                 {isGoogleUser ? "Google" : "Email & Password"}
               </span>
             </div>
             <div className="acc-info-row">
-              <span className="acc-info-label">Member since</span>
-              <span style={{ color: C.slate, fontSize: "14px" }}>
+              <span className="acc-info-label">Member since:</span>
+              <span style={{ color: C.navyDark, fontSize: "16px" }}>
                 {new Date(session.user.created_at).toLocaleDateString("en-US", {
                   month: "long",
                   year: "numeric",
@@ -318,13 +325,18 @@ export default function AccountSettings() {
             <Link
               href="/profile"
               style={{
-                fontSize: "14px",
-                fontWeight: "700",
+                fontSize: "15px",
+                fontWeight: "600",
                 color: C.terracotta,
                 textDecoration: "none",
               }}
             >
-              Edit your profile →
+              Edit your profile{" "}
+              <ArrowRight
+                size={14}
+                strokeWidth={2.4}
+                style={{ marginLeft: "4px", verticalAlign: "middle" }}
+              />
             </Link>
           </div>
 
@@ -334,7 +346,7 @@ export default function AccountSettings() {
               <p className="acc-card-title">Google Account</p>
               <p
                 style={{
-                  fontSize: "14px",
+                  fontSize: "16px",
                   color: C.slate,
                   lineHeight: "1.7",
                   margin: "0 0 16px",
@@ -350,7 +362,12 @@ export default function AccountSettings() {
                 className="acc-btn acc-btn-ghost"
                 style={{ textDecoration: "none", display: "inline-flex" }}
               >
-                Manage Google Account ↗
+                Manage Google Account{" "}
+                <ArrowUpRight
+                  size={14}
+                  strokeWidth={2.4}
+                  style={{ marginLeft: "4px", verticalAlign: "middle" }}
+                />
               </a>
             </div>
           )}
@@ -431,58 +448,50 @@ export default function AccountSettings() {
           <div className="acc-card">
             <p className="acc-card-title">Data & Privacy</p>
             <p className="acc-card-sub">Your data belongs to you.</p>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            <p
+              style={{
+                fontSize: "16px",
+                fontWeight: "600",
+                color: C.navyDark,
+                margin: "0 0 2px",
+              }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <div>
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      color: C.navyDark,
-                      margin: "0 0 2px",
-                    }}
-                  >
-                    Export my data
-                  </p>
-                  <p style={{ fontSize: "13px", color: C.muted, margin: 0 }}>
-                    Receive a copy of your pet's health records.
-                  </p>
-                </div>
-                <a
-                  href="mailto:[legal@petparrk.com]?subject=Data Export Request"
-                  className="acc-btn acc-btn-ghost"
-                  style={{
-                    textDecoration: "none",
-                    display: "inline-flex",
-                    whiteSpace: "nowrap",
-                    flexShrink: 0,
-                    marginLeft: "16px",
-                  }}
-                >
-                  Request Export
-                </a>
-              </div>
-              <div className="acc-divider" />
-              <Link
-                href="/privacy-policy"
-                style={{
-                  fontSize: "14px",
-                  color: C.terracotta,
-                  fontWeight: "600",
-                  textDecoration: "none",
-                }}
-              >
-                View Privacy Policy →
-              </Link>
-            </div>
+              Export my data
+            </p>
+            <p
+              style={{
+                fontSize: "15px",
+                fontWeight: "500",
+                color: C.muted,
+                margin: "0 0 12px",
+              }}
+            >
+              Receive a copy of your pet's health records.
+            </p>
+            <a
+              href="mailto:[legal@petparrk.com]?subject=Data Export Request"
+              className="acc-btn acc-btn-ghost"
+              style={{ textDecoration: "none" }}
+            >
+              Request Export
+            </a>
+            <div className="acc-divider" />
+            <Link
+              href="/privacy-policy"
+              style={{
+                fontSize: "15px",
+                color: C.terracotta,
+                fontWeight: "600",
+                textDecoration: "none",
+              }}
+            >
+              View Privacy Policy{" "}
+              <ArrowRight
+                size={14}
+                strokeWidth={2.4}
+                style={{ marginLeft: "4px", verticalAlign: "middle" }}
+              />
+            </Link>
           </div>
 
           {/* Sign Out */}
@@ -506,7 +515,7 @@ export default function AccountSettings() {
               style={{
                 fontSize: "11px",
                 fontWeight: "700",
-                letterSpacing: "0.08em",
+                letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 color: C.error,
                 marginBottom: "8px",
@@ -523,7 +532,7 @@ export default function AccountSettings() {
             <p className="acc-card-title" style={{ color: C.error }}>
               Delete Account
             </p>
-            <p className="acc-card-sub">
+            <p className="acc-card-sub" style={{ fontSize: "14px" }}>
               Permanently delete your account and all associated data. This
               cannot be undone.
             </p>

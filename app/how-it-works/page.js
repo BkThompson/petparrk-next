@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { ArrowRight, Search, Stethoscope, ClipboardList } from "lucide-react";
 
 function useScrollReveal(threshold = 0.08) {
   const ref = useRef(null);
@@ -95,22 +96,25 @@ const PAW_TRAIL = [
 const STEPS = [
   {
     number: "01",
-    icon: "🔍",
+    icon: Search,
     title: "Find a Vet",
+    href: "/vets",
     description:
       "Search verified vets in your neighborhood. Filter by price, specialty, or availability. See real prices before you ever pick up the phone.",
   },
   {
     number: "02",
-    icon: "🩺",
+    icon: Stethoscope,
     title: "Check Symptoms",
+    href: "/symptom-checker",
     description:
       "Not sure if it's urgent? Get instant AI triage guidance personalized to your pet — 24/7, completely free. No subscription required.",
   },
   {
     number: "03",
-    icon: "📋",
+    icon: ClipboardList,
     title: "Track Your Pet's Health",
+    href: "/pet-card",
     description:
       "Build your pet's complete health history over time. Vet visits, vaccines, notes — all in one place you own and control.",
   },
@@ -131,7 +135,7 @@ const FAQS = [
   },
   {
     q: "What areas does PetParrk cover?",
-    a: "We're starting in Oakland and the East Bay, expanding across the Bay Area based on community interest.",
+    a: "Launching in Oakland and Berkeley with verified vet listings across California. We're expanding city by city.",
   },
 ];
 
@@ -206,8 +210,14 @@ export default function HowItWorksPage() {
         .rv.on,.rl.on,.rr.on { opacity:1; transform:translate(0); }
         .d1{transition-delay:.1s} .d2{transition-delay:.22s} .d3{transition-delay:.34s}
 
+
+
+
         .walk-paw { position:absolute; transition:opacity 0.55s ease-out, transform 0.45s cubic-bezier(0.175,0.885,0.32,1.275); }
         .bg-paw { position:absolute; transition:opacity 1.8s ease-in-out; }
+
+
+
 
         @media (max-width: 768px) {
           .walk-paw { display: none !important; }
@@ -218,6 +228,9 @@ export default function HowItWorksPage() {
           .hiw-header { min-height: 368px !important; height: auto !important; padding: 80px 0 88px !important; }
         }
 
+
+
+
         .sc-outer { position:relative; border-radius:22px; padding:1.5px; transition:transform 0.3s ease; height:100%; }
         .sc-outer:hover { transform:translateY(-4px); }
         .sc { border-radius:20px; padding:36px 28px; background:linear-gradient(160deg,rgba(42,62,78,.97) 0%,rgba(26,42,55,.97) 100%); text-align:center; transition:background .3s,box-shadow .3s; height:100%; box-sizing:border-box; }
@@ -225,17 +238,26 @@ export default function HowItWorksPage() {
         .sg { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; align-items:stretch; }
         @media(max-width:900px){.sg{grid-template-columns:1fr;}}
 
+
+
+
         .fq { border-top:1px solid rgba(255,255,255,.07); padding:24px 0; cursor:pointer; }
         .fq:last-child { border-bottom:1px solid rgba(255,255,255,.07); }
         .fa { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows .38s cubic-bezier(.4,0,.2,1),opacity .3s; }
         .fa.open { grid-template-rows:1fr; opacity:1; }
         .fa-inner { overflow:hidden; }
 
+
+
+
         .bt { height:48px; padding:0 32px; line-height:0; border-radius:12px; font-size:15px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; font-family:var(--font-urbanist,'Urbanist',sans-serif); transition:background .25s,color .25s; }
         .bt-tc { background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); }
         .bt-tc:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
         .bt-dk { background:transparent; color:var(--color-navy-dark,#172531); border:2px solid var(--color-navy-dark,#172531); }
         .bt-dk:hover { background:var(--color-navy-dark,#172531); color:#fff; }
+
+
+
 
         @media(max-width:768px){.fqg{grid-template-columns:1fr!important;} .bt{width:100%;box-sizing:border-box;height:48px;justify-content:center;}}
       `}</style>
@@ -338,7 +360,7 @@ export default function HowItWorksPage() {
             style={{
               fontSize: "11px",
               fontWeight: "700",
-              letterSpacing: "0.1em",
+              letterSpacing: "0.10em",
               textTransform: "uppercase",
               color: "var(--color-gold,#EFC88B)",
               marginBottom: "12px",
@@ -364,6 +386,7 @@ export default function HowItWorksPage() {
           <p
             style={{
               fontSize: "17px",
+              fontWeight: 500,
               color: "rgba(255,255,255,0.65)",
               margin: 0,
               lineHeight: "1.75",
@@ -406,11 +429,14 @@ export default function HowItWorksPage() {
                 className={`rv${stepsVisible ? " on" : ""} d${i + 1}`}
                 style={{ height: "100%" }}
               >
-                <div
+                <Link
+                  href={step.href}
                   className="sc-outer"
                   style={{
                     background:
                       "linear-gradient(135deg,rgba(255,255,255,0.14) 0%,rgba(255,255,255,0.04) 28%,transparent 42%,transparent 58%,rgba(255,255,255,0.04) 72%,rgba(255,255,255,0.14) 100%)",
+                    display: "block",
+                    textDecoration: "none",
                   }}
                 >
                   <div className="sc">
@@ -419,7 +445,7 @@ export default function HowItWorksPage() {
                         position: "absolute",
                         top: "16px",
                         right: "20px",
-                        fontSize: "72px",
+                        fontSize: "76px",
                         fontWeight: "800",
                         color: "rgba(255,255,255,0.04)",
                         lineHeight: 1,
@@ -438,16 +464,15 @@ export default function HowItWorksPage() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: "28px",
                         margin: "0 auto 20px",
-                        filter: "brightness(1.2)",
+                        color: "#fff",
                       }}
                     >
-                      {step.icon}
+                      <step.icon size={28} strokeWidth={2} />
                     </div>
                     <h3
                       style={{
-                        fontSize: "20px",
+                        fontSize: "22px",
                         fontWeight: "800",
                         color: "#fff",
                         marginBottom: "12px",
@@ -459,7 +484,8 @@ export default function HowItWorksPage() {
                     </h3>
                     <p
                       style={{
-                        fontSize: "15px",
+                        fontSize: "16px",
+                        fontWeight: 500,
                         color: "rgba(255,255,255,0.55)",
                         lineHeight: "1.75",
                         margin: 0,
@@ -468,7 +494,7 @@ export default function HowItWorksPage() {
                       {step.description}
                     </p>
                   </div>
-                </div>
+                </Link>
               </div>
             ))}
           </div>
@@ -497,7 +523,7 @@ export default function HowItWorksPage() {
                 style={{
                   fontSize: "11px",
                   fontWeight: "700",
-                  letterSpacing: "0.1em",
+                  letterSpacing: "0.10em",
                   textTransform: "uppercase",
                   color: "var(--color-gold,#EFC88B)",
                   marginBottom: "16px",
@@ -507,13 +533,13 @@ export default function HowItWorksPage() {
               </p>
               <h2
                 style={{
-                  fontSize: "clamp(26px,3.5vw,40px)",
+                  fontSize: "clamp(26px,3.5vw,44px)",
                   fontWeight: "800",
                   color: "#fff",
                   lineHeight: "1.1",
                   fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                   marginBottom: "20px",
-                  letterSpacing: "-0.02em",
+                  letterSpacing: "-0.025em",
                 }}
               >
                 Got questions?
@@ -523,9 +549,12 @@ export default function HowItWorksPage() {
               <p
                 style={{
                   fontSize: "16px",
+                  fontWeight: 500,
                   color: "rgba(255,255,255,0.5)",
                   lineHeight: "1.75",
-                  marginBottom: "36px",
+                  marginBottom: "20px",
+                  textWrap: "pretty",
+                  maxWidth: "90%",
                 }}
               >
                 Everything you need to know about how PetParrk works.
@@ -539,7 +568,12 @@ export default function HowItWorksPage() {
                   textDecoration: "none",
                 }}
               >
-                Still have questions? Contact us →
+                Still have questions? Contact us{" "}
+                <ArrowRight
+                  size={14}
+                  strokeWidth={2.4}
+                  style={{ marginLeft: "4px", verticalAlign: "middle" }}
+                />
               </Link>
             </div>
             <div className={`rr${faqVisible ? " on" : ""}`}>
@@ -559,8 +593,8 @@ export default function HowItWorksPage() {
                   >
                     <p
                       style={{
-                        fontSize: "16px",
-                        fontWeight: "700",
+                        fontSize: "18px",
+                        fontWeight: "800",
                         color: "#fff",
                         margin: 0,
                         fontFamily:
@@ -589,6 +623,7 @@ export default function HowItWorksPage() {
                       <p
                         style={{
                           fontSize: "15px",
+                          fontWeight: 500,
                           color: "rgba(255,255,255,0.55)",
                           lineHeight: "1.75",
                           margin: "14px 0 0",
@@ -610,65 +645,80 @@ export default function HowItWorksPage() {
       <section
         style={{ background: "var(--color-cream,#F5F0E8)", padding: "96px 0" }}
       >
-        <div
-          ref={ctaRef}
-          className={`rv${ctaVisible ? " on" : ""}`}
-          style={{
-            maxWidth: "640px",
-            margin: "0 auto",
-            textAlign: "center",
-            padding: "0 24px",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "11px",
-              fontWeight: "700",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--color-terracotta,#CF5C36)",
-              marginBottom: "16px",
-            }}
-          >
-            Get started free
-          </p>
-          <h2
-            style={{
-              fontSize: "clamp(26px,4vw,42px)",
-              fontWeight: "800",
-              color: "var(--color-navy-dark,#172531)",
-              marginBottom: "16px",
-              fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
-              letterSpacing: "-0.02em",
-              lineHeight: "1.1",
-            }}
-          >
-            Ready to find your next vet?
-          </h2>
-          <p
-            style={{
-              fontSize: "17px",
-              color: "var(--color-slate,#4B5563)",
-              lineHeight: "1.7",
-              marginBottom: "36px",
-            }}
-          >
-            Browse verified vets with real prices — no account needed.
-          </p>
+        <div className="pp-container">
           <div
+            ref={ctaRef}
+            className={`rv${ctaVisible ? " on" : ""}`}
             style={{
-              display: "flex",
-              gap: "12px",
-              justifyContent: "center",
-              flexWrap: "wrap",
+              maxWidth: "640px",
+              margin: "0 auto",
+              textAlign: "center",
             }}
           >
-            <Link href="/vets" className="bt bt-tc">
-              Find a Vet →
-            </Link>
-            <Link href="/symptom-checker" className="bt bt-dk">
-              Check Symptoms →
-            </Link>
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                letterSpacing: "0.10em",
+                textTransform: "uppercase",
+                color: "var(--color-terracotta,#CF5C36)",
+                marginBottom: "16px",
+              }}
+            >
+              Get started free
+            </p>
+            <h2
+              style={{
+                fontSize: "clamp(26px,4vw,44px)",
+                fontWeight: "800",
+                color: "var(--color-navy-dark,#172531)",
+                marginBottom: "16px",
+                fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
+                letterSpacing: "-0.025em",
+                lineHeight: "1.1",
+              }}
+            >
+              Ready to find your next vet?
+            </h2>
+            <p
+              style={{
+                fontSize: "17px",
+                fontWeight: 500,
+                color: "var(--color-slate,#4B5563)",
+                lineHeight: "1.7",
+                // marginBottom: "36px",
+                wordWrap: "pretty",
+                maxWidth: "90%",
+                margin: "0 auto 36px",
+              }}
+            >
+              Browse verified vets with real prices — no account needed.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <Link href="/vets" className="bt bt-tc">
+                Find a Vet{" "}
+                <ArrowRight
+                  size={14}
+                  strokeWidth={2.4}
+                  style={{ marginLeft: "4px", verticalAlign: "middle" }}
+                />
+              </Link>
+              <Link href="/symptom-checker" className="bt bt-dk">
+                Check Symptoms{" "}
+                <ArrowRight
+                  size={14}
+                  strokeWidth={2.4}
+                  style={{ marginLeft: "4px", verticalAlign: "middle" }}
+                />
+              </Link>
+            </div>
           </div>
         </div>
       </section>

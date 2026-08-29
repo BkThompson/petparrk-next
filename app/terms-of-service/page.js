@@ -9,19 +9,18 @@ const COMPANY_ADDRESS = "[Company Address], Oakland, California";
 export default function TermsOfService() {
   return (
     <>
-      <style>{`        .legal-body { background: #F5F0E8; padding: 48px 0 96px; }
-        .legal-container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+      <style>{`.legal-body { background: #F5F0E8; padding: 48px 0 96px; }
         .legal-page-title { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid #D1C9BC; }
-        .legal-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6B7280; margin-bottom: 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
-        .legal-h1 { font-size: clamp(24px,3vw,34px); font-weight: 800; color: #172531; margin: 0 0 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); letter-spacing: -0.02em; line-height: 1.15; }
-        .legal-date { font-size: 14px; color: #6B7280; margin: 0; }
+        .legal-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: #6B7280; margin-bottom: 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
+        .legal-h1 { font-size: clamp(24px,3vw,34px); font-weight: 800; color: #172531; margin: 0 0 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); letter-spacing: -0.025em; line-height: 1.15; }
+        .legal-date { font-size: 14px; font-weight: 500; color: #1F2937; margin: 0; }
         .legal-section { margin-bottom: 44px; }
-        .legal-h2 { font-size: 15px; font-weight: 700; color: #172531; text-transform: uppercase; letter-spacing: 0.07em; margin: 0 0 16px; font-family: var(--font-urbanist,'Urbanist',sans-serif); padding-bottom: 8px; }
-        .legal-h3 { font-size: 16px; font-weight: 700; color: #172531; margin: 24px 0 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
-        .legal-p { font-size: 16px; color: #1F2937; line-height: 1.85; margin: 0 0 14px; }
-        .legal-caps { font-size: 14px; color: #1F2937; line-height: 1.8; font-weight: 600; margin: 0 0 14px; }
+        .legal-h2 { font-size: 16px; font-weight: 700; color: #172531; text-transform: uppercase; letter-spacing: 0.10em; margin: 0 0 16px; font-family: var(--font-urbanist,'Urbanist',sans-serif); padding-bottom: 8px; }
+        .legal-h3 { font-size: 17px; font-weight: 700; color: #172531; margin: 24px 0 10px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
+        .legal-p { font-size: 16px; font-weight: 500; color: #1F2937; line-height: 1.85; margin: 0 0 14px; }
+        .legal-caps { font-size: 15px; color: #1F2937; line-height: 1.8; font-weight: 600; margin: 0 0 14px; }
         .legal-ul { margin: 10px 0 16px 22px; padding: 0; }
-        .legal-ul li { font-size: 16px; color: #1F2937; line-height: 1.85; margin-bottom: 6px; }
+        .legal-ul li { font-size: 16px; font-weight: 500; color: #1F2937; line-height: 1.85; margin-bottom: 8px; }
         .legal-divider { height: 1px; background: #D1C9BC; margin: 44px 0; }
         .legal-notice-box { background: #fff; border: 1px solid #D1C9BC; border-radius: 12px; padding: 24px 28px; margin-bottom: 32px; }
         .legal-notice-box p { font-size: 16px; color: #1F2937; line-height: 1.85; margin: 0; }
@@ -31,7 +30,7 @@ export default function TermsOfService() {
 `}</style>
 
       <div className="legal-body">
-        <div className="legal-container">
+        <div className="pp-container-text">
           <div className="legal-page-title">
             <p className="legal-eyebrow">Legal</p>
             <h1 className="legal-h1">Terms of Service</h1>
@@ -222,7 +221,33 @@ export default function TermsOfService() {
               upload have been redacted to remove personal financial
               information, including account numbers and payment card numbers.
             </p>
-            <h3 className="legal-h3">7.3 Prohibited Content</h3>
+            <p className="legal-p">
+              We encourage you to also redact your name, address, and other
+              personal identifying details before uploading a document. Where
+              such information remains, PetParrk does not extract it, publish
+              it, or associate it with the pricing data displayed to other
+              users. Uploaded documents are used only for internal verification
+              and are retained for a limited period as described in our{" "}
+              <a href="/privacy-policy" className="legal-link">
+                Privacy Policy
+              </a>
+              .
+            </p>
+            <h3 className="legal-h3">
+              7.3 Automated Processing of User Content
+            </h3>
+            <p className="legal-p">
+              You acknowledge that User Content you submit — including symptom
+              descriptions, pet health information, and uploaded documents — is
+              processed using third-party artificial intelligence services in
+              order to provide features of the Service. Automated extraction may
+              be inaccurate or incomplete. Where information extracted from your
+              submission is added to your pet's records, you will be given an
+              opportunity to review and confirm it before it is saved. You
+              remain responsible for verifying the accuracy of your pet's
+              records.
+            </p>
+            <h3 className="legal-h3">7.4 Prohibited Content</h3>
             <p className="legal-p">
               You may not submit User Content that is false, misleading,
               defamatory, obscene, unlawful, or that violates the rights of any
@@ -230,14 +255,14 @@ export default function TermsOfService() {
               Content that violates these Terms or that we determine, in our
               sole discretion, is otherwise inappropriate.
             </p>
-            <h3 className="legal-h3">7.4 Pet Health Records</h3>
+            <h3 className="legal-h3">7.5 Pet Health Records</h3>
             <p className="legal-p">
               Health records, notes, and other personal pet health information
               you enter into your pet profile are stored privately and are not
               shared with other users or displayed publicly. You may export or
               delete such records at any time.
             </p>
-            <h3 className="legal-h3">7.5 Community Standards</h3>
+            <h3 className="legal-h3">7.6 Community Standards</h3>
             <p className="legal-p">
               All User Content must comply with PetParrk's Code of Conduct,
               available at{" "}

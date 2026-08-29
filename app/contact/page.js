@@ -2,6 +2,14 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import {
+  ArrowRight,
+  MessageCircle,
+  Hospital,
+  Newspaper,
+  PawPrint,
+  Mail,
+} from "lucide-react";
 
 function useScrollReveal(threshold = 0.08) {
   const ref = useRef(null);
@@ -26,22 +34,22 @@ function useScrollReveal(threshold = 0.08) {
 
 const REASONS = [
   {
-    icon: "💬",
+    icon: MessageCircle,
     label: "General feedback",
     body: "Tell us what's working, what's not, or what you wish PetParrk could do. Your feedback shapes what we build.",
   },
   {
-    icon: "🏥",
+    icon: Hospital,
     label: "Vet partnerships",
-    body: "Are you a vet or clinic interested in being featured or partnering with us. We'd love to connect.",
+    body: "Are you a vet or clinic interested in being featured or partnering with us? We'd love to connect.",
   },
   {
-    icon: "📰",
+    icon: Newspaper,
     label: "Press & media",
     body: "Writing about pet care, health tech, or consumer startups? Reach out and we'll get back to you quickly.",
   },
   {
-    icon: "🐾",
+    icon: PawPrint,
     label: "Submit a price",
     body: "Visited a vet recently? Help the community by submitting what you paid from that vet's profile page.",
   },
@@ -109,7 +117,7 @@ export default function ContactPage() {
         .cr { display:flex; gap:16px; align-items:flex-start; padding:20px 0; border-bottom:1px solid rgba(23,37,49,0.08); }
         .cr:last-child { border-bottom:none; }
         .ri { width:40px; height:40px; border-radius:10px; background:rgba(207,92,54,0.1); border:1px solid rgba(207,92,54,0.18); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-        .eb { display:inline-flex; align-items:center; gap:10px; padding:16px 24px; border-radius:12px; text-decoration:none; font-weight:700; font-size:15px; font-family:var(--font-urbanist,'Urbanist',sans-serif); transition:background .25s,color .25s; width:100%; box-sizing:border-box; justify-content:flex-start; }
+        .eb { display:inline-flex; align-items:center; gap:10px; padding:16px 24px; border-radius:12px; text-decoration:none; font-weight:700; font-size:16px; font-family:var(--font-urbanist,'Urbanist',sans-serif); transition:background .25s,color .25s; width:100%; box-sizing:border-box; justify-content:flex-start; }
         .eb-p { background:var(--color-navy-dark,#172531); color:#fff; border:2px solid var(--color-navy-dark,#172531); }
         .eb-p:hover { background:transparent; color:var(--color-navy-dark,#172531); }
         .eb-s { background:transparent; color:var(--color-navy-dark,#172531); border:2px solid var(--color-navy-dark,#172531); }
@@ -123,7 +131,8 @@ export default function ContactPage() {
           .contact-header { height:auto !important; min-height:368px !important; padding:80px 0 88px !important; overflow:hidden; }
           .cg { grid-template-columns:1fr; gap:48px; }
           .ci { display:none; }
-          .bc, .eb { width:100%; box-sizing:border-box; height:48px; justify-content:center; }
+          .bc { width:100%; box-sizing:border-box; height:48px; justify-content:center; }
+          .eb { width:100%; box-sizing:border-box; height:48px; }
         }
       `}</style>
 
@@ -351,7 +360,7 @@ export default function ContactPage() {
             style={{
               fontSize: "11px",
               fontWeight: "700",
-              letterSpacing: "0.1em",
+              letterSpacing: "0.10em",
               textTransform: "uppercase",
               color: "var(--color-gold,#EFC88B)",
               marginBottom: "12px",
@@ -361,7 +370,7 @@ export default function ContactPage() {
           </p>
           <h1
             style={{
-              fontSize: "clamp(30px,5.5vw,58px)",
+              fontSize: "clamp(30px,5.5vw,56px)",
               fontWeight: "800",
               color: "#fff",
               fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -377,6 +386,7 @@ export default function ContactPage() {
           <p
             style={{
               fontSize: "17px",
+              fontWeight: 500,
               color: "rgba(255,255,255,0.65)",
               margin: 0,
               maxWidth: "460px",
@@ -402,7 +412,13 @@ export default function ContactPage() {
               <div style={{ marginBottom: "40px" }}>
                 {REASONS.map((item) => (
                   <div key={item.label} className="cr">
-                    <div className="ri">{item.icon}</div>
+                    <div className="ri">
+                      <item.icon
+                        size={18}
+                        strokeWidth={2}
+                        color="var(--color-terracotta,#CF5C36)"
+                      />
+                    </div>
                     <div>
                       <p
                         style={{
@@ -418,10 +434,13 @@ export default function ContactPage() {
                       </p>
                       <p
                         style={{
-                          fontSize: "14px",
+                          fontSize: "16px",
+                          fontWeight: 500,
                           color: "var(--color-slate,#4B5563)",
                           lineHeight: "1.7",
                           margin: 0,
+                          maxWidth: "94%",
+                          textWrap: "pretty",
                         }}
                       >
                         {item.body}
@@ -438,10 +457,20 @@ export default function ContactPage() {
                 }}
               >
                 <a href="mailto:info@petparrk.com" className="eb eb-p">
-                  ✉️ info@petparrk.com
+                  <Mail
+                    size={16}
+                    strokeWidth={2}
+                    style={{ marginRight: "4px", verticalAlign: "middle" }}
+                  />{" "}
+                  info@petparrk.com
                 </a>
                 <a href="mailto:support@petparrk.com" className="eb eb-s">
-                  💬 support@petparrk.com
+                  <MessageCircle
+                    size={16}
+                    strokeWidth={2}
+                    style={{ marginRight: "4px", verticalAlign: "middle" }}
+                  />{" "}
+                  support@petparrk.com
                 </a>
               </div>
             </div>
@@ -469,8 +498,8 @@ export default function ContactPage() {
                     <p
                       style={{
                         fontSize: "11px",
-                        fontWeight: "600",
-                        letterSpacing: "0.08em",
+                        fontWeight: "700",
+                        letterSpacing: "0.10em",
                         textTransform: "uppercase",
                         margin: 0,
                       }}
@@ -491,25 +520,20 @@ export default function ContactPage() {
           background: "var(--color-navy-dark,#172531)",
           paddingTop: "48px",
           paddingBottom: "0",
-          paddingLeft: "20px",
-          paddingRight: "20px",
         }}
       >
         <div
           ref={ctaRef}
-          className={`rv${ctaVisible ? " on" : ""}`}
+          className={`pp-container rv${ctaVisible ? " on" : ""}`}
           style={{
-            maxWidth: "1280px",
-            margin: "0 auto",
             textAlign: "center",
             paddingBottom: "48px",
-            paddingLeft: "24px",
-            paddingRight: "24px",
           }}
         >
           <p
             style={{
               fontSize: "17px",
+              fontWeight: 500,
               color: "rgba(255,255,255,0.65)",
               lineHeight: "1.7",
               marginBottom: "24px",
@@ -519,7 +543,12 @@ export default function ContactPage() {
             required.
           </p>
           <Link href="/vets" className="bc">
-            Find a Vet →
+            Find a Vet{" "}
+            <ArrowRight
+              size={14}
+              strokeWidth={2.4}
+              style={{ marginLeft: "4px", verticalAlign: "middle" }}
+            />
           </Link>
         </div>
         <div
@@ -527,7 +556,7 @@ export default function ContactPage() {
             height: "1px",
             background:
               "linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,0.2) 20%,rgba(255,255,255,0.2) 80%,rgba(255,255,255,0))",
-            margin: "0 24px",
+            margin: 0,
           }}
         />
       </section>

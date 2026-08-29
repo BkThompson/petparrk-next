@@ -1,8 +1,75 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
+
+// Known disposable / throwaway email domains. Blocking these at signup stops the
+// low-effort bot & abuse accounts that use temporary inboxes to dodge email
+// confirmation. This is a blocklist (catches known domains, not every possible
+// one) — it works as one layer alongside CAPTCHA + required email confirmation,
+// not as a standalone guarantee. Extend this list over time as needed.
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  "mailinator.com",
+  "tempmail.com",
+  "temp-mail.org",
+  "10minutemail.com",
+  "guerrillamail.com",
+  "guerrillamail.info",
+  "grr.la",
+  "sharklasers.com",
+  "throwawaymail.com",
+  "yopmail.com",
+  "getnada.com",
+  "trashmail.com",
+  "maildrop.cc",
+  "dispostable.com",
+  "fakeinbox.com",
+  "mintemail.com",
+  "mailnesia.com",
+  "mohmal.com",
+  "emailondeck.com",
+  "spamgourmet.com",
+  "mytemp.email",
+  "tempinbox.com",
+  "burnermail.io",
+  "temp-mail.io",
+  "moakt.com",
+  "tempmailo.com",
+  "1secmail.com",
+  "inboxkitten.com",
+  "mailpoof.com",
+  "vomoto.com",
+]);
+
+// Returns true if the email's domain is a known disposable provider.
+function isDisposableEmail(email) {
+  const at = email.lastIndexOf("@");
+  if (at === -1) return false;
+  const domain = email
+    .slice(at + 1)
+    .trim()
+    .toLowerCase();
+  return DISPOSABLE_EMAIL_DOMAINS.has(domain);
+}
+
+// Validates a password against the same policy enforced server-side by Supabase
+// (min 8 chars + lowercase + uppercase + digit + symbol). Returns an error
+// string if invalid, or "" if the password passes. Keeping this in sync with
+// the Supabase Auth password settings means users see a clear message here
+// rather than a confusing rejection after submitting.
+function getPasswordError(password) {
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (!/[a-z]/.test(password))
+    return "Password must include a lowercase letter.";
+  if (!/[A-Z]/.test(password))
+    return "Password must include an uppercase letter.";
+  if (!/[0-9]/.test(password)) return "Password must include a number.";
+  if (!/[^A-Za-z0-9]/.test(password))
+    return "Password must include a symbol (e.g. ! ? @ #).";
+  return "";
+}
 
 function AuthPageContent() {
   const router = useRouter();
@@ -18,18 +85,114 @@ function AuthPageContent() {
   const [successMsg, setSuccessMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // ── Cloudflare Turnstile (bot/abuse protection) ──────────────────────────
+  // The widget produces a single-use token that we pass to every Supabase auth
+  // call (signUp / signInWithPassword / resetPasswordForEmail). Supabase then
+  // verifies it server-side and rejects any attempt without a valid token, so
+  // scripted/bot signups are blocked. Requires:
+  //   1. NEXT_PUBLIC_TURNSTILE_SITE_KEY set in env
+  //   2. CAPTCHA enabled in Supabase → Auth → Bot and Abuse Protection
+  const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const [captchaToken, setCaptchaToken] = useState("");
+  const turnstileRef = useRef(null);
+  const widgetIdRef = useRef(null);
+
+  // Reset the widget so a fresh token is issued (tokens are single-use and
+  // expire; we reset after each submit attempt and on mode switch).
+  const resetCaptcha = useCallback(() => {
+    setCaptchaToken("");
+    if (window.turnstile && widgetIdRef.current !== null) {
+      try {
+        window.turnstile.reset(widgetIdRef.current);
+      } catch (e) {}
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) return; // not configured yet — skip silently
+    const SCRIPT_SRC =
+      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+
+    function renderWidget() {
+      if (!window.turnstile || !turnstileRef.current) return;
+      // If a widget was rendered into a now-unmounted div (mode switch),
+      // reset the id so we render fresh into the currently-visible form.
+      if (widgetIdRef.current !== null) {
+        if (turnstileRef.current.childElementCount > 0) return; // still there
+        widgetIdRef.current = null;
+      }
+      widgetIdRef.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token) => setCaptchaToken(token),
+        "expired-callback": () => setCaptchaToken(""),
+        "error-callback": () => setCaptchaToken(""),
+        theme: "light",
+      });
+    }
+
+    if (window.turnstile) {
+      renderWidget();
+      return;
+    }
+    // Load the script once.
+    let script = document.querySelector(`script[src="${SCRIPT_SRC}"]`);
+    if (!script) {
+      script = document.createElement("script");
+      script.src = SCRIPT_SRC;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+    script.addEventListener("load", renderWidget);
+    return () => script.removeEventListener("load", renderWidget);
+  }, [TURNSTILE_SITE_KEY, mode]);
+  // Covers the auth form while we check for an existing session on mount,
+  // so an already-authenticated user (e.g. arriving via email confirmation)
+  // never sees the sign-in form flash before being redirected.
+  const [checkingSession, setCheckingSession] = useState(true);
+
   // Read tab and redirect query params
   const redirectTo = searchParams.get("redirect") || "/";
 
-  // Read tab query param on mount — supports ?tab=signup
+  // Read tab query param — supports ?tab=signin, ?tab=signup, ?tab=forgot
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab === "signup") setMode("signup");
+    else if (tab === "forgot") setMode("forgot");
+    else setMode("signin");
   }, [searchParams]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.push(redirectTo);
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) {
+        // No session — show the form.
+        setCheckingSession(false);
+        return;
+      }
+
+      // First-authenticated-load onboarding gate.
+      // Supabase email confirmation can land the user here on /auth rather
+      // than /auth/callback, so the callback gate alone is not enough. Mirror
+      // it here: if this user has not yet seen the welcome intro, route them
+      // to their destination with ?welcome=1 so the WelcomeModal fires. The
+      // modal clears the flag on dismiss. Best-effort — any failure falls back
+      // to a normal redirect so the user is never trapped on /auth.
+      let target = redirectTo;
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("has_seen_welcome")
+          .eq("id", data.session.user.id)
+          .single();
+        if (profile && profile.has_seen_welcome === false) {
+          const url = new URL(redirectTo, window.location.origin);
+          url.searchParams.set("welcome", "1");
+          target = url.pathname + url.search;
+        }
+      } catch (e) {
+        console.error("Welcome-gate lookup failed:", e?.message ?? e);
+      }
+      router.push(target);
     });
   }, []);
 
@@ -45,6 +208,7 @@ function AuthPageContent() {
 
   function switchMode(newMode) {
     reset();
+    resetCaptcha();
     setMode(newMode);
   }
 
@@ -65,8 +229,10 @@ function AuthPageContent() {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: { captchaToken },
     });
     setLoading(false);
+    resetCaptcha();
     if (error) setError(error.message);
     else router.push(redirectTo);
   }
@@ -82,6 +248,19 @@ function AuthPageContent() {
       setError("Password must be at least 8 characters.");
       return;
     }
+    // Match Supabase's password policy (lowercase + uppercase + digit + symbol)
+    // so users get a clear message here instead of a cryptic server rejection.
+    const pwError = getPasswordError(password);
+    if (pwError) {
+      setError(pwError);
+      return;
+    }
+    if (isDisposableEmail(email)) {
+      setError(
+        "Please use a permanent email address — disposable email providers aren't allowed.",
+      );
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
@@ -89,14 +268,16 @@ function AuthPageContent() {
       options: {
         data: { full_name: fullName },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
+        captchaToken,
       },
     });
     setLoading(false);
+    resetCaptcha();
     if (error) setError(error.message);
     else {
       switchMode("signin");
       setSuccessMsg(
-        "✅ Account created! Check your email and click the confirmation link to get started.",
+        "Account created! Check your email and click the confirmation link to get started.",
       );
     }
   }
@@ -107,10 +288,12 @@ function AuthPageContent() {
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
+      captchaToken,
     });
     setLoading(false);
+    resetCaptcha();
     if (error) setError(error.message);
-    else setSuccessMsg("📬 Reset link sent! Check your inbox.");
+    else setSuccessMsg("Reset link sent! Check your inbox.");
   }
 
   const inputStyle = {
@@ -118,7 +301,8 @@ function AuthPageContent() {
     padding: "12px 14px",
     borderRadius: "10px",
     border: "1.5px solid var(--color-border, #EDE8E0)",
-    fontSize: "15px",
+    fontSize: "16px",
+    fontWeight: "500",
     fontFamily: "var(--font-urbanist, system-ui)",
     outline: "none",
     boxSizing: "border-box",
@@ -128,7 +312,7 @@ function AuthPageContent() {
 
   const labelStyle = {
     display: "block",
-    fontSize: "13px",
+    fontSize: "14px",
     fontWeight: "600",
     color: "var(--color-slate, #4B5563)",
     marginBottom: "6px",
@@ -136,8 +320,12 @@ function AuthPageContent() {
 
   const primaryBtn = {
     width: "100%",
-    padding: "13px",
-    background: loading ? "#aaa" : "var(--color-terracotta, #CF5C36)",
+    height: "48px",
+    padding: "0 24px",
+    background: "var(--color-terracotta, #CF5C36)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     color: "#fff",
     border: "2px solid var(--color-terracotta, #CF5C36)",
     borderRadius: "10px",
@@ -150,9 +338,10 @@ function AuthPageContent() {
 
   const googleBtn = {
     width: "100%",
-    padding: "12px",
+    height: "48px",
+    padding: "0 24px",
     background: "#fff",
-    color: "#333",
+    color: "var(--color-navy-dark, #172531)",
     border: "1.5px solid var(--color-border, #EDE8E0)",
     borderRadius: "10px",
     fontSize: "15px",
@@ -184,8 +373,9 @@ function AuthPageContent() {
         alignItems: "center",
         gap: "12px",
         margin: "20px 0",
-        color: "#aaa",
-        fontSize: "13px",
+        color: "var(--color-muted, #717A86)",
+        fontSize: "14px",
+        fontWeight: "500",
       }}
     >
       <div
@@ -218,23 +408,68 @@ function AuthPageContent() {
         background: "none",
         border: "none",
         cursor: "pointer",
-        color: "#888",
+        color: "var(--color-muted, #717A86)",
         fontSize: "18px",
       }}
     >
-      {showPassword ? "🙈" : "👁️"}
+      {showPassword ? (
+        <EyeOff size={18} strokeWidth={2} />
+      ) : (
+        <Eye size={18} strokeWidth={2} />
+      )}
     </button>
   );
 
+  if (checkingSession) {
+    return (
+      <div
+        style={{
+          minHeight: "calc(100vh - 64px)",
+          background: "var(--color-cream, #F5F0E8)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <div
+          style={{
+            width: "32px",
+            height: "32px",
+            border: "3px solid var(--color-border, #EDE8E0)",
+            borderTopColor: "var(--color-terracotta, #CF5C36)",
+            borderRadius: "50%",
+            animation: "authSpin 0.7s linear infinite",
+          }}
+        />
+        <span
+          style={{
+            position: "absolute",
+            width: "1px",
+            height: "1px",
+            overflow: "hidden",
+            clip: "rect(0 0 0 0)",
+          }}
+        >
+          Loading…
+        </span>
+        <style>{`@keyframes authSpin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
     <div
+      className="auth-page-wrap"
       style={{
         minHeight: "calc(100vh - 64px)",
         background: "var(--color-cream, #F5F0E8)",
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "center",
-        padding: "48px 20px 80px",
+        paddingTop: "48px",
+        paddingBottom: "80px",
         fontFamily: "var(--font-urbanist, system-ui)",
       }}
     >
@@ -259,11 +494,19 @@ function AuthPageContent() {
               fontSize: "22px",
               fontWeight: "800",
               fontFamily: "var(--font-urbanist, system-ui)",
+              letterSpacing: "-0.025em",
             }}
           >
             PetParrk
           </h1>
-          <p style={{ margin: "6px 0 0", color: "#9CA3AF", fontSize: "14px" }}>
+          <p
+            style={{
+              margin: "6px 0 0",
+              color: "var(--color-muted, #717A86)",
+              fontSize: "15px",
+              fontWeight: "500",
+            }}
+          >
             {mode === "signin" && "Welcome back"}
             {mode === "signup" && "Create your free account"}
             {mode === "forgot" && "Reset your password"}
@@ -308,9 +551,9 @@ function AuthPageContent() {
                 color:
                   mode === "signin"
                     ? "var(--color-navy-dark, #172531)"
-                    : "#9CA3AF",
-                fontSize: "14px",
-                fontWeight: "700",
+                    : "var(--color-muted, #717A86)",
+                fontSize: "15px",
+                fontWeight: "600",
                 cursor: "pointer",
                 fontFamily: "var(--font-urbanist, system-ui)",
                 position: "relative",
@@ -331,9 +574,9 @@ function AuthPageContent() {
                 color:
                   mode === "signup"
                     ? "var(--color-navy-dark, #172531)"
-                    : "#9CA3AF",
-                fontSize: "14px",
-                fontWeight: "700",
+                    : "var(--color-muted, #717A86)",
+                fontSize: "15px",
+                fontWeight: "600",
                 cursor: "pointer",
                 fontFamily: "var(--font-urbanist, system-ui)",
                 position: "relative",
@@ -355,6 +598,7 @@ function AuthPageContent() {
               borderRadius: "8px",
               padding: "10px 14px",
               fontSize: "14px",
+              fontWeight: "500",
               marginBottom: "16px",
               animation: "fadeIn 0.2s ease",
             }}
@@ -370,6 +614,7 @@ function AuthPageContent() {
               borderRadius: "8px",
               padding: "10px 14px",
               fontSize: "14px",
+              fontWeight: "500",
               marginBottom: "16px",
               animation: "fadeIn 0.2s ease",
             }}
@@ -379,6 +624,8 @@ function AuthPageContent() {
         )}
         <style>{`
           @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+          .auth-page-wrap { padding-left: 20px; padding-right: 20px; }
+          @media (max-width: 640px) { .auth-page-wrap { padding-left: 16px; padding-right: 16px; } }
           .auth-form-content { animation: fadeIn 0.2s ease; }
           .auth-primary-btn:hover:not(:disabled) { background: #fff !important; color: var(--color-terracotta, #CF5C36) !important; border: 2px solid var(--color-terracotta, #CF5C36) !important; }
           .auth-google-btn:hover { border-color: var(--color-navy-dark, #172531) !important; background: var(--color-navy-dark, #172531) !important; color: #fff !important; }
@@ -430,6 +677,13 @@ function AuthPageContent() {
                   Forgot password?
                 </button>
               </div>
+              {TURNSTILE_SITE_KEY && (
+                <div
+                  ref={turnstileRef}
+                  className="cf-turnstile"
+                  style={{ margin: "0 0 16px" }}
+                />
+              )}
               <button
                 type="submit"
                 className="auth-primary-btn"
@@ -484,11 +738,22 @@ function AuthPageContent() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 8 characters"
+                    placeholder="Create a strong password"
                     style={{ ...inputStyle, paddingRight: "44px" }}
                   />
                   {eyeBtn}
                 </div>
+                <p
+                  style={{
+                    margin: "6px 2px 0",
+                    fontSize: "12.5px",
+                    lineHeight: 1.4,
+                    color: "var(--color-muted, #717A86)",
+                  }}
+                >
+                  At least 8 characters, with an uppercase and lowercase letter,
+                  a number, and a symbol.
+                </p>
               </div>
               <div style={{ marginBottom: "20px" }}>
                 <label style={labelStyle}>Confirm Password</label>
@@ -501,6 +766,13 @@ function AuthPageContent() {
                   style={inputStyle}
                 />
               </div>
+              {TURNSTILE_SITE_KEY && (
+                <div
+                  ref={turnstileRef}
+                  className="cf-turnstile"
+                  style={{ margin: "0 0 16px" }}
+                />
+              )}
               <button
                 type="submit"
                 className="auth-primary-btn"
@@ -511,8 +783,9 @@ function AuthPageContent() {
               </button>
               <p
                 style={{
-                  fontSize: "12px",
-                  color: "#9CA3AF",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                  color: "var(--color-muted, #717A86)",
                   textAlign: "center",
                   marginTop: "12px",
                 }}
@@ -528,10 +801,10 @@ function AuthPageContent() {
           <>
             <p
               style={{
-                fontSize: "14px",
-                color: "#4B5563",
+                fontSize: "15px",
+                color: "var(--color-slate, #4B5563)",
                 marginBottom: "20px",
-                lineHeight: "1.6",
+                lineHeight: "1.65",
               }}
             >
               Enter your email and we'll send you a link to reset your password.
@@ -548,6 +821,13 @@ function AuthPageContent() {
                   style={inputStyle}
                 />
               </div>
+              {TURNSTILE_SITE_KEY && (
+                <div
+                  ref={turnstileRef}
+                  className="cf-turnstile"
+                  style={{ margin: "0 0 16px" }}
+                />
+              )}
               <button
                 type="submit"
                 className="auth-primary-btn"
@@ -565,7 +845,12 @@ function AuthPageContent() {
               }}
             >
               <button style={linkBtn} onClick={() => switchMode("signin")}>
-                ← Back to Sign In
+                <ArrowLeft
+                  size={14}
+                  strokeWidth={2.4}
+                  style={{ marginRight: "4px", verticalAlign: "middle" }}
+                />{" "}
+                Back to Sign In
               </button>
             </p>
           </>
@@ -574,22 +859,27 @@ function AuthPageContent() {
         {/* Browse without account */}
         {mode !== "forgot" && (
           <p
-            style={{ textAlign: "center", marginTop: "16px", fontSize: "13px" }}
+            style={{ textAlign: "center", marginTop: "16px", fontSize: "14px" }}
           >
             <button
               style={{
                 background: "none",
                 border: "none",
-                color: "#9CA3AF",
+                color: "var(--color-muted, #717A86)",
                 cursor: "pointer",
-                fontSize: "13px",
-                fontWeight: "400",
+                fontSize: "14px",
+                fontWeight: "500",
                 fontFamily: "var(--font-urbanist, system-ui)",
                 padding: 0,
               }}
               onClick={() => router.push("/")}
             >
-              Browse without an account →
+              Browse without an account{" "}
+              <ArrowRight
+                size={14}
+                strokeWidth={2.4}
+                style={{ marginLeft: "4px", verticalAlign: "middle" }}
+              />
             </button>
           </p>
         )}

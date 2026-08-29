@@ -5,6 +5,41 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Dog,
+  Cat,
+  Bird,
+  Rabbit,
+  Fish,
+  PawPrint,
+  Mic,
+  CircleStop,
+  Eye,
+  Wind,
+  Bone,
+  Search,
+  Clock,
+  Sun,
+  Calendar,
+  CalendarDays,
+  UtensilsCrossed,
+  Bed,
+  CircleAlert,
+  TriangleAlert,
+  OctagonAlert,
+  ChevronDown,
+  Clipboard,
+  ChevronUp,
+  ArrowLeft,
+  RotateCcw,
+} from "lucide-react";
+import PageLoader from "../../../components/PageLoader";
+import {
+  triggerVetRecommendation,
+  triggerCostEstimate,
+  triggerVisitPrep,
+} from "../../../lib/copilotApi";
+import { renderMarkdown } from "../../../lib/renderMarkdown";
 
 const SESSION_KEY = "petparrk_symptom_session";
 const NAVBAR_H = 64;
@@ -16,6 +51,7 @@ const C = {
   gold: "#EFC88B",
   cream: "#F5F0E8",
   white: "#FFFFFF",
+  ink: "#1A1A1A",
   slate: "#4B5563",
   muted: "#717A86",
   border: "#EDE8E0",
@@ -23,47 +59,85 @@ const C = {
   error: "#C94040",
 };
 
+// ── Species helpers (matches profile page logic) ────────────────────────
+const BANNER_LUCIDE = {
+  dog: Dog,
+  cat: Cat,
+  bird: Bird,
+  small_furry: Rabbit,
+  reptile_fish: Fish,
+};
+
+function speciesBucket(species) {
+  if (!species) return null;
+  const s = String(species).toLowerCase().trim();
+  if (s.startsWith("dog")) return "dog";
+  if (s.startsWith("cat")) return "cat";
+  if (s.startsWith("bird")) return "bird";
+  if (
+    s.startsWith("rabbit") ||
+    s.startsWith("hamster") ||
+    s.startsWith("guinea") ||
+    s.startsWith("ferret") ||
+    s.startsWith("otter") ||
+    s.startsWith("rat") ||
+    s.startsWith("mouse")
+  )
+    return "small_furry";
+  if (
+    s.startsWith("reptile") ||
+    s.startsWith("fish") ||
+    s.startsWith("snake") ||
+    s.startsWith("lizard") ||
+    s.startsWith("turtle") ||
+    s.startsWith("frog") ||
+    s.startsWith("gecko")
+  )
+    return "reptile_fish";
+  return null;
+}
+
 const SYMPTOM_AREAS = [
   {
     id: "stomach",
     label: "Stomach / Digestion",
-    emoji: "🤢",
+    icon: UtensilsCrossed,
     desc: "Vomiting, diarrhea, not eating",
   },
   {
     id: "eyes_ears",
     label: "Eyes / Ears",
-    emoji: "👁️",
+    icon: Eye,
     desc: "Discharge, scratching, redness",
   },
   {
     id: "skin",
     label: "Skin / Coat",
-    emoji: "🐾",
+    icon: PawPrint,
     desc: "Itching, rash, hair loss, lumps",
   },
   {
     id: "breathing",
     label: "Breathing / Cough",
-    emoji: "💨",
+    icon: Wind,
     desc: "Coughing, wheezing, labored breath",
   },
   {
     id: "behavior",
     label: "Behavior / Energy",
-    emoji: "😴",
+    icon: Bed,
     desc: "Lethargy, hiding, confusion",
   },
   {
     id: "movement",
     label: "Limping / Movement",
-    emoji: "🦴",
+    icon: Bone,
     desc: "Limping, stiffness, won't stand",
   },
   {
     id: "other",
     label: "Something else",
-    emoji: "🔍",
+    icon: Search,
     desc: "Doesn't fit the categories above",
   },
 ];
@@ -71,20 +145,20 @@ const DURATIONS = [
   {
     id: "just_now",
     label: "Just started",
-    emoji: "🕐",
+    icon: Clock,
     desc: "Less than an hour ago",
   },
-  { id: "today", label: "Today", emoji: "🌤️", desc: "Started sometime today" },
+  { id: "today", label: "Today", icon: Sun, desc: "Started sometime today" },
   {
     id: "few_days",
     label: "2–3 days",
-    emoji: "📅",
+    icon: Calendar,
     desc: "Been going on a couple days",
   },
   {
     id: "week_plus",
     label: "A week or more",
-    emoji: "🗓️",
+    icon: CalendarDays,
     desc: "Ongoing for a while",
   },
 ];
@@ -92,7 +166,7 @@ const SEVERITIES = [
   {
     id: "mild",
     label: "Mild",
-    emoji: "😐",
+    icon: CircleAlert,
     desc: "Barely noticeable. Eating, drinking, acting mostly normal.",
     color: C.success,
     bg: "#EDFAF3",
@@ -101,7 +175,7 @@ const SEVERITIES = [
   {
     id: "moderate",
     label: "Moderate",
-    emoji: "😟",
+    icon: TriangleAlert,
     desc: "Clearly not themselves. Something is off but they're responsive.",
     color: "#B45309",
     bg: "#FFFBEB",
@@ -110,7 +184,7 @@ const SEVERITIES = [
   {
     id: "severe",
     label: "Severe",
-    emoji: "😰",
+    icon: OctagonAlert,
     desc: "Visibly distressed, in pain, or not responding normally.",
     color: C.error,
     bg: "#FCEAEA",
@@ -136,17 +210,17 @@ function PetChip({ selectedPet, onStartOver }) {
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <div
           style={{
-            width: "32px",
-            height: "32px",
+            width: "45px",
+            height: "45px",
             borderRadius: "50%",
             background: C.cream,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             overflow: "hidden",
-            fontSize: "16px",
             border: `1.5px solid ${C.border}`,
             flexShrink: 0,
+            color: C.terracotta,
           }}
         >
           {selectedPet.photo_url ? (
@@ -155,21 +229,35 @@ function PetChip({ selectedPet, onStartOver }) {
               alt={selectedPet.name}
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
-          ) : selectedPet.species === "Dog" ? (
-            "🐶"
           ) : (
-            "🐾"
+            (() => {
+              const SpeciesIcon =
+                BANNER_LUCIDE[speciesBucket(selectedPet.species)] || PawPrint;
+              return <SpeciesIcon size={18} strokeWidth={2} />;
+            })()
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p className="pc-name">Checking on {selectedPet.name}</p>
-          <p style={{ margin: 0, fontSize: "13px", color: C.muted }}>
-            {[selectedPet.species, selectedPet.breed]
-              .filter(Boolean)
-              .join(" · ")}
+          <p
+            style={{
+              margin: 0,
+              fontSize: "16px",
+              fontWeight: "600",
+            }}
+          >
+            {selectedPet.species && (
+              <span style={{ color: C.muted }}>{selectedPet.species}</span>
+            )}
+            {selectedPet.species && selectedPet.breed && (
+              <span style={{ color: C.muted }}>{" · "}</span>
+            )}
+            {selectedPet.breed && (
+              <span style={{ color: C.navyDark }}>{selectedPet.breed}</span>
+            )}
           </p>
         </div>
-        {/* Desktop: actions stay in the top row */}
+        {/* Desktop: Triage chip in top row */}
         <div className="pc-desk-actions">
           <span
             style={{
@@ -185,12 +273,9 @@ function PetChip({ selectedPet, onStartOver }) {
           >
             Triage
           </span>
-          <button onClick={onStartOver} className="start-over-btn">
-            ↩ Start over
-          </button>
         </div>
       </div>
-      {/* Mobile: actions on second row, indented past avatar */}
+      {/* Mobile: Triage chip on second row, indented past avatar */}
       <div className="pc-mob-actions">
         <span
           style={{
@@ -206,9 +291,6 @@ function PetChip({ selectedPet, onStartOver }) {
         >
           Triage
         </span>
-        <button onClick={onStartOver} className="start-over-btn">
-          ↩ Start over
-        </button>
       </div>
     </div>
   );
@@ -224,6 +306,16 @@ export default function SymptomCheckerChatPage() {
   const [streaming, setStreaming] = useState(false);
   const [triageResult, setTriageResult] = useState(null);
   const [differentials, setDifferentials] = useState([]);
+  const [recommendation, setRecommendation] = useState(null);
+  const [recommendationLoading, setRecommendationLoading] = useState(false);
+  const [costEstimates, setCostEstimates] = useState({}); // { vetId: estimateData }
+  const [estimateLoading, setEstimateLoading] = useState({}); // { vetId: true }
+  const [visitPrep, setVisitPrep] = useState(null); // { visitPrepId, prepContent }
+  const [visitPrepLoading, setVisitPrepLoading] = useState(false);
+  const [visitPrepExpanded, setVisitPrepExpanded] = useState(false);
+  // Follow-up: links this check to a prior one and supplies background context.
+  const [followUpCheckId, setFollowUpCheckId] = useState(null);
+  const [followUpSummary, setFollowUpSummary] = useState(null);
   const [triageCardExpanded, setTriageCardExpanded] = useState(true);
   const [nearbyVets, setNearbyVets] = useState([]);
   const [guestMode, setGuestMode] = useState(false);
@@ -264,6 +356,9 @@ export default function SymptomCheckerChatPage() {
         return;
       }
       const parsed = JSON.parse(saved);
+      // Follow-up linkage carried from the entry page.
+      if (parsed.followUpCheckId) setFollowUpCheckId(parsed.followUpCheckId);
+      if (parsed.followUpSummary) setFollowUpSummary(parsed.followUpSummary);
       if (parsed.autoStart && parsed.selectedPet) {
         setSelectedPet(parsed.selectedPet);
         setGuidedStep(1);
@@ -281,6 +376,9 @@ export default function SymptomCheckerChatPage() {
         setGuestMode(parsed.guestMode || false);
         setGuestPet(parsed.guestPet || { species: "", breed: "", age: "" });
         setFreeCheckUsed(parsed.freeCheckUsed || false);
+        if (parsed.recommendation) setRecommendation(parsed.recommendation);
+        if (parsed.costEstimates) setCostEstimates(parsed.costEstimates);
+        if (parsed.visitPrep) setVisitPrep(parsed.visitPrep);
         setGuidedStep("chat");
         setReady(true);
       } else {
@@ -304,6 +402,11 @@ export default function SymptomCheckerChatPage() {
           guestMode,
           guestPet,
           freeCheckUsed,
+          recommendation,
+          costEstimates,
+          visitPrep,
+          followUpCheckId,
+          followUpSummary,
         }),
       );
     } catch (e) {}
@@ -314,6 +417,11 @@ export default function SymptomCheckerChatPage() {
     selectedPet,
     guestMode,
     freeCheckUsed,
+    recommendation,
+    costEstimates,
+    visitPrep,
+    followUpCheckId,
+    followUpSummary,
     ready,
   ]);
 
@@ -357,6 +465,13 @@ export default function SymptomCheckerChatPage() {
       !!(window.SpeechRecognition || window.webkitSpeechRecognition),
     );
   }, []);
+
+  // Scroll to top whenever guidedStep changes (better UX on mobile)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [guidedStep]);
 
   // Auto-resize textarea
   const adjustTextarea = useCallback(() => {
@@ -449,6 +564,9 @@ export default function SymptomCheckerChatPage() {
           content: m.content,
         })),
         pet: selectedPet || (guestMode ? guestPet : null),
+        // Background from a prior check, when this is a follow-up. The route
+        // appends it to the system prompt as context, never as a diagnosis.
+        followUpContext: followUpSummary || null,
       }),
     });
     if (!res.ok || !res.body) throw new Error("Stream failed");
@@ -512,15 +630,52 @@ export default function SymptomCheckerChatPage() {
             setTriageCardExpanded(true);
             if (guestMode) setFreeCheckUsed(true);
           }
-          if (session && selectedPet && newTriage)
-            await supabase.from("symptom_checks").insert({
-              pet_id: selectedPet.id,
-              owner_id: session.user.id,
-              triage_result: newTriage,
-              differentials: parsedDiffs,
-              transcript: JSON.stringify([greetMsg, firstMsg, aMsg]),
-              created_at: new Date().toISOString(),
-            });
+          if (session && selectedPet && newTriage) {
+            const { data: savedCheck, error: saveError } = await supabase
+              .from("symptom_checks")
+              .insert({
+                pet_id: selectedPet.id,
+                owner_id: session.user.id,
+                triage_result: newTriage,
+                differentials: parsedDiffs,
+                transcript: JSON.stringify([greetMsg, firstMsg, aMsg]),
+                created_at: new Date().toISOString(),
+                parent_check_id: followUpCheckId || null,
+              })
+              .select("id")
+              .single();
+
+            if (saveError) {
+              console.error(
+                "symptom_checks insert failed:",
+                saveError.message,
+                saveError,
+              );
+            }
+            if (savedCheck && newTriage !== "MONITOR") {
+              setRecommendationLoading(true);
+              triggerVetRecommendation({
+                symptomCheckId: savedCheck.id,
+                petId: selectedPet.id,
+                triageResult: newTriage,
+                differentials: parsedDiffs,
+                userZip: null,
+              })
+                .then((rec) => {
+                  if (rec && rec.rankedVets && rec.rankedVets.length > 0) {
+                    setRecommendation({
+                      recommendationId: rec.recommendationId,
+                      symptomCheckId: savedCheck.id,
+                      rankedVets: rec.rankedVets,
+                      differentials: parsedDiffs,
+                      triageResult: newTriage,
+                    });
+                  }
+                })
+                .catch((err) => console.error("Recommendation failed:", err))
+                .finally(() => setRecommendationLoading(false));
+            }
+          }
         },
       );
     } catch (e) {
@@ -572,15 +727,52 @@ export default function SymptomCheckerChatPage() {
             setTriageCardExpanded(true);
             if (guestMode) setFreeCheckUsed(true);
           }
-          if (session && selectedPet && full.includes("[TRIAGE_RESULT:"))
-            await supabase.from("symptom_checks").insert({
-              pet_id: selectedPet.id,
-              owner_id: session.user.id,
-              triage_result: newTriage,
-              differentials: parsedDiffs,
-              transcript: JSON.stringify([...updated, aMsg]),
-              created_at: new Date().toISOString(),
-            });
+          if (session && selectedPet && full.includes("[TRIAGE_RESULT:")) {
+            const { data: savedCheck, error: saveError } = await supabase
+              .from("symptom_checks")
+              .insert({
+                pet_id: selectedPet.id,
+                owner_id: session.user.id,
+                triage_result: newTriage,
+                differentials: parsedDiffs,
+                transcript: JSON.stringify([...updated, aMsg]),
+                created_at: new Date().toISOString(),
+                parent_check_id: followUpCheckId || null,
+              })
+              .select("id")
+              .single();
+
+            if (saveError) {
+              console.error(
+                "symptom_checks insert failed:",
+                saveError.message,
+                saveError,
+              );
+            }
+            if (savedCheck && newTriage !== "MONITOR") {
+              setRecommendationLoading(true);
+              triggerVetRecommendation({
+                symptomCheckId: savedCheck.id,
+                petId: selectedPet.id,
+                triageResult: newTriage,
+                differentials: parsedDiffs,
+                userZip: null,
+              })
+                .then((rec) => {
+                  if (rec && rec.rankedVets && rec.rankedVets.length > 0) {
+                    setRecommendation({
+                      recommendationId: rec.recommendationId,
+                      symptomCheckId: savedCheck.id,
+                      rankedVets: rec.rankedVets,
+                      differentials: parsedDiffs,
+                      triageResult: newTriage,
+                    });
+                  }
+                })
+                .catch((err) => console.error("Recommendation failed:", err))
+                .finally(() => setRecommendationLoading(false));
+            }
+          }
         },
       );
     } catch (e) {
@@ -602,6 +794,9 @@ export default function SymptomCheckerChatPage() {
       sendMessage();
     }
   }
+
+  // Markdown-lite rendering lives in lib/renderMarkdown.js so the health
+  // history page formats assistant messages identically.
 
   function renderMsg(msg, i) {
     const isUser = msg.role === "user";
@@ -690,7 +885,8 @@ export default function SymptomCheckerChatPage() {
             color: isUser ? "#fff" : C.navyDark,
             padding: "12px 16px",
             borderRadius: isUser ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-            fontSize: "15px",
+            fontSize: "16px",
+            fontWeight: 500,
             lineHeight: "1.65",
             border: isUser ? "none" : `1px solid ${C.border}`,
             boxShadow: isUser ? "none" : "0 1px 4px rgba(23,37,49,0.06)",
@@ -710,22 +906,7 @@ export default function SymptomCheckerChatPage() {
               <span className="dot-bounce" style={{ animationDelay: "0.4s" }} />
             </div>
           ) : (
-            lines.map((line, j) => {
-              const parts = line.split(/\*\*(.*?)\*\*/g);
-              return (
-                <p
-                  key={j}
-                  style={{
-                    margin: j === lines.length - 1 ? 0 : "0 0 6px",
-                    color: isUser ? "#fff" : C.navyDark,
-                  }}
-                >
-                  {parts.map((p, k) =>
-                    k % 2 === 1 ? <strong key={k}>{p}</strong> : p,
-                  )}
-                </p>
-              );
-            })
+            renderMarkdown(msg.content, isUser)
           )}
         </div>
         {isUser && (
@@ -742,51 +923,178 @@ export default function SymptomCheckerChatPage() {
               flexShrink: 0,
               marginLeft: "8px",
               marginTop: "2px",
+              color: "#fff",
             }}
           >
-            <span
-              style={{
-                fontSize: "13px",
-                filter: "brightness(0) invert(1)",
-                display: "block",
-                lineHeight: 1,
-              }}
-            >
-              🐾
-            </span>
+            <PawPrint size={14} strokeWidth={2} />
           </div>
         )}
       </div>
     );
   }
 
+  async function getCostEstimate(vetId, vetName) {
+    if (costEstimates[vetId] || estimateLoading[vetId]) return;
+    if (!recommendation) return;
+    setEstimateLoading((l) => ({ ...l, [vetId]: true }));
+    try {
+      const data = await triggerCostEstimate({
+        recommendationId: recommendation.recommendationId,
+        symptomCheckId: recommendation.symptomCheckId,
+        petId: selectedPet?.id,
+        vetId: vetId,
+        differentials: recommendation.differentials,
+      });
+      setCostEstimates((e) => ({ ...e, [vetId]: data }));
+    } catch (err) {
+      setCostEstimates((e) => ({
+        ...e,
+        [vetId]: { error: err.message || "Estimate failed" },
+      }));
+    }
+    setEstimateLoading((l) => ({ ...l, [vetId]: false }));
+  }
+
+  function renderPrepContent(content, cfg) {
+    if (!content) return null;
+    const sections = [
+      { key: "questions_to_ask", label: "Questions to ask", isList: true },
+      { key: "symptoms_to_mention", label: "Worth mentioning", isList: true },
+      { key: "what_to_bring", label: "What to bring", isList: true },
+      { key: "what_to_expect", label: "What to expect", isList: false },
+      { key: "cost_note", label: "On cost", isList: false },
+    ];
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {sections.map((sec) => {
+          const val = content[sec.key];
+          if (sec.isList) {
+            if (!Array.isArray(val) || val.length === 0) return null;
+            return (
+              <div key={sec.key}>
+                <p
+                  style={{
+                    margin: "0 0 8px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: C.muted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  {sec.label}
+                </p>
+                <ul
+                  style={{
+                    margin: 0,
+                    paddingLeft: "18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
+                  }}
+                >
+                  {val.map((item, i) => (
+                    <li
+                      key={i}
+                      style={{
+                        fontSize: "14px",
+                        color: C.navyDark,
+                        lineHeight: "1.6",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          }
+          if (!val || typeof val !== "string") return null;
+          return (
+            <div key={sec.key}>
+              <p
+                style={{
+                  margin: "0 0 6px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  color: C.muted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                {sec.label}
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "14px",
+                  color: C.navyDark,
+                  lineHeight: "1.6",
+                  fontWeight: 500,
+                }}
+              >
+                {val}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  async function getVisitPrep() {
+    if (visitPrep || visitPrepLoading) {
+      setVisitPrepExpanded((v) => !v);
+      return;
+    }
+    if (!recommendation && !triageResult) return;
+    setVisitPrepLoading(true);
+    try {
+      const data = await triggerVisitPrep({
+        petId: selectedPet?.id,
+        symptomCheckId: recommendation?.symptomCheckId,
+        triageResult: triageResult,
+        differentials: differentials,
+      });
+      setVisitPrep(data);
+      setVisitPrepExpanded(true);
+    } catch (err) {
+      console.error("Visit prep failed:", err);
+    }
+    setVisitPrepLoading(false);
+  }
+
   function renderTriageCard() {
     if (!triageResult || !triageMounted) return null;
     const cfg = {
       EMERGENCY: {
-        emoji: "🔴",
+        dotColor: "#C94040",
         label: "Emergency — Act Now",
         color: "#C94040",
         bg: "#FCEAEA",
         border: "#F5C6C6",
+        pillBg: "rgba(201, 64, 64, 0.12)",
         msg: "Take your pet to an emergency vet immediately. Don't wait.",
         vetLabel: "24-Hour Emergency Vets",
       },
       SEE_VET: {
-        emoji: "🟡",
+        dotColor: "#D9A21B",
         label: "See a Vet Soon",
         color: "#B45309",
         bg: "#FFFBEB",
         border: "#FCD34D",
+        pillBg: "rgba(217, 162, 27, 0.14)",
         msg: "Schedule an appointment within 24–48 hours.",
         vetLabel: "Nearby Vets",
       },
       MONITOR: {
-        emoji: "🟢",
+        dotColor: "#1A6641",
         label: "Monitor at Home",
         color: "#2A7D4F",
         bg: "#EDFAF3",
         border: "#A7F3D0",
+        pillBg: "rgba(26, 102, 65, 0.12)",
         msg: "Watch carefully for the next 24 hours.",
         vetLabel: null,
       },
@@ -805,234 +1113,443 @@ export default function SymptomCheckerChatPage() {
           !triageCardExpanded ? () => setTriageCardExpanded(true) : undefined
         }
       >
-        {!triageCardExpanded && (
+        {/* Always-visible header */}
+        <div style={{ padding: "18px 22px" }}>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              padding: "12px 18px",
+              justifyContent: "space-between",
             }}
           >
-            <span style={{ fontSize: "16px" }}>{cfg.emoji}</span>
-            <span
-              style={{
-                fontWeight: "700",
-                fontSize: "14px",
-                color: cfg.color,
-                flex: 1,
-                fontFamily: "var(--font-urbanist,system-ui)",
-              }}
-            >
-              {cfg.label}
-            </span>
-            <span style={{ fontSize: "12px", color: cfg.color, opacity: 0.7 }}>
-              Tap to expand ↓
-            </span>
-          </div>
-        )}
-        {triageCardExpanded && (
-          <div style={{ padding: "20px 22px" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "10px",
-              }}
-            >
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}
-              >
-                <span style={{ fontSize: "22px" }}>{cfg.emoji}</span>
-                <span
-                  style={{
-                    fontWeight: "800",
-                    fontSize: "17px",
-                    color: cfg.color,
-                    fontFamily: "var(--font-urbanist,system-ui)",
-                  }}
-                >
-                  {cfg.label}
-                </span>
-              </div>
-              <button
-                onClick={() => setTriageCardExpanded(false)}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span
                 style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "13px",
+                  display: "inline-block",
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  background: cfg.dotColor,
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontWeight: "800",
+                  fontSize: "17px",
                   color: cfg.color,
-                  opacity: 0.7,
-                  padding: "2px 6px",
-                  fontWeight: "700",
+                  fontFamily: "var(--font-urbanist,system-ui)",
                 }}
               >
-                Collapse ↑
-              </button>
+                {cfg.label}
+              </span>
             </div>
-            <p
-              style={{
-                margin: "0 0 16px",
-                fontSize: "15px",
-                color: C.navyDark,
-                fontWeight: "600",
-                lineHeight: "1.6",
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setTriageCardExpanded(!triageCardExpanded);
               }}
+              className="triage-toggle-btn"
+              style={{ color: cfg.color, opacity: 0.7 }}
+              aria-label={triageCardExpanded ? "Collapse" : "Expand"}
             >
-              {cfg.msg}
-            </p>
-            {differentials.length > 0 && (
-              <div style={{ marginBottom: "16px" }}>
-                <p
-                  style={{
-                    margin: "0 0 8px",
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    color: C.muted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  Could be
-                </p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                  {differentials.map((d, i) => (
-                    <span
-                      key={i}
-                      style={{
-                        display: "inline-block",
-                        padding: "4px 12px",
-                        background: "#fff",
-                        border: `1px solid ${cfg.border}`,
-                        borderRadius: "20px",
-                        fontSize: "12px",
-                        fontWeight: "700",
-                        color: cfg.color,
-                      }}
-                    >
-                      {d}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {cfg.vetLabel && nearbyVets.length > 0 && (
-              <div>
-                <p
-                  style={{
-                    margin: "0 0 10px",
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    color: C.muted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  {cfg.vetLabel}
-                </p>
-                {nearbyVets.map((vet) => (
-                  <div
-                    key={vet.id}
+              {triageCardExpanded ? "Collapse" : "Expand"}
+              <span
+                className={`triage-chevron ${triageCardExpanded ? "open" : ""}`}
+              >
+                <ChevronDown size={14} strokeWidth={2.4} />
+              </span>
+            </button>
+          </div>
+        </div>
+        {/* Animated body */}
+        <div className={`triage-body ${triageCardExpanded ? "open" : ""}`}>
+          <div className="triage-body-inner">
+            <div style={{ padding: "0 22px 22px" }}>
+              <p
+                style={{
+                  margin: "0 0 16px",
+                  fontSize: "15px",
+                  color: C.navyDark,
+                  fontWeight: "600",
+                  lineHeight: "1.6",
+                }}
+              >
+                {cfg.msg}
+              </p>
+              {differentials.length > 0 && (
+                <div style={{ marginBottom: "16px" }}>
+                  <p
                     style={{
-                      background: "#fff",
-                      borderRadius: "12px",
-                      padding: "14px 16px",
-                      marginBottom: "8px",
-                      border: `1px solid ${C.border}`,
+                      margin: "0 0 8px",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      color: C.muted,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.02em",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        gap: "10px",
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p
-                          style={{
-                            margin: "0 0 2px",
-                            fontWeight: "700",
-                            fontSize: "15px",
-                            color: C.navyDark,
-                            fontFamily: "var(--font-urbanist,system-ui)",
-                          }}
-                        >
-                          {vet.name}
-                        </p>
-                        <p
-                          style={{
-                            margin: "0 0 10px",
-                            fontSize: "13px",
-                            color: C.muted,
-                          }}
-                        >
-                          {[vet.neighborhood, vet.city]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </p>
-                        {vet.phone && (
-                          <a
-                            href={`tel:${vet.phone}`}
-                            className="triage-phone-btn"
-                            style={{ background: cfg.color }}
-                          >
-                            {vet.phone}
-                          </a>
-                        )}
-                      </div>
-                      <a
-                        href={`/vet/${vet.slug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    Could be:
+                  </p>
+                  <div
+                    style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}
+                  >
+                    {differentials.map((d, i) => (
+                      <span
+                        key={i}
                         style={{
-                          fontSize: "12px",
-                          color: C.terracotta,
-                          textDecoration: "underline",
-                          whiteSpace: "nowrap",
-                          flexShrink: 0,
-                          marginTop: "2px",
-                          fontWeight: "600",
+                          display: "inline-block",
+                          padding: "4px 12px",
+                          background: "#fff",
+                          border: `1px solid ${cfg.border}`,
+                          borderRadius: "20px",
+                          fontSize: "14px",
+                          fontWeight: "700",
+                          color: cfg.color,
                         }}
                       >
-                        View profile ↗
-                      </a>
-                    </div>
+                        {d}
+                      </span>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                marginTop: "16px",
-                flexWrap: "wrap",
-              }}
-            >
-              <button onClick={resetSession} className="triage-outline-btn">
-                Start New Check
-              </button>
-              {session && (
-                <Link
-                  href="/profile"
-                  className="triage-primary-btn"
-                  style={{ background: cfg.color }}
-                >
-                  View Pet Profile
-                </Link>
+                </div>
               )}
+              {cfg.vetLabel && recommendationLoading && !recommendation && (
+                <div style={{ marginBottom: "8px" }}>
+                  <p
+                    style={{
+                      margin: "0 0 10px",
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      color: C.muted,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    Finding vets that fit best…
+                  </p>
+                  <div className="triage-skeleton">
+                    <div className="triage-skeleton-line medium" />
+                    <div className="triage-skeleton-line short" />
+                    <div
+                      className="triage-skeleton-line long"
+                      style={{ marginBottom: 0 }}
+                    />
+                  </div>
+                  <div className="triage-skeleton">
+                    <div className="triage-skeleton-line medium" />
+                    <div className="triage-skeleton-line short" />
+                    <div
+                      className="triage-skeleton-line long"
+                      style={{ marginBottom: 0 }}
+                    />
+                  </div>
+                  <div className="triage-skeleton">
+                    <div className="triage-skeleton-line medium" />
+                    <div className="triage-skeleton-line short" />
+                    <div
+                      className="triage-skeleton-line long"
+                      style={{ marginBottom: 0 }}
+                    />
+                  </div>
+                </div>
+              )}
+              {cfg.vetLabel &&
+                (recommendation?.rankedVets?.length > 0 ||
+                  (nearbyVets.length > 0 && !recommendationLoading)) && (
+                  <div>
+                    <p
+                      style={{
+                        margin: "0 0 10px",
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        color: C.muted,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                      }}
+                    >
+                      {recommendation?.rankedVets?.length > 0
+                        ? `${cfg.vetLabel} — picked for this`
+                        : cfg.vetLabel}
+                    </p>
+                    {(recommendation?.rankedVets?.length > 0
+                      ? recommendation.rankedVets.map((v) => ({
+                          id: v.vet_id,
+                          slug: v.vet_slug,
+                          name: v.name,
+                          city: v.city,
+                          phone: v.phone,
+                          neighborhood: null,
+                          reasoning: v.reasoning,
+                          accepting_new_patients: v.accepting_new_patients,
+                          fit_signal: v.fit_signal,
+                        }))
+                      : nearbyVets
+                    ).map((vet) => (
+                      <div
+                        key={vet.id}
+                        style={{
+                          background: "#fff",
+                          borderRadius: "12px",
+                          padding: "16px 16px",
+                          marginBottom: "15px",
+                          border: `1px solid ${C.border}`,
+                        }}
+                      >
+                        <div
+                          className="triage-vet-row"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: "10px",
+                          }}
+                        >
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p
+                              style={{
+                                margin: "0 0 5px",
+                                fontWeight: "700",
+                                fontSize: "16px",
+                                color: C.navyDark,
+                                fontFamily: "var(--font-urbanist,system-ui)",
+                              }}
+                            >
+                              {vet.name}
+                            </p>
+                            <p
+                              style={{
+                                margin: "0 0 5px",
+                                fontSize: "15px",
+                                fontWeight: 500,
+                                color: C.muted,
+                              }}
+                            >
+                              {[vet.neighborhood, vet.city]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </p>
+                            {vet.reasoning && (
+                              <p
+                                style={{
+                                  margin: "0 0 10px",
+                                  fontSize: "14px",
+                                  fontWeight: 500,
+                                  color: C.navyDark,
+                                  fontStyle: "italic",
+                                  lineHeight: "1.5",
+                                  opacity: 0.85,
+                                }}
+                              >
+                                {vet.reasoning}
+                              </p>
+                            )}
+                            {vet.fit_signal && vet.fit_signal.label && (
+                              <div
+                                className="fit-badge"
+                                title={vet.fit_signal.tooltip || ""}
+                                style={{
+                                  marginTop: 0,
+                                  marginBottom: "10px",
+                                  background: cfg.pillBg,
+                                  color: cfg.color,
+                                }}
+                              >
+                                {vet.fit_signal.label}
+                              </div>
+                            )}
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "8px",
+                                flexWrap: "wrap",
+                                alignItems: "center",
+                              }}
+                            >
+                              {vet.phone && (
+                                <a
+                                  href={`tel:${vet.phone}`}
+                                  className="triage-phone-btn"
+                                  style={{
+                                    background: cfg.color,
+                                    ["--btn-color"]: cfg.color,
+                                  }}
+                                >
+                                  {vet.phone}
+                                </a>
+                              )}
+                              {recommendation?.rankedVets?.length > 0 &&
+                                !costEstimates[vet.id] &&
+                                !estimateLoading[vet.id] && (
+                                  <button
+                                    type="button"
+                                    className="triage-estimate-btn"
+                                    onClick={() =>
+                                      getCostEstimate(vet.id, vet.name)
+                                    }
+                                    style={{ ["--btn-color"]: cfg.color }}
+                                  >
+                                    Estimate cost
+                                  </button>
+                                )}
+                              {estimateLoading[vet.id] && (
+                                <span
+                                  style={{
+                                    fontSize: "13px",
+                                    fontWeight: 600,
+                                    color: C.muted,
+                                    padding: "8px 4px",
+                                  }}
+                                >
+                                  Calculating…
+                                </span>
+                              )}
+                            </div>
+                            {costEstimates[vet.id] &&
+                              !costEstimates[vet.id].error &&
+                              costEstimates[vet.id].estimateLow != null && (
+                                <div
+                                  style={{
+                                    marginTop: "10px",
+                                    padding: "14px 14px",
+                                    background: cfg.bg,
+                                    borderRadius: "12px",
+                                    border: `1px solid ${cfg.border}`,
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      fontWeight: 800,
+                                      fontSize: "16px",
+                                      color: cfg.color,
+                                      fontFamily:
+                                        "var(--font-urbanist,system-ui)",
+                                    }}
+                                  >
+                                    {costEstimates[vet.id].estimateLow ===
+                                    costEstimates[vet.id].estimateHigh
+                                      ? `$${costEstimates[vet.id].estimateLow}`
+                                      : `$${costEstimates[vet.id].estimateLow}–$${costEstimates[vet.id].estimateHigh}`}
+                                  </div>
+                                  {costEstimates[vet.id].reasoning && (
+                                    <p
+                                      style={{
+                                        margin: "0 0 0",
+                                        fontSize: "14px",
+                                        color: C.navyDark,
+                                        lineHeight: "1.6",
+                                        fontWeight: 500,
+                                      }}
+                                    >
+                                      {costEstimates[vet.id].reasoning}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            {costEstimates[vet.id] &&
+                              (costEstimates[vet.id].error ||
+                                costEstimates[vet.id].estimateLow == null) && (
+                                <p
+                                  style={{
+                                    marginTop: "8px",
+                                    fontSize: "13px",
+                                    color: C.muted,
+                                    fontStyle: "italic",
+                                  }}
+                                >
+                                  {costEstimates[vet.id].reasoning ||
+                                    "Cost data not available. Call for a quote."}
+                                </p>
+                              )}
+                          </div>
+                          <a
+                            href={`/vet/${vet.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="triage-view-profile"
+                          >
+                            View profile ↗
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              {cfg.vetLabel && session && (
+                <div className="triage-prep">
+                  <button
+                    type="button"
+                    className="triage-prep-toggle"
+                    onClick={getVisitPrep}
+                    style={{
+                      ["--btn-color"]: cfg.color,
+                      background: cfg.pillBg,
+                      color: cfg.color,
+                    }}
+                  >
+                    <Clipboard size={16} strokeWidth={2.2} />
+                    {visitPrepLoading
+                      ? "Preparing…"
+                      : visitPrep
+                        ? visitPrepExpanded
+                          ? "Hide visit prep"
+                          : "Show visit prep"
+                        : "Prep me for this visit"}
+                    {visitPrep && (
+                      <span
+                        className={`triage-chevron ${visitPrepExpanded ? "open" : ""}`}
+                        style={{ marginLeft: "auto" }}
+                      >
+                        <ChevronDown size={15} strokeWidth={2.2} />
+                      </span>
+                    )}
+                  </button>
+                  {visitPrep && (
+                    <div
+                      className={`triage-prep-body ${visitPrepExpanded ? "open" : ""}`}
+                    >
+                      <div className="triage-prep-body-inner">
+                        <div style={{ paddingTop: "14px" }}>
+                          {renderPrepContent(visitPrep.prepContent, cfg)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div
+                className="triage-action-row"
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  marginTop: "16px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <button onClick={resetSession} className="triage-outline-btn">
+                  Start New Check
+                </button>
+                {session && (
+                  <Link
+                    href="/profile"
+                    className="triage-primary-btn"
+                    style={{
+                      background: cfg.color,
+                      ["--btn-color"]: cfg.color,
+                    }}
+                  >
+                    View Pet Profile
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
     );
   }
 
-  if (!ready) return null;
+  if (!ready) return <PageLoader for="symptomChat" />;
 
   // ── GUIDED FLOW — no header, full viewport ──
   if (guidedStep !== "chat") {
@@ -1053,7 +1570,7 @@ export default function SymptomCheckerChatPage() {
           .g-sev:hover{border-color:${C.terracotta};background:#fafaf8;}
           .g-sev{border:1.5px solid ${C.border};border-radius:14px;padding:18px 20px;cursor:pointer;background:#fff;transition:border-color 0.15s,background 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
           
-        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:14px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:0; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
+        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:0; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
         .back-btn:hover { color:#172531 !important; outline:none !important; box-shadow:none !important; }
         .back-btn:active { color:#172531 !important; outline:none !important; box-shadow:none !important; }
         .back-btn:focus { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
@@ -1070,10 +1587,11 @@ export default function SymptomCheckerChatPage() {
           }}
         >
           <div
+            className="guided-scroll"
             style={{
               flex: 1,
               overflowY: "auto",
-              padding: "30px 24px 40px",
+              padding: "32px 24px 40px",
               boxSizing: "border-box",
               //scrollbarGutter: "stable",
             }}
@@ -1097,7 +1615,12 @@ export default function SymptomCheckerChatPage() {
                   }}
                   className="back-btn"
                 >
-                  ← Back
+                  <ArrowLeft
+                    size={14}
+                    strokeWidth={2.4}
+                    style={{ marginRight: "4px", verticalAlign: "middle" }}
+                  />{" "}
+                  Back to Symptom Checker
                 </button>
               </div>
               <div style={{ marginBottom: "28px" }}>
@@ -1111,7 +1634,7 @@ export default function SymptomCheckerChatPage() {
                 >
                   <span
                     style={{
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontWeight: "700",
                       color: C.terracotta,
                       textTransform: "uppercase",
@@ -1122,7 +1645,7 @@ export default function SymptomCheckerChatPage() {
                   </span>
                   <span
                     style={{
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontWeight: "700",
                       textTransform: "uppercase",
                       letterSpacing: "0.06em",
@@ -1180,53 +1703,67 @@ export default function SymptomCheckerChatPage() {
                     <p
                       style={{
                         margin: "0 0 20px",
-                        fontSize: "15px",
+                        fontSize: "16px",
+                        fontWeight: 500,
                         color: C.slate,
                       }}
                     >
                       Tap the one that best describes what's going on with{" "}
                       {petName}.
                     </p>
-                    {SYMPTOM_AREAS.map((area) => (
-                      <div
-                        key={area.id}
-                        className="g-card"
-                        onClick={() => selectArea(area.id)}
-                      >
-                        <span
-                          style={{
-                            fontSize: "26px",
-                            flexShrink: 0,
-                            width: "36px",
-                            textAlign: "center",
-                          }}
+                    {SYMPTOM_AREAS.map((area) => {
+                      const Icon = area.icon;
+                      return (
+                        <div
+                          key={area.id}
+                          className="g-card"
+                          onClick={() => selectArea(area.id)}
                         >
-                          {area.emoji}
-                        </span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p
+                          <span
                             style={{
-                              margin: "0 0 2px",
-                              fontWeight: "700",
-                              fontSize: "15px",
-                              color: C.navyDark,
-                              fontFamily: "var(--font-urbanist,system-ui)",
+                              fontSize: "26px",
+                              flexShrink: 0,
+                              width: "36px",
+                              textAlign: "center",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: C.terracotta,
                             }}
                           >
-                            {area.label}
-                          </p>
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: "13px",
-                              color: C.muted,
-                            }}
-                          >
-                            {area.desc}
-                          </p>
+                            {Icon ? (
+                              <Icon size={26} strokeWidth={2} />
+                            ) : (
+                              area.emoji
+                            )}
+                          </span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p
+                              style={{
+                                margin: "0 0 2px",
+                                fontWeight: "700",
+                                fontSize: "17px",
+                                color: C.navyDark,
+                                fontFamily: "var(--font-urbanist,system-ui)",
+                              }}
+                            >
+                              {area.label}
+                            </p>
+                            <p
+                              style={{
+                                margin: 0,
+                                fontSize: "15px",
+                                fontWeight: "500",
+                                color: C.muted,
+                                textWrap: "pretty",
+                              }}
+                            >
+                              {area.desc}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </motion.div>
                 )}
                 {guidedStep === 2 && (
@@ -1253,7 +1790,8 @@ export default function SymptomCheckerChatPage() {
                     <p
                       style={{
                         margin: "0 0 20px",
-                        fontSize: "15px",
+                        fontSize: "16px",
+                        fontWeight: 500,
                         color: C.slate,
                       }}
                     >
@@ -1261,44 +1799,60 @@ export default function SymptomCheckerChatPage() {
                     </p>
                     <div
                       style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
+                        display: "flex",
+                        flexDirection: "column",
                         gap: "10px",
                       }}
                     >
-                      {DURATIONS.map((d) => (
-                        <div
-                          key={d.id}
-                          className="g-dur"
-                          onClick={() => selectDuration(d.id)}
-                        >
-                          <span
-                            style={{ fontSize: "26px", marginBottom: "10px" }}
+                      {DURATIONS.map((d) => {
+                        const Icon = d.icon;
+                        return (
+                          <div
+                            key={d.id}
+                            className="g-card"
+                            onClick={() => selectDuration(d.id)}
                           >
-                            {d.emoji}
-                          </span>
-                          <p
-                            style={{
-                              margin: "0 0 4px",
-                              fontWeight: "700",
-                              fontSize: "15px",
-                              color: C.navyDark,
-                              fontFamily: "var(--font-urbanist,system-ui)",
-                            }}
-                          >
-                            {d.label}
-                          </p>
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: "13px",
-                              color: C.muted,
-                            }}
-                          >
-                            {d.desc}
-                          </p>
-                        </div>
-                      ))}
+                            <span
+                              style={{
+                                fontSize: "26px",
+                                flexShrink: 0,
+                                width: "36px",
+                                textAlign: "center",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: C.terracotta,
+                              }}
+                            >
+                              <Icon size={26} strokeWidth={2} />
+                            </span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p
+                                style={{
+                                  margin: "0 0 2px",
+                                  fontWeight: "700",
+                                  fontSize: "17px",
+                                  color: C.navyDark,
+                                  fontFamily: "var(--font-urbanist,system-ui)",
+                                }}
+                              >
+                                {d.label}
+                              </p>
+                              <p
+                                style={{
+                                  margin: 0,
+                                  fontSize: "15px",
+                                  fontWeight: 500,
+                                  color: C.muted,
+                                  textWrap: "pretty",
+                                }}
+                              >
+                                {d.desc}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </motion.div>
                 )}
@@ -1326,83 +1880,109 @@ export default function SymptomCheckerChatPage() {
                     <p
                       style={{
                         margin: "0 0 20px",
-                        fontSize: "15px",
+                        fontSize: "16px",
+                        fontWeight: 500,
                         color: C.slate,
                       }}
                     >
                       Use your best judgment — you know {petName} best.
                     </p>
-                    {SEVERITIES.map((s) => (
-                      <div
-                        key={s.id}
-                        className="g-sev"
-                        onClick={() => selectSeverity(s.id)}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = s.border;
-                          e.currentTarget.style.background = s.bg;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = C.border;
-                          e.currentTarget.style.background = "#fff";
-                        }}
-                        onTouchStart={(e) => {
-                          e.currentTarget.style.borderColor = s.border;
-                          e.currentTarget.style.background = s.bg;
-                        }}
-                        onTouchEnd={(e) => {
-                          e.currentTarget.style.borderColor = C.border;
-                          e.currentTarget.style.background = "#fff";
-                        }}
-                      >
+                    {SEVERITIES.map((s) => {
+                      const Icon = s.icon;
+                      return (
                         <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "14px",
+                          key={s.id}
+                          className="g-sev"
+                          onClick={() => selectSeverity(s.id)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = s.border;
+                            e.currentTarget.style.background = s.bg;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = C.border;
+                            e.currentTarget.style.background = "#fff";
+                          }}
+                          onTouchStart={(e) => {
+                            e.currentTarget.style.borderColor = s.border;
+                            e.currentTarget.style.background = s.bg;
+                          }}
+                          onTouchEnd={(e) => {
+                            e.currentTarget.style.borderColor = C.border;
+                            e.currentTarget.style.background = "#fff";
                           }}
                         >
-                          <span style={{ fontSize: "30px", flexShrink: 0 }}>
-                            {s.emoji}
-                          </span>
-                          <div>
-                            <p
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "14px",
+                            }}
+                          >
+                            <span
                               style={{
-                                margin: "0 0 4px",
-                                fontWeight: "800",
-                                fontSize: "16px",
+                                flexShrink: 0,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
                                 color: s.color,
-                                fontFamily: "var(--font-urbanist,system-ui)",
                               }}
                             >
-                              {s.label}
-                            </p>
-                            <p
-                              style={{
-                                margin: 0,
-                                fontSize: "13px",
-                                color: C.slate,
-                                lineHeight: "1.5",
-                              }}
-                            >
-                              {s.desc}
-                            </p>
+                              <Icon size={30} strokeWidth={2} />
+                            </span>
+                            <div>
+                              <p
+                                style={{
+                                  margin: "0 0 4px",
+                                  fontWeight: "800",
+                                  fontSize: "17px",
+                                  color: s.color,
+                                  fontFamily: "var(--font-urbanist,system-ui)",
+                                }}
+                              >
+                                {s.label}
+                              </p>
+                              <p
+                                style={{
+                                  margin: 0,
+                                  fontSize: "15px",
+                                  fontWeight: 500,
+                                  color: C.muted,
+                                  lineHeight: "1.5",
+                                  textWrap: "pretty",
+                                }}
+                              >
+                                {s.desc}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </motion.div>
                 )}
               </AnimatePresence>
               <p
                 style={{
                   margin: "24px 0 0",
-                  fontSize: "12px",
+                  fontSize: "13px",
+                  fontWeight: "500",
                   color: C.muted,
                   textAlign: "center",
                 }}
               >
-                ⚕️ PetParrk is not a veterinary service. Always consult a
-                licensed veterinarian.
+                <span
+                  style={{
+                    display: "inline-block",
+                    verticalAlign: "middle",
+                    marginRight: "4px",
+                  }}
+                >
+                  ⚕️
+                </span>
+                PetParrk provides triage guidance only. We are not veterinarians
+                or medical professionals.
+                <br />
+                This is not a substitute for professional veterinary care.
               </p>
             </div>
           </div>
@@ -1427,7 +2007,7 @@ export default function SymptomCheckerChatPage() {
         .chat-messages {
           flex: 1;
           overflow-y: scroll;
-          padding: 30px 24px 20px;
+          padding: 32px 24px 20px;
           scrollbar-width: none;
         }
         .chat-messages::-webkit-scrollbar { display: none; }
@@ -1437,36 +2017,6 @@ export default function SymptomCheckerChatPage() {
           background: ${C.cream};
           flex-shrink: 0;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         /* Auto-expanding textarea with icons inside */
@@ -1518,34 +2068,6 @@ export default function SymptomCheckerChatPage() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         /* Icon buttons inside the input — sit at bottom-right */
         .input-icons {
           display: flex;
@@ -1576,22 +2098,54 @@ export default function SymptomCheckerChatPage() {
         .mic-btn:hover { background: ${C.cream}; color: ${C.navyDark}; }
         .mic-btn:focus { outline: none; }
         .mic-btn.recording-active { color: ${C.terracotta}; }
-        .triage-outline-btn { height:40px; padding:0 20px; background:#fff; border:1.5px solid ${C.border}; border-radius:10px; font-size:14px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); color:${C.navyDark}; transition:background 0.15s,color 0.15s,border-color 0.15s; }
+        .triage-outline-btn { height:42px; padding:0 24px; background:#fff; border:2px solid ${C.border}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); color:${C.navyDark}; transition:background 0.2s,color 0.2s,border-color 0.2s; }
         .triage-outline-btn:hover { background:${C.navyDark}; color:#fff; border-color:${C.navyDark}; }
-        .triage-primary-btn { height:40px; padding:0 20px; border-radius:10px; font-size:14px; font-weight:700; font-family:var(--font-urbanist,system-ui); color:#fff; text-decoration:none; display:inline-flex; align-items:center; transition:filter 0.15s; }
-        .triage-primary-btn:hover { filter:brightness(0.85); }
-        .triage-phone-btn { display:inline-flex; align-items:center; height:40px; padding:0 18px; border-radius:10px; font-size:14px; font-weight:700; color:#fff; text-decoration:none; transition:filter 0.15s; }
-        .triage-phone-btn:hover { filter:brightness(0.85); }
-        .start-over-btn { background:none; border:none; cursor:pointer; font-size:13px; color:${C.muted}; font-weight:600; padding:0; font-family:var(--font-urbanist,system-ui); white-space:nowrap; flex-shrink:0; margin-left:4px; transition:color 0.15s; text-decoration:none; }
-        .start-over-btn:hover { color:${C.terracotta}; text-decoration:underline; text-underline-offset:2px; }
-        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:14px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:0; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
+        .triage-primary-btn { height:42px; padding:0 24px; border:2px solid transparent; border-radius:12px; font-size:15px; font-weight:700; font-family:var(--font-urbanist,system-ui); color:#fff; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s,border-color 0.2s; }
+        .triage-primary-btn:hover { background:#fff !important; color:var(--btn-color) !important; border-color:var(--btn-color) !important; }
+        .triage-phone-btn { display:inline-flex; align-items:center; height:35px; padding:0 18px; border-radius:10px; font-size:14px; font-weight:700; color:#fff; text-decoration:none; border:2px solid transparent; transition:background 0.2s, color 0.2s, border-color 0.2s; }
+        .triage-phone-btn:hover { background:#fff !important; color:var(--btn-color) !important; border-color:var(--btn-color) !important; }
+        .triage-estimate-btn { background:#fff; border:2px solid var(--btn-color); border-radius:999px; padding:8px 16px; font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,system-ui); color:var(--btn-color); transition:background 0.2s, color 0.2s; }
+        .triage-estimate-btn:hover { background:var(--btn-color); color:#fff; }
+        .triage-view-profile { font-size:13px; color:${C.terracotta}; text-decoration:underline; white-space:nowrap; flex-shrink:0; margin-top:2px; font-weight:700; transition:color 0.15s; }
+        .triage-view-profile:hover { color:${C.navyDark}; }
+        .triage-body { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease; }
+        .triage-body.open { grid-template-rows:1fr; opacity:1; }
+        .triage-body-inner { overflow:hidden; }
+        .triage-toggle-btn { background:none; border:none; cursor:pointer; padding:4px 6px; font-weight:700; font-size:13px; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; transition:opacity 0.15s; }
+        .triage-toggle-btn:hover { opacity:0.7; }
+        .triage-chevron { transition:transform 0.45s cubic-bezier(0.4,0,0.2,1); display:inline-flex; }
+        .triage-chevron.open { transform:rotate(180deg); }
+        .triage-skeleton { background:#fff; border-radius:12px; padding:14px 16px; margin-bottom:8px; overflow:hidden; position:relative; }
+        .triage-skeleton::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent); animation:triage-shimmer 1.4s infinite; }
+        @keyframes triage-shimmer { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
+        .triage-skeleton-line { height:14px; background:${C.border}; border-radius:6px; margin-bottom:8px; }
+        .triage-skeleton-line.short { width:40%; }
+        .triage-skeleton-line.medium { width:65%; }
+        .triage-skeleton-line.long { width:85%; }
+        .fit-badge { display:inline-flex; align-items:center; padding:4px 10px; margin-top:8px; border-radius:9999px; font-size:12px; font-weight:600; letter-spacing:0.02em; white-space:nowrap; }
+        .triage-prep { margin-top:16px; }
+        .triage-prep-toggle { width:100%; display:inline-flex; align-items:center; gap:8px; height:46px; padding:0 16px; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,system-ui); transition:filter 0.15s; }
+        .triage-prep-toggle:hover { filter:brightness(0.96); }
+        .triage-prep-body { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease; }
+        .triage-prep-body.open { grid-template-rows:1fr; opacity:1; }
+        .triage-prep-body-inner { overflow:hidden; }
+        @media (max-width: 600px) {
+          .triage-vet-row { flex-direction: column !important; align-items: stretch !important; }
+          .triage-vet-row > a { align-self: flex-start; margin-top: 4px; }
+          .triage-action-row { flex-direction: column !important; }
+          .triage-action-row .triage-outline-btn,
+          .triage-action-row .triage-primary-btn { width: 100%; }
+        }
+        .start-over-btn { background:none; border:none; cursor:pointer; font-size:14px; color:${C.terracotta}; font-weight:700; padding:0; font-family:var(--font-urbanist,system-ui); white-space:nowrap; flex-shrink:0; transition:color 0.15s; text-decoration:none; display:inline-flex; align-items:center; line-height:1; }
+        .start-over-btn:hover { color:#172531; }
+        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:0; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
         .back-btn:link, .back-btn:visited { color:${C.terracotta} !important; }
         .back-btn:hover { color:#172531 !important; outline:none !important; box-shadow:none !important; }
         .back-btn:active { color:#172531 !important; outline:none !important; box-shadow:none !important; }
         .back-btn:focus { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
         .back-btn:focus-visible { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
         .back-btn:focus:not(:focus-visible) { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; }
-        .pc-name { margin:0; font-weight:700; font-size:16px; color:${C.navyDark}; font-family:var(--font-urbanist,system-ui); }
+        .pc-name { margin:0; font-weight:700; font-size:20px; color:${C.navyDark}; font-family:var(--font-urbanist,system-ui); }
         .pc-desk-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
         .pc-mob-actions { display:none; }
         @media(max-width:600px) {
@@ -1621,34 +2175,6 @@ export default function SymptomCheckerChatPage() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         @keyframes dotBounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-5px);opacity:1} }
         .dot-bounce { width:7px;height:7px;border-radius:50%;background:${C.muted};display:inline-block;animation:dotBounce 1.2s infinite ease-in-out; }
       
@@ -1666,7 +2192,15 @@ export default function SymptomCheckerChatPage() {
         {/* Scrollable messages area */}
         <div ref={messagesAreaRef} className="chat-messages">
           <div style={{ maxWidth: "768px", margin: "0 auto" }}>
-            <div style={{ marginBottom: "30px", paddingTop: "0px" }}>
+            <div
+              style={{
+                marginBottom: "30px",
+                paddingTop: "5px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <button
                 onClick={(e) => {
                   e.currentTarget.blur();
@@ -1678,7 +2212,20 @@ export default function SymptomCheckerChatPage() {
                 }}
                 className="back-btn"
               >
-                ← Back
+                <ArrowLeft
+                  size={14}
+                  strokeWidth={2.4}
+                  style={{ marginRight: "4px", verticalAlign: "middle" }}
+                />{" "}
+                Back to Symptom Checker
+              </button>
+              <button onClick={resetSession} className="start-over-btn">
+                <RotateCcw
+                  size={14}
+                  strokeWidth={2.4}
+                  style={{ marginRight: "4px", verticalAlign: "middle" }}
+                />{" "}
+                Start over
               </button>
             </div>
             <PetChip selectedPet={selectedPet} onStartOver={resetSession} />
@@ -1767,7 +2314,11 @@ export default function SymptomCheckerChatPage() {
                       onClick={toggleRecording}
                       title={recording ? "Stop recording" : "Record voice"}
                     >
-                      {recording ? "⏹" : "🎙"}
+                      {recording ? (
+                        <CircleStop size={16} strokeWidth={2} />
+                      ) : (
+                        <Mic size={16} strokeWidth={2} />
+                      )}
                     </button>
                   )}
                   {/* Send button — only appears when input has content */}
@@ -1778,9 +2329,9 @@ export default function SymptomCheckerChatPage() {
                     title="Send"
                   >
                     <svg
-                      width="21"
-                      height="21"
-                      viewBox="0 0 13 14"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 12 13"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                       style={{ display: "block" }}
@@ -1788,7 +2339,7 @@ export default function SymptomCheckerChatPage() {
                       <path
                         d="M6 10.5V1.5M6 1.5L2 5.5M6 1.5L10 5.5"
                         stroke="currentColor"
-                        strokeWidth="2.2"
+                        strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
@@ -1799,17 +2350,30 @@ export default function SymptomCheckerChatPage() {
             )}
             <p
               style={{
-                margin: "8px 0 0",
-                fontSize: "11px",
+                marginTop: "10px",
+                fontSize: "13px",
+                fontWeight: "500",
                 color: C.muted,
                 textAlign: "center",
                 lineHeight: "1.8",
               }}
             >
-              ⚕️ PetParrk is not a veterinary service and does not provide
-              medical advice.
+              {/* <span
+                style={{
+                  display: "inline-block",
+                  verticalAlign: "middle",
+                  marginRight: "4px",
+                  marginTop: "-7px",
+                  left: "48px",
+                  padding: "",
+                }}
+              >
+                ⚕️
+              </span> */}
+              ⚕️ PetParrk provides triage guidance only. We are not
+              veterinarians or medical professionals.
               <br />
-              Always consult a licensed veterinarian.
+              This is not a substitute for professional veterinary care.
             </p>
           </div>
         </div>

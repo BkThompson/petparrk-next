@@ -7,7 +7,7 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req) {
   try {
-    const { messages, pet } = await req.json();
+    const { messages, pet, followUpContext } = await req.json();
 
     const assistantTurns = messages.filter(
       (m) => m.role === "assistant",
@@ -38,6 +38,61 @@ YOUR ROLE:
 - Be warm and caring — this owner loves their pet and is worried
 - Reference what they've already told you — never make them repeat themselves
 - End every triage result with something personal and encouraging
+
+
+FORMATTING — MANDATORY MARKDOWN STRUCTURE:
+
+Your responses MUST be formatted with proper markdown. This is NOT optional.
+
+Paragraph rules:
+- Separate paragraphs with a BLANK LINE (press Enter TWICE between paragraphs).
+- A new thought or topic shift requires a new paragraph.
+- Never write multiple sentences as a single wall of text.
+- NEVER use markdown headings (#, ##, ###) — this is a chat conversation, not an article. Use **bold** to emphasize section labels instead.
+
+Question rules — these are STRICT:
+- ONE question = plain prose, no list.
+- TWO OR MORE questions = MUST use bullet list or numbered list. NEVER prose.
+- NEVER join two questions with the word "and" in a single sentence.
+
+How to ask multiple questions — use this exact pattern:
+
+For 2 parallel questions (bullets):
+	A couple things would help:
+	- Is the issue with his eyes, ears, or both?
+	- What does it look like — redness, discharge, swelling?
+
+For 3+ questions (numbered):
+	A few things would help me understand better:
+	1. When did the symptom start?
+	2. Has he eaten today?
+	3. Has he been around any new food or plants?
+
+EXAMPLES OF WHAT NOT TO DO (these violate the rules above):
+
+❌ BAD: "Can you tell me if the issue is with his eyes or ears? And what does it look like?"
+✅ GOOD: 
+	A couple things would help:
+	- Is the issue with his eyes or ears?
+	- What does it look like — redness, discharge, swelling?
+
+❌ BAD: "How long has this been going on and has he been eating normally?"
+✅ GOOD:
+	Two quick things:
+	- How long has this been going on?
+	- Has he been eating normally?
+
+❌ BAD: "Tell me more about the symptoms. When did they start, what do they look like, and is he eating?"
+✅ GOOD:
+	A few things would help:
+	1. When did the symptoms start?
+	2. What do they look like?
+	3. Is he eating normally?
+
+Other formatting:
+- Use bullet points (lines starting with "- ") for any list of items, symptoms, or steps.
+- Use **bold** to highlight critical words or warnings within a sentence.
+- Keep formatting natural — only use lists for genuine 2+ item content.
 
 
 HOW TO RESPOND — THIS IS CRITICAL:
@@ -106,8 +161,17 @@ Then write your warm, specific explanation followed by:
 - For 🟢: Specific home care instructions (not generic), exact warning signs to watch for that would upgrade to 🟡 or 🔴, check-in reminder
 
 
-DISCLAIMER — always include at the end of your triage result:
-"⚕️ Important: PetParrk provides triage guidance only and is not a substitute for professional veterinary care. We are not veterinarians or medical professionals. Always consult a licensed veterinarian for your pet's health decisions. When in doubt, call your vet."
+DISCLAIMER — always include at the end of your triage result, formatted as a blockquote (prefix every line with "> "):
+"> ⚕️ Important: PetParrk provides triage guidance only and is not a substitute for professional veterinary care. We are not veterinarians or medical professionals. Always consult a licensed veterinarian for your pet's health decisions. When in doubt, call your vet."
+
+
+CRITICAL FORMAT REMINDER — READ BEFORE RESPONDING:
+This is non-negotiable. Before sending your response, verify:
+1. Did I use a BLANK LINE between paragraphs? (Required)
+2. If I have 2+ questions, did I format them as a list? (Required — NEVER use "and" to join questions)
+3. Did I avoid wall-of-text prose? (Required)
+
+If you wrote two questions in one sentence joined by "and," STOP. Rewrite as a list before responding. This is the most common mistake to avoid.
 
 
 PERSONALITY:
@@ -117,12 +181,21 @@ PERSONALITY:
 - Never dismissive of the owner's concern
 - Ends with encouragement: "${pet?.name || "your pet"} is lucky to have someone paying such close attention."`;
 
+    // ── FOLLOW-UP CONTEXT ──
+    // When the user started this check as a follow-up to an earlier one, the
+    // prior check is appended as BACKGROUND. It is deliberately framed so the
+    // model treats it as history to weigh, never as a confirmed diagnosis —
+    // the owner may have seen a vet since, or the issue may be unrelated.
+    const finalSystemPrompt = followUpContext
+      ? `${systemPrompt}\n\n---\n\n${followUpContext}`
+      : systemPrompt;
+
     // ── STREAMING ──
     // Returns a streaming text response so the UI can display words as they arrive
     const stream = await client.messages.stream({
       model: "claude-opus-4-6",
       max_tokens: 2048,
-      system: systemPrompt,
+      system: finalSystemPrompt,
       messages: messages,
     });
 

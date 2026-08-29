@@ -1,7 +1,7 @@
 import { supabase } from "../../../lib/supabase";
 
 export async function generateMetadata({ params }) {
-  const { petId } = params;
+  const { petId } = await params;
 
   const { data: pet } = await supabase
     .from("pets")
@@ -20,10 +20,10 @@ export async function generateMetadata({ params }) {
     pet.species === "Dog"
       ? "🐶"
       : pet.species === "Cat"
-      ? "🐱"
-      : pet.species === "Bird"
-      ? "🐦"
-      : "🐾";
+        ? "🐱"
+        : pet.species === "Bird"
+          ? "🐦"
+          : "🐾";
   const title = `${pet.name}'s Medical Card ${speciesEmoji}`;
   const description = `${pet.name} is a ${
     pet.breed || pet.species

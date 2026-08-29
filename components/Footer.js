@@ -11,7 +11,8 @@ export default function Footer() {
       <style>{`
         .footer-link {
           display: block;
-          font-size: 13px;
+          font-size: 15px;
+          font-weight: 500;
           color: rgba(255,255,255,0.6);
           text-decoration: none;
           margin-bottom: 8px;
@@ -20,7 +21,7 @@ export default function Footer() {
         .footer-link:hover { color: #fff; }
       `}</style>
 
-      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}>
+      <div className="pp-container">
         <div
           style={{
             display: "grid",
@@ -44,7 +45,8 @@ export default function Footer() {
             </div>
             <p
               style={{
-                fontSize: "13px",
+                fontSize: "14px",
+                fontWeight: "500",
                 color: "rgba(255,255,255,0.5)",
                 lineHeight: "1.7",
                 margin: 0,
@@ -63,7 +65,7 @@ export default function Footer() {
                 fontSize: "11px",
                 fontWeight: "700",
                 color: "var(--color-gold,#EFC88B)",
-                letterSpacing: "0.08em",
+                letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 marginBottom: "12px",
               }}
@@ -73,7 +75,7 @@ export default function Footer() {
             {[
               ["Find a Vet", "/vets"],
               ["Symptom Checker", "/symptom-checker"],
-              ["Pet Health Card", "/profile"],
+              ["Pet Cards", "/pet-card"],
             ].map(([label, href]) => (
               <Link key={href} href={href} className="footer-link">
                 {label}
@@ -88,7 +90,7 @@ export default function Footer() {
                 fontSize: "11px",
                 fontWeight: "700",
                 color: "var(--color-gold,#EFC88B)",
-                letterSpacing: "0.08em",
+                letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 marginBottom: "12px",
               }}
@@ -113,7 +115,7 @@ export default function Footer() {
                 fontSize: "11px",
                 fontWeight: "700",
                 color: "var(--color-gold,#EFC88B)",
-                letterSpacing: "0.08em",
+                letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 marginBottom: "12px",
               }}
@@ -122,7 +124,7 @@ export default function Footer() {
             </div>
             {[
               ["Privacy Policy", "/privacy-policy"],
-              ["Terms of Service", "/terms"],
+              ["Terms of Service", "/terms-of-service"],
               ["Code of Conduct", "/code-of-conduct"],
               ["Accessibility", "/accessibility"],
               ["Do Not Sell My Information", "/do-not-sell"],
@@ -149,6 +151,7 @@ export default function Footer() {
           <p
             style={{
               fontSize: "13px",
+              fontWeight: "500",
               color: "rgba(255,255,255,0.4)",
               margin: 0,
             }}
@@ -159,6 +162,7 @@ export default function Footer() {
           <p
             style={{
               fontSize: "13px",
+              fontWeight: 500,
               color: "rgba(255,255,255,0.4)",
               margin: 0,
             }}

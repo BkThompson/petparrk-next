@@ -4,6 +4,76 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
+import {
+  Search,
+  Clock,
+  Thermometer,
+  Dog,
+  Cat,
+  Bird,
+  Rabbit,
+  Fish,
+  PawPrint,
+  ChevronRight,
+  ArrowRight,
+} from "lucide-react";
+import PageLoader from "../../components/PageLoader";
+
+// ── Species + age helpers (matches profile page logic) ──────────────────
+const BANNER_LUCIDE = {
+  dog: Dog,
+  cat: Cat,
+  bird: Bird,
+  small_furry: Rabbit,
+  reptile_fish: Fish,
+};
+
+function speciesBucket(species) {
+  if (!species) return null;
+  const s = String(species).toLowerCase().trim();
+  if (s.startsWith("dog")) return "dog";
+  if (s.startsWith("cat")) return "cat";
+  if (s.startsWith("bird")) return "bird";
+  if (
+    s.startsWith("rabbit") ||
+    s.startsWith("hamster") ||
+    s.startsWith("guinea") ||
+    s.startsWith("ferret") ||
+    s.startsWith("otter") ||
+    s.startsWith("rat") ||
+    s.startsWith("mouse")
+  )
+    return "small_furry";
+  if (
+    s.startsWith("reptile") ||
+    s.startsWith("fish") ||
+    s.startsWith("snake") ||
+    s.startsWith("lizard") ||
+    s.startsWith("turtle") ||
+    s.startsWith("frog") ||
+    s.startsWith("gecko")
+  )
+    return "reptile_fish";
+  return null;
+}
+
+function formatAge(birthday) {
+  if (!birthday) return null;
+  const birthMs = new Date(birthday).getTime();
+  if (isNaN(birthMs)) return null;
+  const diffMs = Date.now() - birthMs;
+  if (diffMs < 0) return "Not born yet";
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days < 7) return days <= 1 ? "1 day" : `${days} days`;
+  if (days < 30) {
+    const w = Math.floor(days / 7);
+    return w === 1 ? "1 week" : `${w} weeks`;
+  }
+  const months = Math.floor(days / 30.44);
+  if (months < 24) return months === 1 ? "1 month" : `${months} months`;
+  const years = Math.floor(days / 365.25);
+  return years === 1 ? "1 year" : `${years} years`;
+}
 
 const SESSION_KEY = "petparrk_symptom_session";
 const C = {
@@ -13,6 +83,7 @@ const C = {
   gold: "#EFC88B",
   cream: "#F5F0E8",
   white: "#FFFFFF",
+  ink: "#1A1A1A",
   slate: "#4B5563",
   muted: "#717A86",
   border: "#EDE8E0",
@@ -125,7 +196,8 @@ export default function SymptomCheckerHomePage() {
     router.push("/symptom-checker/chat");
   }
 
-  if (session === undefined) return null;
+  if (session === undefined)
+    return <PageLoader message="Loading symptom checker…" />;
 
   return (
     <>
@@ -149,53 +221,184 @@ export default function SymptomCheckerHomePage() {
         }
 
 
-        .sc-pet-card { border:1px solid ${C.border}; border-radius:14px; padding:20px 24px; display:flex; align-items:center; gap:16px; transition:background 0.15s; background:${C.white}; position:relative; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        .sc-pet-card { 
+          border:1px solid ${C.border}; 
+          border-radius:14px; 
+          padding:20px 24px; 
+          display:flex; 
+          align-items:center; 
+          gap:16px; 
+          transition:background 0.15s; 
+          background:${C.white}; 
+          position:relative; 
+          }
         .sc-pet-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:${C.terracotta}; opacity:0; transition:opacity 0.15s; border-radius:0 2px 2px 0; }
+
+        /* Avatar - base styles shared by both; width/height owned by variant classes */
+        .sc-avatar { border-radius:50%; background:${C.cream}; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; border:2px solid ${C.border}; color:${C.terracotta}; }
+        .sc-avatar img { width:100%; height:100%; object-fit:cover; }
+        .sc-avatar-desktop { display:flex; width:78px; height:78px; }
+        .sc-avatar-mobile { display:none; }
         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         /* Vertical divider desktop — inset */
         .sc-vdiv { width:1px; background:${C.border}; align-self:stretch; margin:4px 0; flex-shrink:0; }
 
 
-        /* Stats desktop */
-        .sc-stats { display:flex; flex-direction:column; gap:6px; flex-shrink:0; min-width:130px; padding-left:4px; }
-        .sc-stat { display:flex; align-items:baseline; gap:4px; }
-        .sc-stat-label { font-size:13px; font-weight:600; color:${C.muted}; }
-        .sc-stat-value { font-size:13px; font-weight:600; color:${C.navyDark}; }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /* Stats desktop */
+        .sc-stats { display:flex; flex-direction:column; gap:4px; flex-shrink:0; min-width:130px; padding-left:4px; }
+        .sc-stat { display:flex; align-items:baseline; gap:4px; }
+        .sc-stat-label { font-size:16px; font-weight:500; color:${C.muted}; min-width: 53px;}
+        .sc-stat-value { font-size:16px; font-weight:600; color:${C.navyDark}; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /* Mobile-only lastcheck row wrapper (hidden on desktop, lastcheck renders inline in name col) */
+        .sc-lastcheck-row { display:none; }
+        .sc-lastcheck-inline { display:inline-flex; }
 
         /* Mobile stats — hidden on desktop */
         .sc-mob-stats { display:none; }
         .sc-top-row { display:contents; } /* transparent on desktop, becomes flex on mobile */
 
+
+
+
+
+
+
+
         /* Chevron — start new check */
-        .sc-chevron { background:none; border:none; cursor:pointer; padding:0 0 0 12px; font-size:36px; font-weight:300; color:${C.terracotta}; display:flex; align-items:center; flex-shrink:0; line-height:1; transition:color 0.2s, transform 0.2s; }
+        .sc-chevron { background:none; border:none; cursor:pointer; padding:0 0 0 12px; color:${C.terracotta}; display:flex; align-items:center; flex-shrink:0; line-height:1; transition:color 0.2s, transform 0.2s; }
         .sc-chevron:hover { color:#a8471d; transform:translateX(4px); }
         .sc-lastcheck:hover { color:#a8471d !important; }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         @media(max-width:600px) {
-          .sc-pet-card { display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto; padding:20px 20px 20px 24px; align-items:center; column-gap:12px; }
+          .sc-resume-card { flex-direction:column; align-items:stretch !important; }
+          .sc-resume-card .sc-resume-btn { width:100%; justify-content:center; }
+          .sc-pet-card { 
+            display:grid; 
+            grid-template-columns:1fr auto; 
+            grid-template-rows:auto auto auto; 
+            padding:20px 24px 20px 24px; 
+            align-items:center; 
+            gap: 0; 
+            }
+          .sc-lastcheck-row { 
+          display:flex; 
+          grid-column:1 / span 2; 
+          padding-top:5px; 
+          // padding-bottom:10px;
+          /* Indent to align with the name/breed text (avatar 52 + gap 16). */
+          padding-left:78px;
+          }
+          .sc-lastcheck-inline { display:none !important; }
           .sc-vdiv { display:none; }
           .sc-stats { display:none; }
-          .sc-chevron { grid-column:2; grid-row:1 / span 2; align-self:center; padding:0; }
-          .sc-top-row { display:flex; align-items:center; gap:16px; grid-column:1; }
-          .sc-mob-stats { display:flex; gap:20px; grid-column:1; padding-top:10px; border-top:1px solid ${C.border}; margin-left:66px; margin-right:24px}
+          .sc-chevron { grid-column:2; grid-row:1; align-self:center; padding:0 0 0 8px; }
+          .sc-top-row { display:flex; align-items:flex-start; gap:16px; grid-column:1; }
+          .sc-avatar-desktop { display:none; }
+          .sc-avatar-mobile { display:flex; width:60px; height:60px; margin-top: 5px; }
+          .sc-mob-stats { display:flex; gap:20px; grid-column:1 / span 2; padding-top:10px; margin-top:10px; border-top:1px solid ${C.border}; justify-content:space-between; padding-left:4px; padding-right:4px; }
         .sc-mob-stats .sc-stat { flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-start; }
-        .sc-mob-stats .sc-stat-label { font-size:13px; font-weight:600; text-transform:capitalize; color:${C.muted}; white-space:nowrap; }
-        .sc-mob-stats .sc-stat-value { font-size:13px; font-weight:600; color:${C.navyDark}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sc-mob-stats .sc-stat-label { font-size:16px; font-weight:500; text-transform:capitalize; color:${C.muted}; white-space:nowrap; }
+        .sc-mob-stats .sc-stat-value { font-size:16px; font-weight:600; color:${C.navyDark}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         }
-        .sc-input { width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid ${C.border}; font-size:15px; font-family:var(--font-urbanist,system-ui); background:#fff; outline:none; box-sizing:border-box; transition:border-color 0.15s; color:${C.navyDark}; -webkit-appearance:none; }
+        .sc-input { width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid ${C.border}; font-size:16px; font-weight:500; font-family:var(--font-urbanist,system-ui); background:#fff; outline:none; box-sizing:border-box; transition:border-color 0.15s; color:${C.navyDark}; -webkit-appearance:none; }
         .sc-input:focus { border-color:${C.terracotta}; }
         .sc-input::placeholder { color:${C.muted}; }
-        .sc-resume-btn { padding:10px 20px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:10px; font-size:13px; cursor:pointer; font-weight:700; white-space:nowrap; font-family:var(--font-urbanist,system-ui); transition:background 0.2s,color 0.2s; }
+        .sc-resume-btn { padding:10px 20px; height:42px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:10px; font-size:14px; cursor:pointer; font-weight:700; white-space:nowrap; font-family:var(--font-urbanist,system-ui); transition:background 0.2s,color 0.2s; display:inline-flex; align-items:center; }
         .sc-resume-btn:hover { background:#fff; color:${C.terracotta}; }
-        .sc-btn-primary { height:48px; padding:0 28px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
-        .sc-btn-primary:hover { background:#a8471d; }
+        .sc-btn-primary { height:42px; padding:0 28px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
+        .sc-btn-primary:hover { background:${C.white}; color:${C.terracotta}; border:2px solid ${C.terracotta}; }
         .sc-btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
         .sc-btn-outline { height:48px; padding:0 28px; background:transparent; color:${C.navyDark}; border:2px solid ${C.navyDark}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
         .sc-btn-outline:hover { background:${C.navyDark}; color:#fff; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         .sc-header { min-height:393px; height:393px; overflow:hidden; }
@@ -205,13 +408,45 @@ export default function SymptomCheckerHomePage() {
           .sc-guest-grid { grid-template-columns:1fr !important; }
           .sc-btn-primary,.sc-btn-outline { width:100%; box-sizing:border-box; }
           .sc-btn-row { flex-direction:column !important; }
+          .sc-hiw_cards {
+            margin: 0 auto !important;
+            max-width: 88%;
+            }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         .sch-arrow-link { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; text-decoration: none; transition: gap 0.2s ease; }
         .sch-arrow-link:hover { gap: 8px; }
         .sch-arrow-link .arr-icon { display: inline-block; transition: transform 0.2s ease; }
         .sch-arrow-link:hover .arr-icon { transform: translateX(3px); }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
       `}</style>
@@ -336,7 +571,7 @@ export default function SymptomCheckerHomePage() {
           <div style={{ height: "31px" }} />
           <p
             style={{
-              fontSize: "11px",
+              fontSize: "13px",
               fontWeight: "700",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
@@ -362,6 +597,7 @@ export default function SymptomCheckerHomePage() {
           <p
             style={{
               fontSize: "17px",
+              fontWeight: 500,
               color: "rgba(255,255,255,0.65)",
               margin: 0,
               lineHeight: "1.75",
@@ -378,9 +614,13 @@ export default function SymptomCheckerHomePage() {
       <div style={{ background: C.cream }}>
         <div
           className="pp-container"
-          style={{ padding: "56px 24px 80px", boxSizing: "border-box" }}
+          style={{
+            paddingTop: "56px",
+            paddingBottom: "80px",
+            boxSizing: "border-box",
+          }}
         >
-          <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+          <div className="pp-container-text">
             {/* ── HOW IT WORKS ── */}
             <div style={{ marginBottom: "48px" }}>
               <p
@@ -388,7 +628,7 @@ export default function SymptomCheckerHomePage() {
                   fontSize: "11px",
                   fontWeight: "700",
                   textTransform: "uppercase",
-                  letterSpacing: "0.08em",
+                  letterSpacing: "0.10em",
                   color: C.muted,
                   margin: "0 0 24px",
                 }}
@@ -406,88 +646,93 @@ export default function SymptomCheckerHomePage() {
               >
                 {[
                   {
-                    icon: "🔍",
+                    icon: Search,
                     step: "01",
                     title: "Pick the area",
                     body: "Tell us what part of your pet's body or behavior has changed.",
                   },
                   {
-                    icon: "🕐",
+                    icon: Clock,
                     step: "02",
                     title: "How long",
                     body: "Let us know when it started — minutes ago or days.",
                   },
                   {
-                    icon: "🌡️",
+                    icon: Thermometer,
                     step: "03",
                     title: "Severity",
                     body: "Rate how serious it seems. You know your pet best.",
                   },
-                ].map((s) => (
-                  <div key={s.step} className="sc-step-outer">
-                    <div className="sc-step-inner">
-                      {/* Number watermark — faint terracotta on white */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "12px",
-                          right: "16px",
-                          fontSize: "64px",
-                          fontWeight: "800",
-                          color: "rgba(207,92,54,0.10)",
-                          lineHeight: 1,
-                          userSelect: "none",
-                          pointerEvents: "none",
-                        }}
-                      >
-                        {s.step}
+                ].map((s) => {
+                  const Icon = s.icon;
+                  return (
+                    <div key={s.step} className="sc-step-outer">
+                      <div className="sc-step-inner">
+                        {/* Number watermark — faint terracotta on white */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "12px",
+                            right: "16px",
+                            fontSize: "64px",
+                            fontWeight: "800",
+                            color: "rgba(207,92,54,0.10)",
+                            lineHeight: 1,
+                            userSelect: "none",
+                            pointerEvents: "none",
+                          }}
+                        >
+                          {s.step}
+                        </div>
+                        <div
+                          style={{
+                            width: "56px",
+                            height: "56px",
+                            borderRadius: "16px",
+                            background: C.cream,
+                            border: `1px solid ${C.border}`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            margin: "0 auto 18px",
+                            color: C.terracotta,
+                          }}
+                        >
+                          <Icon size={26} strokeWidth={2} />
+                        </div>
+                        <h3
+                          style={{
+                            fontSize: "20px",
+                            fontWeight: "800",
+                            color: C.navyDark,
+                            margin: "0 0 10px",
+                            fontFamily: "var(--font-urbanist,system-ui)",
+                          }}
+                        >
+                          {s.title}
+                        </h3>
+                        <p
+                          class="sc-hiw_cards"
+                          style={{
+                            fontSize: "16px",
+                            fontWeight: 500,
+                            color: C.slate,
+                            lineHeight: "1.7",
+                            margin: 0,
+                          }}
+                        >
+                          {s.body}
+                        </p>
                       </div>
-                      <div
-                        style={{
-                          width: "56px",
-                          height: "56px",
-                          borderRadius: "16px",
-                          background: C.cream,
-                          border: `1px solid ${C.border}`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "26px",
-                          margin: "0 auto 18px",
-                        }}
-                      >
-                        {s.icon}
-                      </div>
-                      <h3
-                        style={{
-                          fontSize: "17px",
-                          fontWeight: "800",
-                          color: C.navyDark,
-                          margin: "0 0 10px",
-                          fontFamily: "var(--font-urbanist,system-ui)",
-                        }}
-                      >
-                        {s.title}
-                      </h3>
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          color: C.slate,
-                          lineHeight: "1.7",
-                          margin: 0,
-                        }}
-                      >
-                        {s.body}
-                      </p>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
             <div
               style={{
-                height: "1px",
+                height: "1.5px",
                 background: C.border,
                 marginBottom: "40px",
               }}
@@ -498,6 +743,7 @@ export default function SymptomCheckerHomePage() {
               <>
                 {resumeData && (
                   <div
+                    className="sc-resume-card"
                     style={{
                       background: "#EDFAF3",
                       border: "1px solid #A7F3D0",
@@ -515,24 +761,70 @@ export default function SymptomCheckerHomePage() {
                         style={{
                           margin: "0 0 2px",
                           fontWeight: "700",
-                          fontSize: "14px",
+                          fontSize: "16px",
                           color: C.success,
                         }}
                       >
                         Resume check for {resumeData.selectedPet?.name}
                       </p>
                       <p
-                        style={{ margin: 0, fontSize: "13px", color: C.slate }}
+                        style={{
+                          margin: 0,
+                          fontSize: "15px",
+                          fontWeight: "500",
+                          color: C.slate,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          flexWrap: "wrap",
+                        }}
                       >
-                        {resumeData.messages.length - 1} message
-                        {resumeData.messages.length !== 2 ? "s" : ""} ·{" "}
-                        {resumeData.triageResult
-                          ? `Result: ${resumeData.triageResult === "EMERGENCY" ? "🔴 Emergency" : resumeData.triageResult === "SEE_VET" ? "🟡 See vet" : "🟢 Monitor"}`
-                          : "In progress"}
+                        <span>
+                          {resumeData.messages.length - 1} message
+                          {resumeData.messages.length !== 2 ? "s" : ""} ·
+                        </span>
+                        {resumeData.triageResult ? (
+                          <>
+                            <span>Result:</span>
+                            <span
+                              style={{
+                                display: "inline-block",
+                                width: 10,
+                                height: 10,
+                                borderRadius: "50%",
+                                background:
+                                  resumeData.triageResult === "EMERGENCY"
+                                    ? "#C94040"
+                                    : resumeData.triageResult === "SEE_VET"
+                                      ? "#D9A21B"
+                                      : "#1A6641",
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span>
+                              {resumeData.triageResult === "EMERGENCY"
+                                ? "Emergency"
+                                : resumeData.triageResult === "SEE_VET"
+                                  ? "See vet soon"
+                                  : "Monitor at home"}
+                            </span>
+                          </>
+                        ) : (
+                          <span>In progress</span>
+                        )}
                       </p>
                     </div>
                     <button onClick={resumeSession} className="sc-resume-btn">
-                      Resume →
+                      Resume{" "}
+                      <ArrowRight
+                        size={14}
+                        strokeWidth={2.4}
+                        style={{
+                          display: "inline",
+                          verticalAlign: "top !imporant",
+                          marginLeft: "4px",
+                        }}
+                      />
                     </button>
                   </div>
                 )}
@@ -541,7 +833,7 @@ export default function SymptomCheckerHomePage() {
                     <h2
                       style={{
                         margin: "0 0 6px",
-                        fontSize: "20px",
+                        fontSize: "22px",
                         fontWeight: "800",
                         color: C.navyDark,
                         fontFamily: "var(--font-urbanist,system-ui)",
@@ -552,7 +844,8 @@ export default function SymptomCheckerHomePage() {
                     <p
                       style={{
                         margin: "0 0 20px",
-                        fontSize: "15px",
+                        fontSize: "16px",
+                        fontWeight: 500,
                         color: C.muted,
                       }}
                     >
@@ -566,49 +859,28 @@ export default function SymptomCheckerHomePage() {
                       }}
                     >
                       {pets.map((pet) => {
-                        const emoji =
-                          pet.species === "Dog"
-                            ? "🐶"
-                            : pet.species === "Cat"
-                              ? "🐱"
-                              : pet.species === "Bird"
-                                ? "🐦"
-                                : pet.species === "Rabbit"
-                                  ? "🐰"
-                                  : "🐾";
+                        const SpeciesIcon =
+                          BANNER_LUCIDE[speciesBucket(pet.species)] || PawPrint;
                         const lastCheck = lastChecks[pet.id];
                         return (
                           <div key={pet.id} className="sc-pet-card">
                             {/* Top row wrapper: avatar + info (col1 row1 in mobile grid) */}
                             <div className="sc-top-row">
-                              {/* Avatar */}
-                              <div
-                                style={{
-                                  width: "52px",
-                                  height: "52px",
-                                  borderRadius: "50%",
-                                  background: C.cream,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  overflow: "hidden",
-                                  flexShrink: 0,
-                                  fontSize: "22px",
-                                  border: `2px solid ${C.border}`,
-                                }}
-                              >
+                              {/* Avatar - Desktop */}
+                              <div className="sc-avatar sc-avatar-desktop">
                                 {pet.photo_url ? (
-                                  <img
-                                    src={pet.photo_url}
-                                    alt={pet.name}
-                                    style={{
-                                      width: "100%",
-                                      height: "100%",
-                                      objectFit: "cover",
-                                    }}
-                                  />
+                                  <img src={pet.photo_url} alt={pet.name} />
                                 ) : (
-                                  emoji
+                                  <SpeciesIcon size={22} strokeWidth={2} />
+                                )}
+                              </div>
+
+                              {/* Avatar - Mobile */}
+                              <div className="sc-avatar sc-avatar-mobile">
+                                {pet.photo_url ? (
+                                  <img src={pet.photo_url} alt={pet.name} />
+                                ) : (
+                                  <SpeciesIcon size={22} strokeWidth={2} />
                                 )}
                               </div>
 
@@ -617,8 +889,8 @@ export default function SymptomCheckerHomePage() {
                                 <p
                                   style={{
                                     margin: 0,
-                                    fontWeight: "700",
-                                    fontSize: "16px",
+                                    fontWeight: "800",
+                                    fontSize: "20px",
                                     color: C.navyDark,
                                     fontFamily:
                                       "var(--font-urbanist,system-ui)",
@@ -626,26 +898,38 @@ export default function SymptomCheckerHomePage() {
                                 >
                                   {pet.name}
                                 </p>
-                                <p
-                                  style={{
-                                    margin: "2px 0 0",
-                                    fontSize: "13px",
-                                    fontWeight: "600",
-                                    color: C.muted,
-                                  }}
-                                >
-                                  {[pet.species, pet.breed]
-                                    .filter(Boolean)
-                                    .join(" · ")}
-                                </p>
+                                {pet.species && (
+                                  <p
+                                    style={{
+                                      // margin: "2px 0 0",
+                                      fontSize: "16px",
+                                      fontWeight: "500",
+                                      color: C.muted,
+                                    }}
+                                  >
+                                    {pet.species}
+                                  </p>
+                                )}
+                                {pet.breed && (
+                                  <p
+                                    style={{
+                                      margin: "2px 0 0",
+                                      fontSize: "16px",
+                                      fontWeight: "600",
+                                      color: C.navyDark,
+                                    }}
+                                  >
+                                    {pet.breed}
+                                  </p>
+                                )}
                                 {lastCheck &&
                                   (() => {
-                                    const e =
+                                    const dotColor =
                                       lastCheck.triage_result === "EMERGENCY"
-                                        ? "🔴"
+                                        ? "#C94040"
                                         : lastCheck.triage_result === "SEE_VET"
-                                          ? "🟡"
-                                          : "🟢";
+                                          ? "#D9A21B"
+                                          : "#1A6641";
                                     const l =
                                       lastCheck.triage_result === "EMERGENCY"
                                         ? "Emergency"
@@ -660,7 +944,7 @@ export default function SymptomCheckerHomePage() {
                                     });
                                     return (
                                       <p
-                                        className="sc-lastcheck"
+                                        className="sc-lastcheck sc-lastcheck-inline"
                                         onClick={(ev) => {
                                           ev.stopPropagation();
                                           try {
@@ -685,23 +969,104 @@ export default function SymptomCheckerHomePage() {
                                         }}
                                         style={{
                                           margin: "4px 0 0",
-                                          fontSize: "12px",
+                                          fontSize: "16px",
                                           fontWeight: "600",
                                           color: C.terracotta,
-                                          //textDecoration: "underline",
-                                          //textDecorationStyle: "dotted",
                                           textUnderlineOffset: "2px",
                                           cursor: "pointer",
-                                          display: "inline-block",
+                                          alignItems: "center",
+                                          gap: "6px",
                                         }}
                                       >
-                                        {e} {l} · {d}
+                                        <span
+                                          style={{
+                                            display: "inline-block",
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: "50%",
+                                            background: dotColor,
+                                            flexShrink: 0,
+                                          }}
+                                        />
+                                        {l} · {d}
                                       </p>
                                     );
                                   })()}
                               </div>
                             </div>
                             {/* end sc-top-row */}
+
+                            {/* Mobile-only lastCheck row (sits between top-row and divider) */}
+                            {lastCheck &&
+                              (() => {
+                                const dotColor =
+                                  lastCheck.triage_result === "EMERGENCY"
+                                    ? "#C94040"
+                                    : lastCheck.triage_result === "SEE_VET"
+                                      ? "#D9A21B"
+                                      : "#1A6641";
+                                const l =
+                                  lastCheck.triage_result === "EMERGENCY"
+                                    ? "Emergency"
+                                    : lastCheck.triage_result === "SEE_VET"
+                                      ? "See vet soon"
+                                      : "Monitor at home";
+                                const d = new Date(
+                                  lastCheck.created_at,
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                });
+                                return (
+                                  <p
+                                    className="sc-lastcheck sc-lastcheck-row"
+                                    onClick={(ev) => {
+                                      ev.stopPropagation();
+                                      try {
+                                        const t = JSON.parse(
+                                          lastCheck.transcript || "[]",
+                                        );
+                                        sessionStorage.setItem(
+                                          SESSION_KEY,
+                                          JSON.stringify({
+                                            selectedPet: pet,
+                                            messages: t,
+                                            triageResult:
+                                              lastCheck.triage_result,
+                                            differentials:
+                                              lastCheck.differentials || [],
+                                            guestMode: false,
+                                            freeCheckUsed: false,
+                                          }),
+                                        );
+                                      } catch (err) {}
+                                      router.push("/symptom-checker/chat");
+                                    }}
+                                    style={{
+                                      margin: 0,
+                                      fontSize: "16px",
+                                      fontWeight: "600",
+                                      color: C.terracotta,
+                                      cursor: "pointer",
+                                      alignItems: "center",
+                                      gap: "6px",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        display: "inline-block",
+                                        width: 10,
+                                        height: 10,
+                                        borderRadius: "50%",
+                                        background: dotColor,
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                    {l} · {d}
+                                  </p>
+                                );
+                              })()}
 
                             {/* Vertical divider — desktop only, inset top/bottom */}
                             <div className="sc-vdiv" />
@@ -712,25 +1077,16 @@ export default function SymptomCheckerHomePage() {
                                 <div className="sc-stat">
                                   <span className="sc-stat-label">Age:</span>
                                   <span className="sc-stat-value">
-                                    {(() => {
-                                      const yrs = Math.floor(
-                                        (Date.now() - new Date(pet.birthday)) /
-                                          (365.25 * 24 * 3600 * 1000),
-                                      );
-                                      return yrs < 1
-                                        ? "< 1 yr"
-                                        : yrs === 1
-                                          ? "1 yr"
-                                          : `${yrs} yrs`;
-                                    })()}
+                                    {formatAge(pet.birthday)}
                                   </span>
                                 </div>
                               )}
-                              {pet.weight_lbs && (
+                              {pet.weight_value && (
                                 <div className="sc-stat">
                                   <span className="sc-stat-label">Weight:</span>
                                   <span className="sc-stat-value">
-                                    {pet.weight_lbs} lbs
+                                    {pet.weight_value}{" "}
+                                    {pet.weight_unit || "lbs"}
                                   </span>
                                 </div>
                               )}
@@ -750,25 +1106,16 @@ export default function SymptomCheckerHomePage() {
                                 <div className="sc-stat">
                                   <span className="sc-stat-label">Age:</span>
                                   <span className="sc-stat-value">
-                                    {(() => {
-                                      const yrs = Math.floor(
-                                        (Date.now() - new Date(pet.birthday)) /
-                                          (365.25 * 24 * 3600 * 1000),
-                                      );
-                                      return yrs < 1
-                                        ? "< 1 yr"
-                                        : yrs === 1
-                                          ? "1 yr"
-                                          : `${yrs} yrs`;
-                                    })()}
+                                    {formatAge(pet.birthday)}
                                   </span>
                                 </div>
                               )}
-                              {pet.weight_lbs && (
+                              {pet.weight_value && (
                                 <div className="sc-stat">
                                   <span className="sc-stat-label">Weight:</span>
                                   <span className="sc-stat-value">
-                                    {pet.weight_lbs} lbs
+                                    {pet.weight_value}{" "}
+                                    {pet.weight_unit || "lbs"}
                                   </span>
                                 </div>
                               )}
@@ -787,7 +1134,7 @@ export default function SymptomCheckerHomePage() {
                               onClick={() => startNewCheck(pet)}
                               aria-label="Start check"
                             >
-                              &#8250;
+                              <ChevronRight size={20} strokeWidth={2.4} />
                             </button>
                           </div>
                         );
@@ -804,13 +1151,13 @@ export default function SymptomCheckerHomePage() {
                       border: `1px solid ${C.border}`,
                     }}
                   >
-                    <div style={{ fontSize: "44px", marginBottom: "16px" }}>
-                      🐾
+                    <div style={{ marginBottom: "16px", color: C.terracotta }}>
+                      <PawPrint size={44} strokeWidth={1.8} />
                     </div>
                     <h3
                       style={{
                         margin: "0 0 8px",
-                        fontSize: "18px",
+                        fontSize: "22px",
                         fontWeight: "800",
                         color: C.navyDark,
                         fontFamily: "var(--font-urbanist,system-ui)",
@@ -821,15 +1168,21 @@ export default function SymptomCheckerHomePage() {
                     <p
                       style={{
                         margin: "0 0 24px",
-                        fontSize: "15px",
+                        fontSize: "16px",
+                        fontWeight: "500",
                         color: C.slate,
                       }}
                     >
                       You'll need to add a pet to your profile before running a
                       symptom check.
                     </p>
-                    <Link href="/profile" className="sc-btn-primary">
-                      Add a Pet →
+                    <Link href="/profile?add=1" className="sc-btn-primary">
+                      Add a Pet{" "}
+                      <ArrowRight
+                        size={14}
+                        strokeWidth={2.4}
+                        style={{ marginLeft: "4px" }}
+                      />
                     </Link>
                   </div>
                 )}
@@ -839,7 +1192,7 @@ export default function SymptomCheckerHomePage() {
                 <h2
                   style={{
                     margin: "0 0 6px",
-                    fontSize: "20px",
+                    fontSize: "22px",
                     fontWeight: "800",
                     color: C.navyDark,
                     fontFamily: "var(--font-urbanist,system-ui)",
@@ -896,7 +1249,7 @@ export default function SymptomCheckerHomePage() {
                             color: C.muted,
                             marginBottom: "6px",
                             textTransform: "uppercase",
-                            letterSpacing: "0.06em",
+                            letterSpacing: "0.10em",
                             fontWeight: "700",
                           }}
                         >
@@ -929,7 +1282,12 @@ export default function SymptomCheckerHomePage() {
                       disabled={!guestPet.species}
                       className="sc-btn-primary"
                     >
-                      Start Free Check →
+                      Start Free Check{" "}
+                      <ArrowRight
+                        size={14}
+                        strokeWidth={2.4}
+                        style={{ marginLeft: "4px" }}
+                      />
                     </button>
                     <Link href="/auth?tab=signup" className="sc-btn-outline">
                       Create Account
@@ -942,12 +1300,25 @@ export default function SymptomCheckerHomePage() {
             <p
               style={{
                 marginTop: "40px",
-                fontSize: "12px",
+                fontSize: "13px",
+                fontWeight: "500",
                 color: C.muted,
                 textAlign: "center",
                 lineHeight: "1.8",
               }}
             >
+              {/* <span
+                style={{
+                  display: "inline-block",
+                  verticalAlign: "middle",
+                  marginRight: "4px",
+                  marginTop: "-7px",
+                  left: "48px",
+                  padding: "",
+                }}
+              >
+                ⚕️
+              </span> */}
               ⚕️ PetParrk provides triage guidance only. We are not
               veterinarians or medical professionals.
               <br />

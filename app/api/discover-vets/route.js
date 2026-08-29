@@ -1,9 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+// app/api/discover-vets/route.js
+//
+// Updated 2026-07-17:
+//   • Auth: POST + requireAdmin('approve_vets') check
+//   • Removed module-level service role client; use supabaseAdmin from requireAdmin
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-);
+import { requireAdmin } from "@/lib/adminAuth";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
@@ -257,8 +258,6 @@ function cleanWebsiteUrl(url) {
 }
 
 // ── Format hours from Google Places weekday_text ──────────────────────────────
-// Google returns: ["Monday: 8:00 AM – 4:00 PM", ...]
-// We want:        "Monday: 8:00 am – 4:00 pm\nTuesday: ..."
 function formatHours(weekday_text) {
   if (!weekday_text || !Array.isArray(weekday_text)) return null;
   return weekday_text
@@ -275,9 +274,8 @@ function formatHours(weekday_text) {
 function cleanVetName(name) {
   if (!name) return name;
   return name
-    .replace(/\s*\([^)]*\)\s*$/, "") // strip trailing (SAN LEANDRO) etc
+    .replace(/\s*\([^)]*\)\s*$/, "")
     .replace(/\s*-\s*[A-Z\s]+$/, (match) => {
-      // Only strip if it looks like an all-caps city suffix
       return match === match.toUpperCase() ? "" : match;
     })
     .trim();
@@ -306,13 +304,11 @@ async function getNeighborhood(address, city, zip) {
   }
 }
 
-// ── Extract zip from formatted address ───────────────────────────────────────
 function extractZip(address) {
   const match = address?.match(/\b(\d{5})\b/);
   return match ? match[1] : null;
 }
 
-// ── Extract city from formatted address ──────────────────────────────────────
 function extractCity(address) {
   if (!address) return null;
   const parts = address.split(",");
@@ -324,7 +320,6 @@ function extractCity(address) {
   return null;
 }
 
-// ── Search Google Places for vets near a zip code ────────────────────────────
 async function searchVetsNearZip(zip) {
   const query = `veterinarian+${zip}+CA`;
   const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${GOOGLE_API_KEY}`;
@@ -333,7 +328,6 @@ async function searchVetsNearZip(zip) {
   return data.results || [];
 }
 
-// ── Get place details (hours, website) ───────────────────────────────────────
 async function getPlaceDetails(placeId) {
   const fields =
     "name,formatted_address,formatted_phone_number,website,opening_hours,vicinity";
@@ -343,13 +337,17 @@ async function getPlaceDetails(placeId) {
   return data.result || {};
 }
 
-// ── Normalize name for duplicate detection ────────────────────────────────────
 function normalizeName(name) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
-export async function GET(req) {
+export async function POST(request) {
+  // Admin auth gate — must be authenticated admin with 'approve_vets' permission
+  const auth = await requireAdmin(request, "approve_vets");
+  if (!auth.ok) return auth.response;
+  const { supabaseAdmin } = auth;
+
   if (!GOOGLE_API_KEY) {
     return Response.json(
       { error: "GOOGLE_PLACES_API_KEY not set" },
@@ -357,18 +355,17 @@ export async function GET(req) {
     );
   }
 
-  const { searchParams } = new URL(req.url);
+  const { searchParams } = new URL(request.url);
   const maxZips = parseInt(searchParams.get("maxZips") || "20");
   const offset = parseInt(searchParams.get("offset") || "0");
 
   const results = { found: 0, added: 0, skipped: 0, errors: [] };
 
   try {
-    // Load existing names and phones to check duplicates
-    const { data: existingVets } = await supabase
+    const { data: existingVets } = await supabaseAdmin
       .from("vets")
       .select("name, phone");
-    const { data: existingPending } = await supabase
+    const { data: existingPending } = await supabaseAdmin
       .from("pending_vets")
       .select("name, phone");
 
@@ -392,14 +389,12 @@ export async function GET(req) {
           try {
             const details = await getPlaceDetails(place.place_id);
 
-            // ── Clean name ──────────────────────────────────────────────
             const cleanedName = cleanVetName(details.name || place.name || "");
             if (!cleanedName) {
               results.skipped++;
               continue;
             }
 
-            // ── Duplicate check ─────────────────────────────────────────
             const phone = details.formatted_phone_number || null;
             if (
               existingNames.has(normalizeName(cleanedName)) ||
@@ -409,30 +404,25 @@ export async function GET(req) {
               continue;
             }
 
-            // ── Extract address parts ───────────────────────────────────
             const formattedAddress =
               details.formatted_address || place.formatted_address || "";
             const addressLine = formattedAddress.split(",")[0]?.trim() || null;
             const city = extractCity(formattedAddress);
             const zipCode = extractZip(formattedAddress) || zip;
 
-            // ── Clean website ───────────────────────────────────────────
             const website = cleanWebsiteUrl(details.website || null);
 
-            // ── Format hours ────────────────────────────────────────────
             const hours = formatHours(
               details.opening_hours?.weekday_text || null,
             );
 
-            // ── Get neighborhood from Geocoding API ─────────────────────
             let neighborhood = null;
             if (addressLine && city) {
               neighborhood = await getNeighborhood(addressLine, city, zipCode);
               await new Promise((r) => setTimeout(r, 100));
             }
 
-            // ── Insert into pending_vets ────────────────────────────────
-            const { error } = await supabase.from("pending_vets").insert({
+            const { error } = await supabaseAdmin.from("pending_vets").insert({
               name: cleanedName,
               address: addressLine,
               city: city,

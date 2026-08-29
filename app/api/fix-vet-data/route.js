@@ -1,9 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+// app/api/fix-vet-data/route.js
+//
+// Updated 2026-07-17:
+//   • Auth: POST + requireAdmin('approve_vets') check
+//   • Removed module-level service role client; use supabaseAdmin from requireAdmin
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-);
+import { requireAdmin } from "@/lib/adminAuth";
 
 const PLACES_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
@@ -74,8 +75,13 @@ async function getPlaceDetails(name, address, city) {
   }
 }
 
-export async function GET(req) {
-  const { searchParams } = new URL(req.url);
+export async function POST(request) {
+  // Admin auth gate — must be authenticated admin with 'approve_vets' permission
+  const auth = await requireAdmin(request, "approve_vets");
+  if (!auth.ok) return auth.response;
+  const { supabaseAdmin } = auth;
+
+  const { searchParams } = new URL(request.url);
   const offset = parseInt(searchParams.get("offset") || "0");
   const limit = parseInt(searchParams.get("limit") || "20");
   const dryRun = searchParams.get("dry_run") === "true";
@@ -89,7 +95,7 @@ export async function GET(req) {
     );
   }
 
-  const { data: vets, error } = await supabase
+  const { data: vets, error } = await supabaseAdmin
     .from(table)
     .select(
       "id, name, address, city, state, zip_code, website, hours, neighborhood",
@@ -172,7 +178,7 @@ export async function GET(req) {
 
       if (Object.keys(updates).length > 0) {
         if (!dryRun) {
-          const { error: updateError } = await supabase
+          const { error: updateError } = await supabaseAdmin
             .from(table)
             .update(updates)
             .eq("id", vet.id);

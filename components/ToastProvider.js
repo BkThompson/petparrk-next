@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback } from "react";
+import { Check, X } from "lucide-react";
 
 const ToastContext = createContext(null);
 
@@ -48,13 +49,20 @@ export default function ToastProvider({ children }) {
               borderRadius: "10px",
               fontSize: "14px",
               fontWeight: "600",
-              fontFamily: "system-ui, sans-serif",
+              fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
               boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
               whiteSpace: "nowrap",
               animation: "fadeInUp 0.2s ease",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
           >
-            {toast.type === "success" ? "✅ " : "❌ "}
+            {toast.type === "success" ? (
+              <Check size={16} strokeWidth={2.6} />
+            ) : (
+              <X size={16} strokeWidth={2.6} />
+            )}
             {toast.message}
           </div>
         ))}
