@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-const EFFECTIVE_DATE = "April 14, 2026";
+const EFFECTIVE_DATE = "September 2, 2026";
 const CONTACT_EMAIL = "[legal@petparrk.com]";
 const COMPANY_ADDRESS = "[Company Address], Oakland, California";
 
@@ -42,7 +42,7 @@ export default function TermsOfService() {
             <h2 className="legal-h2">1. Acceptance of Terms</h2>
             <p className="legal-p">
               These Terms of Service ("Terms") constitute a legally binding
-              agreement between you ("User" or "you") and PetParrk, Inc.
+              agreement between you ("User" or "you") and PetParrk, LLC
               ("PetParrk," "we," "us," or "our") governing your access to and
               use of the PetParrk platform, including our website, applications,
               and all related services (collectively, the "Service").
@@ -74,8 +74,8 @@ export default function TermsOfService() {
             </p>
             <ul className="legal-ul">
               <li>
-                A directory of veterinary clinics in the San Francisco Bay Area,
-                including community-submitted pricing information;
+                A directory of veterinary clinics in California, including
+                pricing information gathered and verified by PetParrk;
               </li>
               <li>
                 An AI-powered symptom triage tool that provides general guidance
@@ -83,12 +83,19 @@ export default function TermsOfService() {
               </li>
               <li>
                 A pet health profile feature allowing users to maintain records
-                of their pet's health history, vaccinations, and veterinary
+                of their pet&apos;s health history, vaccinations, and veterinary
                 visits;
               </li>
+              <li className="legal-li">
+                Optional shareable cards. You may generate a link that makes
+                selected pet information viewable by anyone who has it. Shared
+                links are not password protected. You are responsible for who
+                you share a link with, and you may stop sharing at any time;
+              </li>
               <li>
-                Community-sourced veterinary pricing data submitted by
-                registered users.
+                Veterinary pricing information gathered by PetParrk, which may
+                include prices submitted by registered users. All pricing is
+                reviewed and verified by PetParrk before publication.
               </li>
             </ul>
             <p className="legal-p">
@@ -120,9 +127,13 @@ export default function TermsOfService() {
             <h2 className="legal-h2">4. Account Registration and Security</h2>
             <p className="legal-p">
               Certain features of the Service require registration of an
-              account. When you register, you agree to provide accurate,
-              complete, and current information and to update such information
-              as necessary to maintain its accuracy.
+              account. A limited number of symptom checks may be run without an
+              account. That allowance is applied per connection, is offered as a
+              courtesy, and may be changed, limited, or withdrawn at any time
+              without notice. Attempting to circumvent it is a breach of these
+              Terms. When you register, you agree to provide accurate, complete,
+              and current information and to update such information as
+              necessary to maintain its accuracy.
             </p>
             <p className="legal-p">
               You are solely responsible for maintaining the confidentiality of
@@ -172,11 +183,12 @@ export default function TermsOfService() {
           <div className="legal-section">
             <h2 className="legal-h2">6. Pricing Data and Accuracy</h2>
             <p className="legal-p">
-              Pricing information displayed on the Service is submitted by
-              community members based on their individual experiences with
-              veterinary clinics. PetParrk reviews submissions for plausibility
-              before publishing but does not independently verify the accuracy
-              of any submitted price.
+              Pricing information displayed on the Service is gathered by
+              PetParrk and may include prices submitted by registered users.
+              Every price is reviewed and verified by PetParrk before it is
+              published, and each is dated and tied to a specific service at a
+              specific clinic. Verification confirms a price as of the date
+              shown; it is not a guarantee that the price remains current.
             </p>
             <p className="legal-p">
               Displayed prices are estimates only. Actual prices charged by
@@ -205,11 +217,14 @@ export default function TermsOfService() {
             <h3 className="legal-h3">7.1 License Grant</h3>
             <p className="legal-p">
               By submitting pricing data, reviews, or other content to the
-              Service ("User Content"), you grant PetParrk a non-exclusive,
-              worldwide, royalty-free license to use, display, reproduce, and
-              distribute such User Content solely for the purpose of operating
-              and improving the Service. You retain ownership of your User
-              Content.
+              Service (&quot;User Content&quot;), you grant PetParrk a
+              non-exclusive, worldwide, royalty-free license to use, display,
+              reproduce, and distribute such User Content solely for the purpose
+              of operating and improving the Service. Where you choose to
+              publish User Content through a shareable link, you additionally
+              authorise PetParrk to display that content to anyone holding the
+              link, for as long as you keep sharing enabled. You retain
+              ownership of your User Content.
             </p>
             <h3 className="legal-h3">7.2 Representations and Warranties</h3>
             <p className="legal-p">
@@ -306,6 +321,12 @@ export default function TermsOfService() {
               <li>
                 Transmit any viruses, malware, or other malicious code through
                 the Service;
+              </li>
+              <li className="legal-li">
+                Circumvent, disable, or attempt to defeat any usage limit,
+                access control, rate limit, or bot-detection measure, including
+                by clearing or altering stored data, using multiple accounts, or
+                masking your network address to obtain additional free use;
               </li>
               <li>
                 Impersonate any person or entity or falsely represent your
@@ -541,7 +562,7 @@ export default function TermsOfService() {
               Questions regarding these Terms should be directed to:
             </p>
             <p className="legal-p">
-              <strong>PetParrk, Inc.</strong>
+              <strong>PetParrk, LLC</strong>
               <br />
               Email:{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">

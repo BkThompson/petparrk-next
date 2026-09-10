@@ -796,11 +796,12 @@ function EditorView({ pet, onPetChange }) {
           justify-content: center;
         }
         .pce-photo-change-btn {
+          /* 32px before. */
           position: absolute;
           bottom: 4px;
           right: 4px;
-          width: 32px;
-          height: 32px;
+          width: 44px;
+          height: 44px;
           border-radius: 9999px;
           background: var(--color-terracotta, #CF5C36);
           color: #fff;
@@ -898,6 +899,9 @@ function EditorView({ pet, onPetChange }) {
           margin-bottom: 12px;
         }
         .pce-expand-all-btn {
+          display: inline-flex;
+          align-items: center;
+          min-height: 44px;
           background: none;
           border: 2px solid var(--color-border, #EDE8E0);
           // border-radius: 9999px;
@@ -1077,6 +1081,8 @@ function EditorView({ pet, onPetChange }) {
         }
 
         .pce-field-hint {
+          /* 110ch at 1024. */
+          max-width: 68ch;
           font-size: 13px;
           font-weight: 500;
           color: #717A86;
@@ -1200,6 +1206,8 @@ function EditorView({ pet, onPetChange }) {
         /* Used by TextareaCard view-mode (Allergies, Medical conditions, Quirks)
            — renders the multi-line text content like body prose, not bold title. */
         .pce-list-item-prose {
+          /* 88ch at 900 and above. */
+          max-width: 68ch;
           font-size: 16px;
           font-weight: 500;
           color: var(--color-navy-dark, #172531);
@@ -1311,12 +1319,12 @@ function EditorView({ pet, onPetChange }) {
 
           /* Vaccination cards: Given, Given by, Next due */
           .pce-list-item-meta--vaccinations .pce-list-item-meta-label {
-            min-width: 67px;
+            min-width: 43px;
           }
 
           /* Medication cards: Dose, Given, Given by, Frequency */
           .pce-list-item-meta--medications .pce-list-item-meta-label {
-            min-width: 76px;
+            min-width: 37px;
           }
         }
 
@@ -1422,6 +1430,8 @@ function EditorView({ pet, onPetChange }) {
         }
 
         .pce-notes-text {
+          /* 88ch at 900 and above. */
+          max-width: 68ch;
           font-size: 16px;
           font-weight: 500;
           color: var(--color-navy-dark, #172531);
@@ -1542,8 +1552,6 @@ function EditorView({ pet, onPetChange }) {
           flex-shrink: 0;
         }
         .pce-icon-btn {
-          // width: 15px;
-          // height: 27px;
           border-radius: 8px;
           padding: 4px;
           background: transparent;
@@ -2618,6 +2626,8 @@ function EditorView({ pet, onPetChange }) {
           align-items: flex-start;
         }
         .pce-list-item-prose {
+          /* 88ch at 900 and above. */
+          max-width: 68ch;
           font-size: 16px;
           line-height: 1.55;
           color: var(--color-navy-dark, #172531);
@@ -2702,6 +2712,8 @@ function EditorView({ pet, onPetChange }) {
           letter-spacing: 0;
         }
         .pce-sub-sub {
+          /* 100ch at 1024. */
+          max-width: 68ch;
           font-size: 16px;
           font-weight: 500;
           color: #717A86;
@@ -2722,7 +2734,9 @@ function EditorView({ pet, onPetChange }) {
           box-shadow: 0 0 0 3px rgba(207,92,54,0.12);
           background: #FFFCFA;
           border-radius: 18px;
-          padding: 20px;
+          /* Top padding reserves a band for the close button, so it sits above
+             the fields instead of over them and the fields run full width. */
+          padding: 52px 20px 20px;
           transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
         }
         /* Inside the glowing form the entry card should blend (no double-card):
@@ -2751,13 +2765,10 @@ function EditorView({ pet, onPetChange }) {
           z-index: 2;
         }
         /* Give the form content room so it never sits under the close X. */
-        .pce-inline-form > .pce-entry-card,
-        .pce-inline-form > .pce-field,
-        .pce-inline-form > .pce-sub-title,
-        .pce-inline-form > h3,
-        .pce-inline-form > .pce-field-grid {
-          padding-right: 34px;
-        }
+        /* The close button used to be cleared horizontally, which shortened
+           every field in the form by 34px — not just the row beside it. The
+           form now reserves space above instead (see .pce-inline-form's
+           padding-top), so children run the full width. */
         .pce-form-close:hover {
           background: rgba(23,37,49,0.06);
           color: var(--color-navy-dark, #172531);
@@ -3311,6 +3322,7 @@ function EditorView({ pet, onPetChange }) {
           inset: 0;
           z-index: 100;
           background: rgba(23,37,49,0.55);
+          -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
@@ -5545,10 +5557,27 @@ function FeedingModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
   // Body scroll-lock with compensation for scrollbar to prevent layout shift
   useEffect(() => {
+    // `overflow: hidden` alone does not stop scrolling in iOS Safari. Pinning
+    // the body and offsetting it by the current scroll is what works. Previous
+    // values are restored rather than cleared, so a modal opening on top of
+    // another doesn't release the page when the inner one closes.
     const scrollY = window.scrollY;
-    document.body.style.overflow = "hidden";
+    const body = document.body;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
     return () => {
-      document.body.style.overflow = "";
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
       window.scrollTo(0, scrollY);
     };
   }, []);
@@ -6162,10 +6191,27 @@ function WalkModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
   }
 
   useEffect(() => {
+    // `overflow: hidden` alone does not stop scrolling in iOS Safari. Pinning
+    // the body and offsetting it by the current scroll is what works. Previous
+    // values are restored rather than cleared, so a modal opening on top of
+    // another doesn't release the page when the inner one closes.
     const scrollY = window.scrollY;
-    document.body.style.overflow = "hidden";
+    const body = document.body;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
     return () => {
-      document.body.style.overflow = "";
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
       window.scrollTo(0, scrollY);
     };
   }, []);
@@ -7020,10 +7066,27 @@ function WeightModal({
   }
 
   useEffect(() => {
+    // `overflow: hidden` alone does not stop scrolling in iOS Safari. Pinning
+    // the body and offsetting it by the current scroll is what works. Previous
+    // values are restored rather than cleared, so a modal opening on top of
+    // another doesn't release the page when the inner one closes.
     const scrollY = window.scrollY;
-    document.body.style.overflow = "hidden";
+    const body = document.body;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
     return () => {
-      document.body.style.overflow = "";
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
       window.scrollTo(0, scrollY);
     };
   }, []);
@@ -9100,10 +9163,25 @@ function ModalShell({ title, onClose, children }) {
   // Body scroll-lock when modal is open. The modal itself has
   // overflow-y: auto so its content stays scrollable.
   useEffect(() => {
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // `overflow: hidden` alone does not stop scrolling in iOS Safari.
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
     return () => {
-      document.body.style.overflow = prevOverflow;
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      window.scrollTo(0, scrollY);
     };
   }, []);
 

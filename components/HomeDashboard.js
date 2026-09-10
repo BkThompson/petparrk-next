@@ -25,6 +25,7 @@ import {
   computeLevelState,
   computeCareCompleteCount,
 } from "../lib/levelSystem";
+import { ArtEmptyPets } from "./BrandArt";
 import {
   Stethoscope,
   PlusCircle,
@@ -215,10 +216,10 @@ export default function HomeDashboard({ session, savedVets = [] }) {
 
   return (
     <section className="hd-band">
-      <div className="hd-wrap">
+      <div className="pp-container hd-wrap">
         <style>{`
         .hd-band { background: #fff; border-bottom: 1px solid ${C.border}; }
-        .hd-wrap { max-width: 1280px; margin: 0 auto; padding: 40px 24px 48px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
+        .hd-wrap { padding-top: 40px; padding-bottom: 48px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
         .hd-greeting { font-size: 26px; font-weight: 800; color: ${C.navyDark}; margin: 0 0 2px; letter-spacing: -0.01em; }
         .hd-sub { font-size: 15px; color: ${C.muted}; margin: 0 0 22px; font-weight: 500; }
         .hd-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; margin-bottom: 16px; }
@@ -257,9 +258,9 @@ export default function HomeDashboard({ session, savedVets = [] }) {
         .hd-check-none { font-size: 16px; color: ${C.muted}; font-weight: 500; }
         .hd-pet-check-link { font-size: 16px; color: ${C.terracotta}; cursor: pointer; font-weight: 600; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; width: fit-content; }
         .hd-pet-check-link:hover { color: #a8471d; }
-        .hd-pet-cta { flex-shrink: 0; font-size: 14px; font-weight: 700; color: ${C.terracotta}; cursor: pointer; background: none; border: none; font-family: inherit; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; transition: color 0.15s, transform 0.15s; }
+        .hd-pet-cta { flex-shrink: 0; min-height: 44px; font-size: 14px; font-weight: 700; color: ${C.terracotta}; cursor: pointer; background: none; border: none; font-family: inherit; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; transition: color 0.15s, transform 0.15s; }
         .hd-pet-cta:hover { color: #a8471d; transform: translateX(3px); }
-        .hd-empty { text-align: center; padding: 28px 20px; color: ${C.slate}; }
+        .hd-empty { text-align: center; padding: 24px 20px 32px; color: ${C.slate}; }
         .hd-empty-msg { font-size: 16px; font-weight: 500; line-height: 1.55; color: ${C.slate}; margin: 0; }
         .hd-empty-cta { display: inline-flex; align-items: center; justify-content: center; height: 42px; margin-top: 12px; padding: 0 24px; background: ${C.navyDark}; color: #fff; border: 2px solid ${C.navyDark}; border-radius: 12px; text-decoration: none; font-size: 15px; font-weight: 700; transition: background 0.15s, color 0.15s; }
         .hd-empty-cta:hover { background: #fff; color: ${C.navyDark}; border: 2px solid ${C.navyDark}; }
@@ -272,16 +273,25 @@ export default function HomeDashboard({ session, savedVets = [] }) {
         .hd-saved-chev { display: inline-flex; align-items: center; color: ${C.muted}; text-decoration: none; transition: color 0.15s, transform 0.15s; }
         .hd-saved-link:hover { color: ${C.terracotta}; }
         .hd-saved-chev:hover { color: ${C.terracotta}; transform: translateX(2px); }
-        .hd-see-all { font-size: 13px; font-weight: 700; color: ${C.terracotta}; text-decoration: none; text-transform: none; letter-spacing: 0; }
+        .hd-see-all { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; font-weight: 700; color: ${C.terracotta}; text-decoration: none; text-transform: none; letter-spacing: 0; }
         .hd-see-all:hover { color: ${C.navyDark}; }
 
-        @media (max-width: 860px) {
-          .hd-grid { grid-template-columns: 1fr; }
-          .hd-wrap { padding: 40px 18px 4px; }
+        /* Page tier — matches the site boundary in globals.css so the
+           dashboard's gutter flips at the same width as every other
+           section on the homepage. Horizontal padding comes from
+           .pp-container; never set it here. */
+        @media (max-width: 768px) {
+          .hd-wrap { padding-bottom: 4px; }
           .hd-greeting { font-size: 22px; }
-          /* Mobile pet card: photo + [name/breed/last-check] stacked in the
-             info column (so last-check aligns with the name at all widths),
-             then "Check now" on its own row, right-aligned. */
+        }
+
+        /* Component collapse — the two top cards hold up as a pair down to
+           ~314px / 265px tracks, so they stay side by side through the
+           whole tablet range and only stack on phones. */
+        @media (max-width: 640px) {
+          .hd-grid { grid-template-columns: 1fr; }
+          /* Phone pet card: photo + [name/breed/last-check] stacked in the
+             info column, then "Check now" on its own row, right-aligned. */
           .hd-pet { display: grid; grid-template-columns: 1fr; grid-template-rows: auto auto; gap: 0; padding: 16px 0; }
           .hd-pet-top { grid-row: 1; align-items: flex-start; }
           .hd-pet-cta { grid-row: 2; justify-self: end; padding-top: 15px; padding-left: 76px; }
@@ -454,7 +464,7 @@ export default function HomeDashboard({ session, savedVets = [] }) {
             </div>
           ) : (
             <div className="hd-empty">
-              <div style={{ fontSize: 36, marginBottom: 8 }}>🐾</div>
+              <ArtEmptyPets width={140} />
               <p className="hd-empty-msg">You haven't added any pets yet.</p>
               <Link href="/profile?add=1" className="hd-empty-cta">
                 + Add your first pet

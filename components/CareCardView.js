@@ -1730,7 +1730,12 @@ function CareCardStyles() {
         flex: 1 1 0;
         min-width: max-content;
         text-align: center;
-        padding: 9px 14px;
+        /* 41.8px before — height comes from this padding alone. */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 10px 14px;
         border-radius: 0;
         font-size: 14px;
         font-weight: 600;
@@ -1899,6 +1904,8 @@ function CareCardStyles() {
         line-height: 1.2;
       }
       .pcc-section-sub {
+        /* 100ch at 1024. */
+        max-width: 68ch;
         font-size: 16px;
         font-weight: 500;
         color: #4B5563;
@@ -1983,6 +1990,9 @@ function CareCardStyles() {
         word-break: break-word;
       }
       .pcc-list-item-prose {
+        /* Free-text safety notes — allergies, conditions, quirks. Ran to 92ch
+           at 900 and above. This is the element, not .pcc-notes-text. */
+        max-width: 68ch;
         font-size: 16px;
         font-weight: 500;
         color: var(--color-navy-dark, #172531);
@@ -2058,6 +2068,10 @@ function CareCardStyles() {
       }
       .pcc-prep-toggle,
       .pcc-recap-toggle {
+        /* 24px before. */
+        min-height: 44px;
+        padding: 10px 0;
+        margin: -10px 0;
         display: inline-flex;
         align-items: center;
         gap: 5px;
@@ -2121,6 +2135,10 @@ function CareCardStyles() {
         color: var(--color-slate, #4b5563);
       }
       .pcc-prep-nudge-link {
+        /* 17px before — the smallest control on the page. */
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
         background: none;
         border: none;
         cursor: pointer;
@@ -2246,6 +2264,8 @@ function CareCardStyles() {
         line-height: 1.3;
       }
       .pcc-list-item-meta-value {
+        /* Long free-text values — an allergy note ran to 92ch. */
+        max-width: 68ch;
         font-weight: 600;
         color: var(--color-navy-dark, #172531);
         word-break: break-word;
@@ -2269,10 +2289,10 @@ function CareCardStyles() {
           min-width: 45px;
         }
         .pcc-list-item-meta--vaccinations .pcc-list-item-meta-label {
-          min-width: 67px;
+          min-width: 43px;
         }
         .pcc-list-item-meta--medications .pcc-list-item-meta-label {
-          min-width: 76px;
+          min-width: 37px;
         }
         .pcc-list-item-meta--contacts .pcc-list-item-meta-label {
           min-width: 88px;
@@ -2400,6 +2420,8 @@ function CareCardStyles() {
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
       }
       .pcc-notes-text {
+        /* Free-text notes — an allergy note ran to 92ch at 900 and above. */
+        max-width: 68ch;
         font-size: 16px;
         font-weight: 500;
         color: var(--color-navy-dark, #172531);
@@ -2482,6 +2504,10 @@ function CareCardStyles() {
         margin: 0 0 8px;
       }
       .pcc-helpline-phone {
+        /* 20.5px, and it is a phone number someone taps in an emergency. */
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
         font-size: 17px;
         font-weight: 700;
         color: var(--color-terracotta, #CF5C36);

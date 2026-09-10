@@ -110,16 +110,13 @@ export default function HeroFlipCardLive({ pet }) {
             peeking && !flipped ? " hfc-peeking" : ""
           }`}
           style={height ? { height } : undefined}
+          /* Clicking the card is a mouse convenience only. It deliberately
+             carries no role, tabIndex or aria-label: each face already holds a
+             real <button>, and a button nested inside role="button" is invalid
+             ARIA — it announces a button within a button and gives keyboard
+             users two controls that do the same thing. The badge is the
+             accessible control; this is just a large hit area for pointers. */
           onClick={flip}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              flip();
-            }
-          }}
-          aria-label={flipped ? "Show front of card" : "Show back of card"}
         >
           <div className="hfc-face hfc-front">
             <div className="hfc-mount" ref={frontWrapRef} />
@@ -190,12 +187,15 @@ export default function HeroFlipCardLive({ pet }) {
         /* Corner flip badge — dark scrim + white icon (reads on any bg),
            accent fill on hover. Sits above the card content. */
         .hfc-flip-badge {
+          /* 38px before. Grown to the touch minimum; top/right pulled in by
+             the same 3px each side so the badge stays visually where it was
+             rather than creeping toward the artwork. */
           position: absolute;
-          top: 14px;
-          right: 14px;
+          top: 11px;
+          right: 11px;
           z-index: 5;
-          width: 38px;
-          height: 38px;
+          width: 44px;
+          height: 44px;
           display: inline-flex;
           align-items: center;
           justify-content: center;

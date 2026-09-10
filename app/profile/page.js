@@ -1,5 +1,6 @@
 "use client";
 
+import { ArtEmptyPets } from "../../components/BrandArt";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
@@ -9,7 +10,6 @@ import {
   X,
   Plus,
   Lock,
-  PawPrint,
   ArrowRight,
   Check,
   ChevronDown,
@@ -608,10 +608,10 @@ export default function ProfilePage() {
         @media (max-width: 640px) {
           .pp-edit-full-link { display: flex; width: 100%; }
         }
-        .pp-add-pet-mobile--single { display: block; }
-        .pp-add-pet-mobile--multi { display: none; }
+        .pp-add-pet-mobile.pp-add-pet-mobile--single { display: block; }
+        .pp-add-pet-mobile.pp-add-pet-mobile--multi { display: none; }
         @media (max-width: 767px) {
-          .pp-add-pet-mobile--multi { display: block; }
+          .pp-add-pet-mobile.pp-add-pet-mobile--multi { display: block; }
           /* Top-right button hidden once cards stack. */
           .pp-pack-head .pp-add-pet-top { display: none; }
         }
@@ -651,11 +651,13 @@ export default function ProfilePage() {
           .pp-avatar-outer { width: 130px; height: 130px; padding: 2px; }
           .pp-avatar-inner { font-size: 28px; }
           .pp-avatar-camera {
-            width: 30px; height: 30px;
+            /* 30px was under the tap minimum. The icon inside stays small so
+               the button doesn't visually dominate the avatar. */
+            width: 44px; height: 44px;
             bottom: 0; right: 0;
             border-width: 2px;
           }
-          .pp-avatar-camera svg { width: 14px; height: 14px; }
+          .pp-avatar-camera svg { width: 16px; height: 16px; }
 
           .pp-identity-right {
             padding-top: 4px; padding-left: 0;
@@ -685,20 +687,6 @@ export default function ProfilePage() {
             max-width: 480px;
             text-align: left;
           }
-          .pp-level-mobile-wrap .pp-level-outer {
-            display: block;
-            width: 100%;
-            border-radius: 24px;
-            box-sizing: border-box;
-          }
-          /* MOBILE (≤500): badge spans the full width, content centered
-             (cleaner than pushing the pill to the edge). */
-          .pp-level-mobile-wrap .pp-level-badge {
-            display: flex;
-            width: 100%;
-            justify-content: center;
-            box-sizing: border-box;
-          }
 
           /* Mobile wallpaper handled by independent positionsMobile array in JS */
 
@@ -718,7 +706,7 @@ export default function ProfilePage() {
           .pp-add-pet-mobile .pp-add-pet-btn {
             width: 100%;
             max-width: var(--pp-card-max);
-            height: 42px;
+            height: 44px;
             font-size: 15px;
             margin-bottom: 20px;
           }
@@ -759,6 +747,22 @@ export default function ProfilePage() {
           }
         }
         @media (max-width: 500px) {
+          .pp-level-mobile-wrap .pp-level-outer {
+            display: block;
+            width: 100%;
+            border-radius: 24px;
+            box-sizing: border-box;
+          }
+          /* Phones only: the badge spans the full width with its content
+             centred. Above 500 it hugs its label like the pill it is —
+             this rule used to sit in the 768 block, which stretched it
+             across the whole container on tablets. */
+          .pp-level-mobile-wrap .pp-level-badge {
+            display: flex;
+            width: 100%;
+            justify-content: center;
+            box-sizing: border-box;
+          }
           /* All grid variants collapse to a single column on phones.
              (Previously a trailing comma after .cols-3 glued the NEXT rule
              onto this selector list, so cols-2/3/4 never got their rule.) */
@@ -1069,10 +1073,9 @@ export default function ProfilePage() {
                             display: "flex",
                             justifyContent: "center",
                             marginBottom: "16px",
-                            color: C.terracotta,
                           }}
                         >
-                          <PawPrint size={48} strokeWidth={1.6} />
+                          <ArtEmptyPets width={140} />
                         </div>
                         <h3
                           style={{

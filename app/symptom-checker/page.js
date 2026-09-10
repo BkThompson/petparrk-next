@@ -1,13 +1,15 @@
 "use client";
 
+import {
+  ArtPickArea,
+  ArtHowLong,
+  ArtSeverity,
+} from "../../components/BrandArt";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import {
-  Search,
-  Clock,
-  Thermometer,
   Dog,
   Cat,
   Bird,
@@ -249,7 +251,10 @@ export default function SymptomCheckerHomePage() {
         .sc-pet-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:${C.terracotta}; opacity:0; transition:opacity 0.15s; border-radius:0 2px 2px 0; }
 
         /* Avatar - base styles shared by both; width/height owned by variant classes */
-        .sc-avatar { border-radius:50%; background:${C.cream}; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; border:2px solid ${C.border}; color:${C.terracotta}; }
+        /* Navy surface with a white species icon, matching the photo
+           placeholders on Profile and Pet Card — same state, same pet,
+           so it should read the same wherever it appears. */
+        .sc-avatar { border-radius:50%; background:linear-gradient(135deg,#2C4657 0%,#172531 100%); align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; border:2px solid ${C.border}; color:rgba(255,255,255,0.9); }
         .sc-avatar img { width:100%; height:100%; object-fit:cover; }
         .sc-avatar-desktop { display:flex; width:78px; height:78px; }
         .sc-avatar-mobile { display:none; }
@@ -325,7 +330,7 @@ export default function SymptomCheckerHomePage() {
 
 
         /* Chevron — start new check */
-        .sc-chevron { background:none; border:none; cursor:pointer; padding:0 0 0 12px; color:${C.terracotta}; display:flex; align-items:center; flex-shrink:0; line-height:1; transition:color 0.2s, transform 0.2s; }
+        .sc-chevron { background:none; border:none; cursor:pointer; min-height:44px; min-width:44px; justify-content:center; padding:0 0 0 12px; color:${C.terracotta}; display:flex; align-items:center; flex-shrink:0; line-height:1; transition:color 0.2s, transform 0.2s; }
         .sc-chevron:hover { color:#a8471d; transform:translateX(4px); }
         .sc-lastcheck:hover { color:#a8471d !important; }
 
@@ -378,9 +383,9 @@ export default function SymptomCheckerHomePage() {
         .sc-input { width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid ${C.border}; font-size:16px; font-weight:500; font-family:var(--font-urbanist,system-ui); background:#fff; outline:none; box-sizing:border-box; transition:border-color 0.15s; color:${C.navyDark}; -webkit-appearance:none; }
         .sc-input:focus { border-color:${C.terracotta}; }
         .sc-input::placeholder { color:${C.muted}; }
-        .sc-resume-btn { padding:10px 20px; height:42px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:10px; font-size:14px; cursor:pointer; font-weight:700; white-space:nowrap; font-family:var(--font-urbanist,system-ui); transition:background 0.2s,color 0.2s; display:inline-flex; align-items:center; }
+        .sc-resume-btn { padding:10px 20px; height:44px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:10px; font-size:14px; cursor:pointer; font-weight:700; white-space:nowrap; font-family:var(--font-urbanist,system-ui); transition:background 0.2s,color 0.2s; display:inline-flex; align-items:center; }
         .sc-resume-btn:hover { background:#fff; color:${C.terracotta}; }
-        .sc-btn-primary { height:42px; padding:0 28px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
+        .sc-btn-primary { height:44px; padding:0 28px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
         .sc-btn-primary:hover { background:${C.white}; color:${C.terracotta}; border:2px solid ${C.terracotta}; }
         .sc-btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
         .sc-btn-outline { height:48px; padding:0 28px; background:transparent; color:${C.navyDark}; border:2px solid ${C.navyDark}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
@@ -646,19 +651,19 @@ export default function SymptomCheckerHomePage() {
               >
                 {[
                   {
-                    icon: Search,
+                    icon: ArtPickArea,
                     step: "01",
                     title: "Pick the area",
                     body: "Tell us what part of your pet's body or behavior has changed.",
                   },
                   {
-                    icon: Clock,
+                    icon: ArtHowLong,
                     step: "02",
                     title: "How long",
                     body: "Let us know when it started — minutes ago or days.",
                   },
                   {
-                    icon: Thermometer,
+                    icon: ArtSeverity,
                     step: "03",
                     title: "Severity",
                     body: "Rate how serious it seems. You know your pet best.",
@@ -686,11 +691,15 @@ export default function SymptomCheckerHomePage() {
                         </div>
                         <div
                           style={{
-                            width: "56px",
-                            height: "56px",
-                            borderRadius: "16px",
-                            background: C.cream,
-                            border: `1px solid ${C.border}`,
+                            width: "68px",
+                            height: "68px",
+                            borderRadius: "18px",
+                            // Terracotta tint, matching the spot tiles on Home
+                            // and Pet Card. It was cream, and the art uses
+                            // cream for its surfaces — the unselected rows and
+                            // the clock face disappeared into the tile.
+                            background: "rgba(207,92,54,0.14)",
+                            border: "1px solid rgba(207,92,54,0.28)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -698,7 +707,7 @@ export default function SymptomCheckerHomePage() {
                             color: C.terracotta,
                           }}
                         >
-                          <Icon size={26} strokeWidth={2} />
+                          <Icon size={44} />
                         </div>
                         <h3
                           style={{
@@ -712,7 +721,7 @@ export default function SymptomCheckerHomePage() {
                           {s.title}
                         </h3>
                         <p
-                          class="sc-hiw_cards"
+                          className="sc-hiw_cards"
                           style={{
                             fontSize: "16px",
                             fontWeight: 500,
@@ -871,7 +880,7 @@ export default function SymptomCheckerHomePage() {
                                 {pet.photo_url ? (
                                   <img src={pet.photo_url} alt={pet.name} />
                                 ) : (
-                                  <SpeciesIcon size={22} strokeWidth={2} />
+                                  <SpeciesIcon size={44} strokeWidth={1.7} />
                                 )}
                               </div>
 
@@ -880,7 +889,7 @@ export default function SymptomCheckerHomePage() {
                                 {pet.photo_url ? (
                                   <img src={pet.photo_url} alt={pet.name} />
                                 ) : (
-                                  <SpeciesIcon size={22} strokeWidth={2} />
+                                  <SpeciesIcon size={34} strokeWidth={1.8} />
                                 )}
                               </div>
 
@@ -1198,7 +1207,7 @@ export default function SymptomCheckerHomePage() {
                     fontFamily: "var(--font-urbanist,system-ui)",
                   }}
                 >
-                  Try one free check
+                  Check your pet's symptoms
                 </h2>
                 <p
                   style={{
@@ -1207,8 +1216,8 @@ export default function SymptomCheckerHomePage() {
                     color: C.muted,
                   }}
                 >
-                  No account needed. Sign up to save history and check unlimited
-                  times.
+                  Create a free account to get instant guidance, and to keep a
+                  record of every check you run.
                 </p>
                 <div
                   style={{
@@ -1305,6 +1314,10 @@ export default function SymptomCheckerHomePage() {
                 color: C.muted,
                 textAlign: "center",
                 lineHeight: "1.8",
+                // Ran 111-138ch at wide widths; capped and centred.
+                maxWidth: "68ch",
+                marginLeft: "auto",
+                marginRight: "auto",
               }}
             >
               {/* <span

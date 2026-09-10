@@ -1,13 +1,157 @@
 // app/api/symptom-checker/route.js
-// NOTE: This route intentionally allows unauthenticated access to support guest mode.
-// Guest users get one free check. Logged-in users get unlimited checks.
+// Guests get a limited number of checks; signed-in users are unlimited. The
+// limit is enforced HERE, not in the browser — the localStorage flag on the
+// client is only a fast path so the UI can respond without a round trip.
 import Anthropic from "@anthropic-ai/sdk";
+import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
+
+// Anonymous allowance. Deliberately not 1: households, offices, campuses and
+// mobile carriers share one address, so a limit of 1 tells the second person on
+// a network they've used a check they never ran.
+const GUEST_LIMIT = 3;
+const WINDOW_HOURS = 24;
+// Follow-up turns inside one conversation are free, which left the cost of a
+// single guest conversation unbounded. These cap it.
+const GUEST_MAX_TURNS = 12;
+const MAX_MESSAGES = 40;
+const MAX_CHARS = 12000;
+
+function admin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { persistSession: false } },
+  );
+}
+
+// Raw IPs are never stored — hashed with a server-side salt, so the table holds
+// an opaque key that cannot be reversed into an address.
+function hashIp(req) {
+  const fwd = req.headers.get("x-forwarded-for") || "";
+  const ip = fwd.split(",")[0].trim() || "unknown";
+  return crypto
+    .createHash("sha256")
+    .update(ip + (process.env.GUEST_LIMIT_SALT || ""))
+    .digest("hex");
+}
+
+// Cloudflare siteverify. Only called for a guest starting a NEW check, so a
+// follow-up turn never needs a fresh token.
+async function verifyTurnstile(token, req) {
+  if (!process.env.TURNSTILE_SECRET_KEY) return true; // not configured — skip
+  if (!token) return false;
+  try {
+    const fwd = req.headers.get("x-forwarded-for") || "";
+    const body = new URLSearchParams({
+      secret: process.env.TURNSTILE_SECRET_KEY,
+      response: token,
+    });
+    const ip = fwd.split(",")[0].trim();
+    if (ip) body.append("remoteip", ip);
+    const r = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      { method: "POST", body },
+    );
+    const json = await r.json();
+    return json.success === true;
+  } catch (e) {
+    // Cloudflare unreachable. Fail open, same reasoning as the usage counter:
+    // an outage at their end must not block triage guidance.
+    return true;
+  }
+}
+
+async function getUser(req) {
+  const auth = req.headers.get("authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
+  if (!token) return null;
+  const sb = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    { auth: { persistSession: false } },
+  );
+  const { data, error } = await sb.auth.getUser(token);
+  return error ? null : (data?.user ?? null);
+}
+
+// Only NEW conversations count. Follow-up turns inside a check the guest has
+// already started are free, or the limit would fire mid-conversation.
+async function allowGuest(req, isNewCheck) {
+  if (!isNewCheck) return { ok: true };
+  const db = admin();
+  const ip_hash = hashIp(req);
+  const since = new Date(Date.now() - WINDOW_HOURS * 3600 * 1000).toISOString();
+
+  const { count, error } = await db
+    .from("guest_check_usage")
+    .select("id", { count: "exact", head: true })
+    .eq("ip_hash", ip_hash)
+    .gte("created_at", since);
+
+  // Fail open on an infrastructure error: a database blip must never stand
+  // between a worried owner and triage guidance.
+  if (error) return { ok: true };
+  if ((count ?? 0) >= GUEST_LIMIT) return { ok: false };
+
+  await db.from("guest_check_usage").insert({ ip_hash });
+  return { ok: true };
+}
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req) {
   try {
-    const { messages, pet, followUpContext } = await req.json();
+    const { messages, pet, followUpContext, captchaToken } = await req.json();
+
+    // Size limits apply to everyone: a signed-in account is free to create, so
+    // "authenticated" is not a trust boundary against cost abuse.
+    if (!Array.isArray(messages) || messages.length > MAX_MESSAGES) {
+      return Response.json({ error: "too_many_messages" }, { status: 400 });
+    }
+    const totalChars = messages.reduce(
+      (n, m) => n + String(m?.content ?? "").length,
+      0,
+    );
+    if (totalChars > MAX_CHARS) {
+      return Response.json({ error: "message_too_long" }, { status: 400 });
+    }
+
+    const user = await getUser(req);
+    if (!user) {
+      const turns = messages.filter((m) => m.role === "assistant").length;
+      const isNewCheck = turns === 0;
+      if (turns >= GUEST_MAX_TURNS) {
+        return Response.json(
+          {
+            error: "guest_limit_reached",
+            message:
+              "That's as far as a free check goes. Create a free account to keep going.",
+          },
+          { status: 401 },
+        );
+      }
+      if (isNewCheck && !(await verifyTurnstile(captchaToken, req))) {
+        return Response.json(
+          {
+            error: "captcha_failed",
+            message: "We couldn't verify that request. Please try again.",
+          },
+          { status: 403 },
+        );
+      }
+      const gate = await allowGuest(req, isNewCheck);
+      if (!gate.ok) {
+        return Response.json(
+          {
+            error: "guest_limit_reached",
+            message:
+              "You've used your free checks. Create a free account to keep going.",
+          },
+          { status: 401 },
+        );
+      }
+    }
 
     const assistantTurns = messages.filter(
       (m) => m.role === "assistant",

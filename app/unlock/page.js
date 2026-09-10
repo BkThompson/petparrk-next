@@ -3,11 +3,23 @@ import { useState } from "react";
 
 export default function Unlock() {
   const [val, setVal] = useState("");
+  const [error, setError] = useState(false);
 
   function unlock() {
+    if (!val.trim()) {
+      setError(true);
+      return;
+    }
+    // Store the entered token; proxy.js validates it server-side against
+    // PREVIEW_TOKEN. If it's wrong, proxy.js bounces back here with ?retry=1.
     document.cookie = `preview_token=${val}; path=/; max-age=604800`;
     window.location.href = "/";
   }
+
+  // If proxy.js redirected back here after a failed check, show a hint.
+  const showRetry =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("retry") === "1";
 
   return (
     <div
@@ -16,33 +28,85 @@ export default function Unlock() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        height: "100vh",
-        gap: "12px",
-        fontFamily: "system-ui",
+        minHeight: "100vh",
+        gap: "14px",
+        fontFamily: "var(--font-urbanist, 'Urbanist', system-ui, sans-serif)",
+        background: "#172531",
+        padding: "0 24px",
       }}
     >
+      <div style={{ fontSize: "40px", marginBottom: "4px" }}>🐾</div>
+      <h1
+        style={{
+          margin: 0,
+          fontSize: "24px",
+          fontWeight: 800,
+          color: "#F5F0E8",
+          letterSpacing: "-0.01em",
+        }}
+      >
+        PetParrk
+      </h1>
+      <p
+        style={{
+          margin: "0 0 8px",
+          fontSize: "15px",
+          color: "#9BA6B2",
+          textAlign: "center",
+          maxWidth: "320px",
+          lineHeight: 1.5,
+        }}
+      >
+        This site is in private preview. Enter the password to continue.
+      </p>
       <input
         type="password"
         placeholder="Enter password"
         value={val}
-        onChange={(e) => setVal(e.target.value)}
+        autoFocus
+        onChange={(e) => {
+          setVal(e.target.value);
+          if (error) setError(false);
+        }}
         onKeyDown={(e) => e.key === "Enter" && unlock()}
         style={{
-          padding: "10px",
+          padding: "12px 14px",
           fontSize: "16px",
-          border: "1px solid #ddd",
-          borderRadius: "6px",
+          width: "260px",
+          maxWidth: "100%",
+          border: `1px solid ${error ? "#CF5C36" : "#2c3d4b"}`,
+          borderRadius: "10px",
+          background: "#0f1a24",
+          color: "#F5F0E8",
+          outline: "none",
         }}
       />
+      {(error || showRetry) && (
+        <p
+          style={{
+            margin: 0,
+            fontSize: "13px",
+            color: "#CF5C36",
+            fontWeight: 600,
+          }}
+        >
+          {error
+            ? "Please enter the password."
+            : "Incorrect password. Please try again."}
+        </p>
+      )}
       <button
         onClick={unlock}
         style={{
-          padding: "10px 24px",
-          background: "#111",
+          padding: "11px 28px",
+          background: "#CF5C36",
           color: "#fff",
           border: "none",
-          borderRadius: "6px",
+          borderRadius: "10px",
           cursor: "pointer",
+          fontSize: "15px",
+          fontWeight: 700,
+          fontFamily: "inherit",
         }}
       >
         Enter

@@ -32,17 +32,35 @@ export function UnsavedChangesModal({ open, onChoice }) {
   useEffect(() => {
     if (!open) return;
     const body = document.body;
+    // `overflow: hidden` alone does not stop scrolling in iOS Safari — the page
+    // keeps moving behind the modal. Pinning the body with `position: fixed`
+    // and offsetting it by the current scroll does work, and behaves the same
+    // on desktop. The offset is what stops the page jumping to the top; it is
+    // restored with scrollTo on close.
+    const scrollY = window.scrollY;
     const scrollBarComp =
       window.innerWidth - document.documentElement.clientWidth;
-    const prevOverflow = body.style.overflow;
-    const prevPadRight = body.style.paddingRight;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      paddingRight: body.style.paddingRight,
+    };
     body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
     if (scrollBarComp > 0) {
       body.style.paddingRight = `${scrollBarComp}px`;
     }
     return () => {
-      body.style.overflow = prevOverflow;
-      body.style.paddingRight = prevPadRight;
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.style.paddingRight = prev.paddingRight;
+      window.scrollTo(0, scrollY);
     };
   }, [open]);
 
@@ -118,6 +136,7 @@ export function UnsavedChangesModal({ open, onChoice }) {
         .ucm-backdrop {
           position: fixed; inset: 0;
           background: rgba(23,37,49,0.55);
+          -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
           z-index: 4000;
           display: flex; align-items: center; justify-content: center;

@@ -171,7 +171,7 @@ export default function SharePrivacyPage() {
         .spp-head { padding:0px 0 0px; margin-bottom: 22px; }
         .spp-eyebrow { font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-terracotta,#CF5C36); margin:0 0 8px; }
         .spp-title { font-size:28px; font-weight:800; color:var(--color-navy-dark,#172531); margin:0 0 8px; line-height:1.2; }
-        .spp-sub { font-size:15px; font-weight: 500; color:var(--color-slate); margin:0; line-height:1.5; }
+        .spp-sub { font-size:15px; font-weight: 500; color:var(--color-slate); margin:0; line-height:1.5; max-width:68ch; }
         .spp-notfound { text-align:center; padding:80px 0; }
         .spp-notfound h1 { font-size:24px; font-weight:800; color:var(--color-navy-dark,#172531); }
         .spp-notfound p { color:var(--color-muted,#717A86); margin:8px 0 20px; }
@@ -184,6 +184,7 @@ export default function SharePrivacyPage() {
         .ucm-backdrop {
           position: fixed; inset: 0;
           background: rgba(23,37,49,0.55);
+          -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
           z-index: 4000;
           display: flex; align-items: center; justify-content: center;
@@ -1503,6 +1504,8 @@ export default function SharePrivacyPage() {
           border-top: 1px solid rgba(23, 37, 49, 0.08);
         }
         .pce-share-manage-toggle {
+          /* 19px as a bare text button. */
+          min-height: 44px;
           display: inline-flex;
           align-items: center;
           gap: 8px;
@@ -1697,6 +1700,8 @@ export default function SharePrivacyPage() {
           gap: 6px;
         }
         .pce-share-card-preview {
+          /* 22.1px as a bare text link. */
+          min-height: 44px;
           display: inline-flex;
           align-items: center;
           gap: 6px;
@@ -2850,6 +2855,7 @@ export default function SharePrivacyPage() {
           inset: 0;
           z-index: 100;
           background: rgba(23,37,49,0.55);
+          -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
@@ -3441,16 +3447,29 @@ function ShareQRBlock({ url, cardType, petName }) {
     }
 
     // Tier 3: Legacy fallback.
+    // Same iOS requirements as handleCopy below: on-screen, editable, a real
+    // Selection Range. An element at left:-9999px is off-viewport and iOS
+    // refuses to copy from it.
     try {
       const ta = document.createElement("textarea");
       ta.value = url;
       ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      ta.style.top = "0";
+      ta.contentEditable = "true";
+      ta.readOnly = false;
+      ta.style.cssText =
+        "position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;" +
+        "outline:0;opacity:0;font-size:16px;-webkit-user-select:text;user-select:text;";
       document.body.appendChild(ta);
-      ta.select();
+
+      const range = document.createRange();
+      range.selectNodeContents(ta);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      ta.setSelectionRange(0, 999999);
+
       const ok = document.execCommand("copy");
+      sel.removeAllRanges();
       document.body.removeChild(ta);
       if (ok) {
         setShareState("copied");
@@ -3501,16 +3520,23 @@ function ShareQRBlock({ url, cardType, petName }) {
             </>
           )}
         </button>
-        <a
-          className="pce-share-btn pce-share-btn--secondary"
-          href={`${url}?print=1`}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`Download ${cardType === "care" ? "Care" : "Hero"} Card as PDF`}
-        >
-          <Printer size={14} strokeWidth={2} />
-          Download PDF
-        </a>
+        {/* Care cards only. ?print=1 is read by the care card pages, which
+            fire window.print() on load — there is no equivalent on the hero
+            side, so the button did nothing there. A Hero Card is a flip card
+            on an animated background; printing it would give one face and no
+            background, so this is a deliberate omission rather than a gap. */}
+        {cardType === "care" && (
+          <a
+            className="pce-share-btn pce-share-btn--secondary"
+            href={`${url}?print=1`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Download Care Card as PDF"
+          >
+            <Printer size={14} strokeWidth={2} />
+            Download PDF
+          </a>
+        )}
         <button
           type="button"
           className="pce-share-btn pce-share-btn--secondary"
@@ -3528,9 +3554,12 @@ function ShareQRBlock({ url, cardType, petName }) {
           <strong>Share</strong> sends a link that always points to the latest
           version of this {cardType === "care" ? "Care" : "Hero"} Card.
         </p>
-        <p className="pce-share-hint">
-          <strong>Download PDF</strong> saves a snapshot you can email or print.
-        </p>
+        {cardType === "care" && (
+          <p className="pce-share-hint">
+            <strong>Download PDF</strong> saves a snapshot you can email or
+            print.
+          </p>
+        )}
         <p className="pce-share-hint">
           <strong>Download QR</strong> saves the QR code as an image file.
         </p>
@@ -3736,18 +3765,40 @@ function ShareLinkCard({
     // Legacy fallback for HTTP LAN IPs where modern API is blocked.
     // execCommand("copy") works on the active text selection — we use
     // the existing readonly URL input itself as the selection source.
+    // iOS Safari will not copy from a readonly input, and select() alone does
+    // not create a Range it recognises. It needs: an editable, non-readonly
+    // element, a real Selection Range over it, then setSelectionRange. This is
+    // the only combination that works on iPad over http:// (a LAN IP is not a
+    // secure context, so the Clipboard API above is unavailable there).
     try {
-      const input = document.getElementById(`share-url-${cardType}`);
-      if (input) {
-        input.select();
-        input.setSelectionRange(0, 99999);
-        const ok = document.execCommand("copy");
-        if (ok) {
-          setCopied(true);
-          if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-          copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
-          return;
-        }
+      const ta = document.createElement("textarea");
+      ta.value = shareUrl;
+      ta.setAttribute("readonly", "");
+      ta.contentEditable = "true";
+      ta.readOnly = false;
+      // Kept on-screen but invisible: iOS ignores display:none and elements
+      // positioned outside the viewport. 16px avoids the focus zoom.
+      ta.style.cssText =
+        "position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;" +
+        "outline:0;opacity:0;font-size:16px;-webkit-user-select:text;user-select:text;";
+      document.body.appendChild(ta);
+
+      const range = document.createRange();
+      range.selectNodeContents(ta);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      ta.setSelectionRange(0, 999999);
+
+      const ok = document.execCommand("copy");
+      sel.removeAllRanges();
+      document.body.removeChild(ta);
+
+      if (ok) {
+        setCopied(true);
+        if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+        copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
+        return;
       }
     } catch {
       // Even legacy failed; fall through to selection-only.

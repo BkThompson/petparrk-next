@@ -10,26 +10,41 @@ export default function Footer() {
     >
       <style>{`
         .footer-link {
-          display: block;
+          /* 44px target at every width, not just on phones — a tablet runs
+             desktop layout but is still touch. */
+          display: flex;
+          align-items: center;
+          min-height: 44px;
           font-size: 15px;
           font-weight: 500;
           color: rgba(255,255,255,0.6);
           text-decoration: none;
-          margin-bottom: 8px;
+          margin-bottom: 4px;
           transition: color 0.15s;
         }
         .footer-link:hover { color: #fff; }
+
+        /* Four named columns rather than auto-fit. auto-fit could only place
+           three tracks below 1024px, which orphaned Legal onto its own row
+           at 769 and 900 — at 900 it missed a fourth track by 44px. */
+        .footer-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 32px;
+          margin-bottom: 40px;
+        }
+        @media (max-width: 1023px) { .footer-grid { gap: 24px; } }
+        /* Below the site boundary four columns stop fitting, so pair them
+           two-by-two. Still no orphan: four blocks, two rows. */
+        @media (max-width: 768px) {
+          .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 32px 24px; }
+          .footer-link { margin-bottom: 0; }
+        }
+        @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
       `}</style>
 
       <div className="pp-container">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "32px",
-            marginBottom: "40px",
-          }}
-        >
+        <div className="footer-grid">
           {/* Brand */}
           <div>
             <div

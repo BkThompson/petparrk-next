@@ -42,6 +42,32 @@ export default function AccountSettings() {
 
   // Delete account
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Background scroll-lock while the delete modal is open. Safe because
+  // .modal-box scrolls internally (max-height 86vh, overflow-y auto).
+  useEffect(() => {
+    if (!showDeleteModal) return;
+    // `overflow: hidden` alone does not stop scrolling in iOS Safari.
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    return () => {
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      window.scrollTo(0, scrollY);
+    };
+  }, [showDeleteModal]);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteMsg, setDeleteMsg] = useState(null);
@@ -168,8 +194,11 @@ export default function AccountSettings() {
         .acc-info-label { font-weight: 700; color: ${C.muted}; font-size: 14px; text-transform: uppercase; }
 
         /* Delete modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 24px; }
-        .modal-box { background: #fff; border-radius: 16px; padding: 32px; max-width: 440px; width: 100%; }
+        /* Canonical modal treatment — navy 55% + 4px blur, 20px gutter.
+           Matches pp-modal-backdrop, pce-modal-overlay, ucm-backdrop,
+           rpm-overlay and the VetSlug pricing modal. */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(23,37,49,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-box { background: #fff; border-radius: 18px; padding: 32px; max-width: 440px; width: 100%; max-height: 86vh; overflow-y: auto; box-shadow: 0 30px 60px rgba(0,0,0,0.40); }
         .modal-title { font-size: 20px; font-weight: 800; color: ${C.navyDark}; margin: 0 0 8px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
         .modal-sub { font-size: 16px; color: ${C.slate}; line-height: 1.7; margin: 0 0 24px; }
         .modal-warning { background: #FCEAEA; border-radius: 8px; padding: 12px 16px; font-size: 14px; color: ${C.error}; margin-bottom: 20px; font-weight: 500; line-height: 1.6; }
@@ -242,12 +271,15 @@ export default function AccountSettings() {
       )}
 
       <div className="acc-body">
+        {/* Gutters come from pp-container-text (24px desktop / 16px mobile)
+            so this page can't drift from the site standard. The 560px cap is
+            kept — the container's own 900px is too wide for a settings form,
+            where label/value rows are justified apart. */}
         <div
-          className="acc-inner"
+          className="pp-container-text acc-inner"
           style={{
             width: "100%",
             maxWidth: "560px",
-            margin: "0 auto",
             boxSizing: "border-box",
           }}
         >
@@ -325,6 +357,9 @@ export default function AccountSettings() {
             <Link
               href="/profile"
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                minHeight: "44px",
                 fontSize: "15px",
                 fontWeight: "600",
                 color: C.terracotta,
@@ -479,6 +514,9 @@ export default function AccountSettings() {
             <Link
               href="/privacy-policy"
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                minHeight: "44px",
                 fontSize: "15px",
                 color: C.terracotta,
                 fontWeight: "600",

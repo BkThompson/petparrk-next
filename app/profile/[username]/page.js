@@ -1,5 +1,6 @@
 "use client";
 
+import { ArtEmptyPets } from "../../../components/BrandArt";
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
@@ -43,6 +44,7 @@ import {
   Rabbit,
   Fish,
   Sparkles,
+  Shapes,
   AlertTriangle,
   Circle,
   PawPrint,
@@ -93,7 +95,7 @@ const BANNER_PALETTE = {
     label: "Caramel",
     title: "Dog",
     group: "species",
-    stops: ["#F4A85F", "#D8762A", "#B95A18", "#8B3F0E"],
+    stops: ["#F09A5A", "#D25F1F", "#A8400F", "#752807"],
     text: "#FFEFD9",
     accent: "#B95A18",
   },
@@ -117,7 +119,7 @@ const BANNER_PALETTE = {
     label: "Honey",
     title: "Small Furry",
     group: "species",
-    stops: ["#FCC773", "#E59B2B", "#B57614", "#7F4D08"],
+    stops: ["#FFD98A", "#F0B23A", "#C98C10", "#8A5D04"],
     text: "#FFF1D5",
     accent: "#B57614",
   },
@@ -125,7 +127,7 @@ const BANNER_PALETTE = {
     label: "Sage",
     title: "Reptile/Fish",
     group: "species",
-    stops: ["#5BBE7D", "#2E8A4F", "#1A6638", "#0E4324"],
+    stops: ["#7CBB57", "#4A8A2E", "#33641E", "#1B4012"],
     text: "#DCF1E2",
     accent: "#1A6638",
   },
@@ -147,7 +149,7 @@ const BANNER_PALETTE = {
   copper: {
     label: "Copper Bronze",
     group: "extra",
-    stops: ["#EE9264", "#C7531D", "#973A0E", "#5E2207"],
+    stops: ["#D9A15C", "#A9702E", "#7E4F1C", "#4A2C0D"],
     text: "#FFE3D2",
     accent: "#973A0E",
   },
@@ -180,7 +182,9 @@ const BANNER_LUCIDE = {
   bird: Bird,
   small_furry: Rabbit,
   reptile_fish: Fish,
-  mixed: Sparkles,
+  // An assortment of shapes — a mixed bag. Sparkles read as "magic", which
+  // is Auto's job.
+  mixed: Shapes,
 };
 
 function pageGradient(key) {
@@ -568,17 +572,33 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!showLevelModal) return;
     const body = document.body;
+    // `overflow: hidden` alone does not stop scrolling in iOS Safari. Pinning
+    // the body and offsetting it by the current scroll is what works; the
+    // offset is restored with scrollTo on close so the page doesn't jump.
+    const scrollY = window.scrollY;
     const scrollBarComp =
       window.innerWidth - document.documentElement.clientWidth;
-    const prevOverflow = body.style.overflow;
-    const prevPadRight = body.style.paddingRight;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      paddingRight: body.style.paddingRight,
+    };
     body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
     if (scrollBarComp > 0) {
       body.style.paddingRight = `${scrollBarComp}px`;
     }
     return () => {
-      body.style.overflow = prevOverflow;
-      body.style.paddingRight = prevPadRight;
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.style.paddingRight = prev.paddingRight;
+      window.scrollTo(0, scrollY);
     };
   }, [showLevelModal]);
   const [usernameError, setUsernameError] = useState("");
@@ -1550,7 +1570,7 @@ export default function ProfilePage() {
         }
         .pp-avatar-camera {
           position: absolute; bottom: 6px; right: 6px;
-          width: 38px; height: 38px;
+          width: 44px; height: 44px;
           border-radius: 50%;
           background: ${C.terracotta}; color: #fff;
           border: 3px solid #fff;
@@ -1932,6 +1952,9 @@ export default function ProfilePage() {
         .pp-owner-note-link {
           display: inline-flex;
           align-items: center;
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
           gap: 6px;
           color: ${C.terracotta};
           font-weight: 600;
@@ -2190,6 +2213,9 @@ export default function ProfilePage() {
           width: 100%; height: 100%; object-fit: cover;
         }
         .pp-pet-name-link {
+          display: inline-flex;
+          align-items: center;
+          min-height: 44px;
           color: inherit;
           text-decoration: none;
           transition: color 0.15s;
@@ -2233,7 +2259,7 @@ export default function ProfilePage() {
         .pp-pet-photo-camera {
           position: absolute; bottom: 12px; right: 12px;
           z-index: 2;
-          width: 36px; height: 36px;
+          width: 44px; height: 44px;
           border-radius: 50%;
           background: ${C.terracotta};
           color: #fff;
@@ -2249,7 +2275,7 @@ export default function ProfilePage() {
         .pp-pet-edit-btn {
           position: absolute; top: 12px; right: 12px;
           z-index: 2;
-          width: 36px; height: 36px;
+          width: 44px; height: 44px;
           border-radius: 50%;
           background: rgba(255,255,255,0.95);
           color: ${C.navyDark};
@@ -2349,6 +2375,9 @@ export default function ProfilePage() {
           .pp-medline-clip { transition: none; }
         }
         .pp-medline-toggle {
+          display: inline-flex;
+          align-items: center;
+          min-height: 44px;
           align-self: flex-start;
           background: none;
           border: none;
@@ -2591,7 +2620,7 @@ export default function ProfilePage() {
           box-shadow: 0 0 0 3px rgba(207,92,54,0.15);
         }
         .pp-banner-swatch-color {
-          height: 48px; border-radius: 8px;
+          height: 60px; border-radius: 8px;
           position: relative; overflow: hidden;
           margin-bottom: 8px;
           display: flex; align-items: center; justify-content: center;
@@ -2599,6 +2628,8 @@ export default function ProfilePage() {
         }
         .pp-banner-swatch-color svg {
           color: rgba(255,255,255,0.55);
+          width: 35px;
+          height: 35px;
         }
         .pp-banner-swatch-label {
           font-size: 12px; font-weight: 700; color: ${C.navyDark};
@@ -2622,6 +2653,7 @@ export default function ProfilePage() {
           z-index: 100;
           display: flex; align-items: center; justify-content: center;
           padding: 20px;
+          -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
           overflow-y: auto;
         }
@@ -2644,7 +2676,7 @@ export default function ProfilePage() {
           color: ${C.navyDark};
         }
         .pp-modal-close {
-          width: 36px; height: 36px;
+          width: 44px; height: 44px;
           border: none; background: transparent;
           color: ${C.muted}; cursor: pointer;
           border-radius: 8px;
@@ -2959,11 +2991,11 @@ export default function ProfilePage() {
           .pp-avatar-outer { width: 130px; height: 130px; padding: 2px; }
           .pp-avatar-inner { font-size: 28px; }
           .pp-avatar-camera {
-            width: 30px; height: 30px;
+            width: 44px; height: 44px;
             bottom: 0; right: 0;
             border-width: 2px;
           }
-          .pp-avatar-camera svg { width: 14px; height: 14px; }
+          .pp-avatar-camera svg { width: 16px; height: 16px; }
 
            .pp-pack-head {
             padding-top: 36px
@@ -3386,10 +3418,9 @@ export default function ProfilePage() {
                             display: "flex",
                             justifyContent: "center",
                             marginBottom: "16px",
-                            color: C.terracotta,
                           }}
                         >
-                          <PawPrint size={48} strokeWidth={1.6} />
+                          <ArtEmptyPets width={140} />
                         </div>
                         <h3
                           style={{
@@ -3496,8 +3527,8 @@ export default function ProfilePage() {
                                       ] || PawPrint;
                                     return (
                                       <SpeciesIcon
-                                        size={96}
-                                        strokeWidth={1.5}
+                                        size={132}
+                                        strokeWidth={1.4}
                                         color="rgba(255,255,255,0.85)"
                                       />
                                     );
@@ -4662,7 +4693,7 @@ function ProfileEditForm({
             className="pp-banner-swatch-color"
             style={{ background: pageGradient(autoKey) }}
           >
-            <Sparkles size={20} strokeWidth={1.8} />
+            <Sparkles size={38} strokeWidth={1.6} />
           </div>
           <p className="pp-banner-swatch-label">Auto</p>
         </button>
@@ -4682,7 +4713,7 @@ function ProfileEditForm({
                   className="pp-banner-swatch-color"
                   style={{ background: pageGradient(key) }}
                 >
-                  {SpeciesIcon && <SpeciesIcon size={20} strokeWidth={1.8} />}
+                  {SpeciesIcon && <SpeciesIcon size={38} strokeWidth={1.6} />}
                 </div>
                 <p className="pp-banner-swatch-label">{val.title}</p>
               </button>

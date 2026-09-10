@@ -61,6 +61,9 @@ export function PetTileStyles() {
           width: 100%; height: 100%; object-fit: cover;
         }
         .pp-pet-name-link {
+          display: inline-flex;
+          align-items: center;
+          min-height: 44px;
           color: inherit;
           text-decoration: none;
           transition: color 0.15s;
@@ -104,7 +107,7 @@ export function PetTileStyles() {
         .pp-pet-photo-camera {
           position: absolute; bottom: 12px; right: 12px;
           z-index: 2;
-          width: 36px; height: 36px;
+          width: 44px; height: 44px;
           border-radius: 50%;
           background: ${C.terracotta};
           color: #fff;
@@ -120,7 +123,7 @@ export function PetTileStyles() {
         .pp-pet-edit-btn {
           position: absolute; top: 12px; right: 12px;
           z-index: 2;
-          width: 36px; height: 36px;
+          width: 44px; height: 44px;
           border-radius: 50%;
           background: rgba(255,255,255,0.95);
           color: ${C.navyDark};
@@ -219,11 +222,14 @@ export function PetTileStyles() {
           .pp-medline-clip { transition: none; }
         }
         .pp-medline-toggle {
+          display: inline-flex;
+          align-items: center;
+          min-height: 44px;
           align-self: flex-start;
           background: none;
           border: none;
-          padding: 2px 0 0;
-          margin: 0;
+          padding: 12px 0 10px;
+          margin: -10px 0;
           font-size: 14px;
           font-weight: 700;
           color: ${C.terracotta};
@@ -294,6 +300,7 @@ export function PetTileStyles() {
         }
         .pp-pet-action {
           flex: 1 1 0;
+          min-height: 44px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -399,8 +406,8 @@ export default function PetTile({
                   BANNER_LUCIDE[speciesBucket(pet.species)] || PawPrint;
                 return (
                   <SpeciesIcon
-                    size={96}
-                    strokeWidth={1.5}
+                    size={132}
+                    strokeWidth={1.4}
                     color="rgba(255,255,255,0.85)"
                   />
                 );

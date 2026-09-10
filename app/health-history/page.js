@@ -1,12 +1,13 @@
 "use client";
 
+import { ArtNoChecks } from "../../components/BrandArt";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import PageLoader from "../../components/PageLoader";
 import Breadcrumb from "../../components/Breadcrumb";
-import { ChevronDown, Stethoscope, PawPrint, RefreshCw } from "lucide-react";
+import { ChevronDown, PawPrint, RefreshCw } from "lucide-react";
 import { BANNER_LUCIDE, speciesBucket } from "../../lib/petTileHelpers";
 import { getCopilotDataForCheck } from "../../lib/copilotApi";
 import { renderMarkdown } from "../../lib/renderMarkdown";
@@ -263,9 +264,7 @@ export default function HealthHistoryPage() {
 
         {checks.length === 0 ? (
           <div className="hh-empty">
-            <div className="hh-empty-icon" aria-hidden="true">
-              <Stethoscope size={40} strokeWidth={1.5} />
-            </div>
+            <ArtNoChecks width={140} />
             <p className="hh-empty-title">No health checks yet</p>
             <p className="hh-empty-sub">
               Run a symptom check to get quick, AI-guided triage for your pet.
@@ -503,6 +502,9 @@ export default function HealthHistoryPage() {
           margin: 0 auto;
           padding: 0 24px 64px;
         }
+        /* Records list runs the full 1040. Prose inside it doesn't:
+           uncapped it reached 130ch at 1024px. */
+        .hh-sub, .hh-empty-msg, .hh-detail-body, .hh-copilot p { max-width: 68ch; }
         .hh-topbar { padding: 32px 0 0px; }
         .hh-topbar .bc-nav { margin-bottom: 20px; }
 
@@ -517,7 +519,8 @@ export default function HealthHistoryPage() {
         /* Filter pills */
         .hh-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
         .hh-pill {
-          padding: 7px 15px; border-radius: 999px; border: 1.5px solid ${C.borderStrong};
+          display: inline-flex; align-items: center; min-height: 44px;
+          padding: 7px 16px; border-radius: 999px; border: 1.5px solid ${C.borderStrong};
           background: ${C.white}; color: ${C.slate}; font-size: 13px; font-weight: 700;
           cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
         }
@@ -711,11 +714,7 @@ export default function HealthHistoryPage() {
           text-align: center; padding: 56px 24px;
           background: ${C.white}; border: 1px solid ${C.border}; border-radius: 16px;
         }
-        .hh-empty-icon {
-          width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 18px;
-          display: flex; align-items: center; justify-content: center;
-          background: ${C.cream}; color: ${C.terracotta};
-        }
+        .hh-empty svg { margin-bottom: 14px; }
         .hh-empty-title { font-size: 19px; font-weight: 800; margin: 0 0 8px; }
         .hh-empty-sub {
           font-size: 15px; font-weight: 500; color: ${C.slate};

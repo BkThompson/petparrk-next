@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-const EFFECTIVE_DATE = "April 14, 2026";
+const EFFECTIVE_DATE = "September 2, 2026";
 const CONTACT_EMAIL = "[legal@petparrk.com]";
 const COMPANY_ADDRESS = "[Company Address], Oakland, California";
 
@@ -41,7 +41,7 @@ export default function PrivacyPolicy() {
           <div className="legal-section">
             <h2 className="legal-h2">1. Scope and Who We Are</h2>
             <p className="legal-p">
-              PetParrk, Inc. ("PetParrk," "we," "us," or "our") operates the
+              PetParrk, LLC ("PetParrk," "we," "us," or "our") operates the
               PetParrk platform, including our website and any associated
               applications or services (collectively, the "Service"). This
               Privacy Policy describes how we collect, use, disclose, and
@@ -96,6 +96,15 @@ export default function PrivacyPolicy() {
                 Communications you send to us, including support requests and
                 feedback.
               </li>
+              <li className="legal-li">
+                Content you choose to publish. If you create a shareable pet
+                card, care card, or similar link, the information you place on
+                it — which may include your pet's name, photograph, species,
+                breed, age, and any notes you add — becomes accessible to anyone
+                who has the link. Shared links are not password protected, and
+                anyone the link is forwarded to can view them. You can stop
+                sharing at any time.
+              </li>
             </ul>
             <h3 className="legal-h3">
               2.2 Information Collected Automatically
@@ -116,6 +125,14 @@ export default function PrivacyPolicy() {
               <li>
                 Approximate geographic location derived from your IP address,
                 used to surface relevant local veterinary information.
+              </li>
+              <li className="legal-li">
+                A one-way cryptographic hash of your IP address, stored when you
+                use the symptom checker without an account. We do not store the
+                address itself, and the hash cannot be reversed to recover it.
+                It exists only to count how many free checks have come from one
+                connection, so the free allowance can be applied fairly. See
+                Section 6 for how long it is kept.
               </li>
             </ul>
             <h3 className="legal-h3">2.3 Information from Third Parties</h3>
@@ -186,10 +203,25 @@ export default function PrivacyPolicy() {
             <p className="legal-p">
               We share personal information with third-party service providers
               who assist us in operating the Service, including hosting
-              infrastructure, analytics, email delivery, and payment processing.
-              These providers are contractually obligated to use your
-              information solely to perform services on our behalf and in
-              compliance with this Privacy Policy.
+              infrastructure, database and authentication services, analytics,
+              and email delivery. These providers are contractually obligated to
+              use your information solely to perform services on our behalf and
+              in compliance with this Privacy Policy.
+            </p>
+            <p className="legal-p">
+              <strong>Bot and abuse prevention.</strong> We use Cloudflare
+              Turnstile to distinguish people from automated traffic when you
+              create an account or use the symptom checker without one.
+              Turnstile collects device and browser signals and interaction data
+              from the page it appears on, and processes them under
+              Cloudflare&apos;s own privacy terms. It does not read the contents
+              of the forms you submit.
+            </p>
+            <p className="legal-p">
+              <strong>Payments.</strong> The Service is currently free and we do
+              not process payments. If we introduce paid features, we will use a
+              third-party payment processor, and we will update this Policy
+              before doing so.
             </p>
             <h3 className="legal-h3">4.3 Artificial Intelligence Processing</h3>
             <p className="legal-p">
@@ -206,8 +238,12 @@ export default function PrivacyPolicy() {
               summaries, extract information from documents you upload, and
               produce cost estimates and reminders. Our AI providers process
               this content solely to return a result to us. We do not authorize
-              them to use your content to train their models, and we do not
-              share your name, email address, or account credentials with them.
+              them to use your content to train their models. Our
+              providers&apos; published API terms state that content submitted
+              through their API is not used to train their models, and we do not
+              opt in to any programme that would change that. We do not send
+              your name, email address, or account credentials with these
+              requests.
             </p>
             <p className="legal-p">
               AI-generated output is informational only and is not veterinary
@@ -322,6 +358,12 @@ export default function PrivacyPolicy() {
               disputes, enforce our agreements, and prevent fraud and abuse.
               When information is no longer required for these purposes, we
               delete or de-identify it.
+            </p>
+            <p className="legal-p">
+              <strong>Guest usage records.</strong> The hashed IP records
+              described in Section 2.2 are deleted within seven (7) days. They
+              are never linked to an account, and they are not used for any
+              purpose other than applying the free-check allowance.
             </p>
             <p className="legal-p">
               <strong>Uploaded documents.</strong> Receipt images and veterinary
@@ -459,7 +501,7 @@ export default function PrivacyPolicy() {
               Privacy Policy or our privacy practices, please contact us:
             </p>
             <p className="legal-p">
-              <strong>PetParrk, Inc.</strong>
+              <strong>PetParrk, LLC</strong>
               <br />
               Email:{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">

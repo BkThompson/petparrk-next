@@ -1,5 +1,6 @@
 "use client";
 
+import { ArtContact } from "../../components/BrandArt";
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -114,15 +115,25 @@ export default function ContactPage() {
         .d1 { transition-delay:.12s; }
         .cg { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:start; }
         .ci { display:block; }
+        /* Below 1024 the two-column split starves the reasons list to give
+           room to atmosphere. The illustration goes, same as on phones. */
+        @media (max-width:1023px) {
+          .cg { grid-template-columns:1fr; gap:48px; }
+          .ci { display:none; }
+        }
         .cr { display:flex; gap:16px; align-items:flex-start; padding:20px 0; border-bottom:1px solid rgba(23,37,49,0.08); }
-        .cr:last-child { border-bottom:none; }
-        .ri { width:40px; height:40px; border-radius:10px; background:rgba(207,92,54,0.1); border:1px solid rgba(207,92,54,0.18); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+        /* the last row keeps its rule — it separates the reasons from the
+           two contact buttons below */
+        .cr:last-child { border-bottom:1px solid rgba(23,37,49,0.08); margin-bottom:28px; }
+        /* Same tile as every other spot on the site, scaled for a list row:
+           68/44 proportion held at 52/34. */
+        .ri { width:52px; height:52px; border-radius:14px; background:rgba(207,92,54,0.1); border:1px solid rgba(207,92,54,0.18); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .eb { display:inline-flex; align-items:center; gap:10px; padding:16px 24px; border-radius:12px; text-decoration:none; font-weight:700; font-size:16px; font-family:var(--font-urbanist,'Urbanist',sans-serif); transition:background .25s,color .25s; width:100%; box-sizing:border-box; justify-content:flex-start; }
         .eb-p { background:var(--color-navy-dark,#172531); color:#fff; border:2px solid var(--color-navy-dark,#172531); }
         .eb-p:hover { background:transparent; color:var(--color-navy-dark,#172531); }
         .eb-s { background:transparent; color:var(--color-navy-dark,#172531); border:2px solid var(--color-navy-dark,#172531); }
         .eb-s:hover { background:var(--color-navy-dark,#172531); color:#fff; }
-        .ico { position:relative; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgba(239,200,139,0.4) 0%,rgba(207,92,54,0.2) 15%,transparent 35%,transparent 65%,rgba(207,92,54,0.15) 85%,rgba(239,200,139,0.35) 100%); }
+        .ico { position:relative; max-width:515px; margin:0 auto; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgba(239,200,139,0.4) 0%,rgba(207,92,54,0.2) 15%,transparent 35%,transparent 65%,rgba(207,92,54,0.15) 85%,rgba(239,200,139,0.35) 100%); }
         .ici { border-radius:20px; overflow:hidden; background:linear-gradient(160deg,#2C4657 0%,#172531 100%); }
         .bc { height:48px; padding:0 32px; line-height:1; background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px; font-size:15px; font-weight:700; text-decoration:none; font-family:var(--font-urbanist,'Urbanist',sans-serif); display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:background .25s,color .25s; }
         .bc:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
@@ -134,6 +145,12 @@ export default function ContactPage() {
           .bc { width:100%; box-sizing:border-box; height:48px; justify-content:center; }
           .eb { width:100%; box-sizing:border-box; height:48px; }
         }
+
+  /* Widow control. "balance" evens short headings so the last line isn't one
+     orphaned word; "pretty" does the same for body copy without re-flowing the
+     whole paragraph. Both fall back to normal wrapping where unsupported. */
+  h1, h2, h3 { text-wrap: balance; }
+  p, li { text-wrap: pretty; }
       `}</style>
 
       {/* HEADER — minHeight 393px desktop, 368px mobile */}
@@ -414,7 +431,7 @@ export default function ContactPage() {
                   <div key={item.label} className="cr">
                     <div className="ri">
                       <item.icon
-                        size={18}
+                        size={34}
                         strokeWidth={2}
                         color="var(--color-terracotta,#CF5C36)"
                       />
@@ -439,7 +456,7 @@ export default function ContactPage() {
                           color: "var(--color-slate,#4B5563)",
                           lineHeight: "1.7",
                           margin: 0,
-                          maxWidth: "94%",
+                          maxWidth: "68ch",
                           textWrap: "pretty",
                         }}
                       >
@@ -480,33 +497,15 @@ export default function ContactPage() {
                   className="ici"
                   style={{
                     width: "100%",
-                    aspectRatio: "3/4",
+                    aspectRatio: "1/1",
+                    padding: "18px",
+                    boxSizing: "border-box",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <div
-                    style={{
-                      textAlign: "center",
-                      color: "rgba(255,255,255,0.2)",
-                    }}
-                  >
-                    <div style={{ fontSize: "64px", marginBottom: "12px" }}>
-                      🐾
-                    </div>
-                    <p
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        letterSpacing: "0.10em",
-                        textTransform: "uppercase",
-                        margin: 0,
-                      }}
-                    >
-                      Photo coming soon
-                    </p>
-                  </div>
+                  <ArtContact width={500} />
                 </div>
               </div>
             </div>
@@ -533,14 +532,17 @@ export default function ContactPage() {
           <p
             style={{
               fontSize: "17px",
+              maxWidth: "62ch",
+              marginLeft: "auto",
+              marginRight: "auto",
               fontWeight: 500,
               color: "rgba(255,255,255,0.65)",
               lineHeight: "1.7",
               marginBottom: "24px",
             }}
           >
-            Not sure where to start? Browse our vet directory — no account
-            required.
+            Not sure where to start? Take a look at the vets we've verified so
+            far across California. Browsing is free.
           </p>
           <Link href="/vets" className="bc">
             Find a Vet{" "}

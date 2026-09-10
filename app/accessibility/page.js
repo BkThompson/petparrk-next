@@ -1,6 +1,6 @@
 "use client";
 
-const EFFECTIVE_DATE = "April 14, 2026";
+const EFFECTIVE_DATE = "September 2, 2026";
 const CONTACT_EMAIL = "[legal@petparrk.com]";
 
 export default function Accessibility() {
@@ -35,14 +35,18 @@ export default function Accessibility() {
           <div className="legal-section">
             <h2 className="legal-h2">Our Commitment</h2>
             <p className="legal-p">
-              PetParrk is committed to ensuring that our platform is accessible
-              to all users, including individuals with disabilities. We believe
-              that every pet owner should be able to use PetParrk with ease,
-              regardless of ability or the assistive technologies they rely on.
+              PetParrk, LLC is committed to ensuring that our platform is
+              accessible to all users, including individuals with disabilities.
+              We believe that every pet owner should be able to use PetParrk
+              with ease, regardless of ability or the assistive technologies
+              they rely on.
             </p>
             <p className="legal-p">
-              We aim to conform to the Web Content Accessibility Guidelines
-              (WCAG) 2.1 Level AA across our web and mobile experiences.
+              PetParrk is partially conformant with the Web Content
+              Accessibility Guidelines (WCAG) 2.1 Level AA. Partially conformant
+              means that some parts of the content do not fully conform to the
+              accessibility standard. We are working toward full conformance and
+              treat it as ongoing work rather than a finished state.
             </p>
           </div>
           <div className="legal-divider" />
@@ -69,8 +73,8 @@ export default function Accessibility() {
                 addition to mouse and touch input;
               </li>
               <li>
-                We evaluate third-party components for accessibility compliance
-                before integration.
+                We consider accessibility when selecting third-party components
+                and libraries.
               </li>
             </ul>
           </div>
@@ -78,12 +82,26 @@ export default function Accessibility() {
           <div className="legal-section">
             <h2 className="legal-h2">Known Limitations</h2>
             <p className="legal-p">
-              While we work toward full WCAG 2.1 AA conformance, some areas of
-              the platform may not yet fully meet these standards. PetParrk is
-              an actively developed product and accessibility improvements are
-              incorporated on an ongoing basis. If you encounter a specific
-              barrier, we encourage you to report it to us so we can prioritize
-              a fix.
+              PetParrk is an actively developed product, and accessibility
+              improvements are incorporated on an ongoing basis. We prefer to
+              name what we know rather than describe our gaps in general terms.
+              Areas we are currently aware of:
+            </p>
+            <ul className="legal-ul">
+              <li>
+                Some interactive elements do not yet show a clearly visible
+                focus indicator when navigated by keyboard. We are working
+                through these.
+              </li>
+              <li>
+                Decorative animation on the About page respects the operating
+                system&apos;s reduced-motion setting. Where you find motion that
+                does not, we would like to hear about it.
+              </li>
+            </ul>
+            <p className="legal-p">
+              If you encounter a barrier that is not listed here, please report
+              it using the details below so we can prioritise a fix.
             </p>
           </div>
           <div className="legal-divider" />
@@ -104,8 +122,8 @@ export default function Accessibility() {
             <p className="legal-p">
               Please include a description of the barrier you encountered, the
               page or feature affected, and the browser or device you were
-              using. We will acknowledge your message and work to address the
-              issue as promptly as possible.
+              using. We will acknowledge your message within ten (10) business
+              days and will tell you what we intend to do about it and when.
             </p>
           </div>
           <div className="legal-divider" />

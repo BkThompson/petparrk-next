@@ -1,5 +1,6 @@
 "use client";
 
+import { ArtNoPricing, ArtSubmitPrice } from "../../../components/BrandArt";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
@@ -514,6 +515,19 @@ export default function VetPage() {
   const [allPrices, setAllPrices] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
   const [showPricingModal, setShowPricingModal] = useState(false);
+
+  // Background scroll-lock while the pricing modal is open. Same pattern as
+  // ReportPriceModal and the Profile modals. Safe here because .modal-box is
+  // its own scroll container (max-height 86vh, overflow-y auto), so locking
+  // the body can't trap tall modal content the way it did on CareEditor.
+  useEffect(() => {
+    if (!showPricingModal) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [showPricingModal]);
   const [shareConfirmed, setShareConfirmed] = useState(false);
   const [chartVisible, setChartVisible] = useState(false);
   const [showInlineSubmit, setShowInlineSubmit] = useState(false);
@@ -736,28 +750,38 @@ export default function VetPage() {
         .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#172531;color:#fff;border:2px solid #172531;border-radius:12px;padding:11px 22px;font-size:15px;font-weight:700;font-family:var(--font-urbanist,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(23,37,49,0.22);transition:background 0.15s,color 0.15s}
         .price-gate-btn:hover{background:#fff;color:#172531;border:2px solid #172531}
         @media(max-width:768px){.price-gate-btn{width:100%}}
-        .save-btn{background:none;border:none;cursor:pointer;padding:0;line-height:1;transition:transform 0.1s;display:inline-flex;align-items:center;}
+        .save-btn{background:none;border:none;cursor:pointer;padding:0;line-height:1;transition:transform 0.1s;display:inline-flex;align-items:center;position:relative;}
+        .save-btn::after{content:"";position:absolute;inset:-12px;}
         .save-btn:hover{transform:scale(1.15);}
         .save-animating{animation:heartPop 0.4s ease forwards;}
         .acc-wrap{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 0.38s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease;}
         .acc-wrap.open{grid-template-rows:1fr;opacity:1;}
         .acc-inner{overflow:hidden;}
-        .expand-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid ${C.terracotta};background:transparent;color:${C.terracotta};cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s,color 0.2s;outline:none;}
+        .expand-btn{position:relative;width:28px;height:28px;border-radius:50%;border:1.5px solid ${C.terracotta};background:transparent;color:${C.terracotta};cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s,color 0.2s;outline:none;}
         .expand-btn:hover,.expand-btn.is-open{background:${C.terracotta};color:#fff;}
         .expand-btn.is-open:hover{background:#a8471d;border-color:#a8471d;}
+        .expand-btn::after{content:"";position:absolute;inset:-8px;}
         .expand-icon{width:10px;height:10px;display:block;flex-shrink:0;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);user-select:none;}
         .expand-icon.open{transform:rotate(45deg);}
         .report-price-btn{background:none;border:none;color:${C.muted};font-size:13px;font-weight:600;cursor:pointer;padding:14px 10px;text-decoration:underline;font-family:inherit;transition:color 0.15s;}
         .report-price-btn:hover{color:${C.terracotta};}
         .price-row{padding:16px 0px;}
-        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
-        .modal-box{background:#fff;border-radius:16px;padding:28px;max-width:440px;width:100%;position:relative;}
+        /* Canonical modal backdrop: navy 55% + 4px blur. Same treatment as
+           pp-modal-backdrop (Profile), pce-modal-overlay (Care) and
+           ucm-backdrop (UnsavedChanges). This one was still on plain black. */
+        .modal-overlay{position:fixed;inset:0;background:rgba(23,37,49,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+        .modal-box{background:#fff;border-radius:18px;padding:28px;max-width:440px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 30px 60px rgba(0,0,0,0.40);position:relative;}
         .modal-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border:none;background:transparent;color:${C.muted};cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;z-index:10;}
         .modal-close:hover{background:${C.cream};color:${C.navyDark};}
-        .share-btn{background:none;border:none;cursor:pointer;color:${C.muted};font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;padding:0;transition:color 0.15s;}
+        .share-btn{background:none;border:none;cursor:pointer;color:${C.muted};font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;padding:0;transition:color 0.15s;position:relative;}
+        /* Hit areas extended with pseudo-elements so the 44px target is
+           met without changing any spacing. */
+        .share-btn::after{content:"";position:absolute;inset:-14px -10px;}
         .share-btn:hover{color:${C.slate};}
         .submit-cta-btn{padding:0 20px;height:42px;background:${C.terracotta};color:#fff;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.2s,color 0.2s;border:2px solid ${C.terracotta};font-family:var(--font-urbanist,'Urbanist',sans-serif);display:inline-flex;align-items:center;justify-content:center;}
         .submit-cta-btn:hover{background:#fff;color:${C.terracotta};}
+        .vs-check-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;height:42px;border-radius:12px;border:2px solid ${C.terracotta};background:#fff;color:${C.terracotta};font-size:15px;font-weight:700;text-decoration:none;font-family:var(--font-urbanist,'Urbanist',sans-serif);transition:background 0.2s,color 0.2s;}
+        .vs-check-link:hover{background:${C.terracotta};color:#fff;}
         .toaster-create-btn{display:block;padding:14px;background:${C.terracotta};color:#fff;border:2px solid ${C.terracotta};border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;transition:background 0.18s,color 0.18s;}
         .toaster-create-btn:hover{background:#fff;color:${C.terracotta};}
         .toaster-signin-btn{display:block;padding:14px;background:transparent;color:${C.navyDark};border:2px solid ${C.navyDark};border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;transition:background 0.18s,color 0.18s;}
@@ -794,6 +818,7 @@ export default function VetPage() {
           .chart-row-header{flex-direction:column;align-items:flex-start;gap:6px;}
           /* Submit */
           .submit-cta-btn{width:100%;box-sizing:border-box;padding:14px;}
+          .vs-check-link{width:100%;box-sizing:border-box;}
           .submit-cta-wrap{flex-direction:column!important;}
           .form-2col{grid-template-columns:1fr!important;}
           .seg-group{flex-wrap:wrap!important;}
@@ -801,6 +826,15 @@ export default function VetPage() {
         @media(max-width:375px){}
       
    
+        /* Both pricing links: terracotta with an underline, going navy on
+           hover. These are buttons, not anchors, so the global link rules
+           don't reach them — the colour has to be stated here. */
+        .vs-price-link {
+          color: ${C.terracotta};
+          text-decoration: underline;
+          transition: color 0.15s;
+        }
+        .vs-price-link:hover { color: ${C.navyDark}; text-decoration: underline; }
       `}</style>
 
       {/* Pricing modal */}
@@ -917,90 +951,96 @@ export default function VetPage() {
           className="pp-container"
           style={{ position: "relative", zIndex: 3 }}
         >
-          <div style={{ height: "31px" }} />
-          <h1
-            style={{
-              margin: "0 0 10px",
-              fontSize: "clamp(30px,5.5vw,56px)",
-              fontWeight: "800",
-              color: "#fff",
-              fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
-              letterSpacing: "-0.025em",
-              lineHeight: "1.05",
-              overflowWrap: "break-word",
-              wordBreak: "break-word",
-            }}
-          >
-            {vet.name}
-          </h1>
-          {locationLine && (
-            <p
+          {/* Same 900px measure as the body below, so the page keeps one
+             content edge at every width. Without it the hero title sits at
+             24px while the content card starts at 62px (1024) or 190px
+             (1280). */}
+          <div className="pp-container-text">
+            <div style={{ height: "31px" }} />
+            <h1
               style={{
-                margin: "0 0 16px",
-                fontSize: "17px",
-                fontWeight: 500,
-                color: "rgba(255,255,255,0.6)",
+                margin: "0 0 10px",
+                fontSize: "clamp(30px,5.5vw,56px)",
+                fontWeight: "800",
+                color: "#fff",
+                fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
+                letterSpacing: "-0.025em",
+                lineHeight: "1.05",
                 overflowWrap: "break-word",
+                wordBreak: "break-word",
               }}
             >
-              {locationLine}
-            </p>
-          )}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              flexWrap: "wrap",
-            }}
-          >
-            {(typeof vet.vet_type === "string"
-              ? vet.vet_type
-                  .replace(/[\[\]"']/g, "")
-                  .split(",")
-                  .map((t) => t.trim())
-              : Array.isArray(vet.vet_type)
-                ? vet.vet_type.map((t) =>
-                    String(t)
-                      .replace(/[\[\]"']/g, "")
-                      .trim(),
-                  )
-                : []
-            )
-              .filter(Boolean)
-              .map((t) => (
+              {vet.name}
+            </h1>
+            {locationLine && (
+              <p
+                style={{
+                  margin: "0 0 16px",
+                  fontSize: "17px",
+                  fontWeight: 500,
+                  color: "rgba(255,255,255,0.6)",
+                  overflowWrap: "break-word",
+                }}
+              >
+                {locationLine}
+              </p>
+            )}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                flexWrap: "wrap",
+              }}
+            >
+              {(typeof vet.vet_type === "string"
+                ? vet.vet_type
+                    .replace(/[\[\]"']/g, "")
+                    .split(",")
+                    .map((t) => t.trim())
+                : Array.isArray(vet.vet_type)
+                  ? vet.vet_type.map((t) =>
+                      String(t)
+                        .replace(/[\[\]"']/g, "")
+                        .trim(),
+                    )
+                  : []
+              )
+                .filter(Boolean)
+                .map((t) => (
+                  <span
+                    key={t}
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      background: "rgba(239,200,139,0.16)",
+                      color: C.gold,
+                      padding: "4px 11px",
+                      borderRadius: "20px",
+                      border: "1px solid rgba(239,200,139,0.28)",
+                    }}
+                  >
+                    {t}
+                  </span>
+                ))}
+              {vet.ownership && (
                 <span
-                  key={t}
                   style={{
                     fontSize: "13px",
                     fontWeight: "700",
-                    background: "rgba(239,200,139,0.16)",
-                    color: C.gold,
+                    background: "rgba(255,255,255,0.07)",
+                    color: "rgba(255,255,255,0.5)",
                     padding: "4px 11px",
                     borderRadius: "20px",
-                    border: "1px solid rgba(239,200,139,0.28)",
+                    border: "1px solid rgba(255,255,255,0.12)",
                   }}
                 >
-                  {t}
+                  {vet.ownership?.startsWith("Other:")
+                    ? vet.ownership.replace("Other: ", "")
+                    : vet.ownership}
                 </span>
-              ))}
-            {vet.ownership && (
-              <span
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "700",
-                  background: "rgba(255,255,255,0.07)",
-                  color: "rgba(255,255,255,0.5)",
-                  padding: "4px 11px",
-                  borderRadius: "20px",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                }}
-              >
-                {vet.ownership?.startsWith("Other:")
-                  ? vet.ownership.replace("Other: ", "")
-                  : vet.ownership}
-              </span>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1599,13 +1639,12 @@ export default function VetPage() {
                     </h2>
                     <button
                       onClick={() => setShowPricingModal(true)}
+                      className="vs-price-link"
                       style={{
                         background: "none",
                         border: "none",
                         padding: 0,
                         fontSize: "14px",
-                        color: C.terracotta,
-                        textDecoration: "underline",
                         cursor: "pointer",
                         fontWeight: "600",
                       }}
@@ -1613,61 +1652,12 @@ export default function VetPage() {
                       About these prices
                     </button>
                   </div>
-                  {lastVerified && (
-                    <p
-                      style={{
-                        margin: "0 0 20px",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        color: C.muted,
-                      }}
-                    >
-                      Last verified {formatVerifiedDate(lastVerified)}
-                    </p>
-                  )}
-                  {reviewServices.length > 0 && (
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "10px",
-                        alignItems: "flex-start",
-                        padding: "12px 14px",
-                        marginBottom: "20px",
-                        background: "#F5F0E8",
-                        border: `1px solid ${C.border}`,
-                        borderRadius: "12px",
-                      }}
-                    >
-                      <RefreshCw
-                        size={16}
-                        strokeWidth={2.2}
-                        color={C.slate}
-                        style={{ flexShrink: 0, marginTop: "2px" }}
-                      />
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "14px",
-                          fontWeight: 500,
-                          color: C.slate,
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        Pricing for{" "}
-                        <strong style={{ fontWeight: 700, color: C.navyDark }}>
-                          {reviewServices.length === 1
-                            ? reviewServices[0]
-                            : reviewServices.length === 2
-                              ? `${reviewServices[0]} and ${reviewServices[1]}`
-                              : `${reviewServices.slice(0, -1).join(", ")}, and ${reviewServices[reviewServices.length - 1]}`}
-                        </strong>{" "}
-                        {reviewServices.length === 1 ? "is" : "are"} being
-                        updated and will be back shortly.
-                      </p>
-                    </div>
-                  )}
-                  <div className={`price-gate-wrap${!session ? " gated" : ""}`}>
-                    {!session && (
+                  <div
+                    className={`price-gate-wrap${
+                      !session && pricedRows.length > 0 ? " gated" : ""
+                    }`}
+                  >
+                    {!session && pricedRows.length > 0 && (
                       <div className="price-gate-overlay">
                         <Link href="/auth" className="price-gate-btn">
                           <Lock size={14} strokeWidth={2.5} />
@@ -1676,18 +1666,82 @@ export default function VetPage() {
                       </div>
                     )}
                     <div className="price-gate-inner">
-                      {pricedRows.length === 0 ? (
+                      {lastVerified && (
                         <p
                           style={{
+                            margin: "0 0 20px",
+                            fontSize: "14px",
+                            fontWeight: "500",
                             color: C.muted,
-                            fontStyle: "italic",
-                            fontSize: "15px",
-                            fontWeight: 500,
-                            padding: "16px 0",
                           }}
                         >
-                          No pricing available yet.
+                          Last verified {formatVerifiedDate(lastVerified)}
                         </p>
+                      )}
+                      {/* The "being updated" notice is pricing state, so it
+                         sits inside the gate with everything else. */}
+                      {reviewServices.length > 0 && (
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "10px",
+                            alignItems: "flex-start",
+                            padding: "12px 14px",
+                            marginBottom: "20px",
+                            background: "#F5F0E8",
+                            border: `1px solid ${C.border}`,
+                            borderRadius: "12px",
+                          }}
+                        >
+                          <RefreshCw
+                            size={16}
+                            strokeWidth={2.2}
+                            color={C.slate}
+                            style={{ flexShrink: 0, marginTop: "2px" }}
+                          />
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: "14px",
+                              fontWeight: 500,
+                              color: C.slate,
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            Pricing for{" "}
+                            <strong
+                              style={{ fontWeight: 700, color: C.navyDark }}
+                            >
+                              {reviewServices.length === 1
+                                ? reviewServices[0]
+                                : reviewServices.length === 2
+                                  ? `${reviewServices[0]} and ${reviewServices[1]}`
+                                  : `${reviewServices.slice(0, -1).join(", ")}, and ${reviewServices[reviewServices.length - 1]}`}
+                            </strong>{" "}
+                            {reviewServices.length === 1 ? "is" : "are"} being
+                            updated and will be back shortly.
+                          </p>
+                        </div>
+                      )}
+                      {pricedRows.length === 0 ? (
+                        <div
+                          style={{
+                            textAlign: "center",
+                            padding: "24px 0 28px",
+                          }}
+                        >
+                          <ArtNoPricing width={140} />
+                          <p
+                            style={{
+                              color: C.muted,
+                              fontSize: "15px",
+                              fontWeight: 500,
+                              margin: "12px 0 0",
+                            }}
+                          >
+                            No pricing available yet.
+                          </p>
+                        </div>
                       ) : (
                         pricedRows.map((p, i, arr) => {
                           const accordionCopy = ACCORDION_COPY[p.services?.id];
@@ -1806,6 +1860,8 @@ export default function VetPage() {
                                         marginBottom: "8px",
                                       }}
                                     >
+                                      {/* Body copy capped near 70ch. At 1024
+                                          the full 900px track ran 117. */}
                                       <p
                                         style={{
                                           margin: "0 0 6px",
@@ -1894,14 +1950,13 @@ export default function VetPage() {
                 Prices are estimates and may have changed.{" "}
                 <button
                   onClick={() => setShowPricingModal(true)}
+                  className="vs-price-link"
                   style={{
                     background: "none",
                     border: "none",
                     padding: 0,
                     fontSize: "13px",
                     fontWeight: "600",
-                    color: C.muted,
-                    textDecoration: "underline",
                     cursor: "pointer",
                     fontFamily: "var(--font-urbanist,system-ui)",
                   }}
@@ -1910,6 +1965,80 @@ export default function VetPage() {
                 </button>
               </p>
             )}
+
+            {/* ── SYMPTOM CHECK BRIDGE ──
+                Sits between the prices and the submit CTA because that is
+                where the question forms: someone reading a price is often
+                wondering whether the visit is needed at all, and until now
+                that dead-ended here.
+
+                Two variants. Signed in: prices are visible, so the question is
+                genuinely "do we need this". Signed out: the prices above are
+                blurred, so instead of stacking a second ask on top of the
+                sign-up wall, this offers something they can actually do right
+                now without an account. It deliberately does not repeat the
+                "sign up" call — one wall per screen.
+
+                The vet slug rides along as `from` so the result screen can
+                offer a way back. It is navigation only and must never feed
+                the triage ranking: which vet is right depends on the pet's
+                condition, not on which page someone happened to be reading. */}
+            <div
+              style={{
+                background: C.white,
+                borderRadius: "16px",
+                padding: "24px 20px",
+                border: `1px solid ${C.border}`,
+                marginBottom: "16px",
+              }}
+            >
+              {/* Same layout as the submit-price card below — text left,
+                  button right, stacking to a column on mobile — so the two
+                  read as a pair rather than two unrelated blocks. */}
+              <div
+                className="submit-cta-wrap"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: "16px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <p
+                    style={{
+                      margin: "0 0 4px",
+                      fontSize: "17px",
+                      fontWeight: 800,
+                      color: C.navyDark,
+                    }}
+                  >
+                    Not sure a visit is needed?
+                  </p>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "15px",
+                      fontWeight: 500,
+                      color: C.slate,
+                      lineHeight: 1.55,
+                      maxWidth: "62ch",
+                    }}
+                  >
+                    {session
+                      ? "Describe what you're seeing and get a sense of how urgent it is before you book."
+                      : "Check your pet's symptoms first — it's free, and you don't need an account to try it."}
+                  </p>
+                </div>
+                <Link
+                  href={`/symptom-checker?from=${slug}`}
+                  className="vs-check-link"
+                >
+                  Check symptoms
+                </Link>
+              </div>
+            </div>
 
             {/* ── SUBMIT CTA ── */}
             <div
@@ -1931,29 +2060,52 @@ export default function VetPage() {
                   flexWrap: "wrap",
                 }}
               >
-                <div>
-                  <p
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "14px",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <div
+                    aria-hidden="true"
                     style={{
-                      margin: "0 0 4px",
-                      fontSize: "16px",
-                      fontWeight: "700",
-                      color: C.navyDark,
-                      fontFamily: "var(--font-urbanist,system-ui)",
-                      overflowWrap: "break-word",
+                      flexShrink: 0,
+                      width: "68px",
+                      height: "68px",
+                      borderRadius: "18px",
+                      background: "rgba(207,92,54,0.10)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    Visited {vet.name}?
-                  </p>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "15px",
-                      fontWeight: 500,
-                      color: C.slate,
-                    }}
-                  >
-                    Help other pet owners by sharing what you paid.
-                  </p>
+                    <ArtSubmitPrice size={44} />
+                  </div>
+                  <div>
+                    <p
+                      style={{
+                        margin: "0 0 4px",
+                        fontSize: "16px",
+                        fontWeight: "700",
+                        color: C.navyDark,
+                        fontFamily: "var(--font-urbanist,system-ui)",
+                        overflowWrap: "break-word",
+                      }}
+                    >
+                      Visited {vet.name}?
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "15px",
+                        fontWeight: 500,
+                        color: C.slate,
+                      }}
+                    >
+                      Help other pet owners by sharing what you paid.
+                    </p>
+                  </div>
                 </div>
                 <button
                   ref={submitCtaRef}

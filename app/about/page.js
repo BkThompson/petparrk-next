@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ArtProblemNight,
+  ArtProblemPrice,
+  ArtProblemScatter,
+} from "../../components/BrandArt";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
@@ -190,18 +195,21 @@ const VALUES = [
 
 const PROBLEMS = [
   {
+    art: ArtProblemNight,
     label: "Decision Paralysis",
     title: "Is this an emergency?",
     body: "It's late. Your pet isn't acting like themselves. You don't know if this is something that can wait until morning or something that can't. You want a clear answer from someone who knows your pet — not a list of possibilities that leaves you more worried than when you started.",
     emoji: "🌙",
   },
   {
+    art: ArtProblemPrice,
     label: "Price Opacity",
     title: "What will this actually cost?",
     body: "You ask for a price before you go. You get a range so wide it's useless, or a number that turns out to be just the starting point. By the time you find out the real cost, you're already committed. That's not your fault — it's how the system was built.",
     emoji: "💸",
   },
   {
+    art: ArtProblemScatter,
     label: "Information Overload",
     title: "Where is everything?",
     body: "Records at one vet. Notes at another. Reminders on your phone. Advice from six different places. Especially when you're new at this — there's no single place to keep it all straight.",
@@ -217,7 +225,7 @@ const PROBLEMS = [
 // ────────────────────────────────────────────────────────────────────────────
 const MOBILE_DOG_SVG = encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 338">
-  <g opacity="0.22" transform="translate(27, 58.5) scale(0.80)">
+  <g opacity="0.50" transform="translate(27, 58.5) scale(0.80)">
     <ellipse cx="228" cy="332" rx="50" ry="4" fill="rgba(80,30,5,0.55)"/>
     <ellipse cx="228" cy="302" rx="38" ry="22" fill="#2C4657"/>
     <ellipse cx="228" cy="280" rx="20" ry="14" fill="#2C4657"/>
@@ -234,7 +242,7 @@ const MOBILE_DOG_SVG = encodeURIComponent(
     <ellipse cx="210" cy="322" rx="12" ry="7" fill="#1a2f3d"/>
     <ellipse cx="246" cy="322" rx="12" ry="7" fill="#1a2f3d"/>
   </g>
-  <g opacity="0.22" transform="translate(50, 60) scale(0.80)">
+  <g opacity="0.50" transform="translate(50, 60) scale(0.80)">
     <ellipse cx="318" cy="330" rx="58" ry="4.5" fill="rgba(80,30,5,0.55)"/>
     <ellipse cx="318" cy="293" rx="44" ry="28" fill="#CF5C36"/>
     <ellipse cx="318" cy="268" rx="26" ry="18" fill="#CF5C36"/>
@@ -247,8 +255,6 @@ const MOBILE_DOG_SVG = encodeURIComponent(
     <circle cx="304" cy="228" r="3.2" fill="#1a0800"/>
     <circle cx="333" cy="228" r="6.5" fill="rgba(240,228,192,0.55)"/>
     <circle cx="334" cy="228" r="3.2" fill="#1a0800"/>
-    <path d="M310 276 C307 282 307 292 310 297 C312 300 318 301 322 299 C326 296 327 286 324 279 C321 275 313 273 310 276Z" fill="#e8897a" opacity="0.82"/>
-    <line x1="317" y1="278" x2="317" y2="296" stroke="#c06050" stroke-width="1.4" opacity="0.4"/>
     <ellipse cx="296" cy="318" rx="14" ry="8" fill="#A84428"/>
     <ellipse cx="340" cy="318" rx="14" ry="8" fill="#A84428"/>
   </g>
@@ -315,26 +321,6 @@ function DogGolden() {
           fill={D}
         />
         <ellipse cx="141" cy="29" rx="4" ry="3.5" fill="#1a0800" />
-        <path
-          d="M125 37 C129 41 135 41 138 37"
-          stroke="#8B3520"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <path
-          d="M127 41 C124 43 122 48 124 52 C126 56 132 56 133 52 C134 48 132 43 129 41Z"
-          fill="#e8897a"
-        />
-        <line
-          x1="128"
-          y1="41"
-          x2="128"
-          y2="52"
-          stroke="#c06050"
-          strokeWidth="1.3"
-          opacity="0.45"
-        />
         <g className="golden-leg-fl">
           <path
             d="M88 67 C86 72 85 78 87 85 C89 89 95 89 95 85 C94 78 93 72 90 67Z"
@@ -555,7 +541,8 @@ const PAGE_CSS = `
   .problem-row-reverse .problem-text { order:2; }
   .problem-row-reverse .problem-image { order:1; }
   .problem-text-inner { border-left:3px solid var(--color-terracotta,#CF5C36); padding-left:24px; }
-  .problem-image-box  { width:100%; aspect-ratio:4/3; background:linear-gradient(135deg,var(--color-cream,#F5F0E8) 0%,#E2D9CE 100%); border-radius:20px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; }
+  .problem-image-box svg { width:100%; height:auto; display:block; }
+  .problem-image-box  { overflow:hidden; width:100%; aspect-ratio:4/3; background:linear-gradient(135deg,var(--color-cream,#F5F0E8) 0%,#E2D9CE 100%); border-radius:20px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; }
   .value-stripe-row { display:grid; grid-template-columns:140px 1fr; gap:48px; padding:48px 0; border-top:1px solid var(--color-border,#EDE8E0); align-items:start; }
   .value-stripe-row:last-child { border-bottom:1px solid var(--color-border,#EDE8E0); }
   .vsnum { font-size:clamp(76px,9vw,96px); font-weight:800; line-height:1; color:var(--color-border,#EDE8E0); font-family:var(--font-urbanist,'Urbanist',sans-serif); user-select:none; padding-top:4px; }
@@ -583,7 +570,7 @@ const PAGE_CSS = `
   .btn-wh:hover { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.6); }
 
 
-  .carousel-btn { width:52px; height:52px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--color-navy-dark,#172531); transition:color .2s; padding:0; flex-shrink:0; line-height:1; }
+  .carousel-btn { width:44px; height:44px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--color-navy-dark,#172531); transition:color .2s; padding:0; flex-shrink:0; line-height:1; }
   .carousel-btn:hover { color:var(--color-terracotta,#CF5C36); }
   .carousel-track { overflow:hidden; border-radius:20px; box-shadow:0 2px 12px rgba(23,37,49,0.06); position:relative; height:280px; }
   .carousel-card  { background:#fff; border-radius:20px; padding:32px 28px; border:1px solid var(--color-border,#EDE8E0); height:280px; box-sizing:border-box; overflow:hidden; }
@@ -593,17 +580,37 @@ const PAGE_CSS = `
   .values-desktop  { display:block; }
 
 
+  /* Buttons go full width on phones only; at tablet there is room for the
+     pair side by side. Matches .btn-cta-group on Home. */
+  @media (max-width:640px) {
+    .btn-tc,.btn-wh { width:100%; box-sizing:border-box; height:48px; justify-content:center; }
+  }
   @media (max-width:768px) {
     .values-carousel { display:block; }
     .values-desktop  { display:none;  }
     .problem-row,.problem-row-reverse { grid-template-columns:1fr; gap:28px; padding:40px 0; }
-    .problem-row-reverse .problem-text { order:unset; }
-    .problem-image { display:none; }
+    /* Reset both desktop orders, then set them for the stacked layout —
+       the reverse-row rules are more specific than a bare .problem-image
+       selector and would otherwise keep winning. */
+    .problem-row .problem-image,
+    .problem-row-reverse .problem-image { order:1; }
+    .problem-row .problem-text,
+    .problem-row-reverse .problem-text { order:2; }
+    /* Show the panel art on phones, above the copy and centred. It was
+       hidden here from when the box held a "photo coming soon"
+       placeholder; there is real artwork in it now. */
+    .problem-image { display:block; width:100%; max-width:420px; margin:0 auto 4px; }
     .value-stripe-row { grid-template-columns:56px 1fr; gap:16px; padding:32px 0; }
     .vsnum { font-size:48px; }
-    .btn-tc,.btn-wh { width:100%; box-sizing:border-box; height:48px; justify-content:center; }
+
     .about-mobile-header { min-height:368px !important; }
   }
+
+  /* Widow control. "balance" evens short headings so the last line isn't one
+     orphaned word; "pretty" does the same for body copy without re-flowing the
+     whole paragraph. Both fall back to normal wrapping where unsupported. */
+  h1, h2, h3 { text-wrap: balance; }
+  p, li { text-wrap: pretty; }
 `;
 
 const SLIDE_DUR = 440;
@@ -635,40 +642,86 @@ export default function AboutPage() {
   useEffect(() => {
     if (!isDesktop) return;
     if (hasAnimated.current) return;
-    hasAnimated.current = true;
-    const dog1 = dog1Ref.current,
-      dog2 = dog2Ref.current,
-      header = headerRef.current;
-    if (!dog1 || !dog2 || !header) return;
-    const W = header.offsetWidth;
-    gsap.fromTo(
-      dog1,
-      { x: -160, opacity: 0 },
-      {
-        x: W + 20,
-        duration: 14,
-        ease: "none",
-        onStart: () => gsap.to(dog1, { opacity: 1, duration: 0.9 }),
-      },
-    );
-    gsap.to(dog1, { opacity: 0, duration: 1.0, delay: 13.4 });
-    gsap.fromTo(
-      dog2,
-      { x: -180, opacity: 0 },
-      {
-        x: W + 20,
-        duration: 10,
-        ease: "none",
-        delay: 1.6,
-        onStart: () => gsap.to(dog2, { opacity: 1, duration: 0.9 }),
-      },
-    );
-    gsap.to(dog2, { opacity: 0, duration: 1.0, delay: 12.0 });
-    const t = setTimeout(() => setPhrasesFrozen(true), 11200);
+
+    // Respect the OS reduced-motion setting (WCAG 2.1 AA, 2.3.3). People turn
+    // this on because movement triggers migraine or vestibular symptoms — so
+    // the dogs are placed where they finish rather than walking there, and the
+    // phrases settle immediately. Same content, no motion.
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      hasAnimated.current = true;
+      const d1 = dog1Ref.current,
+        d2 = dog2Ref.current;
+      if (d1) gsap.set(d1, { opacity: 0 });
+      if (d2) gsap.set(d2, { opacity: 0 });
+      setPhrasesFrozen(true);
+      return;
+    }
+
+    // The header is measured for the dogs' travel distance. On a cold load the
+    // effect can fire before layout settles, and offsetWidth comes back 0 —
+    // the dogs then travel 20px and stop, which looks like no animation at all
+    // and is why a hard refresh "fixed" it. So: measure in a frame, and if the
+    // width isn't real yet, try again next frame rather than running with 0.
+    let raf = 0;
+    let cancelled = false;
+    let cleanupTweens = null;
+
+    const start = () => {
+      if (cancelled) return;
+      const dog1 = dog1Ref.current,
+        dog2 = dog2Ref.current,
+        header = headerRef.current;
+      if (!dog1 || !dog2 || !header) return;
+      const W = header.offsetWidth;
+      if (W < 200) {
+        raf = requestAnimationFrame(start);
+        return;
+      }
+      hasAnimated.current = true;
+      cleanupTweens = run(dog1, dog2, W);
+    };
+
+    const run = (dog1, dog2, W) => {
+      gsap.fromTo(
+        dog1,
+        { x: -160, opacity: 0 },
+        {
+          x: W + 20,
+          duration: 14,
+          ease: "none",
+          onStart: () => gsap.to(dog1, { opacity: 1, duration: 0.9 }),
+        },
+      );
+      gsap.to(dog1, { opacity: 0, duration: 1.0, delay: 13.4 });
+      gsap.fromTo(
+        dog2,
+        { x: -180, opacity: 0 },
+        {
+          x: W + 20,
+          duration: 10,
+          ease: "none",
+          delay: 1.6,
+          onStart: () => gsap.to(dog2, { opacity: 1, duration: 0.9 }),
+        },
+      );
+      gsap.to(dog2, { opacity: 0, duration: 1.0, delay: 12.0 });
+      const t = setTimeout(() => setPhrasesFrozen(true), 11200);
+      return () => {
+        clearTimeout(t);
+        gsap.killTweensOf(dog1);
+        gsap.killTweensOf(dog2);
+      };
+    };
+
+    raf = requestAnimationFrame(start);
     return () => {
-      clearTimeout(t);
-      gsap.killTweensOf(dog1);
-      gsap.killTweensOf(dog2);
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      if (cleanupTweens) cleanupTweens();
     };
   }, [isDesktop]);
 
@@ -714,7 +767,7 @@ export default function AboutPage() {
         boxSizing: "border-box",
         display: "flex",
         alignItems: "flex-start",
-        background: "#E8D9C0",
+        backgroundColor: "#E8D9C0",
         backgroundImage: [
           `url("data:image/svg+xml,${MOBILE_DOG_SVG}")`,
           "repeating-linear-gradient(45deg,rgba(100,50,15,0.022) 0px,rgba(100,50,15,0.022) 1px,transparent 1px,transparent 8px)",
@@ -777,7 +830,7 @@ export default function AboutPage() {
         padding: "80px 0 88px",
         minHeight: "393px",
         position: "relative",
-        overflow: isDesktop ? "hidden" : "visible",
+        overflow: "hidden",
         borderBottom: "1px solid rgba(120,70,30,0.12)",
         boxSizing: "border-box",
         display: "flex",
@@ -1096,6 +1149,7 @@ export default function AboutPage() {
               className={`rv${missionVisible ? " on" : ""} d2`}
               style={{
                 fontSize: "18px",
+                maxWidth: "64ch",
                 fontWeight: 500,
                 color: "var(--color-slate,#4B5563)",
                 lineHeight: "1.8",
@@ -1112,6 +1166,7 @@ export default function AboutPage() {
               className={`rv${missionVisible ? " on" : ""} d3`}
               style={{
                 fontSize: "18px",
+                maxWidth: "64ch",
                 fontWeight: 500,
                 color: "var(--color-slate,#4B5563)",
                 lineHeight: "1.8",
@@ -1222,19 +1277,7 @@ export default function AboutPage() {
                 className={`problem-image rs${problemsVisible ? " on" : ""} d${i + 2}`}
               >
                 <div className="problem-image-box">
-                  <div style={{ fontSize: "52px" }}>{p.emoji}</div>
-                  <p
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      color: "var(--color-muted, #717A86)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.10em",
-                      margin: 0,
-                    }}
-                  >
-                    Photo coming soon
-                  </p>
+                  {p.art ? <p.art width={520} /> : null}
                 </div>
               </div>
             </div>
@@ -1477,7 +1520,7 @@ export default function AboutPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "20px",
+                gap: "2px",
                 marginTop: "20px",
               }}
             >
@@ -1494,7 +1537,7 @@ export default function AboutPage() {
                 <ChevronLeft size={32} strokeWidth={1.5} />
               </button>
               <div
-                style={{ display: "flex", gap: "10px", alignItems: "center" }}
+                style={{ display: "flex", gap: "0px", alignItems: "center" }}
               >
                 {VALUES.map((_, i) => (
                   <button
@@ -1502,21 +1545,40 @@ export default function AboutPage() {
                     onClick={() => goToValue(i)}
                     aria-label={`Value ${i + 1}`}
                     style={{
-                      width: "14px",
-                      height: "14px",
-                      borderRadius: "50%",
-                      background:
-                        activeValue === i
-                          ? "var(--color-terracotta,#CF5C36)"
-                          : "var(--color-border,#EDE8E0)",
-                      border: "none",
-                      cursor: "pointer",
-                      transform: activeValue === i ? "scale(1.2)" : "scale(1)",
-                      transition: "background 0.3s,transform 0.3s",
+                      // 24 wide keeps the original 24px pitch between dots
+                      // (14px dot + 10px gap); 44 tall still gives a real
+                      // target without spreading the row out.
+                      width: "24px",
+                      height: "44px",
                       padding: 0,
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       flexShrink: 0,
                     }}
-                  />
+                  >
+                    {/* The dot is a child so the button can be a 44px target
+                        without the dot growing with it. */}
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        display: "block",
+                        width: "14px",
+                        height: "14px",
+                        borderRadius: "50%",
+                        background:
+                          activeValue === i
+                            ? "var(--color-terracotta,#CF5C36)"
+                            : "var(--color-border,#EDE8E0)",
+                        transform:
+                          activeValue === i ? "scale(1.2)" : "scale(1)",
+                        transition: "background 0.3s,transform 0.3s",
+                      }}
+                    />
+                  </button>
                 ))}
               </div>
               <button
@@ -1588,6 +1650,9 @@ export default function AboutPage() {
             <p
               style={{
                 fontSize: "17px",
+                maxWidth: "64ch",
+                marginLeft: "auto",
+                marginRight: "auto",
                 fontWeight: 500,
                 color: "rgba(255,255,255,0.7)",
                 lineHeight: "1.7",

@@ -6,15 +6,12 @@ import { supabase } from "../lib/supabase";
 import HomeDashboard from "../components/HomeDashboard";
 import Link from "next/link";
 import {
-  DollarSign,
-  Stethoscope,
-  ClipboardList,
-  Heart,
-  Check,
-  X,
-  ArrowRight,
-  Lock,
-} from "lucide-react";
+  ArtPricing,
+  ArtTriage,
+  ArtRecord,
+  ArtSteps,
+} from "../components/BrandArt";
+import { Heart, Check, X, ArrowRight, Lock } from "lucide-react";
 
 function formatPrice(low, high, type) {
   if (!low) return null;
@@ -65,15 +62,15 @@ function getVetCoords(vet) {
 
 const PILLARS = [
   {
-    icon: DollarSign,
+    art: ArtPricing,
     title: "Transparent Pricing",
     description:
-      "Real prices from real pet owners. See what exams, dental, and surgery actually cost before you commit.",
+      "Real prices, verified before they go live. See what exams, dental, and surgery actually cost before you commit.",
     cta: "Find a Vet",
     href: "/vets",
   },
   {
-    icon: Stethoscope,
+    art: ArtTriage,
     title: "AI Symptom Triage",
     description:
       "When your pet isn't acting like themselves, get instant guidance on what to do next — day or night.",
@@ -81,7 +78,7 @@ const PILLARS = [
     href: "/symptom-checker",
   },
   {
-    icon: ClipboardList,
+    art: ArtRecord,
     title: "Pet Health History",
     description:
       "One place for every vet visit, vaccine, and health note. Your pet's story, owned by you.",
@@ -101,7 +98,7 @@ const STEPS = [
     number: "02",
     title: "See actual prices",
     description:
-      "Real costs submitted by pet owners like you — exams, dental, surgery, and more.",
+      "Real costs for exams, dental, surgery, and more — each one checked and dated.",
   },
   {
     number: "03",
@@ -495,7 +492,7 @@ export default function Home() {
           ?.price_low ?? 999;
       return aP - bP;
     })
-    .slice(0, 3);
+    .slice(0, 4);
 
   function handleHeroSearch(e) {
     e.preventDefault();
@@ -835,7 +832,7 @@ export default function Home() {
         .price-chip-value { font-weight:700; color:#CF5C36; }
         .price-gate-wrap{position:relative}
         .price-gate-wrap.gated{padding:10px 0 20px}
-        .price-gate-wrap.gated .price-gate-inner{filter:blur(5px);pointer-events:none;user-select:none}
+        .price-gate-wrap.gated .price-gate-inner{filter:blur(5px);pointer-events:none;user-select:none;-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
         .price-gate-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;padding:0 16px}
         .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#172531;color:#fff;border:2px solid #172531;border-radius:12px;padding:9px 18px;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 2px 10px rgba(23,37,49,0.2);transition:background 0.15s,color 0.15s}
         .price-gate-btn:hover{background:#fff;color:#172531;border:2px solid #172531}
@@ -845,7 +842,65 @@ export default function Home() {
         }
         .pillars-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
         .vets-grid    { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; align-items:stretch; }
-        @media(max-width:900px){ .pillars-grid{ grid-template-columns:1fr; } }
+        /* Four teasers are fetched, but the fourth is only shown in the
+           two-column tablet band, where three would orphan. Everywhere else
+           the row already comes out even at three. */
+        .vets-grid > *:nth-child(4) { display:none; }
+        /* Pillars go 3-up only when the tracks stay usable. At 901px they
+           would be 271px, which forces three-line titles. */
+        @media(max-width:1023px){ .pillars-grid{ grid-template-columns:1fr; } }
+
+        /* Illustration that fills the stranded left column of the steps
+           section. Hidden on phones, where the column stacks anyway. */
+        .steps-art { margin-top: 40px; }
+        @media(max-width:640px){ .steps-art { display:none; } }
+
+        /* ── TABLET BAND (660-1023px) ──────────────────────────────
+           One column, but the card relayouts horizontally: illustration
+           left, title + copy centre, CTA right. Without this the cards
+           are full-width blocks with a centred icon over two lines. */
+        @media (min-width:660px) and (max-width:1023px) {
+          .pillars-grid { grid-template-columns:1fr; gap:16px; }
+          .pillar-card {
+            display:grid;
+            grid-template-columns:auto minmax(0,1fr) auto;
+            grid-template-rows:auto auto;
+            column-gap:24px;
+            row-gap:6px;
+            align-items:center;
+            text-align:left;
+            padding:26px 28px;
+          }
+          .pillar-card > .pillar-icon-wrap {
+            grid-column:1; grid-row:1 / span 2;
+            margin:0; width:64px; height:64px; border-radius:17px;
+          }
+          .pillar-card > h3 {
+            grid-column:2; grid-row:1;
+            margin-bottom:0 !important;
+            font-size:20px !important;
+          }
+          .pillar-card > p {
+            grid-column:2; grid-row:2;
+            margin:0 !important;
+            max-width:none !important;
+            font-size:15px !important;
+            line-height:1.6 !important;
+          }
+          .pillar-card > .pillar-link-wrap {
+            grid-column:3; grid-row:1 / span 2;
+            margin-top:0; padding-top:0; white-space:nowrap;
+          }
+          /* Three teasers land 2 + 1 in this band. The section is a teaser
+             with "See all vets" directly below it, so drop the orphan. */
+          .vets-grid > *:nth-child(4) { display:block; }
+          /* 80px between the two step columns costs more than it buys once
+             the columns are ~320px. */
+          .steps-grid { gap:40px !important; }
+        }
+
+        /* Trust stats stack rather than orphaning 2 + 1. */
+        @media(max-width:640px){ .trust-grid { grid-template-columns:1fr !important; } }
 
 
 
@@ -971,6 +1026,23 @@ export default function Home() {
           .btn-cta-group { flex-direction:column!important; align-items:stretch!important; }
           .btn-primary,.btn-outline-dark { width:100%; box-sizing:border-box; height:50px; justify-content:center; }
         }
+
+  /* Widow control. "balance" evens short headings so the last line isn't one
+     orphaned word; "pretty" does the same for body copy without re-flowing the
+     whole paragraph. Both fall back to normal wrapping where unsupported. */
+  h1, h2, h3 { text-wrap: balance; }
+  p, li { text-wrap: pretty; }
+        /* Sits on the navy steps panel. globals.css has
+           ".reveal-up a:hover { color:#172531 !important }", which made this
+           vanish — the fix is at source: that rule now skips .pp-keep-color,
+           which this link carries. Gold in every state, matching the gold
+           buttons above it. */
+        a.pp-steps-learnmore,
+        a.pp-steps-learnmore:hover,
+        a.pp-steps-learnmore:focus,
+        a.pp-steps-learnmore:visited {
+          color: var(--color-gold, #EFC88B);
+        }
       `}</style>
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
@@ -992,8 +1064,7 @@ export default function Home() {
             height: "900px",
             pointerEvents: "none",
             background:
-              "radial-gradient(ellipse at center, rgba(239,200,139,0.06) 0%, rgba(239,200,139,0.025) 40%, transparent 68%)",
-            filter: "blur(60px)",
+              "radial-gradient(ellipse at center, rgba(239,200,139,0.06) 0%, rgba(239,200,139,0.04) 28%, rgba(239,200,139,0.018) 52%, transparent 76%)",
           }}
         />
 
@@ -1161,7 +1232,7 @@ export default function Home() {
           </div>
           {loading ? (
             <div className="vets-grid">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="skeleton" style={{ height: "220px" }} />
               ))}
             </div>
@@ -1254,7 +1325,7 @@ export default function Home() {
                         style={{
                           display: "flex",
                           flexWrap: "wrap",
-                          gap: "4px",
+                          gap: "8px",
                           marginBottom: "14px",
                         }}
                       >
@@ -1473,7 +1544,7 @@ export default function Home() {
           </div>
           <div className="pillars-grid" style={{ alignItems: "stretch" }}>
             {PILLARS.map((pillar, i) => {
-              const Icon = pillar.icon;
+              const Art = pillar.art;
               return (
                 <div
                   key={pillar.title}
@@ -1482,11 +1553,8 @@ export default function Home() {
                 >
                   <div className="pillar-card-outer" style={{ height: "100%" }}>
                     <div className="pillar-card">
-                      <div
-                        className={`pillar-icon-wrap pillar-icon-${i}`}
-                        style={{ filter: "brightness(1.35)" }}
-                      >
-                        <Icon size={32} strokeWidth={2} color="#fff" />
+                      <div className={`pillar-icon-wrap pillar-icon-${i}`}>
+                        <Art size={44} />
                       </div>
                       <h3
                         style={{
@@ -1502,7 +1570,7 @@ export default function Home() {
                         {pillar.title}
                       </h3>
                       <p
-                        class="home-platform-build"
+                        className="home-platform-build"
                         style={{
                           fontSize: "16px",
                           fontWeight: 500,
@@ -1613,13 +1681,13 @@ export default function Home() {
               </p>
               <Link
                 href="/how-it-works"
+                className="pp-steps-learnmore pp-keep-color"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "8px",
                   fontSize: "14px",
                   fontWeight: "700",
-                  color: "var(--color-gold,#EFC88B)",
                   textDecoration: "none",
                 }}
               >
@@ -1630,6 +1698,9 @@ export default function Home() {
                   style={{ marginLeft: "4px", verticalAlign: "middle" }}
                 />
               </Link>
+              <div className="steps-art">
+                <ArtSteps width={320} />
+              </div>
             </div>
             <div>
               {STEPS.map((step, i) => (
@@ -1672,16 +1743,14 @@ export default function Home() {
           style={{
             borderTop: "1px solid rgba(255,255,255,0.06)",
             paddingTop: "64px",
-            paddingLeft: "20px",
-            paddingRight: "20px",
           }}
         >
           <div
             ref={trustRef}
-            className={`pp-container reveal-up${trustVisible ? " visible" : ""}`}
+            className={`pp-container trust-grid reveal-up${trustVisible ? " visible" : ""}`}
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))",
+              gridTemplateColumns: "repeat(3,1fr)",
               gap: "16px",
               textAlign: "center",
               paddingBottom: "64px",
@@ -1690,9 +1759,12 @@ export default function Home() {
             {[
               {
                 value: `${vets.length > 0 ? vets.length : "40"}+`,
-                label: "Verified vets in the East Bay",
+                label: "Verified vets across California",
               },
-              { value: "Free", label: "No account needed to browse" },
+              {
+                value: "Free",
+                label: "Browse and check symptoms, no account needed",
+              },
               {
                 value: "Verified",
                 label: "Every price reviewed before it goes live",
@@ -1789,8 +1861,8 @@ export default function Home() {
                   marginBottom: "20px",
                 }}
               >
-                Save vets, run symptom checks, and build a health history your
-                pet deserves — all for free.
+                See what people paid, check symptoms any time, and keep every
+                visit, vaccine and note in one place.
               </p>
               <div
                 className="btn-cta-group"

@@ -27,13 +27,14 @@ import {
   Check,
   Copy,
   X,
-  Sparkles,
+  WandSparkles,
   AlertTriangle,
 } from "lucide-react";
 import AutoGrowTextarea from "./AutoGrowTextarea";
 import {
   BANNER_PALETTE,
   BANNER_LUCIDE,
+  CUSTOM_LUCIDE,
   pageGradient,
 } from "../lib/petTileHelpers";
 
@@ -458,7 +459,10 @@ export default function ProfileEditForm({
           color: C.muted,
         }}
       >
-        Auto picks a color based on your pack. Pick a custom one to override.
+        Auto picks your banner color from the pets in your pack, and updates it
+        whenever your pack changes. Mixed is what it uses when you have more
+        than one kind of animal. Prefer to choose yourself? Pick any color
+        below.
       </p>
 
       <div className="pp-banner-pick-grid">
@@ -472,7 +476,7 @@ export default function ProfileEditForm({
             className="pp-banner-swatch-color"
             style={{ background: pageGradient(autoKey) }}
           >
-            <Sparkles size={20} strokeWidth={1.8} />
+            <WandSparkles size={20} strokeWidth={1.8} />
           </div>
           <p className="pp-banner-swatch-label">Auto</p>
         </button>
@@ -526,7 +530,14 @@ export default function ProfileEditForm({
               <div
                 className="pp-banner-swatch-color"
                 style={{ background: pageGradient(key) }}
-              />
+              >
+                {(() => {
+                  const CustomIcon = CUSTOM_LUCIDE[key];
+                  return CustomIcon ? (
+                    <CustomIcon size={20} strokeWidth={1.8} />
+                  ) : null;
+                })()}
+              </div>
               <p className="pp-banner-swatch-label">{val.label}</p>
             </button>
           ))}

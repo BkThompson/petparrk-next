@@ -274,6 +274,9 @@ export default function PublicHeroCardPage() {
         .pht-download:active { transform: translateY(1px); }
         .pht-download:disabled { opacity: 0.65; cursor: default; }
         .pht-brand {
+          /* 22.1px before. This is the only route from a shared card back to
+             PetParrk, on a page seen by people without an account. */
+          display: inline-flex; align-items: center; min-height: 44px;
           font-size: 13px; font-weight: 600;
           color: var(--pht-bg-muted, rgba(255,255,255,0.8));
           text-decoration: none;

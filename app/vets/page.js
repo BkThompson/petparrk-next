@@ -1,5 +1,6 @@
 "use client";
 
+import { ArtNoResults } from "../../components/BrandArt";
 import React, {
   useEffect,
   useRef,
@@ -14,7 +15,6 @@ import {
   Heart,
   Check,
   X,
-  Search,
   ChevronDown,
   ArrowRight,
   ArrowUp,
@@ -1201,7 +1201,7 @@ function VetsContent() {
                           style={{
                             display: "flex",
                             flexWrap: "wrap",
-                            gap: "10px",
+                            gap: "8px",
                             marginBottom: "10px",
                           }}
                         >
@@ -1290,7 +1290,7 @@ function VetsContent() {
                               className="price-gate-inner"
                               style={{
                                 display: "flex",
-                                gap: "10px",
+                                gap: "8px",
                                 marginTop: "10px",
                                 marginBottom: "14px",
                                 flexWrap: "wrap",
@@ -1431,8 +1431,8 @@ function VetsContent() {
             )}
           {!loading && filtered.length === 0 && (
             <div style={{ textAlign: "center", padding: "60px 20px" }}>
-              <div style={{ marginBottom: "12px", color: "#717A86" }}>
-                <Search size={32} strokeWidth={1.8} />
+              <div style={{ marginBottom: "12px" }}>
+                <ArtNoResults width={140} />
               </div>
               <p
                 style={{

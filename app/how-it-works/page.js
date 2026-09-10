@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { supabase } from "../../lib/supabase";
 import { ArrowRight, Search, Stethoscope, ClipboardList } from "lucide-react";
 
 function useScrollReveal(threshold = 0.08) {
@@ -100,7 +101,7 @@ const STEPS = [
     title: "Find a Vet",
     href: "/vets",
     description:
-      "Search verified vets in your neighborhood. Filter by price, specialty, or availability. See real prices before you ever pick up the phone.",
+      "Search verified vets in your neighborhood. Filter by price, specialty, or availability. See what people actually paid before you pick up the phone.",
   },
   {
     number: "02",
@@ -108,7 +109,7 @@ const STEPS = [
     title: "Check Symptoms",
     href: "/symptom-checker",
     description:
-      "Not sure if it's urgent? Get instant AI triage guidance personalized to your pet — 24/7, completely free. No subscription required.",
+      "Not sure if it's urgent? Get instant AI triage guidance personalized to your pet — 24/7. Try it without an account; sign up free to keep going and to save every check. No subscription, ever.",
   },
   {
     number: "03",
@@ -116,18 +117,18 @@ const STEPS = [
     title: "Track Your Pet's Health",
     href: "/pet-card",
     description:
-      "Build your pet's complete health history over time. Vet visits, vaccines, notes — all in one place you own and control.",
+      "Build your pet's complete health history over time. Every symptom check, vet visit and note in one place you own and control.",
   },
 ];
 
 const FAQS = [
   {
     q: "Is PetParrk free to use?",
-    a: "Yes. Browsing the vet directory, viewing prices, and running one symptom check are all free with no account required. Create a free account to save vets and build your pet's health history.",
+    a: "Yes — PetParrk is free. You can browse the whole vet directory and try the symptom checker without an account. A free account unlocks submitted prices, unlimited symptom checks, and lets you save vets and build your pet's health history.",
   },
   {
     q: "Where does the pricing data come from?",
-    a: "Prices are submitted by pet owners in the community and verified by our team before going live. We never show unverified data.",
+    a: "Every price on PetParrk is gathered and verified by our team before it goes live. Each one is checked, dated, and tied to a specific service at a specific clinic. We never show unverified data.",
   },
   {
     q: "Is the symptom checker a replacement for a vet?",
@@ -135,7 +136,7 @@ const FAQS = [
   },
   {
     q: "What areas does PetParrk cover?",
-    a: "Launching in Oakland and Berkeley with verified vet listings across California. We're expanding city by city.",
+    a: "We list verified vets across California.",
   },
 ];
 
@@ -157,6 +158,35 @@ function PawShape({ fill = "white" }) {
 }
 
 export default function HowItWorksPage() {
+  // Step 3 links to "Track Your Pet's Health". Where that should go depends on
+  // the visitor: the health history page is useless with nothing in it, and a
+  // signed-out visitor can't reach it at all.
+  //   no account        -> sign up
+  //   account, history  -> the history itself
+  //   account, none yet -> the symptom checker, which is what creates the
+  //                        first entry
+  const [trackHref, setTrackHref] = useState("/auth?tab=signup");
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      const session = data?.session;
+      if (!session) {
+        if (!cancelled) setTrackHref("/auth?tab=signup");
+        return;
+      }
+      const { count } = await supabase
+        .from("symptom_checks")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", session.user.id);
+      if (!cancelled)
+        setTrackHref((count ?? 0) > 0 ? "/health-history" : "/symptom-checker");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const [openFaq, setOpenFaq] = useState(null);
   const [visiblePaws, setVisiblePaws] = useState([]);
   const [fadingPaws, setFadingPaws] = useState([]);
@@ -259,7 +289,16 @@ export default function HowItWorksPage() {
 
 
 
-        @media(max-width:768px){.fqg{grid-template-columns:1fr!important;} .bt{width:100%;box-sizing:border-box;height:48px;justify-content:center;}}
+        @media(max-width:768px){.fqg{grid-template-columns:1fr!important;}}
+        /* Buttons stay side by side on tablet — they only go full width on
+           phones, matching .btn-cta-group on Home. */
+        @media(max-width:640px){.bt{width:100%;box-sizing:border-box;height:48px;justify-content:center;}}
+
+  /* Widow control. "balance" evens short headings so the last line isn't one
+     orphaned word; "pretty" does the same for body copy without re-flowing the
+     whole paragraph. Both fall back to normal wrapping where unsupported. */
+  h1, h2, h3 { text-wrap: balance; }
+  p, li { text-wrap: pretty; }
       `}</style>
 
       {/* HEADER — minHeight 393px desktop, 368px mobile via .hiw-header class */}
@@ -430,7 +469,7 @@ export default function HowItWorksPage() {
                 style={{ height: "100%" }}
               >
                 <Link
-                  href={step.href}
+                  href={step.href === "/pet-card" ? trackHref : step.href}
                   className="sc-outer"
                   style={{
                     background:
@@ -562,6 +601,10 @@ export default function HowItWorksPage() {
               <Link
                 href="/contact"
                 style={{
+                  // 17px tall as a bare inline link; make it a real control.
+                  display: "inline-flex",
+                  alignItems: "center",
+                  minHeight: "44px",
                   fontSize: "14px",
                   fontWeight: "700",
                   color: "var(--color-gold,#EFC88B)",
@@ -687,12 +730,11 @@ export default function HowItWorksPage() {
                 color: "var(--color-slate,#4B5563)",
                 lineHeight: "1.7",
                 // marginBottom: "36px",
-                wordWrap: "pretty",
                 maxWidth: "90%",
                 margin: "0 auto 36px",
               }}
             >
-              Browse verified vets with real prices — no account needed.
+              Browse verified vets across California. Free to look around.
             </p>
             <div
               style={{

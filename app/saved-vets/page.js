@@ -1,18 +1,11 @@
 "use client";
 
+import { ArtNoSavedVets, ArtNoMatches } from "../../components/BrandArt";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Heart,
-  HeartOff,
-  Search,
-  Check,
-  X,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight, Heart, Check, X } from "lucide-react";
 import PageLoader from "../../components/PageLoader";
 
 const C = {
@@ -171,11 +164,14 @@ export default function SavedVets() {
 
         /* Left column */
         .sv-left { padding-right: 20px; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
-        .sv-name-link { text-decoration: none; display: block; }
+        /* Vet name, website link and the unsave button were 27.6, 22.5 and
+           24.5px. Unsave is destructive, so it gets a real target rather than
+           a slightly bigger one. */
+        .sv-name-link { text-decoration: none; display: block; padding: 9px 0; margin: -9px 0; }
         .sv-name-link:hover .sv-name { color: ${C.terracotta}; }
         .sv-name { font-size: 17px; font-weight: 700; color: ${C.navyDark}; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin: 0 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .sv-meta { font-size: 15px; font-weight: 500; color: ${C.muted}; margin: 0 0 2px; line-height: 1.5; }
-        .sv-meta-link { font-size: 15px; font-weight: 500; color: ${C.terracotta}; margin: 0 0 2px; line-height: 1.5; text-decoration: none; }
+        .sv-meta-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 500; color: ${C.terracotta}; margin: 0 0 2px; line-height: 1.5; text-decoration: none; }
         .sv-meta-link:hover { text-decoration: underline; }
     
 
@@ -217,7 +213,7 @@ export default function SavedVets() {
         }
 
         /* Unsave */
-        .sv-unsave { background: none; border: none; cursor: pointer; font-size: 16px; line-height: 1; padding: 0; transition: transform 0.15s; }
+        .sv-unsave { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: none; border: none; cursor: pointer; font-size: 16px; line-height: 1; padding: 0; transition: transform 0.15s; }
         .sv-unsave:hover { transform: scale(1.2); }
         .sv-unsave.removing { animation: heartPop 0.3s ease forwards; opacity: 0.5; pointer-events: none; }
 
@@ -314,7 +310,7 @@ export default function SavedVets() {
             <div className="sv-list">
               <div className="sv-empty">
                 <div className="sv-empty-icon">
-                  <HeartOff size={48} strokeWidth={1.6} color={C.muted} />
+                  <ArtNoSavedVets width={140} />
                 </div>
                 <h2 className="sv-empty-title">No saved vets yet</h2>
                 <p className="sv-empty-sub">
@@ -339,7 +335,7 @@ export default function SavedVets() {
             <div className="sv-list">
               <div className="sv-empty">
                 <div className="sv-empty-icon">
-                  <Search size={48} strokeWidth={1.6} color={C.muted} />
+                  <ArtNoMatches width={140} />
                 </div>
                 <h2 className="sv-empty-title">No results</h2>
                 <p className="sv-empty-sub">No saved vets match "{search}".</p>

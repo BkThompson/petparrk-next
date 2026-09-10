@@ -1,5 +1,11 @@
 "use client";
 
+import { ArtEmptyPets } from "../../components/BrandArt";
+import {
+  ArtCareCard,
+  ArtHeroCard,
+  ArtShareCard,
+} from "../../components/BrandArt";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -10,13 +16,8 @@ import {
   Fish,
   Sparkles,
   ArrowRight,
-  Award,
   Plus,
   ClipboardList,
-  PlusCircle,
-  ShieldCheck,
-  Heart,
-  Share2,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import PageLoader from "../../components/PageLoader";
@@ -191,7 +192,15 @@ function MarketingView() {
   return (
     <>
       <style>{`
-        .pc-marketing { background: var(--color-cream, #F5F0E8); min-height: calc(100vh - 64px); }
+        /* No min-height: forcing 100vh left a slab of empty cream below the
+           closing CTA whenever the content came up short. The footer sits
+           directly beneath, so the section can end where it ends. */
+        .pc-marketing { background: var(--color-cream, #F5F0E8); }
+        /* Widow control. "balance" evens the last line of short headings so a
+           single word isn't stranded; "pretty" does the same for body copy.
+           Both fall back to normal wrapping where unsupported. */
+        .pc-hero h1, .pc-closing h2, .pc-feature-card h3 { text-wrap: balance; }
+        .pc-lede, .pc-closing p, .pc-feature-card p { text-wrap: pretty; }
         .pc-container { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
 
         /* Hero */
@@ -288,6 +297,14 @@ function MarketingView() {
            so the closing CTA sits closer to the cards instead of floating
            in a large vertical gap. */
         .pc-features { padding: 12px 0 20px; }
+        .pc-feature-card:nth-child(2) .pc-feature-icon-wrap {
+          background: rgba(239,200,139,0.30);
+          border-color: rgba(203,150,60,0.38);
+        }
+        .pc-feature-card:nth-child(3) .pc-feature-icon-wrap {
+          background: rgba(100,160,210,0.14);
+          border-color: rgba(100,160,210,0.25);
+        }
         .pc-features-grid {
           display: grid;
           grid-template-columns: 1fr;
@@ -316,10 +333,14 @@ function MarketingView() {
         /* Icon centered via auto margins (text-align centers inline-flex
            too, but auto margins are more explicit and reliable). */
         .pc-feature-icon-wrap {
-          width: 60px;
-          height: 60px;
-          border-radius: 16px;
-          background: rgba(207,92,54,0.10);
+          /* 68px tile at 18px radius — the standard spot tile. Base tint is
+             terracotta; cards 2 and 3 override it above, the way Home gives
+             each pillar its own colour. */
+          width: 68px;
+          height: 68px;
+          border-radius: 18px;
+          background: rgba(207,92,54,0.14);
+          border: 1px solid rgba(207,92,54,0.28);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -345,7 +366,7 @@ function MarketingView() {
         /* Closing CTA — padding-top tightened so it sits closer to
            the feature cards above instead of floating in a big gap. */
         .pc-closing {
-          padding: 24px 0 80px;
+          padding: 24px 0 56px;
           text-align: center;
         }
         .pc-closing h2 {
@@ -406,7 +427,7 @@ function MarketingView() {
             <div className="pc-features-grid">
               <div className="pc-feature-card">
                 <div className="pc-feature-icon-wrap">
-                  <ShieldCheck size={24} strokeWidth={2} />
+                  <ArtCareCard size={44} />
                 </div>
                 <h3>Care Card</h3>
                 <p>
@@ -418,7 +439,7 @@ function MarketingView() {
 
               <div className="pc-feature-card">
                 <div className="pc-feature-icon-wrap">
-                  <Heart size={24} strokeWidth={2} />
+                  <ArtHeroCard size={44} />
                 </div>
                 <h3>Hero Card</h3>
                 <p>
@@ -429,12 +450,13 @@ function MarketingView() {
 
               <div className="pc-feature-card">
                 <div className="pc-feature-icon-wrap">
-                  <Share2 size={24} strokeWidth={2} />
+                  <ArtShareCard size={44} />
                 </div>
                 <h3>Share anywhere</h3>
                 <p>
-                  Send a private link, download a PDF, or post the Hero Card to
-                  share what makes your pet special. You stay in control.
+                  Send a private link, save the Hero Card as an image, print the
+                  Care Card for the vet, or share a QR code someone can scan.
+                  Turn sharing off whenever you like.
                 </p>
               </div>
             </div>
@@ -517,7 +539,7 @@ function EmptyPetsView({ error }) {
       <div className="pc-empty">
         <div className="pc-empty-card">
           <div className="pc-empty-icon">
-            <PlusCircle size={36} strokeWidth={2} />
+            <ArtEmptyPets width={140} />
           </div>
           <h2>No pets yet</h2>
           {error ? <p className="pc-empty-err">{error}</p> : null}
@@ -617,7 +639,7 @@ function HeroPreviewTile({ pet }) {
       >
         <div className="pc-hub-inner pc-hub-setup-inner">
           <div className="pc-hub-setup-icon">
-            <Sparkles size={26} strokeWidth={1.75} />
+            <ArtHeroCard size={44} />
           </div>
           <p className="pc-hub-setup-name">{pet.name}</p>
           <span className="pc-hub-setup-cta">
@@ -670,13 +692,19 @@ function CarePreviewTile({ pet }) {
           {pet.photo_url ? (
             <img src={pet.photo_url} alt={pet.name} loading="lazy" />
           ) : (
-            <div className="pc-hub-care-photo-ph">
-              <ClipboardList
-                size={28}
-                strokeWidth={1.6}
-                color="rgba(255,255,255,0.9)"
-              />
-            </div>
+            (() => {
+              const SpeciesIcon =
+                SPECIES_ICON[speciesBucket(pet.species)] || Sparkles;
+              return (
+                <div className="pc-hub-care-photo-ph">
+                  <SpeciesIcon
+                    size={44}
+                    strokeWidth={1.5}
+                    color="rgba(255,255,255,0.9)"
+                  />
+                </div>
+              );
+            })()
           )}
         </div>
         <div className="pc-hub-care-body">
@@ -790,7 +818,27 @@ function PetPickerView({ pets }) {
           background: rgba(23,37,49,0.10); border-radius: 999px; padding: 2px 10px;
           line-height: 1.6;
         }
-        .pc-hub-section-icon { color: var(--color-terracotta, #CF5C36); display: inline-flex; }
+        /* A tile behind the section marks. Without it the Care Card art is
+           cream-on-cream — the body disappears and all that survives is the
+           navy header bar and the cross, which reads as a stray line. The
+           tile also matches how these spots are treated elsewhere. */
+        .pc-hub-section-icon {
+          color: var(--color-terracotta, #CF5C36);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 11px;
+          background: rgba(207,92,54,0.14);
+          border: 1px solid rgba(207,92,54,0.28);
+          flex-shrink: 0;
+        }
+        /* Hero keeps the gold it has on the marketing page. */
+        .pc-hub-section--hero .pc-hub-section-icon {
+          background: rgba(239,200,139,0.30);
+          border-color: rgba(203,150,60,0.38);
+        }
 
         /* ── Grids ── */
         /* ── Grids: count-driven columns, MATCHING ProfileMain's pet-grid for
@@ -907,8 +955,12 @@ function PetPickerView({ pets }) {
           display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; text-align: center;
         }
         .pc-hub-setup-icon {
+          /* Gold tint, not cream: the Hero Card art has a cream inner panel
+             that vanished against a cream circle. */
           width: 56px; height: 56px; border-radius: 50%;
-          background: var(--color-cream, #F5F0E8);
+          background: rgba(239,200,139,0.30);
+          border: 1px solid rgba(203,150,60,0.38);
+          box-sizing: border-box;
           display: flex; align-items: center; justify-content: center;
           color: var(--color-terracotta, #CF5C36);
         }
@@ -931,7 +983,12 @@ function PetPickerView({ pets }) {
         .pc-hub-care-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .pc-hub-care-photo-ph {
           width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-          background: linear-gradient(135deg, #5C8FA8 0%, #2C5F6B 100%);
+          /* Same treatment as the Hero tile: navy surface, white species icon.
+             Both are answering "no photo yet" for the same pet, so they should
+             look the same. Species is carried by the icon's shape; colouring
+             the background by species as well would say it twice and split the
+             two placeholders apart. */
+          background: linear-gradient(135deg, #2C4657 0%, #172531 100%);
         }
         .pc-hub-care-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
         .pc-hub-care-eyebrow {
@@ -970,10 +1027,10 @@ function PetPickerView({ pets }) {
           </div>
 
           {/* HERO CARDS */}
-          <div className="pc-hub-section">
+          <div className="pc-hub-section pc-hub-section--hero">
             <div className="pc-hub-section-head">
               <span className="pc-hub-section-icon">
-                <Award size={17} strokeWidth={2.2} />
+                <ArtHeroCard size={26} />
               </span>
               <h2 className="pc-hub-section-title">Hero Cards</h2>
               <span className="pc-hub-section-count">{pets.length}</span>
@@ -989,7 +1046,7 @@ function PetPickerView({ pets }) {
           <div className="pc-hub-section">
             <div className="pc-hub-section-head">
               <span className="pc-hub-section-icon">
-                <ClipboardList size={17} strokeWidth={2.2} />
+                <ArtCareCard size={26} />
               </span>
               <h2 className="pc-hub-section-title">Care Cards</h2>
               <span className="pc-hub-section-count">{pets.length}</span>

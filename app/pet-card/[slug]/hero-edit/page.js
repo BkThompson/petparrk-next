@@ -453,10 +453,31 @@ function UnsavedChangesModal({ open, onChoice }) {
   useEffect(() => {
     if (!open) return;
     const body = document.body;
-    const prevOverflow = body.style.overflow;
+    // `overflow: hidden` alone does not stop scrolling in iOS Safari. Pinning
+    // the body and offsetting it by the current scroll is what works; the
+    // offset is restored with scrollTo on close so the page doesn't jump.
+    const scrollY = window.scrollY;
+    const scrollBarComp =
+      window.innerWidth - document.documentElement.clientWidth;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      paddingRight: body.style.paddingRight,
+    };
     body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    if (scrollBarComp > 0) body.style.paddingRight = `${scrollBarComp}px`;
     return () => {
-      body.style.overflow = prevOverflow;
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.style.paddingRight = prev.paddingRight;
+      window.scrollTo(0, scrollY);
     };
   }, [open]);
 
@@ -2480,9 +2501,9 @@ function HeroEditorView({ pet, slug }) {
                       }}
                     >
                       {active ? (
-                        <Check size={13} strokeWidth={3} color="#fff" />
+                        <Check size={19} strokeWidth={2.8} color="#fff" />
                       ) : (
-                        <Award size={14} strokeWidth={2.5} color={t.color} />
+                        <Award size={20} strokeWidth={2.2} color={t.color} />
                       )}
                     </span>
                     <span
@@ -2547,7 +2568,7 @@ function HeroEditorView({ pet, slug }) {
                       className="he-display-pill"
                       style={{ background: tier.color }}
                     >
-                      <Award size={13} strokeWidth={2.5} /> {tier.label}
+                      <Award size={16} strokeWidth={2.3} /> {tier.label}
                     </span>
                     <span className="he-rarity-current-desc">{tier.desc}</span>
                   </div>
@@ -5612,13 +5633,13 @@ const heroEditorCss = `
   .he-title { font-size:30px; font-weight:800; letter-spacing:-0.02em; margin:0 0 6px; line-height:1.1; }
   .he-sub { font-size:15px; font-weight:500; color:var(--slate); margin:0; }
 
-  /* "View Hero Card" — header pill + bottom CTA. Same action, same treatment
-     (both outlined terracotta); the bottom one is slightly larger for its
-     end-of-page role. */
+  /* "View Hero Card" — header pill + bottom CTA. Same action, same treatment,
+     and now the same size: the header one was 40.8px against the CTA's 47, and
+     two sizes for one action reads as an accident rather than a hierarchy. */
   .he-viewcard-pill {
-    display:inline-flex; align-items:center; gap:6px; margin-top:12px;
-    padding:7px 15px; border:1.5px solid var(--terracotta); border-radius:999px;
-    color:var(--terracotta); font-size:14px; font-weight:700; text-decoration:none;
+    display:inline-flex; align-items:center; gap:7px; margin-top:12px;
+    min-height:44px; padding:0 22px; border:1.5px solid var(--terracotta); border-radius:999px;
+    color:var(--terracotta); font-size:15px; font-weight:700; text-decoration:none;
     background:transparent; transition:background 0.15s, color 0.15s;
   }
   .he-viewcard-pill:hover { background:var(--terracotta); color:#fff; }
@@ -5629,7 +5650,7 @@ const heroEditorCss = `
   .he-viewcard-cta-label { font-size:15px; font-weight:500; color:var(--slate); margin:0; }
   .he-viewcard-cta-btn {
     display:inline-flex; align-items:center; gap:7px;
-    padding:11px 22px; border-radius:999px;
+    min-height:44px; padding:0 22px; border-radius:999px;
     border:1.5px solid var(--terracotta); background:transparent; color:var(--terracotta);
     font-size:15px; font-weight:700; text-decoration:none;
     transition:background 0.15s, color 0.15s;
@@ -5676,6 +5697,8 @@ const heroEditorCss = `
   /* view/edit pattern (matches Care Editor) */
   .he-sec-head-row { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; }
   .he-edit-btn { 
+    /* Was 22px. Padding grows the target; the negative margin keeps the
+       pencil sitting where it did next to the title. */
     flex-shrink:0; 
     background:transparent; 
     border:none; 
@@ -5685,7 +5708,8 @@ const heroEditorCss = `
     display:flex; 
     align-items:flex-start; 
     justify-content:center; 
-    padding:4px; 
+    padding:11px; 
+    margin:-7px; 
     transition:background 0.15s, color 0.15s; 
   }
   .he-edit-btn:hover { background:rgba(23,37,49,0.06); color:var(--navy); }
@@ -5872,9 +5896,15 @@ const heroEditorCss = `
 
   /* rarity */
   .he-rarity-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top: 3px; padding: 0 3px; }
-  .he-rarity-opt { display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:13px; background:#fff; border:1.5px solid var(--border); border-radius:13px; cursor:pointer; font-family:inherit; text-align:left; transition:border-color 0.15s; }
+  /* Centred: the labels and descriptions are short enough to hold, and the
+     symmetry reads better than a left edge with a dot floating above it.
+     "One in a million" is the longest description and the one to watch
+     if a third column ever gets narrower. */
+  .he-rarity-opt { display:flex; flex-direction:column; align-items:center; gap:6px; padding:13px; background:#fff; border:1.5px solid var(--border); border-radius:13px; cursor:pointer; font-family:inherit; text-align:center; transition:border-color 0.15s; }
   .he-rarity-opt:hover { border-color:var(--muted); }
-  .he-rarity-dot { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  /* 22px holding a 14px mark read as a bullet rather than a badge. 32px
+     keeps the same inset-highlight treatment with room for the icon. */
+  .he-rarity-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;
     background-image: linear-gradient(145deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 42%), linear-gradient(320deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0) 45%);
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.6), inset 0 -2px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.18); }
   .he-rarity-label { font-size:16px; font-weight:800; color:var(--navy); }
@@ -6029,7 +6059,7 @@ const heroEditorCss = `
   /* Compact toolbar sizing for ONLY the Preview/Publish buttons in the action
      bar. Higher specificity than .he-btn so it wins regardless of source order;
      scoped to the bar so other .he-btn-sm buttons are unaffected. */
-  .he-actionbar-actions .he-btn { height:34px; min-width:0; padding:0 14px; font-size:13.5px; border-radius:9px; gap:6px; }
+  .he-actionbar-actions .he-btn { height:40px; min-width:0; padding:0 16px; font-size:13.5px; border-radius:9px; gap:6px; }
   /* Publish button holds a fixed width so it doesn't jump when its label swaps
      between "Publish" / "Publishing…" / "Published" (the checkmark state was
      resizing it). 134px fits the widest label ("Publishing…"). */
@@ -6119,7 +6149,7 @@ const heroEditorCss = `
   .he-hint-auto { display:inline-block; margin-top:10px; font-size:13px; color:#9AA3AD; font-weight:500; }
   /* Reset lighting sits at the bottom, right-aligned. */
   .he-light-reset-row { display:flex; justify-content:flex-start; margin-top:4px; }
-  .he-photo-hint { color: #717a86; font-size:14px; font-weight: 500;  margin:10px 0 0; }
+  .he-photo-hint { color: #717a86; font-size:14px; font-weight: 500;  margin:10px 0 0; max-width:68ch; }
   .he-textlink--active { color:var(--terracotta); font-weight:800; text-decoration:underline; text-underline-offset:2px; }
   .he-pick-label { font-size:16px; font-weight:700; color:var(--navy); margin:0 0 9px; }
   .he-swatch-row { display:flex; flex-wrap:wrap; gap:9px; margin-bottom: 10px;}
@@ -6994,6 +7024,7 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
           color: #717A86;
           margin: 0 0 14px;
           line-height: 1.6;
+          max-width: 68ch;
         }
 /* Modal */
         /* Inline expanding form (vaccinations + medications add).

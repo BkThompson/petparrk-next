@@ -94,6 +94,10 @@ function AuthPageContent() {
   //   2. CAPTCHA enabled in Supabase → Auth → Bot and Abuse Protection
   const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const [captchaToken, setCaptchaToken] = useState("");
+  // Covers the auth form while we check for an existing session on mount,
+  // so an already-authenticated user (e.g. arriving via email confirmation)
+  // never sees the sign-in form flash before being redirected.
+  const [checkingSession, setCheckingSession] = useState(true);
   const turnstileRef = useRef(null);
   const widgetIdRef = useRef(null);
 
@@ -145,12 +149,11 @@ function AuthPageContent() {
     }
     script.addEventListener("load", renderWidget);
     return () => script.removeEventListener("load", renderWidget);
-  }, [TURNSTILE_SITE_KEY, mode]);
-  // Covers the auth form while we check for an existing session on mount,
-  // so an already-authenticated user (e.g. arriving via email confirmation)
-  // never sees the sign-in form flash before being redirected.
-  const [checkingSession, setCheckingSession] = useState(true);
-
+    // checkingSession matters: the form (and this widget's container) is not
+    // in the DOM while the session check runs, so an effect that fires during
+    // that window finds turnstileRef.current === null and gives up. Re-running
+    // once the form mounts is what actually gets the widget rendered.
+  }, [TURNSTILE_SITE_KEY, mode, checkingSession]);
   // Read tab and redirect query params
   const redirectTo = searchParams.get("redirect") || "/";
 
@@ -362,7 +365,9 @@ function AuthPageContent() {
     cursor: "pointer",
     fontSize: "14px",
     fontWeight: "600",
-    padding: 0,
+    // 17px tall with padding 0. Vertical padding brings it to a 44px
+    // target; the negative right margin keeps it flush to the edge.
+    padding: "14px 0",
     fontFamily: "var(--font-urbanist, system-ui)",
   };
 
@@ -400,6 +405,7 @@ function AuthPageContent() {
     <button
       type="button"
       onClick={() => setShowPassword(!showPassword)}
+      aria-label={showPassword ? "Hide password" : "Show password"}
       style={{
         position: "absolute",
         right: "12px",
@@ -408,6 +414,13 @@ function AuthPageContent() {
         background: "none",
         border: "none",
         cursor: "pointer",
+        // 22.5px icon, 44px target. Padding rather than a pseudo-element
+        // because nothing here depends on the button's own box.
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "44px",
+        height: "44px",
         color: "var(--color-muted, #717A86)",
         fontSize: "18px",
       }}
@@ -544,7 +557,7 @@ function AuthPageContent() {
               onClick={() => switchMode("signin")}
               style={{
                 flex: 1,
-                padding: "9px 8px",
+                padding: "13px 8px",
                 borderRadius: "7px",
                 border: "none",
                 background: "transparent",
@@ -567,7 +580,7 @@ function AuthPageContent() {
               onClick={() => switchMode("signup")}
               style={{
                 flex: 1,
-                padding: "9px 8px",
+                padding: "13px 8px",
                 borderRadius: "7px",
                 border: "none",
                 background: "transparent",

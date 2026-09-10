@@ -1,6 +1,6 @@
 "use client";
 
-const EFFECTIVE_DATE = "April 14, 2026";
+const EFFECTIVE_DATE = "September 2, 2026";
 const CONTACT_EMAIL = "[legal@petparrk.com]";
 
 export default function CodeOfConduct() {
@@ -38,9 +38,11 @@ export default function CodeOfConduct() {
               PetParrk is a community-supported platform built on accurate,
               honest information. The quality of our veterinary pricing data,
               reviews, and community contributions depends on every user acting
-              in good faith. This Code of Conduct applies to all content
-              submitted to PetParrk, including price submissions, reviews, pet
-              health records, and any future community features.
+              in good faith. This Code of Conduct applies to content you submit
+              that other people can see — price submissions, anything you
+              publish through a shareable link, and any future community
+              features. It does not govern the private records you keep for your
+              own pets.
             </p>
           </div>
           <div className="legal-divider" />
@@ -74,14 +76,43 @@ export default function CodeOfConduct() {
                 for clinics you did not visit.
               </li>
             </ul>
-            <h3 className="legal-h3">Reviews and Comments</h3>
+            {/* Reviews are not a feature yet. The standards below are kept
+                here so they can be restored when reviews ship — but review
+                them against how the feature actually works before publishing:
+
+                <h3 className="legal-h3">Reviews and Comments</h3>
+                <p className="legal-p">
+                  All reviews and user comments must reflect genuine first-hand
+                  experiences. You may not submit reviews for clinics you have
+                  not personally visited, submit reviews to artificially improve
+                  or harm a clinic's standing, or submit content that is
+                  defamatory, harassing, threatening, obscene, or unlawful.
+                </p>
+            */}
+            <h3 className="legal-h3">Shareable Cards</h3>
             <p className="legal-p">
-              All reviews and user comments must reflect genuine first-hand
-              experiences. You may not submit reviews for clinics you have not
-              personally visited, submit reviews to artificially improve or harm
-              a clinic's standing, or submit content that is defamatory,
-              harassing, threatening, obscene, or unlawful.
+              PetParrk lets you publish a link that makes selected pet
+              information viewable by anyone who has it. When you do:
             </p>
+            <ul className="legal-ul">
+              <li>
+                Share only information about pets you are responsible for;
+              </li>
+              <li>
+                Do not include another person&apos;s name, address, contact
+                details, or any other information about them without their
+                permission;
+              </li>
+              <li>
+                Do not use a shared card to advertise, solicit, or promote a
+                business or service;
+              </li>
+              <li>
+                Remember that a shared link is not password protected. Anyone it
+                is forwarded to can open it. Stop sharing at any time if you no
+                longer want the card to be reachable.
+              </li>
+            </ul>
           </div>
           <div className="legal-divider" />
           <div className="legal-section">
@@ -103,6 +134,12 @@ export default function CodeOfConduct() {
               <li>
                 Attempting to scrape or collect data from PetParrk by automated
                 means without authorization;
+              </li>
+              <li>
+                Circumventing, disabling, or attempting to defeat any usage
+                limit, access control, rate limit, or bot-detection measure —
+                including by clearing stored data, using multiple accounts, or
+                masking your network address to obtain additional free use;
               </li>
               <li>
                 Using PetParrk to promote unlicensed veterinary services or

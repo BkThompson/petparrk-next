@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  ArtStomach,
+  ArtEyes,
+  ArtSkin,
+  ArtBreathing,
+  ArtBehavior,
+  ArtLimping,
+  ArtSomethingElse,
+} from "../../../components/BrandArt";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
@@ -14,16 +23,10 @@ import {
   PawPrint,
   Mic,
   CircleStop,
-  Eye,
-  Wind,
-  Bone,
-  Search,
   Clock,
   Sun,
   Calendar,
   CalendarDays,
-  UtensilsCrossed,
-  Bed,
   CircleAlert,
   TriangleAlert,
   OctagonAlert,
@@ -101,43 +104,43 @@ const SYMPTOM_AREAS = [
   {
     id: "stomach",
     label: "Stomach / Digestion",
-    icon: UtensilsCrossed,
+    art: ArtStomach,
     desc: "Vomiting, diarrhea, not eating",
   },
   {
     id: "eyes_ears",
     label: "Eyes / Ears",
-    icon: Eye,
+    art: ArtEyes,
     desc: "Discharge, scratching, redness",
   },
   {
     id: "skin",
     label: "Skin / Coat",
-    icon: PawPrint,
+    art: ArtSkin,
     desc: "Itching, rash, hair loss, lumps",
   },
   {
     id: "breathing",
     label: "Breathing / Cough",
-    icon: Wind,
+    art: ArtBreathing,
     desc: "Coughing, wheezing, labored breath",
   },
   {
     id: "behavior",
     label: "Behavior / Energy",
-    icon: Bed,
+    art: ArtBehavior,
     desc: "Lethargy, hiding, confusion",
   },
   {
     id: "movement",
     label: "Limping / Movement",
-    icon: Bone,
+    art: ArtLimping,
     desc: "Limping, stiffness, won't stand",
   },
   {
     id: "other",
     label: "Something else",
-    icon: Search,
+    art: ArtSomethingElse,
     desc: "Doesn't fit the categories above",
   },
 ];
@@ -233,7 +236,9 @@ function PetChip({ selectedPet, onStartOver }) {
             (() => {
               const SpeciesIcon =
                 BANNER_LUCIDE[speciesBucket(selectedPet.species)] || PawPrint;
-              return <SpeciesIcon size={18} strokeWidth={2} />;
+              // 18px inside a 45px chip filled only 40% of it. 27px matches
+              // the proportion the species icon has on the Pet Card tiles.
+              return <SpeciesIcon size={27} strokeWidth={1.8} />;
             })()
           )}
         </div>
@@ -1568,9 +1573,15 @@ export default function SymptomCheckerChatPage() {
           .g-dur:hover{border-color:${C.terracotta};background:#fafaf8;}
           .g-card:hover{border-color:${C.terracotta};background:#fafaf8;}
           .g-sev:hover{border-color:${C.terracotta};background:#fafaf8;}
+          /* The tile keeps its border in every state. Clearing it on hover was
+             tried and reverted: hover doesn't exist on touch, so the effect was
+             desktop-only, and removing an edge reads as receding when the row
+             is meant to be gaining emphasis. The colour comes from the severity
+             via --sev-border, set inline on the tile. */
+          .g-sev-tile { border: 1px solid var(--sev-border, transparent); }
           .g-sev{border:1.5px solid ${C.border};border-radius:14px;padding:18px 20px;cursor:pointer;background:#fff;transition:border-color 0.15s,background 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
           
-        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:0; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
+        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:15px 0; margin-top:-15px; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
         .back-btn:hover { color:#172531 !important; outline:none !important; box-shadow:none !important; }
         .back-btn:active { color:#172531 !important; outline:none !important; box-shadow:none !important; }
         .back-btn:focus { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
@@ -1712,7 +1723,7 @@ export default function SymptomCheckerChatPage() {
                       {petName}.
                     </p>
                     {SYMPTOM_AREAS.map((area) => {
-                      const Icon = area.icon;
+                      const Art = area.art;
                       return (
                         <div
                           key={area.id}
@@ -1721,21 +1732,19 @@ export default function SymptomCheckerChatPage() {
                         >
                           <span
                             style={{
-                              fontSize: "26px",
                               flexShrink: 0,
-                              width: "36px",
-                              textAlign: "center",
+                              width: "68px",
+                              height: "68px",
+                              borderRadius: "18px",
+                              background: "rgba(207,92,54,0.14)",
+                              border: "1px solid rgba(207,92,54,0.28)",
+                              boxSizing: "border-box",
                               display: "inline-flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              color: C.terracotta,
                             }}
                           >
-                            {Icon ? (
-                              <Icon size={26} strokeWidth={2} />
-                            ) : (
-                              area.emoji
-                            )}
+                            <Art size={44} />
                           </span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <p
@@ -1814,17 +1823,20 @@ export default function SymptomCheckerChatPage() {
                           >
                             <span
                               style={{
-                                fontSize: "26px",
                                 flexShrink: 0,
-                                width: "36px",
-                                textAlign: "center",
+                                width: "68px",
+                                height: "68px",
+                                borderRadius: "18px",
+                                background: "rgba(207,92,54,0.14)",
+                                border: "1px solid rgba(207,92,54,0.28)",
+                                boxSizing: "border-box",
                                 display: "inline-flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 color: C.terracotta,
                               }}
                             >
-                              <Icon size={26} strokeWidth={2} />
+                              <Icon size={30} strokeWidth={2} />
                             </span>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p
@@ -1919,8 +1931,19 @@ export default function SymptomCheckerChatPage() {
                             }}
                           >
                             <span
+                              className="g-sev-tile"
                               style={{
                                 flexShrink: 0,
+                                width: "68px",
+                                height: "68px",
+                                borderRadius: "18px",
+                                background: s.bg,
+                                // Only the colour is passed inline, as a custom
+                                // property. The border itself is declared in
+                                // CSS — an inline `border` would beat the hover
+                                // rule and never clear.
+                                "--sev-border": `${s.color}44`,
+                                boxSizing: "border-box",
                                 display: "inline-flex",
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -1968,6 +1991,11 @@ export default function SymptomCheckerChatPage() {
                   fontWeight: "500",
                   color: C.muted,
                   textAlign: "center",
+                  // Second copy of the disclaimer — the first one was capped
+                  // last round and this one was missed.
+                  maxWidth: "68ch",
+                  marginLeft: "auto",
+                  marginRight: "auto",
                 }}
               >
                 <span
@@ -2136,9 +2164,9 @@ export default function SymptomCheckerChatPage() {
           .triage-action-row .triage-outline-btn,
           .triage-action-row .triage-primary-btn { width: 100%; }
         }
-        .start-over-btn { background:none; border:none; cursor:pointer; font-size:14px; color:${C.terracotta}; font-weight:700; padding:0; font-family:var(--font-urbanist,system-ui); white-space:nowrap; flex-shrink:0; transition:color 0.15s; text-decoration:none; display:inline-flex; align-items:center; line-height:1; }
+        .start-over-btn { background:none; border:none; cursor:pointer; font-size:14px; color:${C.terracotta}; font-weight:700; padding:15px 0; margin-top:-15px; font-family:var(--font-urbanist,system-ui); white-space:nowrap; flex-shrink:0; transition:color 0.15s; text-decoration:none; display:inline-flex; align-items:center; line-height:1; }
         .start-over-btn:hover { color:#172531; }
-        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:0; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
+        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:15px 0; margin-top:-15px; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
         .back-btn:link, .back-btn:visited { color:${C.terracotta} !important; }
         .back-btn:hover { color:#172531 !important; outline:none !important; box-shadow:none !important; }
         .back-btn:active { color:#172531 !important; outline:none !important; box-shadow:none !important; }
@@ -2252,7 +2280,7 @@ export default function SymptomCheckerChatPage() {
                     fontWeight: "700",
                   }}
                 >
-                  You've used your free check.
+                  Create a free account to continue.
                 </p>
                 <p
                   style={{
@@ -2261,7 +2289,8 @@ export default function SymptomCheckerChatPage() {
                     color: C.muted,
                   }}
                 >
-                  Sign up to save history and check as many times as you need.
+                  Your account keeps a record of every check, so you can see how
+                  things change over time.
                 </p>
                 <Link
                   href="/auth"
@@ -2356,6 +2385,10 @@ export default function SymptomCheckerChatPage() {
                 color: C.muted,
                 textAlign: "center",
                 lineHeight: "1.8",
+                // Ran 111-138ch at wide widths; capped and centred.
+                maxWidth: "68ch",
+                marginLeft: "auto",
+                marginRight: "auto",
               }}
             >
               {/* <span

@@ -342,19 +342,39 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
       const ta = document.createElement("textarea");
       ta.value = url;
       ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.top = "0";
-      ta.style.left = "0";
-      ta.style.opacity = "0";
+      // iOS will not copy from a readonly field, ignores anything positioned
+      // off-viewport, and needs a real Selection Range — select() alone is not
+      // enough. 16px avoids the focus zoom.
+      ta.contentEditable = "true";
+      ta.readOnly = false;
+      ta.style.cssText =
+        "position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;" +
+        "outline:0;opacity:0;font-size:16px;-webkit-user-select:text;user-select:text;";
       document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      ta.setSelectionRange(0, url.length);
-      document.execCommand("copy");
+
+      const range = document.createRange();
+      range.selectNodeContents(ta);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      ta.setSelectionRange(0, 999999);
+
+      const ok = document.execCommand("copy");
+      sel.removeAllRanges();
       document.body.removeChild(ta);
-      // execCommand's boolean is unreliable on mobile, so flag success after
-      // attempting it rather than gating on the return value.
-      flagCopied();
+      if (ok) {
+        flagCopied();
+        return;
+      }
+      // Last resort. Over plain http:// on iOS there is no reliable
+      // programmatic copy at all: the Clipboard API needs a secure context and
+      // Safari has stopped honouring execCommand. Rather than fail silently or
+      // claim a copy that never happened, put the link in front of the user so
+      // they can copy it by hand. Production is HTTPS, so this path is only
+      // reached when testing over a LAN address.
+      if (typeof window !== "undefined" && window.prompt) {
+        window.prompt("Copy this link:", url);
+      }
     } catch {
       // If even the textarea path throws, there's nothing more we can do
       // silently — leave it; production (HTTPS) uses the reliable path above.
@@ -364,6 +384,21 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
   // Download = export the card as a trading-card IMAGE (PNG). Private export of
   // the owner's own card — independent of public sharing, always available.
   const [downloading, setDownloading] = useState(false);
+  // Share differs from Copy link only when the OS share sheet exists — a touch
+  // device in a secure context, since navigator.share is gated on HTTPS.
+  // Everywhere else handleShare falls through to the same copy that handleCopy
+  // uses, so showing both is two buttons doing one thing.
+  const [canNativeShare, setCanNativeShare] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const touch =
+      "ontouchstart" in window || (navigator?.maxTouchPoints ?? 0) > 0;
+    setCanNativeShare(
+      touch &&
+        typeof navigator.share === "function" &&
+        window.isSecureContext === true,
+    );
+  }, []);
   async function handleDownload() {
     if (downloading) return;
     setDownloading(true);
@@ -985,7 +1020,10 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                       </>
                     ) : (
                       <>
-                        <Share2 size={18} /> Share Hero Card
+                        <Share2 size={18} />{" "}
+                        {canNativeShare
+                          ? "Share Hero Card"
+                          : "Copy Hero Card link"}
                       </>
                     )}
                   </button>
@@ -997,21 +1035,26 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                     <Download size={18} />{" "}
                     {downloading ? "Preparing…" : "Download Hero Card"}
                   </button>
-                  <button
-                    className="hc-btn hc-btn-ghost"
-                    onClick={handleCopy}
-                    disabled={actionBusy}
-                  >
-                    {copied ? (
-                      <>
-                        <Check size={18} /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <Link2 size={18} /> Copy link
-                      </>
-                    )}
-                  </button>
+                  {/* Only a separate control when the primary button opens the
+                      OS share sheet. Otherwise the primary already copies the
+                      link and this is a second button doing the same thing. */}
+                  {canNativeShare && (
+                    <button
+                      className="hc-btn hc-btn-ghost"
+                      onClick={handleCopy}
+                      disabled={actionBusy}
+                    >
+                      {copied ? (
+                        <>
+                          <Check size={18} /> Copied
+                        </>
+                      ) : (
+                        <>
+                          <Link2 size={18} /> Copy link
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
                 <p className="hc-panel-foot">
                   Add more personality in the{" "}
@@ -1037,7 +1080,8 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                   </>
                 ) : (
                   <>
-                    <Share2 size={18} /> Share Hero Card
+                    <Share2 size={18} />{" "}
+                    {canNativeShare ? "Share Hero Card" : "Copy Hero Card link"}
                   </>
                 )}
               </button>
@@ -1049,21 +1093,23 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                 <Download size={18} />{" "}
                 {downloading ? "Preparing…" : "Download Hero Card"}
               </button>
-              <button
-                className="hc-btn hc-btn-ghost"
-                onClick={handleCopy}
-                disabled={actionBusy}
-              >
-                {copied ? (
-                  <>
-                    <Check size={18} /> Copied
-                  </>
-                ) : (
-                  <>
-                    <Link2 size={18} /> Copy link
-                  </>
-                )}
-              </button>
+              {canNativeShare && (
+                <button
+                  className="hc-btn hc-btn-ghost"
+                  onClick={handleCopy}
+                  disabled={actionBusy}
+                >
+                  {copied ? (
+                    <>
+                      <Check size={18} /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Link2 size={18} /> Copy link
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1245,8 +1291,11 @@ const heroCardCss = `
     display:flex; justify-content:space-between; align-items:center; gap:10px 16px;
     font-size:13px; font-weight:500; box-shadow:0 4px 14px rgba(0,0,0,0.20);
   }
+  /* 22.1px as bare text links. Padding grows the target, the negative
+     margin keeps them where they sit in the header row. */
   .hc-owner-back, .hc-owner-edit {
-    display:inline-flex; align-items:center; gap:6px;
+    display:inline-flex; align-items:center; gap:6px; min-height:44px;
+    padding:11px 0; margin:-11px 0;
     font-weight:700; text-decoration:none; white-space:nowrap;
   }
   .hc-owner-back { color:#fff; }
@@ -1367,7 +1416,9 @@ const heroCardCss = `
     border:1px solid var(--t-card-border); border-radius:999px; font-size:14px; font-weight:600;
     color:var(--t-chip-text); white-space:nowrap;line-height: 1.2;
   }
-  .hc-tag-toggle { background:transparent; color:var(--t-accent-on-card); cursor:pointer; font-family:inherit; font-weight:700; }
+  /* The "N more" pill is a button; plain tags are not, so only this one
+     needs a real target. 30.8px before. */
+  .hc-tag-toggle { min-height:44px; background:transparent; color:var(--t-accent-on-card); cursor:pointer; font-family:inherit; font-weight:700; }
   .hc-tag-toggle:hover { background:var(--t-chip-bg); }
   .hc-fade { animation: hcFadeIn 0.4s cubic-bezier(0.33, 1, 0.68, 1) both; }
 
@@ -1432,7 +1483,8 @@ const heroCardCss = `
   }
   .hc-org { color:var(--t-card-muted); font-weight:500; display:block; margin:10px 0 0; font-size:14px; }
   .hc-org-name { font-weight:700; color:var(--t-card-text); }
-  .hc-read-more { margin-top:8px; background:none; border:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:800; display:inline-flex; align-items:center; gap:4px; padding:0; }
+  /* 16px before — the smallest control on the page. */
+  .hc-read-more { margin-top:8px; min-height:44px; background:none; border:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:800; display:inline-flex; align-items:center; gap:4px; padding:12px 0; margin-bottom:-12px; }
   .hc-chev { transition:transform 0.3s; }
 
   .hc-footer { border-top:1px solid var(--t-divider); padding:16px 22px; display:flex; align-items:center; justify-content:space-between; }

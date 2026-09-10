@@ -179,18 +179,30 @@ a {
   opacity: 0.8;
 } */
 
-/* ── Custom Color & Opacity Override */
+/* ── Custom Color & Opacity Override
+   The three named selectors below are specific links. `.reveal-up a:hover` is
+   not — it catches every link inside any reveal container, including ones on
+   dark panels, where navy makes them vanish. Rather than narrow it and risk
+   changing links this was written for, links can opt out with
+   `.pp-keep-color`, which keeps whatever colour their own page sets. */
 .see-all-vets-link:hover,
-.reveal-up a:hover,
+.reveal-up a:not(.pp-keep-color):hover,
 .nav-link-dark:hover,
 a.pc-add-link:hover {
   color: #172531 !important;
   opacity: 1;
 }
 
-/* ── Slug Page - "Back to all vets" link  ─────────── */
+/* ── Standalone back / browse links ───────────────────
+   Used on the vet profile ("Back to all vets") and Saved Vets
+   ("Browse more vets"). Both sit on their own line, so giving the class a
+   real target here fixes every instance rather than one page at a time.
+   16-22px measured before. */
 .nav-link-dark {
   color: #cf5c36;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 a.pc-add-link:hover {

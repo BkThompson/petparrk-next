@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-const EFFECTIVE_DATE = "April 14, 2026";
+const EFFECTIVE_DATE = "September 2, 2026";
 const CONTACT_EMAIL = "[legal@petparrk.com]";
 
 export default function DoNotSell() {
@@ -72,6 +72,30 @@ export default function DoNotSell() {
                 platform.
               </li>
             </ul>
+            <p className="legal-p">
+              <strong>Processing that is not a sale or a share.</strong> To
+              operate the Service we disclose personal information to vendors
+              who process it on our behalf — hosting, database and
+              authentication, email delivery, bot prevention, and the
+              artificial-intelligence providers that power the symptom checker.
+              That last one is worth naming plainly: when you use the symptom
+              checker, the symptoms you describe and the pet information
+              relevant to the request are transmitted to an AI provider so it
+              can return guidance to us.
+            </p>
+            <p className="legal-p">
+              Under the CCPA these are service provider relationships, not sales
+              or shares. Each vendor is contractually restricted to processing
+              the information solely to perform services for PetParrk. None of
+              them receives your information for their own purposes, may sell
+              it, or may use it to build profiles or to target advertising. We
+              receive nothing of value in exchange. We describe these
+              disclosures in detail in our{" "}
+              <Link href="/privacy-policy" className="legal-link">
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </div>
           <div className="legal-divider" />
           <div className="legal-section">
@@ -120,6 +144,16 @@ export default function DoNotSell() {
               with the subject line "CCPA Opt-Out Request."
             </p>
             <p className="legal-p">
+              <strong>Global Privacy Control.</strong> Some browsers and
+              extensions send a Global Privacy Control (GPC) signal, which acts
+              as an opt-out of the sale or sharing of personal information.
+              PetParrk does not sell or share personal information, so there is
+              nothing for a GPC signal to opt out of. If we ever introduce a
+              practice that constitutes a sale or share, we will treat a GPC
+              signal as a valid opt-out request for that browser, as required by
+              the CPRA.
+            </p>
+            <p className="legal-p">
               For a complete description of your California privacy rights,
               review our{" "}
               <Link href="/privacy-policy#california" className="legal-link">
@@ -132,7 +166,7 @@ export default function DoNotSell() {
           <div className="legal-section">
             <h2 className="legal-h2">Contact</h2>
             <p className="legal-p">
-              <strong>PetParrk, Inc.</strong>
+              <strong>PetParrk, LLC</strong>
               <br />
               Email:{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">

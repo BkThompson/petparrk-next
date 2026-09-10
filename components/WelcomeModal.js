@@ -110,6 +110,9 @@ export default function WelcomeModal() {
         // layout, so it would otherwise persist on top of the destination).
         setOpen(false);
         document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
         // Strip ?welcome=1 from the CURRENT history entry synchronously, so
         // pressing back lands on a clean URL. Using the native History API
         // here (rather than router.replace) guarantees the current entry is
@@ -152,8 +155,18 @@ export default function WelcomeModal() {
     if (!open) return;
 
     previouslyFocused.current = document.activeElement;
+    // `overflow: hidden` alone does not stop scrolling in iOS Safari. Pinning
+    // the body and offsetting it by the current scroll is what works; the
+    // offset is restored with scrollTo on close so the page doesn't jump.
+    const scrollY = window.scrollY;
     const prevOverflow = document.body.style.overflow;
+    const prevPosition = document.body.style.position;
+    const prevTop = document.body.style.top;
+    const prevWidth = document.body.style.width;
     document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
 
     // Move focus into the dialog for keyboard + screen-reader users.
     const t = setTimeout(() => {
@@ -190,6 +203,10 @@ export default function WelcomeModal() {
       clearTimeout(t);
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
+      document.body.style.position = prevPosition;
+      document.body.style.top = prevTop;
+      document.body.style.width = prevWidth;
+      window.scrollTo(0, scrollY);
       // Restore focus to wherever it was before the modal opened.
       if (previouslyFocused.current instanceof HTMLElement) {
         previouslyFocused.current.focus();
