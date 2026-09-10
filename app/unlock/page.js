@@ -105,7 +105,7 @@ export default function Unlock() {
           justify-content: center;
           height: 48px;
           padding: 0 24px;
-          border-radius: 2px;
+          border-radius: 12px;
           background: #CF5C36;
           color: #fff;
           border: 2px solid #CF5C36;
