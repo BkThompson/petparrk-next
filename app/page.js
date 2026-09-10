@@ -1180,8 +1180,12 @@ export default function Home() {
                   value={heroSearch}
                   onChange={(e) => setHeroSearch(e.target.value)}
                 />
+                {/* The label follows what the button will actually do. The
+                    handler already branches on an empty field — it sends you to
+                    the full directory — but a button reading "Search" with
+                    nothing typed looks like it will do nothing. */}
                 <button type="submit" className="hero-btn">
-                  Search
+                  {heroSearch.trim() ? "Search" : "Browse all vets"}
                 </button>
               </div>
             </form>

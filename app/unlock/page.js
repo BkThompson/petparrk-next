@@ -50,7 +50,7 @@ export default function Unlock() {
       <p
         style={{
           margin: "0 0 8px",
-          fontSize: "15px",
+          fontSize: "16px",
           color: "#9BA6B2",
           textAlign: "center",
           maxWidth: "320px",
@@ -95,22 +95,39 @@ export default function Unlock() {
             : "Incorrect password. Please try again."}
         </p>
       )}
-      <button
-        onClick={unlock}
-        style={{
-          padding: "11px 28px",
-          background: "#CF5C36",
-          color: "#fff",
-          border: "none",
-          borderRadius: "10px",
-          cursor: "pointer",
-          fontSize: "15px",
-          fontWeight: 700,
-          fontFamily: "inherit",
-        }}
-      >
+      <button onClick={unlock} className="unlock-btn">
         Enter
       </button>
+      <style>{`
+        .unlock-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 48px;
+          padding: 0 24px;
+          border-radius: 2px;
+          background: #CF5C36;
+          color: #fff;
+          border: 2px solid #CF5C36;
+          cursor: pointer;
+          font-size: 15px;
+          font-weight: 700;
+          font-family: inherit;
+          box-sizing: border-box;
+          transition: background 0.2s, color 0.2s;
+        }
+        /* Inverts on hover — the same treatment the site's outlined buttons use. */
+        .unlock-btn:hover {
+          background: #fff;
+          color: #CF5C36;
+        }
+        @media (max-width: 640px) {
+          /* Full width of the form, not the viewport: the input above is 260px
+             in a centred column, so a button spanning the whole screen would
+             be much wider than the field it belongs to. */
+          .unlock-btn { width: 100%; max-width: 260px; }
+        }
+      `}</style>
     </div>
   );
 }
