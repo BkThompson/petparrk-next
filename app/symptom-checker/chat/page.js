@@ -341,7 +341,12 @@ export default function SymptomCheckerChatPage() {
 
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY) return;
-    if (!guestMode || guestCaptchaToken) return;
+    // Match the server's definition of a guest: no signed-in session. The
+    // client's guestMode flag is only set by some entry paths, so gating on it
+    // left the widget unrendered for Start New Check, the back link and
+    // resumed sessions — while the route still demanded a token.
+    if (session || session === undefined) return;
+    if (guestCaptchaToken) return;
     function renderWidget() {
       if (!window.turnstile || !turnstileRef.current) return;
       if (turnstileRef.current.dataset.rendered === "1") return;
@@ -373,7 +378,7 @@ export default function SymptomCheckerChatPage() {
     // step renders. An effect that runs before then finds turnstileRef.current
     // null and gives up, and nothing re-runs it. Same failure as the sign-in
     // form, where the container sat behind a loading state.
-  }, [TURNSTILE_SITE_KEY, guestMode, guestCaptchaToken, guidedStep]);
+  }, [TURNSTILE_SITE_KEY, session, guestCaptchaToken, guidedStep]);
   const [triageMounted, setTriageMounted] = useState(false);
   const [ready, setReady] = useState(false);
   const [guidedAnswers, setGuidedAnswers] = useState({
@@ -631,7 +636,7 @@ export default function SymptomCheckerChatPage() {
         // check when TURNSTILE_SECRET_KEY is configured; without it every
         // first message is rejected and the retry only works because by then
         // it is no longer the first turn.
-        captchaToken: guestMode ? guestCaptchaToken || null : null,
+        captchaToken: session ? null : guestCaptchaToken || null,
       }),
     });
     if (!res.ok || !res.body) throw new Error("Stream failed");
@@ -1964,7 +1969,7 @@ export default function SymptomCheckerChatPage() {
                     >
                       Use your best judgment — you know {petName} best.
                     </p>
-                    {guestMode && TURNSTILE_SITE_KEY && (
+                    {!session && TURNSTILE_SITE_KEY && (
                       <div ref={turnstileRef} style={{ margin: "0 0 16px" }} />
                     )}
                     {SEVERITIES.map((s) => {
@@ -1974,7 +1979,7 @@ export default function SymptomCheckerChatPage() {
                           key={s.id}
                           className="g-sev"
                           disabled={
-                            guestMode &&
+                            !session &&
                             !!TURNSTILE_SITE_KEY &&
                             !guestCaptchaToken
                           }
