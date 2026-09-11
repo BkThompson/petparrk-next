@@ -346,6 +346,25 @@ export default function SymptomCheckerChatPage() {
   const turnstileRef = useRef(null);
   const turnstileWidgetId = useRef(null);
 
+  // A per-browser id so the guest allowance follows the device, not just the
+  // network address. Clearable by the user, so the server treats it as one
+  // signal among two rather than proof of anything.
+  function getDeviceId() {
+    if (typeof window === "undefined") return null;
+    try {
+      let id = localStorage.getItem("petparrk_device_id");
+      if (!id) {
+        id =
+          (crypto.randomUUID && crypto.randomUUID()) ||
+          String(Date.now()) + Math.random().toString(36).slice(2);
+        localStorage.setItem("petparrk_device_id", id);
+      }
+      return id;
+    } catch {
+      return null;
+    }
+  }
+
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY) return;
     // Match the server's definition of a guest: no signed-in session. The
@@ -659,6 +678,7 @@ export default function SymptomCheckerChatPage() {
         // first message is rejected and the retry only works because by then
         // it is no longer the first turn.
         captchaToken: session ? null : guestCaptchaToken || null,
+        deviceId: session ? null : getDeviceId(),
       }),
     });
     // Turnstile tokens are single-use. Once one has been spent on the first

@@ -407,6 +407,17 @@ export default function SymptomCheckerHomePage() {
         .sc-btn-primary { height:44px; padding:0 28px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
         .sc-btn-primary:hover { background:${C.white}; color:${C.terracotta}; border:2px solid ${C.terracotta}; }
         .sc-btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
+        .sc-limit-note {
+          margin-bottom: 16px;
+          padding: 14px 16px;
+          border-radius: 12px;
+          background: #FFFBEB;
+          border: 1px solid #FCD34D;
+          font-size: 15px;
+          font-weight: 500;
+          color: ${C.navyDark};
+          line-height: 1.55;
+        }
         .sc-btn-outline { height:44px; padding:0 28px; background:transparent; color:${C.navyDark}; border:2px solid ${C.navyDark}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
         .sc-btn-outline:hover { background:${C.navyDark}; color:#fff; }
 
@@ -1235,8 +1246,8 @@ export default function SymptomCheckerHomePage() {
                     color: C.muted,
                   }}
                 >
-                  Create a free account to get instant guidance, and to keep a
-                  record of every check you run.
+                  Run two checks free, no account needed. Create a free account
+                  for unlimited checks and a record of every one you run.
                 </p>
                 <div
                   style={{
@@ -1302,20 +1313,7 @@ export default function SymptomCheckerHomePage() {
                     }}
                   />
                   {guestRemaining === 0 && (
-                    <div
-                      style={{
-                        marginBottom: "16px",
-                        padding: "14px 16px",
-                        borderRadius: "12px",
-                        background: "#FFFBEB",
-                        border: "1px solid #FCD34D",
-                        fontSize: "15px",
-                        fontWeight: 500,
-                        color: C.navyDark,
-                        lineHeight: 1.55,
-                        maxWidth: "62ch",
-                      }}
-                    >
+                    <div className="sc-limit-note">
                       You&apos;ve used both of your free checks. Create a free
                       account to keep going — there&apos;s no limit, and every
                       check is saved so you can see how things change over time.

@@ -109,9 +109,24 @@ async function getUser(req) {
 
 // Only NEW conversations count. Follow-up turns inside a check the guest has
 // already started are free, or the limit would fire mid-conversation.
-async function allowGuest(req, isNewCheck) {
+async function allowGuest(req, isNewCheck, deviceId) {
   if (!isNewCheck) return { ok: true };
   const db = admin();
+  // Two signals, because neither is sufficient alone.
+  //
+  // The IP hash catches someone opening a fresh browser or a private window,
+  // but it is shared: a household, an office or a mobile carrier can put many
+  // people behind one address, so on its own it tells strangers they have used
+  // checks they never ran.
+  //
+  // The device id is per browser and doesn't punish anyone else on the
+  // network, but it lives in the client's own storage, so it can be cleared or
+  // forged and cannot be trusted on its own.
+  //
+  // Counting both and blocking on whichever trips first gives the accuracy of
+  // the device id with the IP as a floor. It is still not enforcement — a VPN
+  // plus cleared storage defeats it — but it raises the cost of casual abuse,
+  // which is the honest ceiling for anything short of requiring an account.
   const ip_hash = hashIp(req);
   const since = new Date(Date.now() - WINDOW_HOURS * 3600 * 1000).toISOString();
 
@@ -119,11 +134,28 @@ async function allowGuest(req, isNewCheck) {
   // column, and selecting a column that doesn't exist returns an error — which
   // the fail-open below then turns into unlimited free checks. That was the
   // bug: the limiter looked correct and silently never fired.
+  const device_hash = deviceId
+    ? crypto
+        .createHash("sha256")
+        .update(String(deviceId) + (process.env.GUEST_LIMIT_SALT || ""))
+        .digest("hex")
+    : null;
+
   const { count, error } = await db
     .from("guest_check_usage")
     .select("ip_hash", { count: "exact", head: true })
     .eq("ip_hash", ip_hash)
     .gte("created_at", since);
+
+  let deviceCount = 0;
+  if (device_hash) {
+    const { count: dc } = await db
+      .from("guest_check_usage")
+      .select("ip_hash", { count: "exact", head: true })
+      .eq("device_hash", device_hash)
+      .gte("created_at", since);
+    deviceCount = dc ?? 0;
+  }
 
   // Fail open on an infrastructure error: a database blip must never stand
   // between a worried owner and triage guidance. But log it — failing open
@@ -133,11 +165,11 @@ async function allowGuest(req, isNewCheck) {
     console.error("[guest-limit] count failed, failing open:", error.message);
     return { ok: true };
   }
-  if ((count ?? 0) >= GUEST_LIMIT) return { ok: false };
+  if (Math.max(count ?? 0, deviceCount) >= GUEST_LIMIT) return { ok: false };
 
   const { error: insertError } = await db
     .from("guest_check_usage")
-    .insert({ ip_hash });
+    .insert({ ip_hash, device_hash });
   if (insertError) {
     console.error("[guest-limit] insert failed:", insertError.message);
   }
@@ -183,7 +215,8 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const { messages, pet, followUpContext, captchaToken } = await req.json();
+    const { messages, pet, followUpContext, captchaToken, deviceId } =
+      await req.json();
 
     // Size limits apply to everyone: a signed-in account is free to create, so
     // "authenticated" is not a trust boundary against cost abuse.
@@ -221,7 +254,13 @@ export async function POST(req) {
           { status: 403 },
         );
       }
-      const gate = await allowGuest(req, isNewCheck);
+      // deviceId is client-supplied and therefore untrusted — a second signal
+      // alongside the IP, never the only one.
+      const gate = await allowGuest(
+        req,
+        isNewCheck,
+        typeof deviceId === "string" ? deviceId : null,
+      );
       if (!gate.ok) {
         return Response.json(
           {
