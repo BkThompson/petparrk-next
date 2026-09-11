@@ -136,6 +136,41 @@ async function allowGuest(req, isNewCheck) {
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// Lets the symptom checker ask, before it asks anyone three questions, whether
+// a guest has any free checks left. Walling someone at the end of the flow is a
+// worse experience than telling them at the start. Read-only: it counts, it
+// never inserts, so calling it does not consume an allowance.
+export async function GET(req) {
+  const user = await getUser(req);
+  if (user) return Response.json({ guest: false, remaining: null });
+
+  try {
+    const db = admin();
+    const since = new Date(
+      Date.now() - WINDOW_HOURS * 3600 * 1000,
+    ).toISOString();
+    const { count, error } = await db
+      .from("guest_check_usage")
+      .select("ip_hash", { count: "exact", head: true })
+      .eq("ip_hash", hashIp(req))
+      .gte("created_at", since);
+
+    // Fail open, consistent with allowGuest: if we can't count, don't block.
+    if (error) {
+      console.error("[guest-limit] status count failed:", error.message);
+      return Response.json({ guest: true, remaining: GUEST_LIMIT });
+    }
+    const used = count ?? 0;
+    return Response.json({
+      guest: true,
+      remaining: Math.max(0, GUEST_LIMIT - used),
+      limit: GUEST_LIMIT,
+    });
+  } catch (e) {
+    return Response.json({ guest: true, remaining: GUEST_LIMIT });
+  }
+}
+
 export async function POST(req) {
   try {
     const { messages, pet, followUpContext, captchaToken } = await req.json();

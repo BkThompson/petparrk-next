@@ -1698,17 +1698,6 @@ export default function SymptomCheckerChatPage() {
              is meant to be gaining emphasis. The colour comes from the severity
              via --sev-border, set inline on the tile. */
           .g-sev-tile { border: 1px solid var(--sev-border, transparent); }
-          .sc-signup-btn {
-            display: inline-flex; align-items: center; justify-content: center;
-            height: 44px; padding: 0 24px; border-radius: 12px;
-            background: ${C.terracotta}; color: #fff;
-            border: 2px solid ${C.terracotta};
-            text-decoration: none; font-size: 15px; font-weight: 700;
-            font-family: var(--font-urbanist,system-ui);
-            transition: background 0.2s, color 0.2s;
-          }
-          .sc-signup-btn:hover { background: #fff; color: ${C.terracotta}; }
-          .chat-textarea { font-weight: 500; }
           .g-sev{border:1.5px solid ${C.border};border-radius:14px;padding:18px 20px;cursor:pointer;background:#fff;transition:border-color 0.15s,background 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
           
         .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:15px 0; margin-top:-15px; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
@@ -2186,6 +2175,20 @@ export default function SymptomCheckerChatPage() {
           flex-direction: column;
           background: ${C.cream};
         }
+        /* The guest wall renders in the chat view, so its button styles belong
+           here. They were in the guided-flow block, where the wall never
+           appears, which is why the button rendered as a bare link. */
+        .sc-signup-btn {
+          display: inline-flex; align-items: center; justify-content: center;
+          height: 44px; padding: 0 24px; border-radius: 12px;
+          background: ${C.terracotta}; color: #fff;
+          border: 2px solid ${C.terracotta};
+          text-decoration: none; font-size: 15px; font-weight: 700;
+          font-family: var(--font-urbanist,system-ui);
+          transition: background 0.2s, color 0.2s;
+        }
+        .sc-signup-btn:hover { background: #fff; color: ${C.terracotta}; }
+        .chat-textarea { font-weight: 500; }
         .chat-messages {
           flex: 1;
           overflow-y: scroll;

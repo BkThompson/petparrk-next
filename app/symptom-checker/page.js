@@ -100,6 +100,24 @@ export default function SymptomCheckerHomePage() {
   const [resumeData, setResumeData] = useState(null);
   const [guestPet, setGuestPet] = useState({ species: "", breed: "", age: "" });
 
+  // How many free checks are left, asked before the guided flow starts. Being
+  // told up front is far better than answering three questions and then being
+  // refused. null means unknown — never block on it.
+  const [guestRemaining, setGuestRemaining] = useState(null);
+  useEffect(() => {
+    if (session === undefined || session) return;
+    let cancelled = false;
+    fetch("/api/symptom-checker")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d?.guest) setGuestRemaining(d.remaining ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
+
   const [lastChecks, setLastChecks] = useState({});
 
   useEffect(() => {
@@ -1283,6 +1301,35 @@ export default function SymptomCheckerHomePage() {
                       margin: "0 0 20px",
                     }}
                   />
+                  {guestRemaining === 0 && (
+                    <div
+                      style={{
+                        marginBottom: "16px",
+                        padding: "14px 16px",
+                        borderRadius: "12px",
+                        background: "#FFFBEB",
+                        border: "1px solid #FCD34D",
+                        fontSize: "15px",
+                        fontWeight: 500,
+                        color: C.navyDark,
+                        lineHeight: 1.55,
+                        maxWidth: "62ch",
+                      }}
+                    >
+                      You&apos;ve used your free checks for now. They reset
+                      within 24 hours — or create a free account and there
+                      &apos;s no limit, with every check saved so you can see
+                      how things change over time.
+                      <div style={{ marginTop: "14px" }}>
+                        <Link
+                          href="/auth?tab=signup"
+                          className="sc-btn-primary"
+                        >
+                          Create a free account
+                        </Link>
+                      </div>
+                    </div>
+                  )}
                   <div
                     className="sc-btn-row"
                     style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}
