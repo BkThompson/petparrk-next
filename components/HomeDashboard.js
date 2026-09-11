@@ -256,8 +256,8 @@ export default function HomeDashboard({ session, savedVets = [] }) {
         .hd-pet-check { display: flex; flex-direction: column; gap: 2px; margin: 0; }
         .hd-check-label { font-size: 13px; font-weight: 700; color: ${C.muted}; text-transform: uppercase; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin-top: 5px; }
         .hd-check-none { font-size: 16px; color: ${C.muted}; font-weight: 500; }
-        .hd-pet-check-link { font-size: 16px; color: ${C.terracotta}; cursor: pointer; font-weight: 600; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; width: fit-content; }
-        .hd-pet-check-link:hover { color: #a8471d; }
+        .hd-pet-check-link { font-size: 16px; color: ${C.terracotta}; cursor: pointer; font-weight: 600;  text-underline-offset: 2px; width: fit-content; }
+        .hd-pet-check-link:hover { color: #a8471d; text-decoration: underline; }
         .hd-pet-cta { flex-shrink: 0; min-height: 44px; font-size: 14px; font-weight: 700; color: ${C.terracotta}; cursor: pointer; background: none; border: none; font-family: inherit; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; transition: color 0.15s, transform 0.15s; }
         .hd-pet-cta:hover { color: #a8471d; transform: translateX(3px); }
         .hd-empty { text-align: center; padding: 24px 20px 32px; color: ${C.slate}; }

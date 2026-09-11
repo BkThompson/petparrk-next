@@ -40,7 +40,10 @@ function hashIp(req) {
 // follow-up turn never needs a fresh token.
 async function verifyTurnstile(token, req) {
   if (!process.env.TURNSTILE_SECRET_KEY) return true; // not configured — skip
-  if (!token) return false;
+  if (!token) {
+    console.error("[captcha] no token sent with a new guest check");
+    return false;
+  }
   try {
     const fwd = req.headers.get("x-forwarded-for") || "";
     const body = new URLSearchParams({
@@ -54,6 +57,16 @@ async function verifyTurnstile(token, req) {
       { method: "POST", body },
     );
     const json = await r.json();
+    if (json.success !== true) {
+      // Cloudflare names the reason: timeout-or-duplicate means the token was
+      // already used or has expired, which is the likely case here — the token
+      // is issued on the landing page, then sits through three guided steps
+      // before the first message, and is reused on a second check.
+      console.error(
+        "[captcha] siteverify rejected:",
+        JSON.stringify(json["error-codes"] || json),
+      );
+    }
     return json.success === true;
   } catch (e) {
     // Cloudflare unreachable. Fail open, same reasoning as the usage counter:
