@@ -1363,6 +1363,7 @@ export default function SymptomCheckerHomePage() {
                 lineHeight: "1.8",
                 // Ran 111-138ch at wide widths; capped and centred.
                 maxWidth: "68ch",
+                textWrap: "balance",
                 marginLeft: "auto",
                 marginRight: "auto",
               }}

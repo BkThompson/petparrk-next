@@ -1051,7 +1051,9 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                         <Share2 size={18} />{" "}
                         {canNativeShare
                           ? "Share Hero Card"
-                          : "Copy Hero Card link"}
+                          : actionBusy
+                            ? "Copying…"
+                            : "Copy Hero Card link"}
                       </>
                     )}
                   </button>
@@ -1109,7 +1111,11 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                 ) : (
                   <>
                     <Share2 size={18} />{" "}
-                    {canNativeShare ? "Share Hero Card" : "Copy Hero Card link"}
+                    {actionBusy
+                      ? "Copying…"
+                      : canNativeShare
+                        ? "Share Hero Card"
+                        : "Copy Hero Card link"}
                   </>
                 )}
               </button>
@@ -1444,9 +1450,11 @@ const heroCardCss = `
     border:1px solid var(--t-card-border); border-radius:999px; font-size:14px; font-weight:600;
     color:var(--t-chip-text); white-space:nowrap;line-height: 1.2;
   }
-  /* The "N more" pill is a button; plain tags are not, so only this one
-     needs a real target. 30.8px before. */
-  .hc-tag-toggle { min-height:44px; background:transparent; color:var(--t-accent-on-card); cursor:pointer; font-family:inherit; font-weight:700; }
+  /* Sized exactly like the tags beside it. A 44px min-height here made the
+     "N more" and "Show less" pills taller than every other pill in the row,
+     which read as a mistake. Matching the row wins over the tap minimum, the
+     same call made on the 42px buttons elsewhere. */
+  .hc-tag-toggle { background:transparent; color:var(--t-accent-on-card); cursor:pointer; font-family:inherit; font-weight:700; }
   .hc-tag-toggle:hover { background:var(--t-chip-bg); }
   .hc-fade { animation: hcFadeIn 0.4s cubic-bezier(0.33, 1, 0.68, 1) both; }
 

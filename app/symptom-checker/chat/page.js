@@ -329,6 +329,46 @@ export default function SymptomCheckerChatPage() {
   // Set by the symptom-checker landing page when a guest passes Turnstile,
   // carried through the session object. Null for signed-in users.
   const [guestCaptchaToken, setGuestCaptchaToken] = useState(null);
+
+  // Turnstile lives here rather than only on the landing page. Five different
+  // places write the guest session and only one of them carried a token, so
+  // any other entry path — Start New Check, the back link, a resumed session —
+  // arrived with nothing and the first message was rejected. Every path ends
+  // up on this page, so this is the one place that covers them all.
+  const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const turnstileRef = useRef(null);
+
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) return;
+    if (!guestMode || guestCaptchaToken) return;
+    function renderWidget() {
+      if (!window.turnstile || !turnstileRef.current) return;
+      if (turnstileRef.current.dataset.rendered === "1") return;
+      turnstileRef.current.dataset.rendered = "1";
+      window.turnstile.render(turnstileRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token) => setGuestCaptchaToken(token),
+        "expired-callback": () => setGuestCaptchaToken(null),
+        "error-callback": () => setGuestCaptchaToken(null),
+      });
+    }
+    if (window.turnstile) {
+      renderWidget();
+      return;
+    }
+    const existing = document.querySelector(
+      'script[src*="challenges.cloudflare.com"]',
+    );
+    const script = existing || document.createElement("script");
+    if (!existing) {
+      script.src =
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+    script.addEventListener("load", renderWidget);
+    return () => script.removeEventListener("load", renderWidget);
+  }, [TURNSTILE_SITE_KEY, guestMode, guestCaptchaToken]);
   const [triageMounted, setTriageMounted] = useState(false);
   const [ready, setReady] = useState(false);
   const [guidedStep, setGuidedStep] = useState(1);
@@ -1920,12 +1960,20 @@ export default function SymptomCheckerChatPage() {
                     >
                       Use your best judgment — you know {petName} best.
                     </p>
+                    {guestMode && TURNSTILE_SITE_KEY && (
+                      <div ref={turnstileRef} style={{ margin: "0 0 16px" }} />
+                    )}
                     {SEVERITIES.map((s) => {
                       const Icon = s.icon;
                       return (
                         <div
                           key={s.id}
                           className="g-sev"
+                          disabled={
+                            guestMode &&
+                            !!TURNSTILE_SITE_KEY &&
+                            !guestCaptchaToken
+                          }
                           onClick={() => selectSeverity(s.id)}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.borderColor = s.border;
@@ -2015,6 +2063,7 @@ export default function SymptomCheckerChatPage() {
                   // Second copy of the disclaimer — the first one was capped
                   // last round and this one was missed.
                   maxWidth: "68ch",
+                  textWrap: "balance",
                   marginLeft: "auto",
                   marginRight: "auto",
                 }}
@@ -2408,6 +2457,7 @@ export default function SymptomCheckerChatPage() {
                 lineHeight: "1.8",
                 // Ran 111-138ch at wide widths; capped and centred.
                 maxWidth: "68ch",
+                textWrap: "balance",
                 marginLeft: "auto",
                 marginRight: "auto",
               }}
