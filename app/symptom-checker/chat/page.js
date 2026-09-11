@@ -347,11 +347,12 @@ export default function SymptomCheckerChatPage() {
     // resumed sessions — while the route still demanded a token.
     if (session || session === undefined) return;
     if (guestCaptchaToken) return;
+    let widgetId;
     function renderWidget() {
       if (!window.turnstile || !turnstileRef.current) return;
       if (turnstileRef.current.dataset.rendered === "1") return;
       turnstileRef.current.dataset.rendered = "1";
-      window.turnstile.render(turnstileRef.current, {
+      widgetId = window.turnstile.render(turnstileRef.current, {
         sitekey: TURNSTILE_SITE_KEY,
         callback: (token) => setGuestCaptchaToken(token),
         "expired-callback": () => setGuestCaptchaToken(null),
@@ -373,12 +374,20 @@ export default function SymptomCheckerChatPage() {
       document.head.appendChild(script);
     }
     script.addEventListener("load", renderWidget);
-    return () => script.removeEventListener("load", renderWidget);
-    // guidedStep matters: the widget's container only exists once the severity
-    // step renders. An effect that runs before then finds turnstileRef.current
-    // null and gives up, and nothing re-runs it. Same failure as the sign-in
-    // form, where the container sat behind a loading state.
-  }, [TURNSTILE_SITE_KEY, session, guestCaptchaToken, guidedStep]);
+    return () => {
+      script.removeEventListener("load", renderWidget);
+      // Cloudflare keeps its own registry of widget ids. Without this it logs
+      // "Cannot find Widget" when React removes the node from underneath it —
+      // which is exactly what the console was showing.
+      if (widgetId && window.turnstile?.remove) {
+        try {
+          window.turnstile.remove(widgetId);
+        } catch {}
+      }
+    };
+    // The container is mounted outside AnimatePresence, so it exists from the
+    // first step onward and this runs once instead of chasing step changes.
+  }, [TURNSTILE_SITE_KEY, session, guestCaptchaToken]);
   const [triageMounted, setTriageMounted] = useState(false);
   const [ready, setReady] = useState(false);
   const [guidedAnswers, setGuidedAnswers] = useState({
@@ -1759,6 +1768,24 @@ export default function SymptomCheckerChatPage() {
                   />
                 </div>
               </div>
+              {/* Outside AnimatePresence on purpose. Inside the animated step
+                  this mounted and was then torn down by the step transition —
+                  Cloudflare logged "Cannot find Widget" each time and no token
+                  survived. Mounted here it renders once and persists across
+                  all three steps. Hidden until the last step so it doesn't
+                  distract, but visibility: hidden keeps it in the DOM where
+                  visibility toggling with display:none would not. */}
+              {!session && TURNSTILE_SITE_KEY && (
+                <div
+                  style={{
+                    height: guidedStep === 3 ? "auto" : 0,
+                    overflow: "hidden",
+                    marginBottom: guidedStep === 3 ? 16 : 0,
+                  }}
+                >
+                  <div ref={turnstileRef} />
+                </div>
+              )}
               <AnimatePresence mode="wait" custom={stepDirection}>
                 {guidedStep === 1 && (
                   <motion.div
@@ -1969,9 +1996,6 @@ export default function SymptomCheckerChatPage() {
                     >
                       Use your best judgment — you know {petName} best.
                     </p>
-                    {!session && TURNSTILE_SITE_KEY && (
-                      <div ref={turnstileRef} style={{ margin: "0 0 16px" }} />
-                    )}
                     {SEVERITIES.map((s) => {
                       const Icon = s.icon;
                       return (
