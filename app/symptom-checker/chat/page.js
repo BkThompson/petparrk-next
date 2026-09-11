@@ -344,6 +344,7 @@ export default function SymptomCheckerChatPage() {
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_INVISIBLE ||
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const turnstileRef = useRef(null);
+  const turnstileWidgetId = useRef(null);
 
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY) return;
@@ -364,6 +365,7 @@ export default function SymptomCheckerChatPage() {
         "expired-callback": () => setGuestCaptchaToken(null),
         "error-callback": () => setGuestCaptchaToken(null),
       });
+      turnstileWidgetId.current = widgetId;
     }
     if (window.turnstile) {
       renderWidget();
@@ -654,7 +656,33 @@ export default function SymptomCheckerChatPage() {
         captchaToken: session ? null : guestCaptchaToken || null,
       }),
     });
-    if (!res.ok || !res.body) throw new Error("Stream failed");
+    // Turnstile tokens are single-use. Once one has been spent on the first
+    // message of a check, the next check must not reuse it — Cloudflare
+    // rejects that as "timeout-or-duplicate". Resetting asks the widget for a
+    // fresh token, which arrives via the callback above.
+    if (!session && turnstileWidgetId.current && window.turnstile?.reset) {
+      try {
+        window.turnstile.reset(turnstileWidgetId.current);
+        setGuestCaptchaToken(null);
+      } catch {}
+    }
+    if (!res.ok) {
+      // A guest who has used their three free checks gets a 401 with
+      // guest_limit_reached. Surfacing that as "Something went wrong" made a
+      // deliberate limit look like a crash.
+      let payload = null;
+      try {
+        payload = await res.json();
+      } catch {}
+      if (res.status === 401 && payload?.error === "guest_limit_reached") {
+        setFreeCheckUsed(true);
+        const err = new Error("guest_limit_reached");
+        err.code = "guest_limit_reached";
+        throw err;
+      }
+      throw new Error("Stream failed");
+    }
+    if (!res.body) throw new Error("Stream failed");
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let full = "";
@@ -769,7 +797,10 @@ export default function SymptomCheckerChatPage() {
         firstMsg,
         {
           role: "assistant",
-          content: "Something went wrong. Please try again.",
+          content:
+            e?.code === "guest_limit_reached"
+              ? "You've used your free checks for today. Create a free account to keep checking on your pet — your history is saved, and there's no limit."
+              : "Something went wrong. Please try again.",
         },
       ]);
     }
@@ -865,7 +896,10 @@ export default function SymptomCheckerChatPage() {
         ...updated,
         {
           role: "assistant",
-          content: "Something went wrong. Please try again.",
+          content:
+            e?.code === "guest_limit_reached"
+              ? "You've used your free checks for today. Create a free account to keep checking on your pet — your history is saved, and there's no limit."
+              : "Something went wrong. Please try again.",
         },
       ]);
     }
@@ -1664,6 +1698,17 @@ export default function SymptomCheckerChatPage() {
              is meant to be gaining emphasis. The colour comes from the severity
              via --sev-border, set inline on the tile. */
           .g-sev-tile { border: 1px solid var(--sev-border, transparent); }
+          .sc-signup-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            height: 44px; padding: 0 24px; border-radius: 12px;
+            background: ${C.terracotta}; color: #fff;
+            border: 2px solid ${C.terracotta};
+            text-decoration: none; font-size: 15px; font-weight: 700;
+            font-family: var(--font-urbanist,system-ui);
+            transition: background 0.2s, color 0.2s;
+          }
+          .sc-signup-btn:hover { background: #fff; color: ${C.terracotta}; }
+          .chat-textarea { font-weight: 500; }
           .g-sev{border:1.5px solid ${C.border};border-radius:14px;padding:18px 20px;cursor:pointer;background:#fff;transition:border-color 0.15s,background 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
           
         .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:15px 0; margin-top:-15px; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
@@ -2382,9 +2427,10 @@ export default function SymptomCheckerChatPage() {
                 }}
               >
                 <p
+                  className="sc-signup-title"
                   style={{
                     margin: "0 0 6px",
-                    fontSize: "15px",
+                    fontSize: "24px",
                     color: C.navyDark,
                     fontWeight: "700",
                   }}
@@ -2392,31 +2438,18 @@ export default function SymptomCheckerChatPage() {
                   Create a free account to continue.
                 </p>
                 <p
+                  className="sc-signup-sub"
                   style={{
                     margin: "0 0 20px",
-                    fontSize: "14px",
+                    fontSize: "16px",
+                    fontWeight: 500,
                     color: C.muted,
                   }}
                 >
                   Your account keeps a record of every check, so you can see how
                   things change over time.
                 </p>
-                <Link
-                  href="/auth"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    height: "44px",
-                    padding: "0 24px",
-                    background: C.terracotta,
-                    color: "#fff",
-                    borderRadius: "12px",
-                    textDecoration: "none",
-                    fontSize: "15px",
-                    fontWeight: "700",
-                    fontFamily: "var(--font-urbanist,system-ui)",
-                  }}
-                >
+                <Link href="/auth" className="sc-signup-btn">
                   Sign Up Free
                 </Link>
               </div>
