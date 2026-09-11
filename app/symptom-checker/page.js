@@ -407,6 +407,12 @@ export default function SymptomCheckerHomePage() {
         .sc-btn-primary { height:44px; padding:0 28px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
         .sc-btn-primary:hover { background:${C.white}; color:${C.terracotta}; border:2px solid ${C.terracotta}; }
         .sc-btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
+        .sc-guest-lede {
+          margin: 0 0 24px;
+          font-size: 15px;
+          font-weight: 500;
+          color: ${C.muted};
+        }
         .sc-limit-note {
           margin-bottom: 16px;
           padding: 14px 16px;
@@ -1239,13 +1245,7 @@ export default function SymptomCheckerHomePage() {
                 >
                   Check your pet's symptoms
                 </h2>
-                <p
-                  style={{
-                    margin: "0 0 24px",
-                    fontSize: "15px",
-                    color: C.muted,
-                  }}
-                >
+                <p className="sc-guest-lede">
                   Run two checks free, no account needed. Create a free account
                   for unlimited checks and a record of every one you run.
                 </p>
