@@ -335,6 +335,7 @@ export default function SymptomCheckerChatPage() {
   // any other entry path — Start New Check, the back link, a resumed session —
   // arrived with nothing and the first message was rejected. Every path ends
   // up on this page, so this is the one place that covers them all.
+  const [guidedStep, setGuidedStep] = useState(1);
   const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const turnstileRef = useRef(null);
 
@@ -368,10 +369,13 @@ export default function SymptomCheckerChatPage() {
     }
     script.addEventListener("load", renderWidget);
     return () => script.removeEventListener("load", renderWidget);
-  }, [TURNSTILE_SITE_KEY, guestMode, guestCaptchaToken]);
+    // guidedStep matters: the widget's container only exists once the severity
+    // step renders. An effect that runs before then finds turnstileRef.current
+    // null and gives up, and nothing re-runs it. Same failure as the sign-in
+    // form, where the container sat behind a loading state.
+  }, [TURNSTILE_SITE_KEY, guestMode, guestCaptchaToken, guidedStep]);
   const [triageMounted, setTriageMounted] = useState(false);
   const [ready, setReady] = useState(false);
-  const [guidedStep, setGuidedStep] = useState(1);
   const [guidedAnswers, setGuidedAnswers] = useState({
     area: null,
     duration: null,
