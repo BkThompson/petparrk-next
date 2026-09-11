@@ -299,6 +299,34 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
   async function handleCopy() {
     if (actionBusy) return;
     setActionBusy(true);
+
+    // iOS Safari only allows a clipboard write while the user gesture is still
+    // active, and awaiting resolveShareUrl() ends that window — which is why
+    // this worked on desktop and silently failed on iPad even over HTTPS.
+    // ClipboardItem accepts a promise, so the write is registered during the
+    // tap and resolves once the URL arrives.
+    if (
+      typeof window !== "undefined" &&
+      window.isSecureContext &&
+      typeof ClipboardItem !== "undefined" &&
+      navigator.clipboard?.write
+    ) {
+      try {
+        const blob = resolveShareUrl().then(
+          (u) => new Blob([u || ""], { type: "text/plain" }),
+        );
+        await navigator.clipboard.write([
+          new ClipboardItem({ "text/plain": blob }),
+        ]);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        setActionBusy(false);
+        return;
+      } catch {
+        // Fall through to the original path below.
+      }
+    }
+
     try {
       const url = await resolveShareUrl();
       if (!url) return; // redirected to /share or failed

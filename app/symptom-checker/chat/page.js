@@ -326,6 +326,9 @@ export default function SymptomCheckerChatPage() {
   const [guestMode, setGuestMode] = useState(false);
   const [guestPet, setGuestPet] = useState({ species: "", breed: "", age: "" });
   const [freeCheckUsed, setFreeCheckUsed] = useState(false);
+  // Set by the symptom-checker landing page when a guest passes Turnstile,
+  // carried through the session object. Null for signed-in users.
+  const [guestCaptchaToken, setGuestCaptchaToken] = useState(null);
   const [triageMounted, setTriageMounted] = useState(false);
   const [ready, setReady] = useState(false);
   const [guidedStep, setGuidedStep] = useState(1);
@@ -381,6 +384,7 @@ export default function SymptomCheckerChatPage() {
         setGuestMode(parsed.guestMode || false);
         setGuestPet(parsed.guestPet || { species: "", breed: "", age: "" });
         setFreeCheckUsed(parsed.freeCheckUsed || false);
+        setGuestCaptchaToken(parsed.captchaToken || null);
         if (parsed.recommendation) setRecommendation(parsed.recommendation);
         if (parsed.costEstimates) setCostEstimates(parsed.costEstimates);
         if (parsed.visitPrep) setVisitPrep(parsed.visitPrep);
@@ -560,9 +564,16 @@ export default function SymptomCheckerChatPage() {
   }
 
   async function callStream(apiMessages, onChunk, onDone) {
+    // The route reads this to tell a signed-in user from a guest. Without it
+    // everyone is treated as a guest, which means the guest limit and the
+    // captcha requirement apply to account holders too.
+    const headers = { "Content-Type": "application/json" };
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`;
+    }
     const res = await fetch("/api/symptom-checker", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         messages: apiMessages.map((m) => ({
           role: m.role,
@@ -572,6 +583,11 @@ export default function SymptomCheckerChatPage() {
         // Background from a prior check, when this is a follow-up. The route
         // appends it to the system prompt as context, never as a diagnosis.
         followUpContext: followUpSummary || null,
+        // Guests only. The route requires this on the first message of a new
+        // check when TURNSTILE_SECRET_KEY is configured; without it every
+        // first message is rejected and the retry only works because by then
+        // it is no longer the first turn.
+        captchaToken: guestMode ? guestCaptchaToken || null : null,
       }),
     });
     if (!res.ok || !res.body) throw new Error("Stream failed");
@@ -1570,9 +1586,14 @@ export default function SymptomCheckerChatPage() {
         <style>{`
           .g-card{border:1.5px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:#fff;display:flex;align-items:center;gap:14px;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
           .g-dur{border:1.5px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:#fff;display:flex;flex-direction:column;align-items:center;text-align:center;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;color:${C.navyDark};}
-          .g-dur:hover{border-color:${C.terracotta};background:#fafaf8;}
-          .g-card:hover{border-color:${C.terracotta};background:#fafaf8;}
-          .g-sev:hover{border-color:${C.terracotta};background:#fafaf8;}
+          /* Hover only where hover exists. On touch devices the hover state
+             sticks after a tap, so returning to a step showed an option
+             looking already selected when nothing was. */
+          @media (hover: hover) {
+            .g-dur:hover{border-color:${C.terracotta};background:#fafaf8;}
+            .g-card:hover{border-color:${C.terracotta};background:#fafaf8;}
+            .g-sev:hover{border-color:${C.terracotta};background:#fafaf8;}
+          }
           /* The tile keeps its border in every state. Clearing it on hover was
              tried and reverted: hover doesn't exist on touch, so the effect was
              desktop-only, and removing an edge reads as receding when the row

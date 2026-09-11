@@ -192,6 +192,7 @@ export default function SymptomCheckerHomePage() {
           guestPet,
           freeCheckUsed: false,
           autoStart: true,
+          captchaToken: captchaToken || null,
         }),
       );
     } catch (e) {}
@@ -1282,13 +1283,19 @@ export default function SymptomCheckerHomePage() {
                       margin: "0 0 20px",
                     }}
                   />
+                  {TURNSTILE_SITE_KEY && !session && (
+                    <div ref={turnstileRef} style={{ margin: "0 0 16px" }} />
+                  )}
                   <div
                     className="sc-btn-row"
                     style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}
                   >
                     <button
                       onClick={startGuestCheck}
-                      disabled={!guestPet.species}
+                      disabled={
+                        !guestPet.species ||
+                        (!!TURNSTILE_SITE_KEY && !captchaToken)
+                      }
                       className="sc-btn-primary"
                     >
                       Start Free Check{" "}

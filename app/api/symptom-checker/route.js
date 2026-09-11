@@ -83,9 +83,13 @@ async function allowGuest(req, isNewCheck) {
   const ip_hash = hashIp(req);
   const since = new Date(Date.now() - WINDOW_HOURS * 3600 * 1000).toISOString();
 
+  // Counts on ip_hash, not id: the table is (ip_hash, created_at) with no id
+  // column, and selecting a column that doesn't exist returns an error — which
+  // the fail-open below then turns into unlimited free checks. That was the
+  // bug: the limiter looked correct and silently never fired.
   const { count, error } = await db
     .from("guest_check_usage")
-    .select("id", { count: "exact", head: true })
+    .select("ip_hash", { count: "exact", head: true })
     .eq("ip_hash", ip_hash)
     .gte("created_at", since);
 
@@ -284,7 +288,15 @@ TRIAGE LEVELS — when you have enough information (or by your 5th response), pr
 
 
 TRIAGE RESULT FORMAT:
-When issuing a result, your response MUST include ALL of the following tags at the very top, before any other text:
+Emit the tags on EVERY response that gives guidance about what to do or what
+to watch for — not only when you consider the conversation finished. If your
+reply tells the owner to watch for warning signs, to call a vet, or to monitor
+at home, that IS a result and it must carry the tags. Leaving them off means
+the owner sees advice with no urgency level attached, which is worse than no
+advice. Only omit them while you are still asking clarifying questions and
+have given no guidance at all.
+
+Your response MUST include ALL of the following tags at the very top, before any other text:
 
 
 [TRIAGE_RESULT: EMERGENCY | SEE_VET | MONITOR]

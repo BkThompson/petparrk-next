@@ -38,6 +38,21 @@ export default function VantaBackground({ effect, bg, accent, fullHeight }) {
 
   useEffect(() => {
     let cancelled = false;
+
+    // Skip the animation entirely when the visitor has asked for reduced
+    // motion, or on a touch device. Vanta is a continuous WebGL render loop:
+    // it measurably drags on tablets even in a production build, and the
+    // static gradient underneath is a perfectly good background. The
+    // accessibility statement claims motion is respected, so the first of
+    // these two conditions is also a promise being kept.
+    if (typeof window !== "undefined") {
+      const reduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      const coarse = window.matchMedia("(pointer: coarse)").matches;
+      if (reduced || coarse) return;
+    }
+
     // Legacy pets may have a now-removed effect saved (fog/halo/globe/clouds).
     // Fall back to a supported effect so their card still animates.
     const effectKey = EFFECT_LOADERS[effect] ? effect : "waves";
