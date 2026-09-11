@@ -94,11 +94,21 @@ async function allowGuest(req, isNewCheck) {
     .gte("created_at", since);
 
   // Fail open on an infrastructure error: a database blip must never stand
-  // between a worried owner and triage guidance.
-  if (error) return { ok: true };
+  // between a worried owner and triage guidance. But log it — failing open
+  // silently is how this limiter ran for weeks without enforcing anything and
+  // without leaving a single row behind.
+  if (error) {
+    console.error("[guest-limit] count failed, failing open:", error.message);
+    return { ok: true };
+  }
   if ((count ?? 0) >= GUEST_LIMIT) return { ok: false };
 
-  await db.from("guest_check_usage").insert({ ip_hash });
+  const { error: insertError } = await db
+    .from("guest_check_usage")
+    .insert({ ip_hash });
+  if (insertError) {
+    console.error("[guest-limit] insert failed:", insertError.message);
+  }
   return { ok: true };
 }
 

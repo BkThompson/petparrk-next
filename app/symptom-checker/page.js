@@ -99,6 +99,46 @@ export default function SymptomCheckerHomePage() {
   const [pets, setPets] = useState([]);
   const [resumeData, setResumeData] = useState(null);
   const [guestPet, setGuestPet] = useState({ species: "", breed: "", age: "" });
+
+  // Turnstile for guest checks. The API route requires a token on the first
+  // message of a new guest check whenever TURNSTILE_SECRET_KEY is configured;
+  // without this widget every first message is rejected and the retry only
+  // works because by then it is no longer the first turn.
+  const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const turnstileRef = useRef(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) return;
+    if (session) return; // signed-in users never take the guest path
+    function renderWidget() {
+      if (!window.turnstile || !turnstileRef.current) return;
+      if (turnstileRef.current.dataset.rendered === "1") return;
+      turnstileRef.current.dataset.rendered = "1";
+      window.turnstile.render(turnstileRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token) => setCaptchaToken(token),
+        "expired-callback": () => setCaptchaToken(""),
+        "error-callback": () => setCaptchaToken(""),
+      });
+    }
+    if (window.turnstile) {
+      renderWidget();
+      return;
+    }
+    const existing = document.querySelector(
+      'script[src*="challenges.cloudflare.com"]',
+    );
+    const script = existing || document.createElement("script");
+    if (!existing) {
+      script.src =
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+    script.addEventListener("load", renderWidget);
+    return () => script.removeEventListener("load", renderWidget);
+  }, [TURNSTILE_SITE_KEY, session]);
   const [lastChecks, setLastChecks] = useState({});
 
   useEffect(() => {
