@@ -336,7 +336,13 @@ export default function SymptomCheckerChatPage() {
   // arrived with nothing and the first message was rejected. Every path ends
   // up on this page, so this is the one place that covers them all.
   const [guidedStep, setGuidedStep] = useState(1);
-  const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  // Invisible widget: verifies silently so a challenge never interrupts
+  // someone mid-triage. Sign-in keeps the managed widget, where a visible
+  // check reads as reassurance. Falls back to the managed key if the
+  // invisible one isn't configured.
+  const TURNSTILE_SITE_KEY =
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_INVISIBLE ||
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const turnstileRef = useRef(null);
 
   useEffect(() => {

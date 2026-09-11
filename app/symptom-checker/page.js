@@ -100,45 +100,6 @@ export default function SymptomCheckerHomePage() {
   const [resumeData, setResumeData] = useState(null);
   const [guestPet, setGuestPet] = useState({ species: "", breed: "", age: "" });
 
-  // Turnstile for guest checks. The API route requires a token on the first
-  // message of a new guest check whenever TURNSTILE_SECRET_KEY is configured;
-  // without this widget every first message is rejected and the retry only
-  // works because by then it is no longer the first turn.
-  const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-  const turnstileRef = useRef(null);
-  const [captchaToken, setCaptchaToken] = useState("");
-
-  useEffect(() => {
-    if (!TURNSTILE_SITE_KEY) return;
-    if (session) return; // signed-in users never take the guest path
-    function renderWidget() {
-      if (!window.turnstile || !turnstileRef.current) return;
-      if (turnstileRef.current.dataset.rendered === "1") return;
-      turnstileRef.current.dataset.rendered = "1";
-      window.turnstile.render(turnstileRef.current, {
-        sitekey: TURNSTILE_SITE_KEY,
-        callback: (token) => setCaptchaToken(token),
-        "expired-callback": () => setCaptchaToken(""),
-        "error-callback": () => setCaptchaToken(""),
-      });
-    }
-    if (window.turnstile) {
-      renderWidget();
-      return;
-    }
-    const existing = document.querySelector(
-      'script[src*="challenges.cloudflare.com"]',
-    );
-    const script = existing || document.createElement("script");
-    if (!existing) {
-      script.src =
-        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-      script.async = true;
-      document.head.appendChild(script);
-    }
-    script.addEventListener("load", renderWidget);
-    return () => script.removeEventListener("load", renderWidget);
-  }, [TURNSTILE_SITE_KEY, session]);
   const [lastChecks, setLastChecks] = useState({});
 
   useEffect(() => {
@@ -232,7 +193,6 @@ export default function SymptomCheckerHomePage() {
           guestPet,
           freeCheckUsed: false,
           autoStart: true,
-          captchaToken: captchaToken || null,
         }),
       );
     } catch (e) {}
@@ -429,7 +389,7 @@ export default function SymptomCheckerHomePage() {
         .sc-btn-primary { height:44px; padding:0 28px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
         .sc-btn-primary:hover { background:${C.white}; color:${C.terracotta}; border:2px solid ${C.terracotta}; }
         .sc-btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
-        .sc-btn-outline { height:48px; padding:0 28px; background:transparent; color:${C.navyDark}; border:2px solid ${C.navyDark}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
+        .sc-btn-outline { height:44px; padding:0 28px; background:transparent; color:${C.navyDark}; border:2px solid ${C.navyDark}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
         .sc-btn-outline:hover { background:${C.navyDark}; color:#fff; }
 
 
@@ -1323,19 +1283,13 @@ export default function SymptomCheckerHomePage() {
                       margin: "0 0 20px",
                     }}
                   />
-                  {TURNSTILE_SITE_KEY && !session && (
-                    <div ref={turnstileRef} style={{ margin: "0 0 16px" }} />
-                  )}
                   <div
                     className="sc-btn-row"
                     style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}
                   >
                     <button
                       onClick={startGuestCheck}
-                      disabled={
-                        !guestPet.species ||
-                        (!!TURNSTILE_SITE_KEY && !captchaToken)
-                      }
+                      disabled={!guestPet.species}
                       className="sc-btn-primary"
                     >
                       Start Free Check{" "}

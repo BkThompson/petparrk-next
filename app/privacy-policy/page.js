@@ -211,11 +211,20 @@ export default function PrivacyPolicy() {
             <p className="legal-p">
               <strong>Bot and abuse prevention.</strong> We use Cloudflare
               Turnstile to distinguish people from automated traffic when you
-              create an account or use the symptom checker without one.
+              create an account or use the symptom checker without one. On the
+              symptom checker it runs invisibly, with nothing shown on screen.
               Turnstile collects device and browser signals and interaction data
-              from the page it appears on, and processes them under
-              Cloudflare&apos;s own privacy terms. It does not read the contents
-              of the forms you submit.
+              from the page it runs on, and processes them under the{" "}
+              <a
+                href="https://www.cloudflare.com/turnstile-privacy-policy/"
+                className="legal-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Cloudflare Turnstile Privacy Addendum
+              </a>
+              . It does not read the contents of the forms you submit, and it is
+              not used for advertising or to track you across other sites.
             </p>
             <p className="legal-p">
               <strong>Payments.</strong> The Service is currently free and we do

@@ -39,7 +39,16 @@ function hashIp(req) {
 // Cloudflare siteverify. Only called for a guest starting a NEW check, so a
 // follow-up turn never needs a fresh token.
 async function verifyTurnstile(token, req) {
-  if (!process.env.TURNSTILE_SECRET_KEY) return true; // not configured — skip
+  // Two widgets, two secrets. The symptom checker uses an invisible widget so
+  // a challenge never interrupts triage; sign-in keeps the managed one, where
+  // a visible check is reassuring rather than obstructive. A token is only
+  // valid against the secret belonging to the widget that issued it, so this
+  // route verifies with the invisible secret and falls back to the managed one
+  // if that isn't configured.
+  const secret =
+    process.env.TURNSTILE_SECRET_KEY_INVISIBLE ||
+    process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) return true; // not configured — skip
   if (!token) {
     console.error("[captcha] no token sent with a new guest check");
     return false;
@@ -47,7 +56,7 @@ async function verifyTurnstile(token, req) {
   try {
     const fwd = req.headers.get("x-forwarded-for") || "";
     const body = new URLSearchParams({
-      secret: process.env.TURNSTILE_SECRET_KEY,
+      secret,
       response: token,
     });
     const ip = fwd.split(",")[0].trim();
