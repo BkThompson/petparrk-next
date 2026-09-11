@@ -1316,18 +1316,9 @@ export default function SymptomCheckerHomePage() {
                         maxWidth: "62ch",
                       }}
                     >
-                      You&apos;ve used your free checks for now. They reset
-                      within 24 hours — or create a free account and there
-                      &apos;s no limit, with every check saved so you can see
-                      how things change over time.
-                      <div style={{ marginTop: "14px" }}>
-                        <Link
-                          href="/auth?tab=signup"
-                          className="sc-btn-primary"
-                        >
-                          Create a free account
-                        </Link>
-                      </div>
+                      You&apos;ve used both of your free checks. Create a free
+                      account to keep going — there&apos;s no limit, and every
+                      check is saved so you can see how things change over time.
                     </div>
                   )}
                   <div

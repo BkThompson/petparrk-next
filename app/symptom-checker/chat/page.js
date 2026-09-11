@@ -625,6 +625,11 @@ export default function SymptomCheckerChatPage() {
       .replace(/\[TRIAGE_RESULT: SEE_VET\]/g, "")
       .replace(/\[TRIAGE_RESULT: MONITOR\]/g, "")
       .replace(/\[DIFFERENTIALS:[^\]]*\]/g, "")
+      // Mid-stream the tag arrives a character at a time, so "[DIFFERENTIALS:
+      // Ear inf" has no closing bracket yet and the rules above can't match it
+      // — which is why it flashed on screen before disappearing. Drop any
+      // unterminated tag still being typed at the end of the buffer.
+      .replace(/\[(TRIAGE_RESULT|DIFFERENTIALS)[^\]]*$/, "")
       .trim();
     return { newTriage, parsedDiffs, clean };
   }
@@ -799,7 +804,7 @@ export default function SymptomCheckerChatPage() {
           role: "assistant",
           content:
             e?.code === "guest_limit_reached"
-              ? "You've used your free checks for today. Create a free account to keep checking on your pet — your history is saved, and there's no limit."
+              ? "You've used both of your free checks. Create a free account to keep checking on your pet — your history is saved, and there's no limit."
               : "Something went wrong. Please try again.",
         },
       ]);
@@ -898,7 +903,7 @@ export default function SymptomCheckerChatPage() {
           role: "assistant",
           content:
             e?.code === "guest_limit_reached"
-              ? "You've used your free checks for today. Create a free account to keep checking on your pet — your history is saved, and there's no limit."
+              ? "You've used both of your free checks. Create a free account to keep checking on your pet — your history is saved, and there's no limit."
               : "Something went wrong. Please try again.",
         },
       ]);

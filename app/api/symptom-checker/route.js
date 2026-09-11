@@ -9,8 +9,18 @@ import crypto from "crypto";
 // Anonymous allowance. Deliberately not 1: households, offices, campuses and
 // mobile carriers share one address, so a limit of 1 tells the second person on
 // a network they've used a check they never ran.
-const GUEST_LIMIT = 3;
-const WINDOW_HOURS = 24;
+const GUEST_LIMIT = 2;
+// Effectively permanent. The allowance is two checks per address, full stop —
+// a rolling window would let anyone wait it out, and the point is to make an
+// account the way forward rather than a delay.
+//
+// Worth knowing what this can and cannot do: an IP hash is a weak identifier.
+// Mobile carriers put thousands of people behind one address, households and
+// offices share one, and a VPN or a phone switching to cellular produces a
+// fresh one in seconds. So this will occasionally tell someone they have used
+// checks they never ran, and it will never stop a determined person. It raises
+// the cost of casual abuse, which is all an IP limit can honestly claim.
+const WINDOW_HOURS = 24 * 365 * 10;
 // Follow-up turns inside one conversation are free, which left the cost of a
 // single guest conversation unbounded. These cap it.
 const GUEST_MAX_TURNS = 12;
