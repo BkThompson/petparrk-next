@@ -190,6 +190,18 @@ export default function HeroFlipCardLive({ pet }) {
           position: relative;
         }
         .hfc-mount { width: 100%; display: block; }
+        /* The front needs a transform of its own. WebKit only applies backface
+           culling to elements it has promoted to a 3D layer, and an untransformed
+           element isn't one — so on real iPhones and iPads the front stayed
+           visible through the flip and you saw it mirrored, while the back sat
+           hidden behind it. rotateY(0) is visually a no-op and does nothing on
+           Blink, which is why desktop and the device emulator always looked
+           right. translateZ(0.01px) keeps it fractionally in front of the back
+           face so they can't z-fight. */
+        .hfc-front {
+          transform: rotateY(0deg) translateZ(0.01px);
+          -webkit-transform: rotateY(0deg) translateZ(0.01px);
+        }
         .hfc-back {
           position: absolute;
           inset: 0;
