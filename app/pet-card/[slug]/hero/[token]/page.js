@@ -201,7 +201,15 @@ export default function PublicHeroCardPage() {
           justify-content: center;
           padding: 45px 18px 72px;
           font-family: 'Urbanist',-apple-system,BlinkMacSystemFont,sans-serif;
-          overflow: hidden;
+          /* Deliberately NOT overflow:hidden. In WebKit an ancestor with
+             overflow other than visible flattens preserve-3d in its
+             descendants, which killed the card's flip on real iPhones and
+             iPads while Chrome and its device emulator were unaffected —
+             Blink doesn't flatten. Clipping the x-axis alone still contains
+             any horizontal bleed without touching the 3D context.
+             The background it was containing is position:fixed, which cannot
+             extend the page scroll anyway. */
+          overflow-x: clip;
         }
         .pht-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
         .pht-inner {
@@ -274,9 +282,6 @@ export default function PublicHeroCardPage() {
         .pht-download:active { transform: translateY(1px); }
         .pht-download:disabled { opacity: 0.65; cursor: default; }
         .pht-brand {
-          /* 22.1px before. This is the only route from a shared card back to
-             PetParrk, on a page seen by people without an account. */
-          display: inline-flex; align-items: center; min-height: 44px;
           font-size: 13px; font-weight: 600;
           color: var(--pht-bg-muted, rgba(255,255,255,0.8));
           text-decoration: none;
