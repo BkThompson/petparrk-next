@@ -151,16 +151,27 @@ export default function HeroFlipCardLive({ pet }) {
         }
         .hfc-perspective {
           perspective: 1600px;
+          -webkit-perspective: 1600px;
           width: 100%;
         }
         .hfc-flip {
           width: 100%;
           position: relative;
+          /* Both spellings on purpose. The faces already carried
+             -webkit-backface-visibility but this was left unprefixed, and on
+             iPadOS 16 the unprefixed property alone doesn't hold the 3D
+             context — the container flattens, the back never rotates into
+             view, and you see the mirrored front instead. Desktop was fine,
+             which is why it looked like a data problem. */
           transform-style: preserve-3d;
+          -webkit-transform-style: preserve-3d;
           transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
         }
-        .hfc-flip.is-flipped { transform: rotateY(180deg); }
+        .hfc-flip.is-flipped {
+          transform: rotateY(180deg);
+          -webkit-transform: rotateY(180deg);
+        }
         /* Auto-peek: a subtle one-time 3D tilt, triggered by state so it runs
            exactly once and can't re-fire on hover/repaint. */
         .hfc-peeking {
@@ -183,6 +194,7 @@ export default function HeroFlipCardLive({ pet }) {
           position: absolute;
           inset: 0;
           transform: rotateY(180deg);
+          -webkit-transform: rotateY(180deg);
         }
         /* Corner flip badge — dark scrim + white icon (reads on any bg),
            accent fill on hover. Sits above the card content. */

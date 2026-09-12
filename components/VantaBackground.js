@@ -261,6 +261,12 @@ export default function VantaBackground({ effect, bg, accent, fullHeight }) {
         minHeight: fullHeight ? "205vh" : "100%",
         zIndex: 0,
         pointerEvents: "none",
+        // The pet's chosen colour, painted whether or not the animation runs.
+        // Vanta used to be the only thing colouring this element, so skipping
+        // it on touch devices and under reduced motion left the shared card
+        // with no background at all. Now the static version is the same
+        // colour, just still.
+        background: bg || undefined,
       }}
     />
   );
