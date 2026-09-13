@@ -222,7 +222,10 @@ function HeroStatRow({ s, i, statFillFor, statGlowFor }) {
   // Quick off the mark then easing to a stop — the same curve as before, just
   // given longer to play out. 1400ms still read as hurried.
   const DURATION = 1800;
-  const delay = i * 100;
+  // No stagger. At 100ms per row an eight-stat card left the last bar
+  // starting most of a second after the first, which read as lag rather
+  // than sequence. They all move together now.
+  const delay = 0;
 
   const rowRef = useRef(null);
   const [grown, setGrown] = useState(false);

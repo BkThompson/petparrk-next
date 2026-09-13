@@ -443,7 +443,10 @@ function buildFront(pet, data, theme) {
       // same window and with the same easing so the digits never run ahead of
       // the fill. 1400ms because the first version was too quick to read.
       const DURATION = 1800;
-      const delay = i * 100;
+      // No stagger. At 100ms per row an eight-stat card left the last bar
+      // starting most of a second after the first, which read as lag rather
+      // than sequence. They all move together now.
+      const delay = 0;
       const fill = el("div", {
         height: "100%",
         width: "0%",
