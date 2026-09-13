@@ -437,21 +437,28 @@ function cleanWebsiteUrl(url) {
 
 // ── Auto-lookup neighborhood from Google Geocoding API ──────────────────────
 async function getNeighborhoodFromAddress(address, city, zipCode) {
+  // Goes through /api/geocode rather than calling Google directly. The key
+  // used to come from NEXT_PUBLIC_GOOGLE_PLACES_API_KEY, and anything with
+  // that prefix is compiled into the browser bundle — so the credential was
+  // readable by anyone who viewed source, and marking it Secret in Vercel
+  // changed nothing. The route keeps it server-side.
   try {
-    const fullAddress = `${address}, ${city}, CA ${zipCode}`;
-    const encoded = encodeURIComponent(fullAddress);
-    const res = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encoded}&key=${process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY}`,
-    );
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) return null;
+
+    const res = await fetch("/api/geocode", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ address, city, zipCode }),
+    });
+    if (!res.ok) return null;
     const data = await res.json();
-    if (!data.results?.[0]) return null;
-    const components = data.results[0].address_components;
-    const neighborhood = components.find(
-      (c) =>
-        c.types.includes("neighborhood") ||
-        c.types.includes("sublocality_level_1"),
-    );
-    return neighborhood?.long_name || null;
+    return data.neighborhood || null;
   } catch (err) {
     console.error("Neighborhood lookup failed:", err);
     return null;
@@ -7060,7 +7067,7 @@ export default function AdminPage() {
                     return (
                       <div className="adm-empty">
                         <SubInboxIcon />
-                        <p>No vets found.</p>
+                        <p className="no-vets">No vets found.</p>
                       </div>
                     );
                   }

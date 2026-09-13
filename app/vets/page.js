@@ -1436,7 +1436,7 @@ function VetsContent() {
               </div>
               <p
                 style={{
-                  fontSize: "18px",
+                  fontSize: "24px",
                   fontWeight: "700",
                   color: "#172531",
                   margin: "0 0 8px",
@@ -1446,7 +1446,7 @@ function VetsContent() {
               </p>
               <p
                 style={{
-                  fontSize: "14px",
+                  fontSize: "16px",
                   fontWeight: 500,
                   color: "#717A86",
                   margin: 0,
