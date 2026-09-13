@@ -1981,7 +1981,7 @@ function CareCardStyles() {
         margin-top: 2px;
       }
       .pcc-list-item-title {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 700;
         color: var(--color-navy-dark, #172531);
         margin: 0;
@@ -2040,7 +2040,8 @@ function CareCardStyles() {
       .pcc-prep-card {
         border: 1.5px solid var(--color-terracotta, #cf5c36);
         border-radius: 16px;
-        padding: 20px;
+        // padding: 20px;
+        padding: 20px 20px 0;
         margin-top: 20px;
         background: #fff;
       }
@@ -2128,9 +2129,9 @@ function CareCardStyles() {
       }
       .pcc-prep-nudge {
         margin-top: 8px;
-        padding-top: 14px;
+        // padding-top: 14px;
         border-top: 1px solid var(--color-border, #ede8e0);
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 500;
         color: var(--color-slate, #4b5563);
       }
@@ -2491,7 +2492,7 @@ function CareCardStyles() {
         min-width: 0;
       }
       .pcc-helpline-title {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 700;
         margin: 0 0 2px;
         color: var(--color-navy-dark, #172531);
@@ -2501,13 +2502,13 @@ function CareCardStyles() {
         font-weight: 500;
         color: #717A86;
         line-height: 1.4;
-        margin: 0 0 8px;
+        margin: 0 0 0px;
       }
       .pcc-helpline-phone {
         /* 20.5px, and it is a phone number someone taps in an emergency. */
         display: inline-flex;
         align-items: center;
-        min-height: 44px;
+        // min-height: 44px;
         font-size: 17px;
         font-weight: 700;
         color: var(--color-terracotta, #CF5C36);

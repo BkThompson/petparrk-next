@@ -272,7 +272,7 @@ function PetChip({ selectedPet, onStartOver }) {
               borderRadius: "20px",
               color: C.navyDark,
               fontWeight: "700",
-              border: `1px solid ${C.border}`,
+              border: `2px solid ${C.border}`,
               whiteSpace: "nowrap",
             }}
           >
@@ -2372,6 +2372,7 @@ export default function SymptomCheckerChatPage() {
           outline: none;
           box-shadow: none;
           transition: background 0.2s, color 0.2s;
+          border: 1px solid #c1c1c1;
         }
         .send-icon-btn.visible {
           background: #CF5C36;

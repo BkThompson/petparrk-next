@@ -731,6 +731,18 @@ function VetsContent() {
         .pp-select:focus{border-color:#CF5C36}
         .dir-search{width:100%;height:44px;flex-shrink:0;padding:0 14px;border-radius:12px;border:1px solid #EDE8E0;font-size:15px;font-weight:500;outline:none;box-sizing:border-box;font-family:var(--font,'Urbanist',sans-serif);background:#fff;transition:border-color 0.15s}
         .dir-search:focus{border-color:#CF5C36}
+        /* The wrapper carries the flex sizing the input used to; the input
+           fills it. Right padding leaves room for the clear button. */
+        .dir-search-wrap{position:relative;display:flex;align-items:center;width:100%}
+        .dir-search-wrap .dir-search{padding-right:40px}
+        .dir-search-clear{
+          position:absolute;right:6px;top:50%;transform:translateY(-50%);
+          width:32px;height:32px;display:inline-flex;align-items:center;
+          justify-content:center;border:none;background:transparent;
+          border-radius:8px;cursor:pointer;color:#717A86;
+          transition:background 0.15s,color 0.15s;
+        }
+        .dir-search-clear:hover{background:#F5F0E8;color:#172531}
         .badge-navy{background:#EBF0F5;color:#2C4657}
         .badge-success{background:#EDFAF3;color:#1A6641}
         .badge-error{background:#FCEAEA;color:#C94040}
@@ -761,7 +773,9 @@ function VetsContent() {
         .fbar-nbhd{flex:1.4 1 0!important}
         .fbar-sort{flex:1.2 1 0!important}
         .fbar-filters{flex:0.85 1 0!important}
-        .dir-search.fbar-item{max-width:none}
+        /* fbar-item and fbar-search now sit on .dir-search-wrap, so this
+           targets the wrapper rather than the input it used to. */
+        .dir-search-wrap.fbar-item{max-width:none}
         .filters-btn{height:44px;padding:0 16px;border-radius:12px;border:1px solid #EDE8E0;background:#fff;color:#172531;cursor:pointer;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;transition:all 0.15s}
         .filters-btn:hover{border-color:#172531}
         .filters-btn.open{background:#172531;color:#fff;border-color:#172531}
@@ -913,13 +927,28 @@ function VetsContent() {
                 alignItems: "center",
               }}
             >
-              <input
-                type="text"
-                className="dir-search fbar-item fbar-search"
-                placeholder="Search by vet name or neighborhood..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              {/* The input is wrapped so the clear button can sit inside it.
+                  Clearing a search that returned nothing used to mean
+                  backspacing through the whole term. */}
+              <div className="dir-search-wrap fbar-item fbar-search">
+                <input
+                  type="text"
+                  className="dir-search"
+                  placeholder="Search by vet name or neighborhood..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                {search && (
+                  <button
+                    type="button"
+                    className="dir-search-clear"
+                    aria-label="Clear search"
+                    onClick={() => setSearch("")}
+                  >
+                    <X size={16} strokeWidth={2.5} />
+                  </button>
+                )}
+              </div>
 
               {/* neighborhood dropdown uses neighborhood||city composite value */}
               <FilterDropdown

@@ -407,7 +407,7 @@ function buildFront(pet, data, theme) {
       flexDirection: "column",
       gap: "15px",
     });
-    stats.forEach((s) => {
+    stats.forEach((s, i) => {
       const row = el("div", {
         display: "flex",
         alignItems: "center",
@@ -439,14 +439,21 @@ function buildFront(pet, data, theme) {
         overflow: "hidden",
       });
       const val = Math.max(0, Math.min(10, Number(s.value) || 0));
-      bar.appendChild(
-        el("div", {
-          height: "100%",
-          width: val * 10 + "%",
-          borderRadius: "999px",
-          background: `linear-gradient(90deg, ${accent}, ${accentLite})`,
-        }),
-      );
+      // The bar grows from zero and the number counts up to meet it, over the
+      // same window and with the same easing so the digits never run ahead of
+      // the fill. 1400ms because the first version was too quick to read.
+      const DURATION = 1800;
+      const delay = i * 100;
+      const fill = el("div", {
+        height: "100%",
+        width: "0%",
+        borderRadius: "999px",
+        background: `linear-gradient(90deg, ${accent}, ${accentLite})`,
+        transition: `width ${DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+        transitionDelay: delay + "ms",
+        willChange: "width",
+      });
+      bar.appendChild(fill);
       row.appendChild(bar);
       const isMax = val >= 10;
       const valEl = el("div", {
@@ -463,8 +470,62 @@ function buildFront(pet, data, theme) {
       });
       if (isMax)
         valEl.appendChild(el("span", { color: GOLD, fontSize: "11px" }, "★"));
-      valEl.appendChild(document.createTextNode(`${val}/10`));
+      // Only the achieved value counts up; the "/10" is fixed, because that is
+      // the scale rather than the number worth watching.
+      const numNode = document.createTextNode("0");
+      valEl.appendChild(numNode);
+      valEl.appendChild(document.createTextNode("/10"));
       row.appendChild(valEl);
+
+      const stillness =
+        typeof window !== "undefined" &&
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (stillness) {
+        fill.style.transition = "none";
+        fill.style.width = val * 10 + "%";
+        numNode.nodeValue = String(val);
+      } else {
+        const start = () => {
+          // Two frames: one for the element to be laid out at 0%, one for the
+          // change to register as a transition rather than an initial value.
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              fill.style.width = val * 10 + "%";
+            }),
+          );
+          let startedAt = null;
+          const tick = (now) => {
+            if (startedAt === null) startedAt = now;
+            const t = Math.min(1, (now - startedAt) / DURATION);
+            const eased = 1 - Math.pow(1 - t, 3);
+            numNode.nodeValue = String(Math.round(val * eased));
+            if (t < 1) requestAnimationFrame(tick);
+          };
+          setTimeout(() => requestAnimationFrame(tick), delay);
+        };
+
+        // Wait until the row is on screen. These stats sit below the fold on a
+        // phone, so firing on build meant the animation finished before anyone
+        // scrolled to it. The observer fires straight away if the row is
+        // already visible, and disconnects after the first hit so it plays
+        // once per visit rather than every time it scrolls back into view.
+        if (typeof IntersectionObserver === "undefined") {
+          start();
+        } else {
+          const io = new IntersectionObserver(
+            (entries) => {
+              if (entries.some((e) => e.isIntersecting)) {
+                io.disconnect();
+                start();
+              }
+            },
+            { threshold: 0.25 },
+          );
+          io.observe(row);
+        }
+      }
       sw.appendChild(row);
     });
     content.appendChild(sw);

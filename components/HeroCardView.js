@@ -211,6 +211,112 @@ function HeroBackground({ design, category, bg, accent, lighting }) {
   return <VantaBackground effect={design} bg={bg} accent={accent} fullHeight />;
 }
 
+// One stat row. Split out of the map so it can hold its own animation state.
+//
+// The bar grows from zero and the number counts up to meet it, both over the
+// same window and with the same easing so the digits never run ahead of the
+// fill. The "/10" is fixed — only the achieved value moves, because that's the
+// number worth reading. Staggered by row so they arrive as a sequence.
+function HeroStatRow({ s, i, statFillFor, statGlowFor }) {
+  const val = Math.max(0, Math.min(10, Number(s.value) || 0));
+  // Quick off the mark then easing to a stop — the same curve as before, just
+  // given longer to play out. 1400ms still read as hurried.
+  const DURATION = 1800;
+  const delay = i * 100;
+
+  const rowRef = useRef(null);
+  const [grown, setGrown] = useState(false);
+  const [shown, setShown] = useState(0);
+
+  useEffect(() => {
+    const still =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (still) {
+      setGrown(true);
+      setShown(val);
+      return;
+    }
+
+    let raf;
+    let timer;
+    let startedAt = null;
+
+    function run() {
+      timer = setTimeout(() => {
+        setGrown(true);
+        const step = (now) => {
+          if (startedAt === null) startedAt = now;
+          const t = Math.min(1, (now - startedAt) / DURATION);
+          // Matches the bar's curve so the digits never run ahead of the fill.
+          const eased = 1 - Math.pow(1 - t, 3);
+          setShown(Math.round(val * eased));
+          if (t < 1) raf = requestAnimationFrame(step);
+        };
+        raf = requestAnimationFrame(step);
+      }, delay);
+    }
+
+    // Wait until the row is actually on screen. On a phone the stats sit well
+    // below the fold, so firing on render meant the whole thing played out
+    // before anyone scrolled to it. The observer fires immediately if the row
+    // is already visible, so desktop behaves the same way without a separate
+    // rule. Disconnecting after the first hit is what keeps it to once per
+    // visit — scrolling past again, or flipping the card back and forth,
+    // doesn't replay it.
+    const node = rowRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") {
+      run();
+      return () => {
+        clearTimeout(timer);
+        if (raf) cancelAnimationFrame(raf);
+      };
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          run();
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(node);
+
+    return () => {
+      io.disconnect();
+      clearTimeout(timer);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [val, delay]);
+
+  return (
+    <div className="hc-stat-row" ref={rowRef}>
+      <div className="hc-stat-name">
+        <span className="hc-stat-emoji">{s.emoji}</span>
+        <span className="hc-stat-label-text">{s.label}</span>
+      </div>
+      <div className="hc-stat-bar">
+        <div
+          className="hc-stat-fill"
+          style={{
+            width: grown ? `${val * 10}%` : "0%",
+            background: statFillFor(val),
+            boxShadow: statGlowFor(val),
+            transition: `width ${DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+          }}
+        />
+      </div>
+      <div className={`hc-stat-val${val >= 10 ? " is-max" : ""}`}>
+        {val >= 10 && <span className="hc-stat-star">★</span>}
+        {shown}/10
+      </div>
+    </div>
+  );
+}
+
 export function HeroCardView({ pet, slug, previewMode, publicMode }) {
   // Draft / Publish: the public sees the PUBLISHED snapshot (hero_published);
   // the owner's preview (?preview=public) shows the DRAFT (live hero_* columns)
@@ -906,40 +1012,15 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                     <div className="hc-section hc-sec-stats">
                       <div className="hc-section-label">Stats</div>
                       <div className="hc-stats">
-                        {stats.map((s, i) => {
-                          const val = Math.max(
-                            0,
-                            Math.min(10, Number(s.value) || 0),
-                          );
-                          return (
-                            <div className="hc-stat-row" key={i}>
-                              <div className="hc-stat-name">
-                                <span className="hc-stat-emoji">{s.emoji}</span>
-                                <span className="hc-stat-label-text">
-                                  {s.label}
-                                </span>
-                              </div>
-                              <div className="hc-stat-bar">
-                                <div
-                                  className="hc-stat-fill"
-                                  style={{
-                                    width: `${val * 10}%`,
-                                    background: statFillFor(val),
-                                    boxShadow: statGlowFor(val),
-                                  }}
-                                />
-                              </div>
-                              <div
-                                className={`hc-stat-val${val >= 10 ? " is-max" : ""}`}
-                              >
-                                {val >= 10 && (
-                                  <span className="hc-stat-star">★</span>
-                                )}
-                                {val}/10
-                              </div>
-                            </div>
-                          );
-                        })}
+                        {stats.map((s, i) => (
+                          <HeroStatRow
+                            key={i}
+                            s={s}
+                            i={i}
+                            statFillFor={statFillFor}
+                            statGlowFor={statGlowFor}
+                          />
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1444,16 +1525,20 @@ const heroCardCss = `
   .hc-section:last-child { margin-bottom:0; }
   .hc-section-label { font-size:17px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--t-accent-on-card); margin-bottom:12px; }
 
-  .hc-tags { display:flex; flex-wrap:wrap; gap:8px; }
+  /* align-items:flex-start matters. Without it the row defaults to stretch, so
+     the tallest child sets the height of every pill beside it — which is how a
+     single oversized toggle made the whole Personality and Badges rows look
+     wrong while Preferences, which has no toggle in its row, stayed correct. */
+  .hc-tags { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
   .hc-tag {
     display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--t-chip-bg);
     border:1px solid var(--t-card-border); border-radius:999px; font-size:14px; font-weight:600;
     color:var(--t-chip-text); white-space:nowrap;line-height: 1.2;
   }
-  /* Sized exactly like the tags beside it. A 44px min-height here made the
-     "N more" and "Show less" pills taller than every other pill in the row,
-     which read as a mistake. Matching the row wins over the tap minimum, the
-     same call made on the 42px buttons elsewhere. */
+  /* Sized exactly like the tags beside it. The 44px min-height that used to be
+     here was for the tap minimum, but it made the toggle taller than every
+     other pill — and, through the stretch above, made them all taller too.
+     Matching the row wins. */
   .hc-tag-toggle { background:transparent; color:var(--t-accent-on-card); cursor:pointer; font-family:inherit; font-weight:700; }
   .hc-tag-toggle:hover { background:var(--t-chip-bg); }
   .hc-fade { animation: hcFadeIn 0.4s cubic-bezier(0.33, 1, 0.68, 1) both; }
