@@ -91,6 +91,19 @@ export async function POST(req) {
         c.types.includes("neighborhood") ||
         c.types.includes("sublocality_level_1"),
     );
+
+    // When nothing matches, log what Google actually returned. The two types
+    // above are the usual ones, but Google labels the same place differently
+    // by region — so a null here may mean the answer is present under a type
+    // we aren't looking for, rather than absent.
+    if (!neighborhood) {
+      console.log(
+        "[geocode] no neighborhood match for",
+        fullAddress,
+        "— types returned:",
+        JSON.stringify(components.map((c) => c.types.join("|"))),
+      );
+    }
     return Response.json({ neighborhood: neighborhood?.long_name || null });
   } catch (err) {
     // Never block a vet from being saved because a lookup failed.
