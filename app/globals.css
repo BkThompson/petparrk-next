@@ -58,6 +58,16 @@
   --space-20: 80px;
 
   /* Border Radius */
+  /* Pill and chip border thickness, site-wide. */
+  --pill-border-w: 2px;
+  /* Control outlines — inputs, selects, chips, option tiles, anything you type
+     in or click. Separate from --color-border, which is for dividers and card
+     edges: a control needs enough weight to read as a control, and at
+     --pill-border-w an #ede8e0 edge is too faint to do that.
+     Warm on purpose. The palette runs cream (#f5f0e8) through #ede8e0 to this;
+     a neutral or cool grey sits against those backgrounds with a faint blue
+     cast that doesn't belong to the family. */
+  --control-border: var(--color-border-strong);
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -378,12 +388,23 @@ select {
 }
 
 /* ── Badges ──────────────────────────────────── */
+/* Pill borders live here rather than per page, so every badge on the site
+   picks them up from one place. --pill-border-w is the single value to change
+   thickness. The base border is transparent so a variant without its own
+   colour keeps the same box size. Each variant below takes a border in ITS OWN
+   colour — one shared grey would flatten navy, green, red and gold into the
+   same shape and lose the meaning the colour is carrying. */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border-radius: var(--radius-md);
+  /* Badges are pills. Rounded rectangles are reserved for price chips, so the
+     two read as different kinds of thing at a glance. Home and Saved Vets were
+     already overriding the old --radius-md locally to get this; setting it
+     here makes those overrides redundant rather than necessary. */
+  border-radius: 999px;
+  border: var(--pill-border-w) solid transparent;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -393,30 +414,37 @@ select {
 .badge-navy {
   background: #ebf0f5;
   color: #2c4657;
+  border-color: rgba(44, 70, 87, 0.22);
 }
 .badge-terracotta {
   background: var(--color-warning-light);
   color: var(--color-warning-text);
+  border-color: rgba(139, 58, 30, 0.22);
 }
 .badge-success {
   background: var(--color-success-light);
   color: var(--color-success-text);
+  border-color: rgba(26, 102, 65, 0.22);
 }
 .badge-error {
   background: var(--color-error-light);
   color: var(--color-error-text);
+  border-color: rgba(201, 64, 64, 0.24);
 }
 .badge-gold {
   background: #fef8ec;
   color: #8b6914;
+  border-color: rgba(139, 105, 20, 0.22);
 }
 .badge-dark {
   background: var(--color-navy-dark);
   color: var(--color-white);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 .badge-neutral {
   background: #f3f4f6;
   color: var(--color-slate);
+  border-color: rgba(75, 85, 99, 0.2);
 }
 
 /* ── Cards ───────────────────────────────────── */

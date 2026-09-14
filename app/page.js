@@ -518,72 +518,10 @@ export default function Home() {
         @keyframes floatBR1{ 0%,100%{transform:translate(0px,0px) scale(1)} 30%{transform:translate(-20px,-25px) scale(1.05)} 70%{transform:translate(15px,-10px) scale(0.96)} }
         @keyframes floatBR2{ 0%,100%{transform:translate(0px,0px) scale(1)} 40%{transform:translate(18px,-22px)  scale(1.08)} 75%{transform:translate(-12px,15px) scale(0.94)} }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         .anim-1{animation:fadeSlideUp 0.9s 0.10s ease both}
         .anim-2{animation:fadeSlideUp 0.9s 0.28s ease both}
         .anim-3{animation:fadeSlideUp 0.9s 0.48s ease both}
         .anim-4{animation:fadeSlideUp 0.9s 0.68s ease both}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         @media (max-width: 768px) { 
           .hero-float { 
@@ -595,37 +533,6 @@ export default function Home() {
           }
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         .reveal-up    { opacity:0; transform:translateY(40px);  transition:opacity 1.2s cubic-bezier(0.22,1,0.36,1),transform 1.2s cubic-bezier(0.22,1,0.36,1); }
         .reveal-left  { opacity:0; transform:translateX(-40px); transition:opacity 1.2s cubic-bezier(0.22,1,0.36,1),transform 1.2s cubic-bezier(0.22,1,0.36,1); }
         .reveal-right { opacity:0; transform:translateX(40px);  transition:opacity 1.2s cubic-bezier(0.22,1,0.36,1),transform 1.2s cubic-bezier(0.22,1,0.36,1); }
@@ -633,79 +540,17 @@ export default function Home() {
         .reveal-up.visible,.reveal-left.visible,.reveal-right.visible,.reveal-scale.visible { opacity:1; transform:translateY(0) translateX(0) scale(1); }
         .reveal-delay-1{transition-delay:0.12s} .reveal-delay-2{transition-delay:0.26s} .reveal-delay-3{transition-delay:0.40s}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         .hero-input-wrap { position:relative; }
-        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:1.5px solid rgba(255,255,255,0.1); font-size:16px; font-weight:500; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgba(255,255,255,0.06); color:#fff; outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
+        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:2px solid rgba(255,255,255,0.1); font-size:16px; font-weight:500; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgba(255,255,255,0.06); color:#fff; outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
         .hero-search::placeholder { color:rgba(255,255,255,0.35); }
         .hero-search:focus { border-color:var(--color-terracotta,#CF5C36); background:rgba(255,255,255,0.09); box-shadow:0 0 0 6px rgba(207,92,54,0.08),0 0 24px rgba(207,92,54,0.12),0 8px 32px rgba(0,0,0,0.2); }
-        .hero-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); border-radius:10px; padding:10.5px 22px; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,'Urbanist',sans-serif); white-space:nowrap; transition:background 0.2s,color 0.2s; }
+        .hero-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px; padding:10px 22px; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,'Urbanist',sans-serif); white-space:nowrap; transition:background 0.2s,color 0.2s; }
         .hero-btn:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
         @media (max-width:480px) {
           .hero-input-wrap { display:flex; flex-direction:column; gap:10px; }
           .hero-search { padding:18px 22px; border-radius:14px; }
           .hero-btn { position:static; transform:none; width:100%; padding:16px; border-radius:12px; font-size:15px; border:2px solid var(--color-terracotta,#CF5C36); }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         .pillar-card-outer { position:relative; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgba(239,200,139,0.55) 0%,rgba(207,92,54,0.25) 12%,rgba(255,255,255,0.04) 28%,transparent 42%,transparent 58%,rgba(255,255,255,0.04) 72%,rgba(207,92,54,0.2) 88%,rgba(239,200,139,0.45) 100%); transition:transform 0.3s; }
         .pillar-card-outer:hover { transform:translateY(-4px); }
@@ -717,71 +562,9 @@ export default function Home() {
         .pillar-icon-wrap.pillar-icon-1 { background:rgba(100,160,210,0.14)!important; border:1px solid rgba(100,160,210,0.25); }
         .pillar-icon-wrap.pillar-icon-2 { background:rgba(80,140,80,0.14)!important; border:1px solid rgba(80,140,80,0.25); }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         .step-card { padding:32px 0; display:grid; grid-template-columns:72px 1fr; gap:20px; align-items:start; }
         .step-card+.step-card { border-top:1px solid rgba(255,255,255,0.07); }
         .step-number { font-size:clamp(44px,6vw,60px); font-weight:800; line-height:1; color:rgba(239,200,139,0.15); font-family:var(--font-urbanist,'Urbanist',sans-serif); user-select:none; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         /* ── VET CARDS — match Find a Vet page exactly ── */
         .vet-card-outer { border-radius:18px; padding:1.5px; height:100%; background:#EDE8E0; transition:transform 0.3s,background 0.25s ease; }
@@ -789,45 +572,23 @@ export default function Home() {
         .vet-card-outer:hover .vet-card-inner { box-shadow:0 0 0 1.5px rgba(239,200,139,0.9),0 16px 48px rgba(23,37,49,0.13); }
         .vet-card-inner { border-radius:17px; padding:24px; background:#fff; display:flex; flex-direction:column; height:100%; box-sizing:border-box; transition:box-shadow 0.25s; }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         .heart-btn { transition:transform 0.15s; border:none; background:none; cursor:pointer; padding:0; line-height:1; display:inline-flex; align-items:center; justify-content:center; }
         .heart-btn:hover { transform:scale(1.2); }
         .heart-animating { animation:heartPop 0.4s ease forwards; }
-        .badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:700; white-space:nowrap; }
-        .badge-navy    { background:#EBF0F5; color:#2C4657; }
-        .badge-success { background:#EDFAF3; color:#1A6641; }
-        .badge-error   { background:#FCEAEA; color:#C94040; }
-        .price-chip { display:inline-flex; align-items:center; gap:5px; background:#F5F0E8; border-radius:8px; padding:4px 10px; font-size:14px; }
+        /* Pill borders.
+           --pill-border-w is the single place to change thickness for every
+           pill on this page — badges and price chips together. Set it to 2px
+           and they all thicken; nothing else needs touching.
+           Each badge keeps a border in its OWN colour rather than a shared
+           grey: one neutral outline would flatten navy, green and red into the
+           same shape and lose the meaning the colour is carrying. The base
+           rule uses a transparent border so the box never changes size between
+           variants. */
+        .badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px;  font-weight:700; white-space:nowrap; border:var(--pill-border-w) solid transparent; }
+        .badge-navy    { background:#EBF0F5; color:#2C4657; border-color:rgba(44,70,87,0.22); }
+        .badge-success { background:#EDFAF3; color:#1A6641; border-color:rgba(26,102,65,0.22); }
+        .badge-error   { background:#FCEAEA; color:#C94040; border-color:rgba(201,64,64,0.24); }
+        .price-chip { display:inline-flex; align-items:center; gap:5px; background:#F5F0E8; border:var(--pill-border-w) solid #EDE8E0; border-radius:8px; padding:4px 10px; font-size:14px; }
         .price-chip-label { color:#717A86; font-weight:600; }
         .price-chip-value { font-weight:700; color:#CF5C36; }
         .price-gate-wrap{position:relative}
@@ -902,38 +663,7 @@ export default function Home() {
         /* Trust stats stack rather than orphaning 2 + 1. */
         @media(max-width:640px){ .trust-grid { grid-template-columns:1fr !important; } }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        .btn-primary {
+      .btn-primary {
           height:50px; padding:0 36px; line-height:1;
           background:var(--color-terracotta,#CF5C36); color:#fff;
           border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px;
@@ -954,70 +684,8 @@ export default function Home() {
         }
         .btn-outline-dark:hover { background:var(--color-navy-dark,#172531); color:#fff; }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
         .skeleton { background:linear-gradient(90deg,#F0ECE4 25%,#D9D2C2 50%,#F0ECE4 75%); background-size:200% 100%; animation:shimmer 1.8s infinite; border-radius:18px; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         @media(max-width:640px){
           .step-card { grid-template-columns:52px 1fr; gap:14px; }

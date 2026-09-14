@@ -141,9 +141,19 @@ export default function SavedVets() {
 
         .sv-body { background: ${C.cream}; min-height: calc(100vh - 64px); padding: 48px 0 96px; }
 
-        .sv-search { width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid ${C.border}; font-size: 15px; font-weight: 500; font-family: var(--font-urbanist,'Urbanist',sans-serif); background: ${C.white}; color: ${C.navyDark}; outline: none; box-sizing: border-box; transition: border-color 0.15s; }
+        .sv-search { width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); font-size: 15px; font-weight: 500; font-family: var(--font-urbanist,'Urbanist',sans-serif); background: ${C.white}; color: ${C.navyDark}; outline: none; box-sizing: border-box; transition: border-color 0.15s; }
         .sv-search:focus { border-color: ${C.terracotta}; }
         .sv-search::placeholder { color: ${C.muted}; }
+        .sv-search-wrap { position: relative; display: flex; align-items: center; width: 100%; }
+        .sv-search-wrap .sv-search { padding-right: 40px; }
+        .sv-search-clear {
+          position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+          width: 32px; height: 32px; display: inline-flex; align-items: center;
+          justify-content: center; border: none; background: transparent;
+          border-radius: 8px; cursor: pointer; color: ${C.muted};
+          transition: background 0.15s, color 0.15s;
+        }
+        .sv-search-clear:hover { background: ${C.cream}; color: ${C.navyDark}; }
 
         .sv-list { background: ${C.white}; border: 1px solid ${C.border}; border-radius: 16px; overflow: hidden; }
 
@@ -171,7 +181,16 @@ export default function SavedVets() {
         .sv-name-link:hover .sv-name { color: ${C.terracotta}; }
         .sv-name { font-size: 17px; font-weight: 700; color: ${C.navyDark}; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin: 0 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .sv-meta { font-size: 15px; font-weight: 500; color: ${C.muted}; margin: 0 0 2px; line-height: 1.5; }
-        .sv-meta-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 500; color: ${C.terracotta}; margin: 0 0 2px; line-height: 1.5; text-decoration: none; }
+        .sv-meta-link { 
+          display: inline-flex; 
+          align-items: center; 
+          // min-height: 44px; 
+          font-size: 15px; 
+          font-weight: 500; 
+          color: ${C.terracotta}; 
+          margin: 0 0 2px; 
+          line-height: 1.5; 
+          text-decoration: none; }
         .sv-meta-link:hover { text-decoration: underline; }
     
 
@@ -183,17 +202,23 @@ export default function SavedVets() {
           display: flex;
           flex-direction: column;
           justify-content: flex-start;
-          gap: 10px;
+          gap: 8px;
           min-width: 0;
         }
 
         /* Accepting badge */
-        .sv-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 14px; font-weight: 700; white-space: nowrap; width: fit-content; }
-        .sv-badge-ok { background: #EDFAF3; color: ${C.success}; }
-        .sv-badge-no { background: #FCEAEA; color: ${C.error}; }
+        /* Pill borders, matching Home. --pill-border-w on :root below is the one
+           place to change thickness for every pill on this page. Each badge
+           takes a border in its own colour rather than a shared grey, so the
+           green and red keep the distinction the colour is carrying; the base
+           rule uses a transparent border so the box never changes size between
+           variants. */
+        .sv-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; white-space: nowrap; width: fit-content; border: var(--pill-border-w) solid transparent; }
+        .sv-badge-ok { background: #EDFAF3; color: ${C.success}; border-color: rgba(26,102,65,0.22); }
+        .sv-badge-no { background: #FCEAEA; color: ${C.error}; border-color: rgba(201,64,64,0.24); }
 
         /* Price chips */
-        .sv-chip { display: inline-flex; align-items: center; gap: 5px; background: ${C.cream}; border-radius: 8px; padding: 4px 10px; font-size: 14px; white-space: nowrap; width: fit-content; }
+        .sv-chip { display: inline-flex; align-items: center; gap: 5px; background: ${C.cream}; border: var(--pill-border-w) solid ${C.border}; border-radius: 8px; padding: 4px 10px; font-size: 14px; font-weight: 600; white-space: nowrap; width: fit-content; }
         .sv-chip-label { color: ${C.muted}; font-weight: 600; }
         .sv-chip-value { color: ${C.terracotta}; font-weight: 700; }
 
@@ -295,13 +320,28 @@ export default function SavedVets() {
           {/* Search */}
           {vets.length > 0 && (
             <div style={{ marginBottom: "16px" }}>
-              <input
-                type="text"
-                className="sv-search"
-                placeholder="Search your saved vets…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              {/* Wrapped so the clear button can sit inside the field, matching
+                  Find a Vet. Clearing a search that returned nothing otherwise
+                  means backspacing through the whole term. */}
+              <div className="sv-search-wrap">
+                <input
+                  type="text"
+                  className="sv-search"
+                  placeholder="Search your saved vets…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                {search && (
+                  <button
+                    type="button"
+                    className="sv-search-clear"
+                    aria-label="Clear search"
+                    onClick={() => setSearch("")}
+                  >
+                    <X size={16} strokeWidth={2.5} />
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

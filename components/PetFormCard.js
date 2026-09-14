@@ -236,7 +236,7 @@ export default function PetFormCard({
             <p
               style={{
                 margin: "0 0 2px",
-                fontSize: "16px",
+                fontSize: "18px",
                 fontWeight: 800,
                 color: C.navyDark,
                 letterSpacing: "-0.01em",
@@ -248,7 +248,7 @@ export default function PetFormCard({
             <p
               style={{
                 margin: 0,
-                fontSize: "14px",
+                fontSize: "16px",
                 fontWeight: "600",
                 color: C.muted,
               }}

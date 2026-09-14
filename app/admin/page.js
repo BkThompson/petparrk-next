@@ -4,6 +4,10 @@ import { useEffect, useState, useRef, memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
+// Arrows come from Lucide so Prev/Skip match every other arrow in the
+// product. The rest of this file uses hand-rolled SVG for its nav marks;
+// those stay as they are.
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 
 const ADMIN_EMAILS = ["bkalthompson@gmail.com", "maggie.tursi@gmail.com"];
 
@@ -5124,15 +5128,17 @@ export default function AdminPage() {
     <>
       <style>{`
         * { box-sizing: border-box; }
-        .adm-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid #DAD3C5; border-radius: 12px; font-size: 15px; font-family: 'Urbanist', sans-serif; outline: none; background: #fff; box-sizing: border-box; }
+        .adm-input { width: 100%; height: 44px; padding: 0 14px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); border-radius: 12px; font-size: 15px; font-family: 'Urbanist', sans-serif; outline: none; background: #fff; box-sizing: border-box; }
         textarea.adm-input { height: auto; min-height: 80px; padding: 12px 14px; resize: vertical; }
         .adm-input:focus { border-color: #2d6a4f; }
         @media (max-width: 700px) { .adm-input { padding: 8px 10px; font-size: 13px; } }
         select.adm-input { cursor: pointer; padding-right: 28px; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
-        .adm-btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: system-ui, sans-serif; white-space: nowrap; }
+        /* 42px is the site-wide button height. These were sized by padding alone,
+           so they came out shorter than every other button in the product. */
+        .adm-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: system-ui, sans-serif; white-space: nowrap; box-sizing: border-box; }
         .adm-btn-green { background: #2d6a4f; color: #fff; }
         .adm-btn-green:hover { background: #245a42; }
-        .adm-btn-red { background: #fce8e8; color: #c62828; border: 1px solid #f5c6c6; }
+        .adm-btn-red { background: #fce8e8; color: #c62828; border: var(--pill-border-w, 2px) solid #f5c6c6; }
         .adm-btn-red:hover { background: #fbd0d0; }
         .call-no-prices-btns { display: flex; gap: 8px; }
         .call-no-prices-btns .adm-b { flex: 1; }
@@ -5146,9 +5152,9 @@ export default function AdminPage() {
           .form-grid-4 { grid-template-columns: 1fr 1fr; }
           .form-grid-3 { grid-template-columns: 1fr 1fr; }
         }
-        .adm-btn-gray { background: #f0f0f0; color: #444; border: 1px solid #ddd; }
+        .adm-btn-gray { background: #f0f0f0; color: #444; border: var(--pill-border-w, 2px) solid #ddd; }
         .adm-btn-gray:hover { background: #e5e5e5; }
-        .adm-btn-outline { background: #fff; color: #2d6a4f; border: 1px solid #2d6a4f; }
+        .adm-btn-outline { background: #fff; color: #2d6a4f; border: var(--pill-border-w, 2px) solid #2d6a4f; }
         .adm-btn-outline:hover { background: #f0f7f4; }
         .adm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .stat-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px 18px; }
@@ -5347,9 +5353,15 @@ export default function AdminPage() {
         .adm-attention-title { font-size: 20px; font-weight: 800; color: #172531; }
         .adm-att-row { display: flex; align-items: flex-start; gap: 12px; padding: 20px 0; border: none; border-bottom: 1px solid #ede8e0; cursor: pointer; width: 100%; text-align: left; background: none; font-family: 'Urbanist', sans-serif; }
         .adm-att-row:last-child { border-bottom: none; }
-        .adm-att-ico { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .adm-att-ico.warn { color: #8B3A1E; }
-        .adm-att-ico.info { background: #f5f0e8; color: #717a86; }
+        /* Tinted tile, matching the spot tiles on Home, How It Works and the
+           dashboard quick actions. The box was already here at 34px, but only
+           .info carried a background — .warn set a colour and nothing else, so
+           warning rows showed a bare icon beside tiled ones in the same list.
+           Each variant's outline comes from its own colour, the same rule the
+           pills follow. */
+        .adm-att-ico { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box; border: var(--pill-border-w, 2px) solid transparent; }
+        .adm-att-ico.warn { background: rgba(207,92,54,0.14); color: #CF5C36; border-color: rgba(207,92,54,0.30); }
+        .adm-att-ico.info { background: #f5f0e8; color: #717a86; border-color: rgba(113,122,134,0.26); }
         .adm-att-main { flex: 1; min-width: 0; }
         .adm-att-h { font-size: 18px; color: #172531; font-weight: 600; }
         .adm-att-s { font-size: 15px; font-weight: 500; padding-top: 5px; color: #4b5563; }
@@ -5357,14 +5369,25 @@ export default function AdminPage() {
 
         /* Submissions */
         .adm-searchbar { position: relative; margin-bottom: 16px; }
-        .adm-searchbar input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid #ede8e0; border-radius: 12px; font-size: 15px; font-weight: 500; outline: none; font-family: 'Urbanist', sans-serif; box-sizing: border-box; }
+        /* Clear button, matching Find a Vet and Saved Vets. Clearing a search
+           that returned nothing otherwise means backspacing the whole term. */
+        .adm-searchbar { position: relative; }
+        .adm-search-clear {
+          position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+          width: 32px; height: 32px; display: inline-flex; align-items: center;
+          justify-content: center; border: none; background: transparent;
+          border-radius: 8px; cursor: pointer; color: #717A86;
+          transition: background 0.15s, color 0.15s;
+        }
+        .adm-search-clear:hover { background: #f3f1ec; color: #172531; }
+        .adm-searchbar input { width: 100%; height: 44px; padding: 0 40px 0 14px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); border-radius: 12px; font-size: 15px; font-weight: 500; outline: none; font-family: 'Urbanist', sans-serif; box-sizing: border-box; }
         .adm-searchbar input:focus { border-color: #cf5c36; }
         .adm-signed-in { margin: 0; font-size: 13px; font-weight: 500; color: #717A86; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         /* Drawer footer (signed-in + back-to-site) — hidden on desktop, shown in mobile drawer */
         .adm-drawer-footer { display: block; margin-top: auto; padding: 16px 20px 6px; border-top: 1px solid #ede8e0; }
         .adm-drawer-signed { margin: 0 0 10px; font-size: 13px; font-weight: 500; color: #717A86; word-break: break-word; }
         .adm-view-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .adm-refresh { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 16px; border: 1px solid #DAD3C5; background: #fff; border-radius: 12px; font-size: 15px; font-weight: 700; color: #172531; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: background 0.15s, border-color 0.15s; flex-shrink: 0; }
+        .adm-refresh { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 16px; border: 2px solid #DAD3C5; background: #fff; border-radius: 12px; font-size: 15px; font-weight: 700; color: #172531; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: background 0.15s, border-color 0.15s; flex-shrink: 0; }
         .adm-addbtn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 44px; padding: 0 20px; border: 2px solid #172531; background: #172531; border-radius: 12px; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: background 0.15s, color 0.15s; flex-shrink: 0; }
         .adm-addbtn:hover { background: #fff; color: #172531; }
         .adm-refresh:hover:not(:disabled) { background: #f5f0e8; border-color: #CF5C36; color: #CF5C36; }
@@ -5372,7 +5395,7 @@ export default function AdminPage() {
         .adm-drawer-back { font-size: 13px; color: #CF5C36; text-decoration: none; font-weight: 700; transition: color 0.15s; }
         .adm-drawer-back:hover { color: #172531; }
         /* Pending Vets */
-        .adm-pv-source { display: inline-block; align-self: flex-start; font-size: 12px; font-weight: 700; color: #717A86; background: #f3f1ec; padding: 2px 9px; border-radius: 6px; margin-bottom: 6px; }
+        .adm-pv-source { display: inline-block; align-self: flex-start; font-size: 12px; font-weight: 700; color: #717A86; background: #f3f1ec; padding: 3px 10px; border-radius: 9999px; border: var(--pill-border-w, 2px) solid rgba(113,122,134,0.26); margin-bottom: 6px; }
         .adm-pv-details { padding: 14px 0; border-top: 1px solid #ede8e0; border-bottom: 1px solid #ede8e0; display: flex; flex-direction: column; gap: 2px; font-size: 16px; }
         .adm-pv-details p { margin: 0; font-size: 15px; color: #4b5563; font-weight: 500; }
         .adm-pv-details .adm-pv-web { color: #1A6641; }
@@ -5449,8 +5472,8 @@ export default function AdminPage() {
         .adm-vet-pageurl-path { font-size: 14px; color: #4b5563; font-weight: 600; font-family: monospace; }
         .adm-vet-pageurl-edit { border: none; background: none; color: #CF5C36; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Urbanist', sans-serif; }
         .adm-vet-pageurl-input { width: auto; flex: 1; min-width: 200px; max-width: 340px; height: 44px; }
-        .adm-vet-declined { font-size: 13px; font-weight: 800; padding: 3px 11px; border-radius: 9999px; background: #FCEAEA; color: #C94040; }
-        .adm-vet-unverified { display: inline-flex; align-items: center; font-size: 13px; font-weight: 800; padding: 3px 11px; border-radius: 9999px; background: #FDF3E0; color: #B26A00; font-family: 'Urbanist', sans-serif; }
+        .adm-vet-declined { font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px; background: #FCEAEA; color: #C94040;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
+        .adm-vet-unverified { display: inline-flex; align-items: center; font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px; background: #FDF3E0; color: #B26A00; font-family: 'Urbanist', sans-serif;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         /* Prices tab */
         .adm-price-vetsearch { margin-bottom: 24px; }
         .adm-price-vetsearch .adm-field-label { margin-bottom: 6px; display: block; }
@@ -5471,10 +5494,10 @@ export default function AdminPage() {
         .adm-price-addform { margin-bottom: 20px; }
         .adm-price-value { font-size: 16px; font-weight: 800; color: #1A6641; }
         .adm-price-type { font-size: 14px; font-weight: 500; color: #717A86; }
-        .adm-price-species { font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px; background: #EDF3F8; color: #2C4657; text-transform: capitalize; }
+        .adm-price-species { font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px; background: #EDF3F8; color: #2C4657; text-transform: capitalize;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-price-details { padding: 14px 0; border-top: 1px solid #ede8e0; border-bottom: 1px solid #ede8e0; display: flex; flex-direction: column; gap: 8px; }
         .adm-price-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-        .adm-price-tag { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 9999px; background: #EDFAF3; color: #1A6641; }
+        .adm-price-tag { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 9999px; background: #EDFAF3; color: #1A6641;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-price-tag-quote { background: #FEF3EB; color: #8B3A1E; }
         .adm-price-note { font-size: 14px; font-weight: 500; color: #4b5563; line-height: 1.6; }
         .adm-price-note p { margin: 0 0 6px; }
@@ -5489,8 +5512,8 @@ export default function AdminPage() {
         .adm-cq-titlewrap { display: flex; flex-direction: column; gap: 10px; }
         .adm-cq-count { margin: 0; font-size: 16px; font-weight: 700; color: #4b5563; }
         /* Sliding toggle (Unpriced / All vets) */
-        .adm-toggle { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; align-items: stretch; width: 260px; height: 44px; padding: 4px; background: #f0ece4; border: 1px solid #DAD3C5; border-radius: 9999px; }
-        .adm-toggle-slider { position: absolute; top: 4px; left: 4px; width: calc(50% - 4px); height: calc(100% - 8px); background: #fff; border-radius: 9999px; box-shadow: 0 1px 3px rgba(23,37,49,0.12); transition: transform 0.25s ease-in-out; }
+        .adm-toggle { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; align-items: stretch; width: 260px; height: 44px; padding: 4px; background: #f0ece4; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); border-radius: 9999px; }
+        .adm-toggle-slider { position: absolute; top: 0px; left: 0px; width: calc(50% - 0px); height: calc(100% - 0px); background: #fff; border-radius: 9999px; box-shadow: 0 1px 3px rgba(23,37,49,0.12); transition: transform 0.25s ease-in-out; }
         .adm-toggle.right .adm-toggle-slider { transform: translateX(100%); }
         .adm-toggle-opt { position: relative; z-index: 1; border: none; background: none; cursor: pointer; font-size: 15px; font-weight: 700; color: #717A86; font-family: 'Urbanist', sans-serif; transition: color 0.25s ease-in-out; }
         .adm-toggle-opt.active { color: #172531; }
@@ -5522,10 +5545,17 @@ export default function AdminPage() {
         .adm-review-range { font-size: 14px; font-weight: 500; color: #717A86; margin-left: 6px; }
         .adm-review-note { margin: 0 0 8px; font-size: 15px; font-weight: 500; color: #4B5563; font-family: 'Urbanist', sans-serif; line-height: 1.5; }
         .adm-review-hint { font-size: 13px; font-weight: 500; color: #717A86; font-family: 'Urbanist', sans-serif; }
-        .adm-badge { display: inline-flex; align-items: center; font-size: 14px; font-weight: 600; padding: 3px 10px; border-radius: 9999px; font-family: 'Urbanist', sans-serif; text-transform: capitalize; }
+        /* Status badges take a border derived from their own text colour via
+           color-mix, rather than a hardcoded value per variant. Several of
+           these get their colours inline from a config object — the activity
+           log badge among them — so listing variants here would have missed
+           them. The transparent border is declared first, so a browser without
+           color-mix support keeps the box size and simply shows no outline.
+           Thickness follows --pill-border-w with the rest of the site. */
+        .adm-badge { display: inline-flex; align-items: center; font-size: 14px; font-weight: 600; padding: 3px 10px; border-radius: 9999px; font-family: 'Urbanist', sans-serif; text-transform: capitalize;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-badge-species { background: #f0ede7; color: #4B5563; }
         .adm-badge-incl { background: #EDFAF3; color: #1A6641; }
-        .adm-priced-badge { display: inline-flex; align-items: center; font-size: 13px; font-weight: 800; padding: 3px 11px; border-radius: 9999px; background: #EDFAF3; color: #1A6641; font-family: 'Urbanist', sans-serif; }
+        .adm-priced-badge { display: inline-flex; align-items: center; font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px; background: #EDFAF3; color: #1A6641; font-family: 'Urbanist', sans-serif;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-nextvet-wrap { display: flex; justify-content: flex-end; }
         .adm-nextvet-btn { font-size: 15px; }
         @media (max-width: 600px) {
@@ -5553,11 +5583,11 @@ export default function AdminPage() {
         .adm-b-green { background: #1A6641; color: #fff; border-color: #1A6641; }
         .adm-b-green:hover:not(:disabled) { background: #fff; color: #1A6641; border-color: #1A6641; }
         .adm-note-vetlink:hover { color: #124D31; text-decoration: underline; }
-        .adm-cq-hasnotes { display: inline-flex; align-items: center; gap: 6px; background: #EDFAF3; border: 1px solid #d3ede0; border-radius: 9999px; padding: 4px 12px; margin: 0 0 8px; font-family: 'Urbanist', sans-serif; font-size: 13px; font-weight: 700; color: #1A6641; cursor: pointer; transition: background 0.15s; }
+        .adm-cq-hasnotes { display: inline-flex; align-items: center; gap: 6px; background: #EDFAF3; border: var(--pill-border-w, 2px) solid #d3ede0; border-radius: 9999px; padding: 4px 12px; margin: 0 0 8px; font-family: 'Urbanist', sans-serif; font-size: 13px; font-weight: 700; color: #1A6641; cursor: pointer; transition: background 0.15s; }
         .adm-cq-hasnotes:hover { background: #d3ede0; }
         .adm-savenote-btn { flex: none; }
         .adm-addprice-btn { flex: none; }
-        .adm-pill { padding: 0 14px; height: 34px; border-radius: 9999px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: 'Urbanist', sans-serif; border: 1px solid #DAD3C5; background: #fff; color: #4B5563; transition: all 0.15s; }
+        .adm-pill { padding: 0 14px; height: 34px; border-radius: 9999px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: 'Urbanist', sans-serif; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); background: #fff; color: #4B5563; transition: all 0.15s; }
         .adm-pill:hover { border-color: #172531; }
         .adm-pill.active { background: #1A6641; border-color: #1A6641; color: #fff; }
         .adm-pill.active:hover { background: #1A6641; }
@@ -5600,7 +5630,7 @@ export default function AdminPage() {
         .adm-conflict-opt { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: #faf9f7; border: 1px solid #EDE8E0; border-radius: 12px; }
         .adm-conflict-opt-main { display: flex; flex-direction: column; gap: 6px; }
         .adm-conflict-price { font-size: 20px; font-weight: 800; color: #172531; }
-        .adm-conflict-src { display: inline-flex; align-items: center; align-self: flex-start; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 800; text-transform: capitalize; background: #EDE8E0; color: #4b5563; }
+        .adm-conflict-src { display: inline-flex; align-items: center; align-self: flex-start; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; text-transform: capitalize; background: #EDE8E0; color: #4b5563;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-src-sheet { background: #EDFAF3; color: #1A6641; }
         .adm-src-manual { background: #FEF3EB; color: #8B3A1E; }
         .adm-src-scraper { background: #eef1fb; color: #3a4a8b; }
@@ -5695,15 +5725,15 @@ export default function AdminPage() {
         .adm-invite-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
         .adm-field { display: flex; flex-direction: column; gap: 6px; }
         .adm-field-label { font-size: 13px; font-weight: 800; color: #717A86; text-transform: uppercase; letter-spacing: 0.10em; }
-        .adm-field-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid #DAD3C5; border-radius: 12px; font-size: 15px; font-weight: 500; font-family: 'Urbanist', sans-serif; color: #172531; background-color: #fff; }
+        .adm-field-input { width: 100%; height: 44px; padding: 0 14px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); border-radius: 12px; font-size: 15px; font-weight: 500; font-family: 'Urbanist', sans-serif; color: #172531; background-color: #fff; }
         textarea.adm-field-input { height: auto; min-height: 80px; padding: 12px 14px; resize: vertical; }
         .adm-field-input:focus { outline: none; border-color: #CF5C36; }
         .adm-perms-label { display: block; font-size: 13px; font-weight: 800; color: #717A86; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px; }
         .adm-perms-hint { margin: 0 0 12px; font-size: 13px; font-weight: 500; color: #717A86; }
         .adm-perms-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-        .adm-perm { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border: 1px solid #DAD3C5; border-radius: 9999px; background: #fff; font-size: 14px; font-weight: 600; color: #172531; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: border-color 0.15s ease, background 0.15s ease; }
+        .adm-perm { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); border-radius: 9999px; background: #fff; font-size: 14px; font-weight: 600; color: #172531; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: border-color 0.15s ease, background 0.15s ease; }
         .adm-perm:hover:not(.disabled) { border-color: #172531; }
-        .adm-perm-box { width: 20px; height: 20px; border-radius: 6px; border: 1px solid #DAD3C5; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease, border-color 0.15s ease; }
+        .adm-perm-box { width: 20px; height: 20px; border-radius: 6px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease, border-color 0.15s ease; }
         .adm-perm.on .adm-perm-box { background: #172531; border-color: #172531; }
         .adm-perm.on { border-color: #172531; }
         .adm-perm.disabled { opacity: 0.45; cursor: not-allowed; }
@@ -5711,7 +5741,7 @@ export default function AdminPage() {
         .adm-invite-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 18px; border-top: 1px solid #e5ded2; }
         .adm-team-invitedby { font-size: 13px; font-weight: 500; color: #717A86; }
         .adm-team-invite-row { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px; min-height: 34px; }
-        .adm-team-you { font-size: 13px; font-weight: 800; padding: 3px 11px; border-radius: 9999px; background: #EDF3F8; color: #2C4657; }
+        .adm-team-you { font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px; background: #EDF3F8; color: #2C4657;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-team-perms { padding: 14px 0 0; border-top: 1px solid #ede8e0; display: flex; flex-direction: column; gap: 10px; }
         .adm-team-actions { border-top: 1px solid #ede8e0; padding-top: 14px; }
         .adm-team-action-btns { display: flex; gap: 10px; justify-content: flex-end; }
@@ -5735,14 +5765,14 @@ export default function AdminPage() {
         .adm-triage-count { font-size: 24px; font-weight: 800; line-height: 1; }
         .adm-triage-label { font-size: 15px; font-weight: 600; }
         .adm-chiprow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; }
-        .adm-chip { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 6px 0 14px; border-radius: 9999px; font-size: 14px; font-weight: 700; border: 1px solid; }
+        .adm-chip { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 6px 0 14px; border-radius: 9999px; font-size: 14px; font-weight: 700; border: var(--pill-border-w, 2px) solid; }
         .adm-chip-x { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.08); cursor: pointer; border: none; padding: 0; }
         .adm-chip-x:hover { background: rgba(0,0,0,0.16); }
         .adm-clear-full { display: none; }
         .adm-log-list { display: flex; flex-direction: column; gap: 12px; }
         /* Pagination (reusable) */
         .adm-pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 28px; }
-        .adm-pager-btn { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 18px; border: 1px solid #DAD3C5; background: #fff; border-radius: 10px; font-size: 14px; font-weight: 700; color: #172531; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, opacity 0.18s ease; }
+        .adm-pager-btn { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 18px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); background: #fff; border-radius: 10px; font-size: 14px; font-weight: 700; color: #172531; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, opacity 0.18s ease; }
         .adm-pager-btn:hover:not(:disabled) { background: #f5f0e8; border-color: #CF5C36; color: #CF5C36; }
         .adm-pager-btn:disabled { opacity: 0.4; cursor: default; }
         .adm-pager-info { font-size: 14px; font-weight: 600; color: #717A86; min-width: 110px; text-align: center; }
@@ -5751,7 +5781,7 @@ export default function AdminPage() {
         .adm-log-id { display: flex; flex-direction: column; gap: 1px; }
         .adm-log-pet { font-size: 18px; font-weight: 600; color: #172531; }
         .adm-log-species { font-size: 16px; font-weight: 500; color: #4b5563; text-transform: capitalize; }
-        .adm-log-badge { font-size: 13px; font-weight: 800; padding: 4px 12px; border-radius: 9999px; white-space: nowrap; flex-shrink: 0; }
+        .adm-log-badge { font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 9999px; white-space: nowrap; flex-shrink: 0;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-log-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 15px; color: #4b5563; font-weight: 500; }
         .adm-log-date { color: #717A86; font-size: 14px; font-weight: 500; }
         .adm-log-time { font-size: 14px; font-weight: 500; color: #717A86; }
@@ -5802,7 +5832,7 @@ export default function AdminPage() {
         }
         /* Users tab */
         .adm-userfilters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
-        .adm-userfilter { padding: 7px 14px; border: 1px solid #DAD3C5; background: #fff; border-radius: 9999px; font-size: 15px; font-weight: 700; color: #4b5563; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: all 0.15s; white-space: nowrap; }
+        .adm-userfilter { padding: 7px 14px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); background: #fff; border-radius: 9999px; font-size: 15px; font-weight: 700; color: #4b5563; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: all 0.15s; white-space: nowrap; }
         .adm-userfilter.active { background: #172531; color: #fff; border-color: #172531; }
         .adm-user-list { display: flex; flex-direction: column; gap: 20px; }
         .adm-user-card { border: 1px solid #ede8e0; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
@@ -5811,12 +5841,12 @@ export default function AdminPage() {
         .adm-user-name { font-size: 18px; font-weight: 700; color: #172531; }
         .adm-user-email { font-size: 15px; color: #717A86; font-weight: 500; word-break: break-word; }
         .adm-user-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-        .adm-ustatus { font-size: 13px; font-weight: 800; padding: 3px 11px; border-radius: 9999px; }
+        .adm-ustatus { font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-ustatus-active { background: #EDFAF3; color: #1A6641; }
         .adm-ustatus-suspended { background: #FEF3EB; color: #8B3A1E; }
         .adm-ustatus-banned { background: #FCEAEA; color: #C94040; }
         .adm-ustatus-new { background: #FEF3EB; color: #8B3A1E; }
-        .adm-uflag { font-size: 13px; font-weight: 800; padding: 3px 11px; border-radius: 9999px; background: #FEF3EB; color: #8B3A1E; display: inline-flex; align-items: center; gap: 4px; }
+        .adm-uflag { font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px; background: #FEF3EB; color: #8B3A1E; display: inline-flex; align-items: center; gap: 4px;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-uflag.auto { background: #f3f1ec; color: #717A86; }
         .adm-uflag svg { width: 12px; height: 12px; }
         .adm-user-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px 0; border-top: 1px solid #ede8e0; border-bottom: 1px solid #ede8e0; }
@@ -5827,7 +5857,7 @@ export default function AdminPage() {
         .adm-user-stat-n { font-size: 18px; font-weight: 800; color: #172531; }
         .adm-user-stat-l { font-size: 15px; color: #4b5563; font-weight: 600; }
         .adm-user-actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; }
-        .adm-user-status-select { height: 44px; padding: 0 38px 0 14px; border: 1px solid #DAD3C5; border-radius: 12px; font-size: 15px; font-weight: 600; font-family: 'Urbanist', sans-serif; color: #172531; background: #fff; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23717A86' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+        .adm-user-status-select { height: 44px; padding: 0 38px 0 14px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); border-radius: 12px; font-size: 15px; font-weight: 600; font-family: 'Urbanist', sans-serif; color: #172531; background: #fff; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23717A86' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
         @media (max-width: 620px) {
           .adm-user-meta { grid-template-columns: repeat(2, 1fr); gap: 0; padding: 4px 0; }
           .adm-user-main { flex-direction: column; align-items: flex-start; gap: 8px; }
@@ -5871,7 +5901,7 @@ export default function AdminPage() {
         }
         .adm-brand-title { margin: 0 0 2px 0; font-size: 20px; color: #172531; font-weight: 800; white-space: nowrap; }
         .adm-filter-row { display: flex; gap: 8px; margin-bottom: 16px; }
-        .adm-filter-pill { padding: 0 24px; height: 38px; border-radius: 12px; border: 1px solid #DAD3C5; background: #fff; font-size: 15px; font-weight: 700; cursor: pointer; color: #4b5563; white-space: nowrap; font-family: 'Urbanist', sans-serif; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+        .adm-filter-pill { padding: 0 24px; height: 38px; border-radius: 12px; border: 2px solid #DAD3C5; background: #fff; font-size: 15px; font-weight: 700; cursor: pointer; color: #4b5563; white-space: nowrap; font-family: 'Urbanist', sans-serif; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
         .adm-filter-pill:hover:not(.on) { border-color: #172531; color: #172531; }
         .adm-filter-pill.on { background: #cf5c36; border-color: #cf5c36; color: #fff; }
 
@@ -5898,7 +5928,7 @@ export default function AdminPage() {
         .adm-batch-meta { font-size: 13px; color: #4b5563; line-height: 1.5; }
         .adm-batch-meta .from { color: #717a86; }
         .adm-batch-badge { flex-shrink: 0; display: flex; }
-        .adm-status-pill { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: 9999px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+        .adm-status-pill { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: 9999px; font-size: 13px; font-weight: 700; white-space: nowrap;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-status-verified { background: #EDFAF3; color: #1A6641; }
         .adm-status-flag { background: #FEF3EB; color: #8B3A1E; }
         .adm-batch-actions { display: flex; gap: 8px; flex-shrink: 0; }
@@ -5910,12 +5940,12 @@ export default function AdminPage() {
         .adm-line-name { font-size: 18px; color: #172531; font-weight: 600; }
         .adm-line-price { font-size: 16px; font-weight: 800; color: #172531; white-space: nowrap; flex-shrink: 0; }
         .adm-line-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .adm-tag { display: inline-block; border-radius: 9999px; padding: 4px 13px; font-size: 13px; font-weight: 800; white-space: nowrap; }
+        .adm-tag { display: inline-block; border-radius: 9999px; padding: 4px 13px; font-size: 13px; font-weight: 700; white-space: nowrap;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-tag-mapped { background: #EDFAF3; color: #1A6641; }
         .adm-tag-unmapped { background: #FEF3EB; color: #8B3A1E; }
         .adm-tag-product { background: #dfe3e8; color: #3f4854; }
         .adm-line-controls { display: flex; gap: 8px; flex-shrink: 0; }
-        .adm-line-select { font-size: 15px; padding: 0 38px 0 14px; height: 44px; border-radius: 12px; border: 1px solid #DAD3C5; background: #fff; font-weight: 600; color: #172531; font-family: 'Urbanist', sans-serif; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23717A86' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+        .adm-line-select { font-size: 15px; padding: 0 38px 0 14px; height: 44px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); background: #fff; font-weight: 600; color: #172531; font-family: 'Urbanist', sans-serif; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23717A86' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
         .adm-line-note { font-size: 13px; color: #8B3A1E; padding: 14px 18px; display: flex; gap: 7px; align-items: flex-start; line-height: 1.6; }
 
         .adm-pager { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 18px; }
@@ -6359,6 +6389,16 @@ export default function AdminPage() {
                       setSubPage(1);
                     }}
                   />
+                  {subSearch && (
+                    <button
+                      type="button"
+                      className="adm-search-clear"
+                      aria-label="Clear search"
+                      onClick={() => setSubSearch("")}
+                    >
+                      <X size={15} strokeWidth={2.6} />
+                    </button>
+                  )}
                 </div>
 
                 <div className="adm-filter-row">
@@ -6684,6 +6724,16 @@ export default function AdminPage() {
                       setPendingVetPage(1);
                     }}
                   />
+                  {pendingVetSearch && (
+                    <button
+                      type="button"
+                      className="adm-search-clear"
+                      aria-label="Clear search"
+                      onClick={() => setPendingVetSearch("")}
+                    >
+                      <X size={15} strokeWidth={2.6} />
+                    </button>
+                  )}
                 </div>
 
                 {pendingVetsLoading && pendingVets.length === 0 && (
@@ -7019,6 +7069,16 @@ export default function AdminPage() {
                       setVetPage(1);
                     }}
                   />
+                  {vetSearch && (
+                    <button
+                      type="button"
+                      className="adm-search-clear"
+                      aria-label="Clear search"
+                      onClick={() => setVetSearch("")}
+                    >
+                      <X size={15} strokeWidth={2.6} />
+                    </button>
+                  )}
                 </div>
 
                 {!showAddVet && (
@@ -8020,7 +8080,8 @@ export default function AdminPage() {
                                   }}
                                   disabled={callIndex === 0}
                                 >
-                                  ← Prev
+                                  <ArrowLeft size={14} strokeWidth={2.4} />
+                                  Prev
                                 </button>
                                 <button
                                   className="adm-b adm-b-primary"
@@ -8044,7 +8105,8 @@ export default function AdminPage() {
                                     setLockedVetName("");
                                   }}
                                 >
-                                  Skip →
+                                  Skip
+                                  <ArrowRight size={14} strokeWidth={2.4} />
                                 </button>
                               </div>
                             </div>
@@ -9426,6 +9488,16 @@ export default function AdminPage() {
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
                   />
+                  {userSearch && (
+                    <button
+                      type="button"
+                      className="adm-search-clear"
+                      aria-label="Clear search"
+                      onClick={() => setUserSearch("")}
+                    >
+                      <X size={15} strokeWidth={2.6} />
+                    </button>
+                  )}
                 </div>
 
                 <div className="adm-userfilters">
@@ -9554,6 +9626,16 @@ export default function AdminPage() {
                     value={petSearch}
                     onChange={(e) => setPetSearch(e.target.value)}
                   />
+                  {petSearch && (
+                    <button
+                      type="button"
+                      className="adm-search-clear"
+                      aria-label="Clear search"
+                      onClick={() => setPetSearch("")}
+                    >
+                      <X size={15} strokeWidth={2.6} />
+                    </button>
+                  )}
                 </div>
 
                 {petsLoading && pets.length === 0 && (

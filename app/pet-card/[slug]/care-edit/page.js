@@ -906,8 +906,8 @@ function EditorView({ pet, onPetChange }) {
           border: 2px solid var(--color-border, #EDE8E0);
           // border-radius: 9999px;
           padding: 6px 14px;
-          font-size: 13px;
-          font-weight: 600;
+          font-size: 14px;
+          font-weight: 700;
           color: var(--color-slate, #4B5563);
           cursor: pointer;
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
@@ -1005,7 +1005,7 @@ function EditorView({ pet, onPetChange }) {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           color: var(--color-navy-dark, #172531);
           background: #fff;
-          border: 1px solid rgba(23,37,49,0.10);
+          border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);
           border-radius: 12px;
           transition: border-color 0.15s, box-shadow 0.15s;
           box-sizing: border-box;
@@ -1230,6 +1230,11 @@ function EditorView({ pet, onPetChange }) {
           text-transform: uppercase;
           white-space: nowrap;
           flex-shrink: 0;
+          /* Borders match the identical pills on the Care Card view, and the
+             wider site convention: an outline in each state's own colour at
+             the shared thickness. Transparent here so a status with no variant
+             keeps the same box size. */
+          border: var(--pill-border-w, 2px) solid transparent;
         }
         /* Separator: subtle horizontal line splitting status from meta details. */
         .pce-list-item-sep {
@@ -1541,11 +1546,11 @@ function EditorView({ pet, onPetChange }) {
             word-break: break-word;
           }
         }
-        .pce-list-item-status.overdue { background: rgba(201,64,64,0.12); color: #C94040; }
-        .pce-list-item-status.soon    { background: rgba(217,162,27,0.14); color: #8C6A11; }
-        .pce-list-item-status.ok      { background: rgba(26,102,65,0.12); color: #1A6641; }
-        .pce-list-item-status.active  { background: rgba(26,102,65,0.12); color: #1A6641; }
-        .pce-list-item-status.ended   { background: rgba(113,122,134,0.14); color: #4B5563; }
+        .pce-list-item-status.overdue { background: rgba(201,64,64,0.12); color: #C94040; border-color: rgba(201,64,64,0.28); }
+        .pce-list-item-status.soon    { background: rgba(217,162,27,0.14); color: #8C6A11; border-color: rgba(217,162,27,0.34); }
+        .pce-list-item-status.ok      { background: rgba(26,102,65,0.12); color: #1A6641; border-color: rgba(26,102,65,0.28); }
+        .pce-list-item-status.active  { background: rgba(26,102,65,0.12); color: #1A6641; border-color: rgba(26,102,65,0.28); }
+        .pce-list-item-status.ended   { background: rgba(113,122,134,0.14); color: #4B5563; border-color: rgba(113,122,134,0.32); }
         .pce-list-item-actions {
           display: flex;
           gap: 4px;

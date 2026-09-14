@@ -723,7 +723,7 @@ export default function InlineSubmitPriceForm({
         .isp-locked-vet {
           /* Fallbacks: not every caller's C token object defines successBg. */
           background: ${C.successBg || "#EDFAF3"};
-          border: 1.5px solid ${C.success || "#1A6641"};
+          border: 2px solid ${C.success || "#1A6641"};
           border-radius: 12px;
           padding: 10px 14px;
           font-size: 14px;
@@ -779,7 +779,7 @@ export default function InlineSubmitPriceForm({
           width: 100%;
           height: 44px;
           padding: 0 14px;
-          border: 1px solid #DAD3C5;
+          border: 2px solid #DAD3C5;
           border-radius: 12px;
           font-size: 15px;
           font-weight: 500;
@@ -814,7 +814,7 @@ export default function InlineSubmitPriceForm({
         .isp-seg-btn {
           flex: 1;
           padding: 10px 6px;
-          border: 1.5px solid ${C.border};
+          border: 2px solid ${C.border};
           border-radius: 12px;
           background: #fff;
           color: ${C.slate};
@@ -838,7 +838,7 @@ export default function InlineSubmitPriceForm({
           border-radius: 20px;
           font-size: 13px; 
           font-weight: 700;
-          border: 1.5px solid ${C.border};
+          border: 2px solid ${C.border};
           background: #fff;
           cursor: pointer;
           transition: all 0.15s;

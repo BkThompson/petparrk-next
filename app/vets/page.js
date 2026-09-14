@@ -723,13 +723,13 @@ function VetsContent() {
         .vet-card-outer:hover{background:#EDE8E0;transform:translateY(-3px)}
         .vet-card-outer:hover .vet-card{box-shadow:0 0 0 1.5px rgba(239,200,139,0.9),0 16px 48px rgba(23,37,49,0.13)}
         .vet-card{border-radius:17px!important;display:flex!important;flex-direction:column!important;height:100%!important;box-sizing:border-box!important}
-        .filter-pill{display:inline-flex;align-items:center;justify-content:center;height:44px;flex-shrink:0;padding:0 18px;border-radius:9999px;border:1px solid #EDE8E0;background:#fff;color:#1A1A1A;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font,'Urbanist',sans-serif);transition:all 0.15s;white-space:nowrap;box-sizing:border-box}
+        .filter-pill{display:inline-flex;align-items:center;justify-content:center;height:44px;flex-shrink:0;padding:0 18px;border-radius:9999px;border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);background:#fff;color:#1A1A1A;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font,'Urbanist',sans-serif);transition:all 0.15s;white-space:nowrap;box-sizing:border-box}
         .filter-pill:hover{border-color:#172531}
         .filter-pill.active{background:#172531;color:#fff;border-color:#172531}
         .sort-pill{font-size:15px}
-        .pp-select{padding:0 36px 0 14px;border-radius:12px;border:1px solid #EDE8E0;font-size:15px;font-weight:500;font-family:var(--font,'Urbanist',sans-serif);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;color:#1A1A1A;outline:none;cursor:pointer;height:44px;flex-shrink:0;appearance:none;-webkit-appearance:none}
+        .pp-select{padding:0 36px 0 14px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);font-size:15px;font-weight:500;font-family:var(--font,'Urbanist',sans-serif);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;color:#1A1A1A;outline:none;cursor:pointer;height:44px;flex-shrink:0;appearance:none;-webkit-appearance:none}
         .pp-select:focus{border-color:#CF5C36}
-        .dir-search{width:100%;height:44px;flex-shrink:0;padding:0 14px;border-radius:12px;border:1px solid #EDE8E0;font-size:15px;font-weight:500;outline:none;box-sizing:border-box;font-family:var(--font,'Urbanist',sans-serif);background:#fff;transition:border-color 0.15s}
+        .dir-search{width:100%;height:44px;flex-shrink:0;padding:0 14px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);font-size:15px;font-weight:500;outline:none;box-sizing:border-box;font-family:var(--font,'Urbanist',sans-serif);background:#fff;transition:border-color 0.15s}
         .dir-search:focus{border-color:#CF5C36}
         /* The wrapper carries the flex sizing the input used to; the input
            fills it. Right padding leaves room for the clear button. */
@@ -743,11 +743,13 @@ function VetsContent() {
           transition:background 0.15s,color 0.15s;
         }
         .dir-search-clear:hover{background:#F5F0E8;color:#172531}
-        .badge-navy{background:#EBF0F5;color:#2C4657}
-        .badge-success{background:#EDFAF3;color:#1A6641}
-        .badge-error{background:#FCEAEA;color:#C94040}
-        .badge-terra{background:#FEF3EB;color:#8B3A1E}
-        .price-chip{display:inline-flex;align-items:center;gap:5px;background:#F5F0E8;border-radius:8px;padding:4px 10px;font-size:14px}
+        .badge-navy{background:#EBF0F5;color:#2C4657;border-color:rgba(44,70,87,0.22)}
+        .badge-success{background:#EDFAF3;color:#1A6641;border-color:rgba(26,102,65,0.22)}
+        .badge-error{background:#FCEAEA;color:#C94040;border-color:rgba(201,64,64,0.24)}
+        .badge-terra{background:#FEF3EB;color:#8B3A1E;border-color:rgba(139,58,30,0.22)}
+        /* Border thickness and radius come from the same tokens the badges
+           use, so a vet-type badge and a price chip sit at the same weight. */
+        .price-chip{display:inline-flex;align-items:center;gap:5px;background:#F5F0E8;border:var(--pill-border-w,2px) solid #EDE8E0;border-radius:var(--radius-md,8px);padding:4px 10px;font-size:14px}
         .price-chip-label{color:#717A86;font-weight:600}
         .price-chip-value{color:#CF5C36;font-weight:700}
         /* Pricing gate for logged-out users: blur the chips + overlay a signup CTA */
@@ -776,7 +778,7 @@ function VetsContent() {
         /* fbar-item and fbar-search now sit on .dir-search-wrap, so this
            targets the wrapper rather than the input it used to. */
         .dir-search-wrap.fbar-item{max-width:none}
-        .filters-btn{height:44px;padding:0 16px;border-radius:12px;border:1px solid #EDE8E0;background:#fff;color:#172531;cursor:pointer;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;transition:all 0.15s}
+        .filters-btn{height:44px;padding:0 16px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);background:#fff;color:#172531;cursor:pointer;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;transition:all 0.15s}
         .filters-btn:hover{border-color:#172531}
         .filters-btn.open{background:#172531;color:#fff;border-color:#172531}
         .filters-badge{background:#CF5C36;color:#fff;font-size:12px;font-weight:700;border-radius:9999px;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
@@ -785,7 +787,7 @@ function VetsContent() {
         .pp-select.fbar-active{background-color:#172531;color:#fff;border-color:#172531;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23ffffff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
         /* Custom filter dropdown (Option C: muted prefix + bold value) */
         .fdd-wrap{position:relative;display:flex}
-        .fdd-btn{width:100%;height:44px;padding:0 14px;border:1px solid #EDE8E0;border-radius:12px;background:#fff;color:#172531;cursor:pointer;font-family:var(--font,'Urbanist',sans-serif);font-size:15px;display:inline-flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;transition:border-color 0.15s,background 0.15s;min-width:0}
+        .fdd-btn{width:100%;height:44px;padding:0 14px;border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);border-radius:12px;background:#fff;color:#172531;cursor:pointer;font-family:var(--font,'Urbanist',sans-serif);font-size:15px;display:inline-flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;transition:border-color 0.15s,background 0.15s;min-width:0}
         .fdd-btn:hover{border-color:#172531}
         .fdd-text{display:inline-flex;align-items:baseline;gap:5px;overflow:hidden;white-space:nowrap;min-width:0}
         .fdd-prefix{color:#717A86;font-weight:600;flex-shrink:0}

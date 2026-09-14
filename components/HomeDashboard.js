@@ -18,7 +18,60 @@
 // Design tokens match the rest of the app (Palette D, Urbanist).
 // =============================================================
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+// Drives the standing animation: the progress bar, the percentage and the XP
+// all move from one loop so they can't drift apart.
+//
+// The bar's width is written straight to the DOM node rather than through
+// state. Both are on the same frame and the same easing, but a re-render per
+// frame — 84 of them over 1400ms — is real work for something the browser can
+// do by setting one style property. The two numbers stay on state because
+// updating text is cheap and React is the simpler way to express it.
+//
+// Quick off the mark, easing to a stop — the same curve as the hero card
+// stats, so the two read as part of the same system.
+function useStandingAnimation(pct, xp, barRef, duration = 1400) {
+  const [shownPct, setShownPct] = useState(0);
+  const [shownXp, setShownXp] = useState(0);
+
+  useEffect(() => {
+    const targetPct = Number(pct) || 0;
+    const targetXp = Number(xp) || 0;
+    const still =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (still) {
+      setShownPct(targetPct);
+      setShownXp(targetXp);
+      if (barRef.current) barRef.current.style.width = targetPct + "%";
+      return;
+    }
+
+    let raf;
+    let startedAt = null;
+    const step = (now) => {
+      if (startedAt === null) startedAt = now;
+      const t = Math.min(1, (now - startedAt) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      // Full precision for the bar so it glides; rounded for the digits.
+      if (barRef.current) {
+        barRef.current.style.width = (targetPct * eased).toFixed(2) + "%";
+      }
+      setShownPct(Math.round(targetPct * eased));
+      setShownXp(Math.round(targetXp * eased));
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [pct, xp, barRef, duration]);
+
+  return { shownPct, shownXp };
+}
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
 import {
@@ -174,6 +227,16 @@ export default function HomeDashboard({ session, savedVets = [] }) {
 
   const tier = levelState?.tier || null;
   const progress = levelState?.progress || null;
+
+  // Hooks can't be called conditionally, so these run even when there is no
+  // progress to show — harmless, since the values are only read inside that
+  // branch and the ref is simply never attached.
+  const barRef = useRef(null);
+  const { shownPct, shownXp } = useStandingAnimation(
+    progress?.pct || 0,
+    progress?.earnedXp || 0,
+    barRef,
+  );
   const level = levelState?.level ?? 0;
 
   // Start a fresh symptom check for a given pet (mirrors profile behavior).
@@ -234,14 +297,37 @@ export default function HomeDashboard({ session, savedVets = [] }) {
         .hd-tier-name { font-size: 20px; font-weight: 800; color: ${C.navyDark}; margin: 0; line-height: 1.1; }
         .hd-tier-level { font-size: 14px; color: ${C.muted}; font-weight: 600; margin: 2px 0 0; }
         .hd-bar-track { height: 8px; background: ${C.border}; border-radius: 100px; overflow: hidden; }
-        .hd-bar-fill { height: 100%; background: ${C.terracotta}; border-radius: 100px; transition: width 0.6s ease; }
+        /* No transition on purpose. The width is driven frame by frame from the
+           same count-up that moves the percentage and the XP, so the three stay
+           in step. A CSS transition on top of that would be a 1.4s ease chasing
+           a value that is already animating — the easing compounds and the bar
+           visibly trails the numbers. */
+        .hd-bar-fill { height: 100%; background: ${C.terracotta}; border-radius: 100px; }
         .hd-bar-label { font-size: 13px; color: ${C.muted}; font-weight: 600; margin-top: 8px; display: flex; justify-content: space-between; }
 
         /* Quick actions */
-        .hd-actions { display: flex; flex-direction: column; gap: 10px; }
+        /* Declared on the container so it shows up once in devtools and can be
+           changed in one place, rather than only existing on each icon. */
+        .hd-actions { --tile-border-w: 1px; display: flex; flex-direction: column; gap: 10px; }
         .hd-action { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 12px; border: 1px solid ${C.border}; background: #fff; color: ${C.navyDark}; text-decoration: none; font-size: 16px; font-weight: 700; transition: border-color 0.15s, background 0.15s, transform 0.1s; }
         .hd-action:hover { border-color: ${C.terracotta}; background: ${C.cream}; transform: translateY(-1px); }
-        .hd-action-icon { color: ${C.terracotta}; display: inline-flex; flex-shrink: 0; }
+        /* A tinted tile rather than a bare icon, matching the spot tiles used
+           on Home's pillars and Pet Card. 36px because these sit in a 13px
+           padded row — the 68px spot tile would dominate it. --tile-border-w
+           is here so the outline thickness can be changed in one place. */
+        .hd-action-icon {
+          color: ${C.terracotta};
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(207,92,54,0.14);
+          border: var(--tile-border-w) solid rgba(207,92,54,0.28);
+          box-sizing: border-box;
+          flex-shrink: 0;
+        }
         .hd-action-arrow { margin-left: auto; color: ${C.muted}; display: inline-flex; }
 
         /* Pets */
@@ -329,14 +415,15 @@ export default function HomeDashboard({ session, savedVets = [] }) {
                   <>
                     <div className="hd-bar-track">
                       <div
+                        ref={barRef}
                         className="hd-bar-fill"
-                        style={{ width: `${progress.pct || 0}%` }}
+                        style={{ width: 0 }}
                       />
                     </div>
                     <div className="hd-bar-label">
-                      <span>{progress.pct || 0}% to next level</span>
+                      <span>{shownPct}% to next level</span>
                       <span>
-                        {progress.earnedXp}/{progress.totalXp} XP
+                        {shownXp}/{progress.totalXp} XP
                       </span>
                     </div>
                   </>
@@ -485,7 +572,7 @@ export default function HomeDashboard({ session, savedVets = [] }) {
               }}
             >
               <span>Saved vets</span>
-              <Link href="/saved" className="hd-see-all">
+              <Link href="/saved-vets" className="hd-see-all">
                 See all
               </Link>
             </p>

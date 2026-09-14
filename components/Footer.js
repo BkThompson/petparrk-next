@@ -14,8 +14,8 @@ export default function Footer() {
              desktop layout but is still touch. */
           display: flex;
           align-items: center;
-          min-height: 44px;
-          font-size: 15px;
+          // min-height: 44px;
+          font-size: 14px;
           font-weight: 500;
           color: rgba(255,255,255,0.6);
           text-decoration: none;

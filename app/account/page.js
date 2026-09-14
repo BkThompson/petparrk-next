@@ -175,11 +175,11 @@ export default function AccountSettings() {
         .acc-card-title { font-size: 16px; font-weight: 700; color: ${C.navyDark}; margin: 0 0 4px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
         .acc-card-sub { font-size: 16px; font-weight: 500;  color: ${C.muted}; margin: 0 0 20px; }
         .acc-label { display: block; font-size: 14px; font-weight: 600; color: ${C.slate}; margin-bottom: 6px; }
-        .acc-input { width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid ${C.border}; font-size: 15px; font-weight: 500; font-family: var(--font-urbanist,system-ui); outline: none; box-sizing: border-box; background: ${C.white}; color: ${C.navyDark}; transition: border-color 0.15s; -webkit-appearance: none; }
+        .acc-input { width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: 2px solid ${C.border}; font-size: 15px; font-weight: 500; font-family: var(--font-urbanist,system-ui); outline: none; box-sizing: border-box; background: ${C.white}; color: ${C.navyDark}; transition: border-color 0.15s; -webkit-appearance: none; }
         .acc-input:focus { border-color: ${C.terracotta}; }
         .acc-input[readonly] { background: ${C.cream}; color: ${C.slate}; cursor: default; }
         .acc-field { margin-bottom: 16px; }
-        .acc-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 24px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.2s, color 0.2s; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; }
+        .acc-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 24px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.2s, color 0.2s; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; }
         .acc-btn:hover { background: #fff; color: ${C.terracotta}; }
         .acc-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .acc-btn-ghost { background: transparent; color: ${C.navyDark}; border: 2px solid ${C.border}; }
@@ -570,7 +570,7 @@ export default function AccountSettings() {
             <p className="acc-card-title" style={{ color: C.error }}>
               Delete Account
             </p>
-            <p className="acc-card-sub" style={{ fontSize: "14px" }}>
+            <p className="acc-card-sub">
               Permanently delete your account and all associated data. This
               cannot be undone.
             </p>

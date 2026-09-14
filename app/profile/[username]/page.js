@@ -2483,7 +2483,7 @@ export default function ProfilePage() {
 
         .input {
           width: 100%; padding: 0 14px; border-radius: 12px;
-          border: 1px solid #DAD3C5; font-size: 15px;
+          border: 2px solid #DAD3C5; font-size: 15px;
           box-sizing: border-box;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           outline: none; background: #fff; height: 44px;
@@ -2510,7 +2510,7 @@ export default function ProfilePage() {
         .pp-weight-input { flex: 1 1 auto; min-width: 0; }
         .pp-weight-unit-toggle {
           display: inline-flex;
-          border: 1.5px solid ${C.borderStrong};
+          border: 2px solid ${C.borderStrong};
           border-radius: 10px;
           overflow: hidden;
           flex-shrink: 0;
@@ -2548,7 +2548,7 @@ export default function ProfilePage() {
         }
         .field { margin-bottom: 14px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .field-hint { margin: 4px 0 0; font-size: 13px; font-weight: 500; color: ${C.muted}; }
+        .field-hint { margin: 4px 0 0; font-size: 13px; font-weight: 600; color: ${C.muted}; }
 
         .btn-primary {
           padding: 0 24px; height: 48px; min-width: 90px;
@@ -2626,10 +2626,14 @@ export default function ProfilePage() {
           display: flex; align-items: center; justify-content: center;
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -2px 4px rgba(0,0,0,0.25);
         }
+        /* Kept in step with the same rule in profileStyles.js — this page
+           carries its own copy, and a change to one without the other is how
+           "the fix didn't take" happens. See that file for why 28/1.4. */
         .pp-banner-swatch-color svg {
           color: rgba(255,255,255,0.55);
-          width: 35px;
-          height: 35px;
+          width: 32px;
+          height: 32px;
+          stroke-width: 1.2;
         }
         .pp-banner-swatch-label {
           font-size: 12px; font-weight: 700; color: ${C.navyDark};
@@ -2826,9 +2830,14 @@ export default function ProfilePage() {
           text-transform: uppercase;
         }
         .pp-lvl-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+        /* Weight up from 500 and an outline added. At 500 on a pale grey fill
+           these sat so far back they read as disabled rather than completed —
+           the colour is also lifted from #94A0AB so the text carries against
+           the fill. */
         .pp-lvl-pill {
-          font-size: 12px; font-weight: 500; color: #94A0AB; background: #F2EFE9;
-          padding: 2px 8px; border-radius: 999px;
+          font-size: 12px; font-weight: 700; color: #6B7682; background: #F2EFE9;
+          padding: 3px 10px; border-radius: 999px;
+          border: var(--pill-border-w, 2px) solid #E2DCD2;
           display: inline-flex; align-items: center; gap: 4px;
         }
         .pp-lvl-pill svg { flex-shrink: 0; }

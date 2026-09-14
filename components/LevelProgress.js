@@ -209,12 +209,24 @@ export default function LevelProgress({
         .lvp-req-prog { font-size: 13px; font-weight: 800; white-space: nowrap; }
         .lvp-req-prog.met { color: #16A34A; }
         .lvp-req-prog.unmet { color: #717A86; }
+        /* Already at 800, which is the heaviest weight Urbanist is loaded at —
+           globals imports 400 to 800, so 900 would be a browser-synthesised
+           fake bold rather than a real weight. The extra presence comes from
+           size and the border instead: 13px, a little more padding, and an
+           outline in each state's own colour so met and unmet stay distinct. */
         .lvp-req-pts {
-          font-size: 12px; font-weight: 800; padding: 2px 8px;
+          font-size: 13px; font-weight: 800; padding: 3px 10px;
           border-radius: 999px; white-space: nowrap;
+          border: var(--pill-border-w, 2px) solid transparent;
         }
-        .lvp-req-pts.met { color: #16A34A; background: rgba(22,163,74,0.10); }
-        .lvp-req-pts.unmet { color: #CF5C36; background: rgba(207,92,54,0.10); }
+        .lvp-req-pts.met {
+          color: #16A34A; background: rgba(22,163,74,0.10);
+          border-color: rgba(22,163,74,0.30);
+        }
+        .lvp-req-pts.unmet {
+          color: #CF5C36; background: rgba(207,92,54,0.10);
+          border-color: rgba(207,92,54,0.30);
+        }
         .lvp-maxed { font-size: 14px; font-weight: 700; color: #4B5563; margin: 4px 0 0; }
 
         .lvp-celeb {

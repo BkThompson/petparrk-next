@@ -1707,7 +1707,7 @@ export default function SymptomCheckerChatPage() {
     return (
       <>
         <style>{`
-          .g-card{border:1.5px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:#fff;display:flex;align-items:center;gap:14px;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
+          .g-card{border:2px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:#fff;display:flex;align-items:center;gap:14px;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
           .g-dur{border:1.5px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:#fff;display:flex;flex-direction:column;align-items:center;text-align:center;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;color:${C.navyDark};}
           /* Hover only where hover exists. On touch devices the hover state
              sticks after a tap, so returning to a step showed an option

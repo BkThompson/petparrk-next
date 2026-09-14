@@ -380,7 +380,11 @@ export default function HealthHistoryPage() {
                                     : d?.name || d?.label,
                                 )
                                 .filter(Boolean)
-                                .join(" · ")}
+                                .map((label) => (
+                                  <span className="hh-diff" key={label}>
+                                    {label}
+                                  </span>
+                                ))}
                             </span>
                           )}
                         </span>
@@ -504,7 +508,11 @@ export default function HealthHistoryPage() {
         }
         /* Records list runs the full 1040. Prose inside it doesn't:
            uncapped it reached 130ch at 1024px. */
-        .hh-sub, .hh-empty-msg, .hh-detail-body, .hh-copilot p { max-width: 68ch; }
+        .hh-sub, .hh-empty-msg, 
+        .hh-detail-body, 
+        .hh-copilot p { 
+          // max-width: 68ch; 
+        }
         .hh-topbar { padding: 32px 0 0px; }
         .hh-topbar .bc-nav { margin-bottom: 20px; }
 
@@ -519,7 +527,7 @@ export default function HealthHistoryPage() {
         /* Filter pills */
         .hh-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
         .hh-pill {
-          display: inline-flex; align-items: center; min-height: 44px;
+          display: inline-flex; align-items: center;
           padding: 7px 16px; border-radius: 999px; border: 1.5px solid ${C.borderStrong};
           background: ${C.white}; color: ${C.slate}; font-size: 13px; font-weight: 700;
           cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
@@ -544,13 +552,24 @@ export default function HealthHistoryPage() {
           border-color: rgba(239,200,139,0.9);
           box-shadow: 0 0 0 1px rgba(239,200,139,0.9), 0 8px 24px rgba(23,37,49,0.08);
         }
+        /* align-items:flex-start on the row, not center. Centring the row tied
+           the photo and the chevron together — both sat on the same vertical
+           axis, so neither could be positioned independently. Each now sets
+           its own alignment via align-self below. */
         .hh-row {
-          width: 100%; display: flex; align-items: center; gap: 14px;
+          width: 100%; display: flex; align-items: flex-start; gap: 14px;
           padding: 14px 16px; background: transparent; border: none; cursor: pointer;
           text-align: left; font-family: inherit;
         }
         .hh-row:hover { background: transparent; }
 
+        /* .hh-pet is the wrapper that actually sits in .hh-row, so the
+           alignment belongs here — align-self on the photo inside it has no
+           effect, because the photo isn't a flex item of the row.
+           Top-aligned at every width, matching the chevron on the other side,
+           so the two ends of the row stay on the same line no matter how tall
+           the middle grows when the condition pills wrap. */
+        .hh-pet { display: flex; align-self: flex-start; flex: 0 0 auto; }
         .hh-pet-photo {
           width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
           flex: 0 0 auto; display: block;
@@ -574,16 +593,35 @@ export default function HealthHistoryPage() {
 
         .hh-row-bottom { display: flex; flex-direction: column; gap: 2px; }
         .hh-date { font-size: 16px; font-weight: 500; color: ${C.muted}; }
+        /* Conditions as pills rather than one dot-separated line.
+           The line was nowrap with an ellipsis, so on a phone it truncated and
+           the last condition was never readable. Pills wrap instead, and two
+           or three short ones often still sit on one line — so this costs less
+           height than stacking them would.
+           It also matches how the same conditions appear under "Could be" on
+           the symptom checker result, which is where they come from. */
         .hh-diffs {
-          font-size: 15px; color: ${C.slate};
-          overflow: hidden; 
-          text-overflow: ellipsis; 
-          white-space: nowrap;
-          font-weight: 500;
-          padding-top: 5px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          padding-top: 6px;
+        }
+        .hh-diff {
+          display: inline-flex;
+          align-items: center;
+          padding: 3px 10px;
+          border-radius: 999px;
+          background: ${C.cream};
+          border: var(--pill-border-w, 2px) solid ${C.border};
+          font-size: 14px;
+          font-weight: 600;
+          color: ${C.slate};
+          line-height: 1.35;
         }
 
-        .hh-chevron { flex: 0 0 auto; color: ${C.muted}; transition: transform 0.2s; display: flex; }
+        /* Always top-aligned, at every width — it points at the row it opens,
+           and a chevron drifting down a tall row loses that connection. */
+        .hh-chevron { flex: 0 0 auto; align-self: flex-start; color: ${C.muted}; transition: transform 0.2s; display: flex; }
         .hh-chevron.is-open { transform: rotate(180deg); }
 
         /* Expanded detail */
@@ -641,7 +679,7 @@ export default function HealthHistoryPage() {
           margin: 0 0 5px; font-size: 15px; font-weight: 500; color: ${C.muted};
         }
         .hh-vet-reason {
-          margin: 0 0 10px; font-size: 14px; font-weight: 500;
+          margin: 0 0 10px; font-size: 15px; font-weight: 500;
           color: ${C.navyDark}; line-height: 1.5; font-style: italic; opacity: 0.85;
         }
         .hh-vet-actions {
@@ -677,7 +715,7 @@ export default function HealthHistoryPage() {
         }
         .hh-vet-link:hover { color: ${C.navyDark}; }
         .hh-copilot-note {
-          margin: 12px 0 0; font-size: 13px; font-weight: 500;
+          margin: 12px 0 0; font-size: 13px; font-weight: 600;
           color: ${C.muted}; line-height: 1.5;
         }
         /* Mobile: stack like the chat card does — content full width,
@@ -702,7 +740,7 @@ export default function HealthHistoryPage() {
           background: ${C.navyDark}; color: ${C.white}; border-color: ${C.navyDark};
         }
         .hh-followup-note {
-          margin: 10px 0 0; font-size: 13px; font-weight: 500;
+          margin: 10px 0 0; font-size: 15px; font-weight: 600;
           color: ${C.muted}; line-height: 1.5;
         }
         @media (max-width: 600px) {

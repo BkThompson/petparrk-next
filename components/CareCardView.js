@@ -50,6 +50,7 @@ import Breadcrumb from "./Breadcrumb";
 import VisitRecap from "./VisitRecap";
 import PetInsights from "./PetInsights";
 import { getActiveVisitPrepForPet, getRecapsForPet } from "../lib/copilotApi";
+import { speciesBucket } from "../lib/petTileHelpers";
 
 // ----------------------------------------------------------------------------
 // Main component. Data comes in via props; each page owns its own loading.
@@ -1561,14 +1562,22 @@ function NotesSection({ notes }) {
   );
 }
 
+// Buckets via the shared helper rather than matching raw species strings.
+// The old version tested for "rabbit" and "fish" exactly, so a hamster, guinea
+// pig, ferret or turtle fell through to Sparkles here while Pet Card — which
+// buckets them — showed the right animal. Same pet, two different icons
+// depending on which page you were on.
+const CARE_SPECIES_ICON = {
+  dog: Dog,
+  cat: Cat,
+  bird: Bird,
+  small_furry: Rabbit,
+  reptile_fish: Fish,
+  mixed: Sparkles,
+};
+
 function getSpeciesIcon(species) {
-  const s = (species || "").toLowerCase();
-  if (s === "dog") return Dog;
-  if (s === "cat") return Cat;
-  if (s === "bird") return Bird;
-  if (s === "rabbit") return Rabbit;
-  if (s === "fish") return Fish;
-  return Sparkles;
+  return CARE_SPECIES_ICON[speciesBucket(species)] || Sparkles;
 }
 
 function capitalize(s) {
@@ -1813,13 +1822,18 @@ function CareCardStyles() {
         object-fit: cover;
         display: block;
       }
+      /* Same treatment as the placeholder on Pet Card: navy surface, white
+         species icon. Both are answering "no photo yet" for the same pet, so
+         they should look the same wherever you meet them. A beige panel with a
+         grey icon read as an empty slot rather than a deliberate stand-in. */
       .pcc-pet-photo-placeholder {
         width: 100%;
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #717A86;
+        background: linear-gradient(135deg, #2C4657 0%, #172531 100%);
+        color: rgba(255,255,255,0.9);
       }
       .pcc-pet-header-info {
         flex: 1;
@@ -1860,12 +1874,18 @@ function CareCardStyles() {
 
       /* Section — white card wrapping each topic.
          Matches editor's .pce-section exactly. */
+      /* Same shadow the pet header already carries. The header and the sections
+         share a surface, radius and border, but only the header lifted off the
+         page — so every section below it, Insights included, read as flat by
+         comparison. One rule here covers all of them rather than adding it to
+         Insights alone. */
       .pcc-section {
         background: #fff;
         border-radius: 16px;
         padding: 28px 24px;
         margin-bottom: 20px;
         border: 1px solid rgba(23, 37, 49, 0.06);
+        box-shadow: 0 2px 12px rgba(23, 37, 49, 0.05);
       }
       /* Safety section — viewer-facing visual urgency. Subtle red tint so
          a sitter scanning the card sees allergies/conditions first. The
@@ -2011,28 +2031,38 @@ function CareCardStyles() {
         padding: 4px 10px;
         border-radius: 9999px;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: 0.04em;
         text-transform: uppercase;
         white-space: nowrap;
         flex-shrink: 0;
+        /* Matches the pills on Home, Find a Vet and the vet page: an outline in
+           each state's own colour, at the site-wide thickness. A shared grey
+           would flatten overdue, soon, active and ended into one shape and
+           lose the distinction the colour is carrying. Transparent in the base
+           rule so a status without a variant keeps the same box size. */
+        border: var(--pill-border-w, 2px) solid transparent;
       }
       .pcc-list-item-status.overdue {
         background: rgba(201, 64, 64, 0.12);
         color: #C94040;
+        border-color: rgba(201, 64, 64, 0.28);
       }
       .pcc-list-item-status.soon {
         background: rgba(217, 162, 27, 0.14);
         color: #8C6A11;
+        border-color: rgba(217, 162, 27, 0.34);
       }
       .pcc-list-item-status.ok,
       .pcc-list-item-status.active {
         background: rgba(26, 102, 65, 0.12);
         color: #1A6641;
+        border-color: rgba(26, 102, 65, 0.28);
       }
       .pcc-list-item-status.ended {
         background: rgba(113, 122, 134, 0.14);
         color: #4B5563;
+        border-color: rgba(113, 122, 134, 0.32);
       }
 
       /* ── Phase B: Visit prep + recap (owner-only) ───────────────── */

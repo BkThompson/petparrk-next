@@ -14,6 +14,7 @@
 // there — this page is their new, dedicated home.
 // ============================================================================
 
+import { ArtCareCard, ArtHeroCard } from "../../../../components/BrandArt";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
@@ -29,8 +30,6 @@ import {
   RefreshCw,
   Share2,
   Loader2,
-  ClipboardList,
-  Award,
   ChevronDown,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -171,7 +170,7 @@ export default function SharePrivacyPage() {
         .spp-head { padding:0px 0 0px; margin-bottom: 22px; }
         .spp-eyebrow { font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-terracotta,#CF5C36); margin:0 0 8px; }
         .spp-title { font-size:28px; font-weight:800; color:var(--color-navy-dark,#172531); margin:0 0 8px; line-height:1.2; }
-        .spp-sub { font-size:15px; font-weight: 500; color:var(--color-slate); margin:0; line-height:1.5; max-width:68ch; }
+        .spp-sub { font-size:15px; font-weight: 500; color:var(--color-slate); margin:0; line-height:1.5; }
         .spp-notfound { text-align:center; padding:80px 0; }
         .spp-notfound h1 { font-size:24px; font-weight:800; color:var(--color-navy-dark,#172531); }
         .spp-notfound p { color:var(--color-muted,#717A86); margin:8px 0 20px; }
@@ -1287,15 +1286,28 @@ export default function SharePrivacyPage() {
           gap: 0;
           margin-bottom: 16px;
         }
+        /* Same tile as the Care Card and Hero Card section marks on the Pet
+           Cards page. These are the same two things, so they should look the
+           same wherever they appear — a bare icon here and a tiled
+           illustration there is the kind of mismatch people feel without
+           being able to name. The gold tint on the hero card follows the
+           colour it already carries on Pet Card. */
         .pce-share-card-icon {
           display: inline-flex;
-          align-items: flex-start;
+          align-items: center;
           justify-content: center;
-          /* width: 36px; */
-          height: 36px;
-          color: var(--color-navy-dark, #172531);
+          width: 40px;
+          height: 40px;
+          border-radius: 11px;
+          background: rgba(207,92,54,0.14);
+          border: 1px solid rgba(207,92,54,0.28);
+          box-sizing: border-box;
           flex-shrink: 0;
-          margin-right: 8px;
+          margin-right: 10px;
+        }
+        .pce-share-card--hero .pce-share-card-icon {
+          background: rgba(239,200,139,0.30);
+          border-color: rgba(203,150,60,0.38);
         }
         .pce-share-card-heading {
           flex: 1;
@@ -1698,6 +1710,7 @@ export default function SharePrivacyPage() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
+          font-weight: 600;
         }
         .pce-share-card-preview {
           /* 22.1px as a bare text link. */
@@ -3309,7 +3322,7 @@ function ShareSection({ pet, onUpdate, setSaveStatus }) {
         <ShareLinkCard
           pet={pet}
           cardType="care"
-          icon={ClipboardList}
+          icon={ArtCareCard}
           title="Care Card"
           description="Medical history, vaccinations, vet info, allergies, and daily care routines."
           masterOn={masterOn}
@@ -3318,7 +3331,7 @@ function ShareSection({ pet, onUpdate, setSaveStatus }) {
         <ShareLinkCard
           pet={pet}
           cardType="hero"
-          icon={Award}
+          icon={ArtHeroCard}
           title="Hero Card"
           description="Photo, personality, identity tags, fun fact — the celebration card."
           masterOn={masterOn}
@@ -3815,10 +3828,12 @@ function ShareLinkCard({
   }
 
   return (
-    <div className="pce-share-card">
+    <div
+      className={`pce-share-card${cardType === "hero" ? " pce-share-card--hero" : ""}`}
+    >
       <div className="pce-share-card-header">
         <span className="pce-share-card-icon" aria-hidden="true">
-          <Icon size={20} strokeWidth={2} />
+          <Icon size={26} />
         </span>
         <div className="pce-share-card-heading">
           <h3 className="pce-share-card-title">{title}</h3>

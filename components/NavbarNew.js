@@ -177,9 +177,19 @@ export default function NavbarNew() {
   function moveIndicator(el) {
     if (!indicatorRef.current || !navLinksRef.current) return;
     const navRect = navLinksRef.current.getBoundingClientRect();
-    const linkRect = el.getBoundingClientRect();
-    indicatorRef.current.style.width = linkRect.width + "px";
-    indicatorRef.current.style.transform = `translateX(${linkRect.left - navRect.left}px)`;
+    // Measure the text, not the link box. The link carries min-height:44px for
+    // the tap target, so its box is much taller than the word inside it —
+    // measuring the box put the underline a long way below the label and made
+    // it read as a stray mark. The inner span is the text itself, and its
+    // ::before reserves the bold width so the line doesn't jump when a link
+    // becomes active.
+    const text = el.querySelector("span") || el;
+    const textRect = text.getBoundingClientRect();
+    indicatorRef.current.style.width = textRect.width + "px";
+    indicatorRef.current.style.transform = `translateX(${textRect.left - navRect.left}px)`;
+    // Sits just under the text wherever that lands, rather than at a fixed
+    // offset from the bottom of a box whose height can change.
+    indicatorRef.current.style.top = `${textRect.bottom - navRect.top + 5}px`;
     indicatorRef.current.classList.add("visible");
   }
 
@@ -206,12 +216,8 @@ export default function NavbarNew() {
           display: flex; align-items: center; justify-content: space-between;
           padding: 0 16px; gap: 16px;
         }
-        /* The nav gutter follows the site boundary in globals.css, not the
-           menu-collapse point. Flipping it at 900 left the logo 8px inside
-           every page's content edge between 769 and 899. */
-        @media (min-width: 769px) { .pp-nav-inner { padding: 0 24px; } }
-        .pp-logo { display: flex; align-items: center; min-height: 44px; gap: 8px; text-decoration: none; flex-shrink: 0;  position: relative;
-        }
+        @media (min-width: 900px) { .pp-nav-inner { padding: 0 24px; } }
+        .pp-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
         .pp-logo-text { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.025em; font-family: var(--font,'Urbanist',sans-serif); }
         .pp-nav-links { display: none; align-items: center; gap: 32px; list-style: none; position: relative; }
         @media (min-width: 900px) { .pp-nav-links { display: flex; } }
@@ -223,8 +229,11 @@ export default function NavbarNew() {
 
 
 
+        /* top is set by moveIndicator() from the text's own position, so there
+           is no fixed bottom offset here — a fixed offset was measured from
+           the 44px link box and left the line detached from the label. */
         .pp-nav-indicator {
-          position: absolute; bottom: -4px; height: 2px;
+          position: absolute; top: 0; height: 2px;
           background: var(--color-terracotta, #CF5C36); border-radius: 9999px;
           transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease;
           pointer-events: none; opacity: 0; left: 0; transform-origin: left center;
@@ -239,17 +248,11 @@ export default function NavbarNew() {
 
 
         .pp-nav-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.6); text-decoration: none; font-family: var(--font,'Urbanist',sans-serif); white-space: nowrap; padding-bottom: 8px; transition: color 0.15s ease; position: relative; }
-        /* Hit area only. The indicator measures the link box, so the
-           target is extended with a pseudo-element instead of padding,
-           which would move the underline. 25.5px text -> 44px target. */
         .pp-nav-link span { display: block; font-weight: 500; }
         .pp-nav-link span::before { content: attr(data-label); font-weight: 700; visibility: hidden; height: 0; display: block; overflow: hidden; pointer-events: none; user-select: none; }
         .pp-nav-link:hover { color: #fff; }
         .pp-nav-link.active { color: var(--color-gold, #EFC88B); }
         .pp-nav-link.active span { font-weight: 700; }
-
-
-
 
 
 
@@ -268,8 +271,8 @@ export default function NavbarNew() {
         @media (min-width: 900px) {
           .pp-signin-btn {
             display: inline-flex; align-items: center; justify-content: center;
-            height: 44px; padding: 0 18px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.35);
-            background: transparent; color: #fff; font-size: 15px; font-weight: 700;
+            height: 42px; padding: 0 18px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.35);
+            background: transparent; color: #fff; font-size: 14px; font-weight: 700;
             font-family: var(--font-urbanist,'Urbanist',sans-serif); text-decoration: none;
             cursor: pointer; transition: border-color 0.2s, background 0.2s; white-space: nowrap;
           }
@@ -282,10 +285,10 @@ export default function NavbarNew() {
         @media (min-width: 900px) {
           .pp-get-started-btn {
             display: inline-flex; align-items: center; justify-content: center;
-            height: 44px; padding: 0 18px; border-radius: 12px;
+            height: 42px; padding: 0 18px; border-radius: 12px;
             border: 2px solid var(--color-terracotta, #CF5C36);
             background: var(--color-terracotta, #CF5C36);
-            color: #fff; font-size: 15px; font-weight: 700;
+            color: #fff; font-size: 14px; font-weight: 700;
             font-family: var(--font-urbanist,'Urbanist',sans-serif);
             text-decoration: none; cursor: pointer; white-space: nowrap;
             transition: background 0.2s, color 0.2s;
@@ -308,12 +311,7 @@ export default function NavbarNew() {
           background: var(--color-terracotta, #CF5C36); color: #fff; font-size: 14px; font-weight: 700;
           display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden;
           transition: border-color 0.15s, transform 0.15s; flex-shrink: 0; font-family: var(--font,'Urbanist',sans-serif);
-         position: relative;
         }
-        /* 36px circle, 44px target. A pseudo-element rather than padding:
-           padding moved the clip box and squared off the avatar image. */
-        .pp-avatar-btn::after { content: ""; position: absolute; top: -4px; right: -4px; bottom: -4px; left: -4px; border-radius: 50%; }
-        /* 36px circle, 44px target. */
         .pp-avatar-btn:hover { border-color: rgba(255,255,255,0.5); transform: scale(1.05); }
 
 
@@ -354,7 +352,7 @@ export default function NavbarNew() {
 
 
 
-        .pp-hamburger { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 44px; height: 44px; margin-right: -4px; background: none; border: none; cursor: pointer; padding: 0; z-index: 310; flex-shrink: 0; border-radius: 6px; }
+        .pp-hamburger { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 36px; height: 36px; background: none; border: none; cursor: pointer; padding: 0; z-index: 310; flex-shrink: 0; border-radius: 6px; }
         .pp-hamburger:hover { background: rgba(255,255,255,0.08); }
         @media (min-width: 900px) { .pp-hamburger { display: none !important; } }
         .pp-hamburger-line { width: 22px; height: 2px; background: #fff; border-radius: 9999px; transition: transform 0.15s, opacity 0.15s; transform-origin: center; }

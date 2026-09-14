@@ -402,7 +402,7 @@ export default function SymptomCheckerHomePage() {
         .sc-input { width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid ${C.border}; font-size:16px; font-weight:500; font-family:var(--font-urbanist,system-ui); background:#fff; outline:none; box-sizing:border-box; transition:border-color 0.15s; color:${C.navyDark}; -webkit-appearance:none; }
         .sc-input:focus { border-color:${C.terracotta}; }
         .sc-input::placeholder { color:${C.muted}; }
-        .sc-resume-btn { padding:10px 20px; height:44px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:10px; font-size:14px; cursor:pointer; font-weight:700; white-space:nowrap; font-family:var(--font-urbanist,system-ui); transition:background 0.2s,color 0.2s; display:inline-flex; align-items:center; }
+        .sc-resume-btn { padding:0px 24px; height:42px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; white-space:nowrap; font-family:var(--font-urbanist,system-ui); transition:background 0.2s,color 0.2s; display:inline-flex; align-items:center; }
         .sc-resume-btn:hover { background:#fff; color:${C.terracotta}; }
         .sc-btn-primary { height:44px; padding:0 28px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
         .sc-btn-primary:hover { background:${C.white}; color:${C.terracotta}; border:2px solid ${C.terracotta}; }
@@ -806,7 +806,7 @@ export default function SymptomCheckerHomePage() {
                         style={{
                           margin: "0 0 2px",
                           fontWeight: "700",
-                          fontSize: "16px",
+                          fontSize: "18px",
                           color: C.success,
                         }}
                       >

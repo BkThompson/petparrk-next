@@ -349,12 +349,11 @@ function HoursLine({ line }) {
         }}
       >
         <span
+          className="hours-day"
           style={{
-            width: "83px",
             flexShrink: 0,
             fontWeight: "600",
             color: C.navyDark,
-            minWidth: "88px",
           }}
         >
           {day}:
@@ -382,12 +381,11 @@ function HoursLine({ line }) {
         }}
       >
         <span
+          className="hours-day"
           style={{
-            width: "83px",
             flexShrink: 0,
             fontWeight: "600",
             color: C.navyDark,
-            minWidth: "88px",
           }}
         >
           {day}:
@@ -444,13 +442,20 @@ function HoursDisplay({ lines }) {
             ))}
           </div>
           <div
+            className="hours-col-2"
             style={{
               display: "flex",
               flexDirection: "column",
               gap: "2px",
               flex: 1,
-              paddingLeft: "12px",
-              borderLeft: `1px solid ${C.border}`,
+              // No border here on purpose. The main divider between Location
+              // and Hours separates two different kinds of information; this
+              // one only marked where the day list happened to break, which
+              // isn't a real distinction — and a second parallel vertical a
+              // few hundred pixels away read as structure the card doesn't
+              // have. The gap groups them well enough, and dropping the rule
+              // gives the column back the width it was short of.
+              paddingLeft: "20px",
             }}
           >
             {lines.slice(mid).map((l, i) => (
@@ -763,6 +768,10 @@ export default function VetPage() {
         .expand-btn::after{content:"";position:absolute;inset:-8px;}
         .expand-icon{width:10px;height:10px;display:block;flex-shrink:0;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);user-select:none;}
         .expand-icon.open{transform:rotate(45deg);}
+        /* Pills in the Details section. Shape, size and border thickness live
+           here so they can be targeted in one place; only the state colours
+           stay inline, since they depend on the vet's data. */
+        .vs-detail-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:14px;font-weight:700;border:var(--pill-border-w,2px) solid transparent;width:fit-content;}
         .report-price-btn{background:none;border:none;color:${C.muted};font-size:13px;font-weight:600;cursor:pointer;padding:14px 10px;text-decoration:underline;font-family:inherit;transition:color 0.15s;}
         .report-price-btn:hover{color:${C.terracotta};}
         .price-row{padding:16px 0px;}
@@ -770,7 +779,7 @@ export default function VetPage() {
            pp-modal-backdrop (Profile), pce-modal-overlay (Care) and
            ucm-backdrop (UnsavedChanges). This one was still on plain black. */
         .modal-overlay{position:fixed;inset:0;background:rgba(23,37,49,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
-        .modal-box{background:#fff;border-radius:18px;padding:28px;max-width:440px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 30px 60px rgba(0,0,0,0.40);position:relative;}
+        .modal-box{background:#fff;border-radius:18px;padding:30px 20px;max-width:440px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 30px 60px rgba(0,0,0,0.40);position:relative;}
         .modal-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border:none;background:transparent;color:${C.muted};cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;z-index:10;}
         .modal-close:hover{background:${C.cream};color:${C.navyDark};}
         .share-btn{background:none;border:none;cursor:pointer;color:${C.muted};font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;padding:0;transition:color 0.15s;position:relative;}
@@ -792,25 +801,52 @@ export default function VetPage() {
         .vet-header{background:${C.navyDark};min-height:393px;padding:80px 0 88px;position:relative;overflow:hidden;box-sizing:border-box;border-bottom:1px solid rgba(255,255,255,0.07);}
 
         /* Info strip */
-        .info-2col{display:grid;grid-template-columns:1fr 1fr;}
+        /* Two things here.
+           minmax(0,…) rather than plain 0.85fr: a bare fraction resolves to
+           minmax(auto,…), whose auto minimum lets a column outgrow its share
+           when its content is wide. The Hours column did exactly that and
+           dragged the divider left of centre while the narrow Call/Details row
+           kept its line at 50% — that mismatch is why the two verticals didn't
+           line up.
+           And the split is 0.85/1.15, not even: Hours holds two sub-columns of
+           day plus time and genuinely needs more room than an address does.
+           Giving it that room is better than shrinking the type to fit. Both
+           rows use the identical template, so the dividers still land on the
+           same line. */
+        .info-2col{display:grid;grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr);}
         /* Vertical divider — absolute, doesn't span full cell height */
+        /* Day label width. 83/88 everywhere by default — the first column holds
+           Wednesday, the longest day name, and needs the room.
+           The second column only ever holds Friday, Saturday and Sunday, so on
+           desktop it can run narrower and give those pixels back to the times
+           beside it. Scoped to that column rather than to the breakpoint alone:
+           applying it to both columns clipped Wednesday. */
+        .hours-day{width:83px;min-width:88px;}
+        @media(min-width:769px){
+          .hours-col-2 .hours-day{width:73px;min-width:71px;}
+        }
         .v-div{position:absolute;right:0;top:20px;bottom:20px;width:1px;background:${C.border};}
         /* Divider row — two floating lines on desktop, one on mobile */
-        .info-div-row{display:grid;grid-template-columns:1fr 1fr;padding:0;}
+        .info-div-row{display:grid;grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr);padding:0;}
         .info-div-left{padding:0 20px;}
         .info-div-right{padding:0 20px;}
         /* Mobile-only divider — shown only when stacked */
         .info-mob-div{display:none;height:1px;background:${C.border};margin:0 20px;}
 
         @media(max-width:768px){
+          /* Back to an even split. Hours switches to its single-column list at
+             this width, so it no longer needs the extra room the desktop ratio
+             gives it, and an even split keeps the two sides balanced. Both rows
+             change together so the dividers stay on the same line. */
+          .info-2col{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+          .info-div-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
           .vet-header{min-height:338px;padding:80px 0 88px;}
-          .info-2col{grid-template-columns:1fr;}
-          .v-div{display:none;}
-          /* Divider row: collapse to single column, hide right */
-          .info-div-row{grid-template-columns:1fr;}
-          .info-div-right{display:none;}
-          /* Show mobile-only dividers */
-          .info-mob-div{display:block;}
+          /* .info-2col, .v-div, .info-div-row and .info-div-right stay
+             two-column here — see the 640 block below. A tablet has room for
+             the 2x2 and stacking it wasted most of the width. */
+          /* Mobile-only dividers stay hidden until the grid actually stacks,
+             at 640 below — showing them here would draw a divider across a
+             layout that still has two columns. */
           /* Hours columns */
           .hours-2col{display:none!important;}
           .hours-1col{display:flex!important;}
@@ -823,6 +859,20 @@ export default function VetPage() {
           .form-2col{grid-template-columns:1fr!important;}
           .seg-group{flex-wrap:wrap!important;}
         }
+        /* The info card stacks here rather than at 768. A tablet has the width
+           for the 2x2 — address top-left, call bottom-left, hours top-right,
+           details bottom-right — and collapsing it at 768 left a single narrow
+           column with most of the screen empty. Hours switches to its own
+           single column at 768 above, so the two sides stay balanced in the
+           640–768 band where the columns are narrower. */
+        @media(max-width:640px){
+          .info-2col{grid-template-columns:1fr;}
+          .v-div{display:none;}
+          .info-div-row{grid-template-columns:1fr;}
+          .info-div-right{display:none;}
+          .info-mob-div{display:block;}
+        }
+
         @media(max-width:375px){}
       
    
@@ -1017,7 +1067,7 @@ export default function VetPage() {
                       color: C.gold,
                       padding: "4px 11px",
                       borderRadius: "20px",
-                      border: "1px solid rgba(239,200,139,0.28)",
+                      border: "2px solid rgba(239,200,139,0.28)",
                     }}
                   >
                     {t}
@@ -1229,21 +1279,19 @@ export default function VetPage() {
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: "10px",
+                      gap: "8px",
                     }}
                   >
                     <span
+                      className="vs-detail-pill"
                       style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "4px 10px",
-                        borderRadius: "20px",
-                        fontSize: "14px",
-                        fontWeight: "700",
                         background: vet.carecredit ? "#EDFAF3" : "#FCEAEA",
                         color: vet.carecredit ? C.success : C.error,
-                        width: "fit-content",
+                        // Border in the pill's own colour, so yes and no stay
+                        // visually distinct rather than sharing a grey outline.
+                        borderColor: vet.carecredit
+                          ? "rgba(26,102,65,0.22)"
+                          : "rgba(201,64,64,0.24)",
                       }}
                     >
                       {vet.carecredit ? (
@@ -1255,21 +1303,17 @@ export default function VetPage() {
                     </span>
                     {vet.accepting_new_patients !== null && (
                       <span
+                        className="vs-detail-pill"
                         style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          padding: "4px 10px",
-                          borderRadius: "20px",
-                          fontSize: "14px",
-                          fontWeight: "700",
                           background: vet.accepting_new_patients
                             ? "#EDFAF3"
                             : "#FCEAEA",
                           color: vet.accepting_new_patients
                             ? C.success
                             : C.error,
-                          width: "fit-content",
+                          borderColor: vet.accepting_new_patients
+                            ? "rgba(26,102,65,0.22)"
+                            : "rgba(201,64,64,0.24)",
                         }}
                       >
                         {vet.accepting_new_patients ? (
@@ -1372,6 +1416,13 @@ export default function VetPage() {
                         : isCheaper
                           ? C.success
                           : C.error;
+                      // Border derived from the same three states, so below,
+                      // at, and above average each keep their own outline.
+                      const badgeBorder = isEqual
+                        ? "#EDE8E0"
+                        : isCheaper
+                          ? "rgba(26,102,65,0.22)"
+                          : "rgba(201,64,64,0.24)";
                       const badgeLabel = isEqual ? (
                         "≈ At average"
                       ) : isCheaper ? (
@@ -1410,6 +1461,7 @@ export default function VetPage() {
                                   borderRadius: "20px",
                                   background: badgeBg,
                                   color: badgeColor,
+                                  border: `2px solid ${badgeBorder}`,
                                   whiteSpace: "nowrap",
                                   display: "inline-flex",
                                   alignItems: "center",
@@ -1857,7 +1909,7 @@ export default function VetPage() {
                                         background: "#f9f9f7",
                                         borderRadius: "10px",
                                         padding: "20px",
-                                        marginBottom: "8px",
+                                        // marginBottom: "8px",
                                       }}
                                     >
                                       {/* Body copy capped near 70ch. At 1024
@@ -1877,7 +1929,7 @@ export default function VetPage() {
                                       <p
                                         style={{
                                           margin: 0,
-                                          fontSize: "14px",
+                                          fontSize: "15px",
                                           fontWeight: 500,
                                           color: C.slate,
                                           lineHeight: "1.6",
@@ -1893,7 +1945,7 @@ export default function VetPage() {
                                 style={{
                                   display: "flex",
                                   justifyContent: "flex-end",
-                                  marginTop: "4px",
+                                  // marginTop: "4px",
                                 }}
                               >
                                 <button

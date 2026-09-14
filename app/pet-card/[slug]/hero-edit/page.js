@@ -581,7 +581,7 @@ function UnsavedChangesModal({ open, onChoice }) {
         .ucm-btn {
           font-family: inherit; font-size: 14.5px; font-weight: 700;
           padding: 11px 18px; border-radius: 10px; cursor: pointer;
-          border: 1.5px solid transparent; transition: all 0.15s;
+          border: var(--pill-border-w, 2px) solid transparent; transition: all 0.15s;
           line-height: 1;
         }
         .ucm-btn-primary { background: #CF5C36; color: #fff; border-color: #CF5C36; }
@@ -4522,7 +4522,9 @@ function IdentityTagsCard({
                               <div className="pce-identity-tag-info-popover-title">
                                 {getTagLabel(tag.slug, pet.species)}
                               </div>
-                              <div>{tag.subtitle}</div>
+                              <div className="pce-identity-tag-info-popover-sub">
+                                {tag.subtitle}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -5619,6 +5621,12 @@ const heroEditorCss = `
   .he-stage {
     --navy:#172531; --terracotta:#CF5C36; --terracotta-dark:#A8471D;
     --cream:#F5F0E8; --border:#EDE8E0; --muted:#717A86; --slate:#4B5563;
+    /* Control outlines — inputs, selects, chips, option tiles. Matches
+       the Care Editor, which uses this same value for .pce-input. It is
+       a cooler grey than --border, which stays the divider and card-edge
+       color. */
+    /* --control-border is NOT declared here on purpose: it comes from
+       globals.css so every page shares one value. */
     --gold:#EFC88B; --success:#1A6641; --error:#C94040;
     font-family: var(--font-urbanist,'Urbanist',sans-serif);
     color: var(--navy); background: var(--cream); min-height: 100vh;
@@ -5638,7 +5646,7 @@ const heroEditorCss = `
      two sizes for one action reads as an accident rather than a hierarchy. */
   .he-viewcard-pill {
     display:inline-flex; align-items:center; gap:7px; margin-top:12px;
-    min-height:44px; padding:0 22px; border:1.5px solid var(--terracotta); border-radius:999px;
+    min-height:44px; padding:0 22px; border:var(--pill-border-w, 2px) solid var(--terracotta); border-radius:999px;
     color:var(--terracotta); font-size:15px; font-weight:700; text-decoration:none;
     background:transparent; transition:background 0.15s, color 0.15s;
   }
@@ -5651,11 +5659,11 @@ const heroEditorCss = `
   .he-viewcard-cta-btn {
     display:inline-flex; align-items:center; gap:7px;
     min-height:44px; padding:0 22px; border-radius:999px;
-    border:1.5px solid var(--terracotta); background:transparent; color:var(--terracotta);
+    border:var(--pill-border-w, 2px) solid var(--terracotta); background:transparent; color:var(--terracotta);
     font-size:15px; font-weight:700; text-decoration:none;
     transition:background 0.15s, color 0.15s;
   }
-  .he-viewcard-cta-btn:hover { background:var(--terracotta); color:#fff; }
+  .he-viewcard-cta-btn:hover { background:var(--terracotta); color:#fff; border-color:var(--terracotta); }
 
   /* Back-to-top — identical look to the care pages' .pcc-scrolltop. */
   .he-scrolltop {
@@ -5712,7 +5720,7 @@ const heroEditorCss = `
     margin:-7px; 
     transition:background 0.15s, color 0.15s; 
   }
-  .he-edit-btn:hover { background:rgba(23,37,49,0.06); color:var(--navy); }
+  .he-edit-btn:hover { background:rgba(23,37,49,0.06); color:var(--navy); border-color:rgba(23,37,49,0.18); }
   .he-display {
     position:static;
     // margin-top:4px;
@@ -5783,7 +5791,7 @@ const heroEditorCss = `
     color:var(--navy); 
   }
   .he-display-stats { display:flex; flex-wrap:wrap; gap:8px; }
-  .he-display-stat { display:inline-flex; align-items:center; padding:6px 12px; background:var(--cream); border:1px solid var(--border); border-radius:999px; font-size:14px; font-weight:600; color:var(--navy); }
+  .he-display-stat { display:inline-flex; align-items:center; padding:6px 12px; background:var(--cream); border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:999px; font-size:14px; font-weight:700; color:var(--navy); }
   .he-display-theme { display:inline-flex; align-items:center; gap:10px; font-size:15px; font-weight:600; color:var(--navy); }
   .he-display-swatch { width:32px; height:22px; border-radius:7px; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08); }
   .he-edit-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
@@ -5861,11 +5869,11 @@ const heroEditorCss = `
   .he-section--collapsible.is-open .he-sec-caret { transform:rotate(180deg); }
   .he-expand-all-row { display:flex; justify-content:flex-end; margin-bottom:12px; }
   .he-expand-all-btn {
-    background:none; border:1px solid var(--border); border-radius:9999px;
+    background:none; border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:9999px;
     padding:6px 14px; font-size:13px; font-weight:600; color:var(--slate,#4B5563);
     cursor:pointer; font-family:inherit; transition:background 0.15s, color 0.15s;
   }
-  .he-expand-all-btn:hover { background:#F5F0E8; color:var(--navy); }
+  .he-expand-all-btn:hover { background:#F5F0E8; color:var(--navy); border-color:var(--navy); }
   /* Edit pencil relocated into the body — small inline control above content */
 
   /* Option A: bordered content card wrapping each section's content, matching the
@@ -5878,7 +5886,7 @@ const heroEditorCss = `
   .he-content-card + .he-content-card { margin-top:12px; }
 
   .he-field { }
-  .he-input { width:100%; height:44px; padding: 0 14px; border:1px solid var(--border); border-radius:12px; font-family:inherit; font-size:15px; font-weight:500; color:var(--navy); background:#fff; box-sizing:border-box; }
+  .he-input { width:100%; height:44px; padding: 0 14px; border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:12px; font-family:inherit; font-size:15px; font-weight:500; color:var(--navy); background:#fff; box-sizing:border-box; }
   .he-textarea { height:auto; min-height:64px; padding:12px 16px; line-height:1.5; resize:vertical; }
   .he-input:focus { outline:none; border-color:var(--terracotta); }
   .he-field-foot { 
@@ -5900,7 +5908,7 @@ const heroEditorCss = `
      symmetry reads better than a left edge with a dot floating above it.
      "One in a million" is the longest description and the one to watch
      if a third column ever gets narrower. */
-  .he-rarity-opt { display:flex; flex-direction:column; align-items:center; gap:6px; padding:13px; background:#fff; border:1.5px solid var(--border); border-radius:13px; cursor:pointer; font-family:inherit; text-align:center; transition:border-color 0.15s; }
+  .he-rarity-opt { display:flex; flex-direction:column; align-items:center; gap:6px; padding:13px; background:#fff; border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:13px; cursor:pointer; font-family:inherit; text-align:center; transition:border-color 0.15s; }
   .he-rarity-opt:hover { border-color:var(--muted); }
   /* 22px holding a 14px mark read as a bullet rather than a badge. 32px
      keeps the same inset-highlight treatment with room for the icon. */
@@ -5920,10 +5928,10 @@ const heroEditorCss = `
   .he-stat-sub-left { display:flex; align-items:center; }
   /* emoji picker popover */
   .he-emoji { position:relative; flex:0 0 auto; }
-  .he-emoji-trigger { height:42px; width:48px; border:1.5px solid var(--border); border-radius:10px; font-size:20px; line-height:1; text-align:center; background:#fff; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; }
+  .he-emoji-trigger { height:42px; width:48px; border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:10px; font-size:20px; line-height:1; text-align:center; background:#fff; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; }
   .he-emoji-trigger:hover { border-color:var(--terracotta); }
   .he-emoji-pop { position:absolute; top:48px; left:0; z-index:30; width:280px; max-height:300px; overflow-y:auto; background:#fff; border:1.5px solid var(--border); border-radius:14px; box-shadow:0 12px 32px rgba(23,37,49,0.18); padding:12px; }
-  .he-emoji-search { width:100%; height:36px; padding:0 12px; margin-bottom:10px; border:1.5px solid var(--border); border-radius:9px; font-family:inherit; font-size:13px; box-sizing:border-box; position:sticky; top:0; }
+  .he-emoji-search { width:100%; height:36px; padding:0 12px; margin-bottom:10px; border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:9px; font-family:inherit; font-size:13px; box-sizing:border-box; position:sticky; top:0; }
   .he-emoji-search:focus { outline:none; border-color:var(--terracotta); }
   .he-emoji-empty { font-size:13px; color:var(--muted); text-align:center; padding:12px 0; margin:0; }
   .he-emoji-group { margin-bottom:12px; }
@@ -5932,7 +5940,7 @@ const heroEditorCss = `
   .he-emoji-cell { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:18px; border:none; background:transparent; border-radius:8px; cursor:pointer; transition:background 0.12s; }
   .he-emoji-cell:hover { background:var(--cream); }
   .he-emoji-cell.is-active { background:var(--terracotta); }
-  .he-stat-label { height:42px; padding:0 12px; border:1.5px solid var(--border); border-radius:10px; font-family:inherit; font-size:14px; font-weight:600; color:var(--navy); box-sizing:border-box; }
+  .he-stat-label { height:42px; padding:0 12px; border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:10px; font-family:inherit; font-size:14px; font-weight:600; color:var(--navy); box-sizing:border-box; }
   .he-stat-label:focus, .he-stat-emoji:focus { outline:none; border-color:var(--terracotta); }
   .he-stat-slider { height:42px; cursor:pointer; }
   .he-stat-val { height:42px; display:flex; align-items:center; justify-content:flex-end; font-size:14px; font-weight:800; color:var(--muted); }
@@ -5941,11 +5949,11 @@ const heroEditorCss = `
 
   .he-stat-add .he-hint { margin:15px 0; }
   .he-custom-row { margin-top:12px; }
-  .he-add-custom-btn { display:inline-flex; align-items:center; gap:7px; padding:10px 16px; background:#fff; border:1.5px dashed var(--terracotta); border-radius:12px; color:var(--terracotta); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; transition:background 0.15s; }
-  .he-add-custom-btn:hover { background:#FBF6EE; }
-  .he-custom-max-note { display:inline-flex; align-items:center; padding:10px 16px; background:#FBF6EE; border:1px solid var(--border); border-radius:12px; color:var(--muted); font-size:14px; font-weight:600; }
+  .he-add-custom-btn { display:inline-flex; align-items:center; gap:7px; padding:10px 16px; background:#fff; border:var(--pill-border-w, 2px) dashed var(--terracotta); border-radius:12px; color:var(--terracotta); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; transition:background 0.15s; }
+  .he-add-custom-btn:hover { background:#FBF6EE; border-color:var(--terracotta); }
+  .he-custom-max-note { display:inline-flex; align-items:center; padding:10px 16px; background:#FBF6EE; border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:12px; color:var(--muted); font-size:14px; font-weight:600; }
   .he-preset-chips { display:flex; flex-wrap:wrap; gap:7px; }
-  .he-preset-chip { display:inline-flex; align-items:center; gap:5px; padding:7px 13px; background:var(--cream); border:1px solid var(--border); border-radius:999px; font-family:inherit; font-size:13px; font-weight:600; color:var(--navy); cursor:pointer; }
+  .he-preset-chip { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--cream); border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:999px; font-family:inherit; font-size:13px; font-weight:700; color:var(--navy); cursor:pointer; }
   .he-preset-chip:hover { border-color:var(--terracotta); }
   .he-preset-saved { padding:0; overflow:hidden; }
   .he-preset-saved.is-on-card { opacity:0.5; }
@@ -6033,7 +6041,7 @@ const heroEditorCss = `
   .he-preset-saved-add { border:none; background:transparent; font-family:inherit; font-size:13px; font-weight:600; color:var(--navy); padding:7px 6px 7px 13px; cursor:pointer; }
   .he-preset-saved-del { border:none; background:transparent; color:var(--muted); padding:7px 10px 7px 4px; cursor:pointer; display:inline-flex; align-items:center; }
   .he-preset-saved-del:hover { color:var(--error); }
-  .he-stat-save-preset { display:inline-flex; align-items:center; gap:4px; border:1.5px solid var(--border); background:#fff; border-radius:8px; font-family:inherit; font-size:12px; font-weight:700; color:var(--terracotta); padding:5px 12px; cursor:pointer; white-space:nowrap; }
+  .he-stat-save-preset { display:inline-flex; align-items:center; gap:4px; border:var(--pill-border-w, 2px) solid var(--control-border); background:#fff; border-radius:8px; font-family:inherit; font-size:12px; font-weight:700; color:var(--terracotta); padding:5px 12px; cursor:pointer; white-space:nowrap; }
   .he-stat-save-preset:hover:not(:disabled) { border-color:var(--terracotta); }
   .he-stat-save-preset:disabled { color:var(--success); border-color:var(--border); cursor:default; }
   .he-preset-chip.he-custom { background:#fff; color:var(--terracotta); font-weight:700; }
@@ -6044,7 +6052,7 @@ const heroEditorCss = `
   /* theme */
   .he-theme-opt { display:flex; flex-direction:column; align-items:center; gap:7px; background:none; border:none; cursor:pointer; font-family:inherit; padding:4px; }
   .he-theme-swatch { width:100%; aspect-ratio:1.6; border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06); transition:transform 0.12s; }
-  .he-theme-opt:hover .he-theme-swatch { transform:translateY(-2px); }
+  .he-theme-opt:not(.is-active):hover .he-theme-swatch { transform:translateY(-2px); box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06), 0 0 0 var(--pill-border-w, 2px) var(--terracotta); }
   .he-theme-opt.is-active .he-theme-swatch { box-shadow:0 0 0 2.5px var(--navy); }
   .he-theme-name { font-size:12px; font-weight:600; color:var(--slate); }
 
@@ -6082,7 +6090,7 @@ const heroEditorCss = `
     cursor:pointer; border:2px solid var(--border,#EDE8E0); background:#f4f2ee;
     transition:border-color 0.15s, transform 0.1s;
   }
-  .he-photo-thumb:hover { transform:translateY(-1px); }
+  .he-photo-thumb:not(.is-active):hover { transform:translateY(-1px); border-color:var(--terracotta,#CF5C36); }
   .he-photo-thumb.is-active { border-color:var(--terracotta,#CF5C36); }
   .he-photo-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
   .he-photo-active-badge {
@@ -6139,7 +6147,7 @@ const heroEditorCss = `
   .he-textlink:active { transform:translateY(0.5px); }
   /* Label color row: swatch + hex + link all on one baseline, vertically
      centered and evenly spaced (no more staggered alignment). */
-  .he-label-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .he-label-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding-left:2px; }
   /* The "Match accent color" / "Reset to automatic" link sits inline directly
      after the hex field (normal gap), on desktop, tablet, and mobile — not
      pushed to the far right. If the row runs out of space it wraps naturally
@@ -6152,15 +6160,15 @@ const heroEditorCss = `
   .he-photo-hint { color: #717a86; font-size:14px; font-weight: 500;  margin:10px 0 0; max-width:68ch; }
   .he-textlink--active { color:var(--terracotta); font-weight:800; text-decoration:underline; text-underline-offset:2px; }
   .he-pick-label { font-size:16px; font-weight:700; color:var(--navy); margin:0 0 9px; }
-  .he-swatch-row { display:flex; flex-wrap:wrap; gap:9px; margin-bottom: 10px;}
+  .he-swatch-row { display:flex; flex-wrap:wrap; gap:9px; margin-bottom: 10px; padding-left: 2px;}
   .he-swatch { width:34px; height:34px; border-radius:9px; border:2px solid rgba(0,0,0,0.08); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; position:relative; transition:transform 0.12s; }
-  .he-swatch:hover { transform:translateY(-2px); }
+  .he-swatch:not(.is-active):hover { transform:translateY(-2px); box-shadow:0 0 0 var(--pill-border-w, 2px) var(--terracotta); }
   .he-swatch.is-active { border-color:var(--navy); box-shadow:inset 0 0 0 2px var(--navy); }
   .he-swatch-custom { background:#fff; color:var(--terracotta); overflow:hidden; }
   .he-swatch-custom input[type="color"] { position:absolute; inset:0; opacity:0; cursor:pointer; border:none; padding:0; }
   .he-hex {
-    display:inline-flex; align-items:center; gap:2px;;
-    border:1.5px solid var(--border,#EDE8E0); border-radius:9px;
+    display:inline-flex; align-items:center; gap:2px;
+    border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:9px;
     padding:6px 10px; background:#fff; max-width:130px;
   }
   .he-hex:focus-within { border-color:var(--terracotta,#CF5C36); }
@@ -6180,14 +6188,14 @@ const heroEditorCss = `
   .he-cat-blurb { font-size:15px; color:var(--muted); margin:0 0 14px; font-weight: 500;}
   /* vanta labeled cards (no thumbnails) */
   .he-vanta-cards { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-  .he-vanta-card { display:flex; align-items:center; gap:10px; padding:11px 13px; background:#fff; border:1.5px solid var(--border); border-radius:12px; font-family:inherit; font-size:14px; font-weight:600; color:var(--navy); cursor:pointer; transition:border-color 0.15s, transform 0.1s; }
+  .he-vanta-card { display:flex; align-items:center; gap:10px; padding:11px 13px; background:#fff; border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:12px; font-family:inherit; font-size:14px; font-weight:600; color:var(--navy); cursor:pointer; transition:border-color 0.15s, transform 0.1s; }
   .he-vanta-card:hover { border-color:var(--terracotta); transform:translateY(-1px); }
   .he-vanta-card.is-active { border-color:var(--terracotta); box-shadow:inset 0 0 0 1.5px var(--terracotta); }
   .he-vanta-chip { width:22px; height:22px; border-radius:6px; flex-shrink:0; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08); }
   .he-design-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
   .he-design-opt { display:flex; flex-direction:column; align-items:center; gap:7px; background:none; border:none; cursor:pointer; font-family:inherit; padding:4px; }
   .he-design-swatch { position:relative; width:100%; aspect-ratio:1.5; border-radius:11px; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08); overflow:hidden; transition:transform 0.12s; }
-  .he-design-opt:hover .he-design-swatch { transform:translateY(-2px); }
+  .he-design-opt:not(.is-active):hover .he-design-swatch { transform:translateY(-2px); box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08), 0 0 0 var(--pill-border-w, 2px) var(--terracotta); }
   .he-design-opt.is-active .he-design-swatch { box-shadow:inset 0 0 0 3px var(--terracotta); transform:translateY(-2px); }
   .he-design-opt.is-active { filter:drop-shadow(0 4px 12px rgba(207,92,54,0.3)); }
   .he-design-opt.is-active .he-design-name { color:var(--terracotta); font-weight:800; }
@@ -6334,7 +6342,7 @@ const heroEditorCss = `
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           color: var(--color-navy-dark, #172531);
           background: #fff;
-          border: 1.5px solid rgba(23,37,49,0.10);
+          border: 2px solid rgba(23,37,49,0.10);
           border-radius: 10px;
           transition: border-color 0.15s, box-shadow 0.15s;
           box-sizing: border-box;
@@ -6369,7 +6377,7 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           color: var(--color-navy-dark, #172531);
           background: #fff;
-          border: 1.5px solid rgba(23,37,49,0.10);
+          border: var(--pill-border-w, 2px) solid var(--control-border);
           border-radius: 10px;
           transition: border-color 0.15s, box-shadow 0.15s;
           box-sizing: border-box;
@@ -6620,7 +6628,7 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
           padding: 8px 10px;
           min-height: 46px;
           background: #fff;
-          border: 1px solid rgba(23,37,49,0.16);
+          border: var(--pill-border-w, 2px) solid var(--control-border);
           border-radius: 10px;
           cursor: text;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -6693,15 +6701,19 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
 /* Chip — the rendered tag pill. Two variants:
            - default (inside TagInput): has a remove × button
            - --display (inside view-mode cards): static, no remove button */
+        /* Same pill treatment as Home and the vets pages: an outline at the
+           shared thickness and weight 700. Without a border these read as
+           soft blobs on a cream field rather than as discrete tags. */
         .pce-tag-chip {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          padding: 4px 4px 4px 10px;
+          padding: 6px 6px 6px 12px;
           background: var(--color-cream, #F5F0E8);
           color: var(--color-navy-dark, #172531);
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 700;
+          border: var(--pill-border-w, 2px) solid var(--control-border);
           border-radius: 999px;
           line-height: 1.3;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -6879,7 +6891,7 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
           grid-column: 1 / -1;
           padding: 12px 14px;
           background: var(--color-cream, #F5F0E8);
-          border: 1px solid #EDE8E0;
+          border: 2px solid #EDE8E0;
           border-radius: 10px;
           font-size: 14px;
           line-height: 1.5;
@@ -6889,6 +6901,12 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
 .pce-identity-tag-info-popover-title {
           font-weight: 700;
           margin-bottom: 2px;
+        }
+        /* The description line under the title. It was a bare div with no
+           class, so it inherited whatever the popover set and there was no way
+           to target it. */
+        .pce-identity-tag-info-popover-sub {
+          font-weight: 600;
         }
 .pce-identity-tag-info-popover-close {
           display: inline-block;
@@ -6944,10 +6962,11 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
           background: var(--color-cream, #F5F0E8);
           color: var(--color-navy-dark, #172531);
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 700;
           border-radius: 999px;
           line-height: 1.3;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
+          border: var(--pill-border-w, 2px) solid var(--control-border);
         }
 .pce-identity-tag-chip .pce-identity-tag-emoji {
           font-size: 15px;
