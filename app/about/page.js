@@ -1409,7 +1409,7 @@ export default function AboutPage() {
                         color: "var(--color-slate,#4B5563)",
                         lineHeight: "1.7",
                         margin: 0,
-                        // maxWidth: "100%",
+                        // maxWidth: "99%",
                         // textWrap: "pretty",
                       }}
                     >
@@ -1465,8 +1465,8 @@ export default function AboutPage() {
                         color: "var(--color-slate,#4B5563)",
                         lineHeight: "1.7",
                         margin: 0,
-                        maxWidth: "99%",
-                        textWrap: "pretty",
+                        // maxWidth: "99%",
+                        // textWrap: "pretty",
                       }}
                     >
                       {VALUES[txState.to].body}
@@ -1506,8 +1506,8 @@ export default function AboutPage() {
                       color: "var(--color-slate,#4B5563)",
                       lineHeight: "1.7",
                       margin: 0,
-                      maxWidth: "99%",
-                      textWrap: "pretty",
+                      // maxWidth: "99%",
+                      // textWrap: "pretty",
                     }}
                   >
                     {VALUES[activeValue].body}
