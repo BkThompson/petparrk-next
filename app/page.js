@@ -766,42 +766,6 @@ export default function Home() {
               textAlign: "center",
             }}
           >
-            <div
-              className="anim-1"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "rgba(239,200,139,0.08)",
-                border: "1px solid rgba(239,200,139,0.2)",
-                borderRadius: "20px",
-                padding: "7px 18px",
-                marginBottom: "32px",
-              }}
-            >
-              <span
-                style={{
-                  width: "6px",
-                  height: "6px",
-                  borderRadius: "50%",
-                  background: "var(--color-gold,#EFC88B)",
-                  display: "inline-block",
-                  boxShadow: "0 0 8px rgba(239,200,139,0.6)",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "700",
-                  color: "var(--color-gold,#EFC88B)",
-                  letterSpacing: "0.10em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Vet Pricing Transparency
-              </span>
-            </div>
-
             <h1
               className="anim-2"
               style={{
