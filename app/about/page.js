@@ -1409,8 +1409,8 @@ export default function AboutPage() {
                         color: "var(--color-slate,#4B5563)",
                         lineHeight: "1.7",
                         margin: 0,
-                        maxWidth: "99%",
-                        textWrap: "pretty",
+                        // maxWidth: "100%",
+                        // textWrap: "pretty",
                       }}
                     >
                       {VALUES[txState.from].body}

@@ -740,7 +740,7 @@ export default function HealthHistoryPage() {
           background: ${C.navyDark}; color: ${C.white}; border-color: ${C.navyDark};
         }
         .hh-followup-note {
-          margin: 10px 0 0; font-size: 15px; font-weight: 600;
+          margin: 10px 0 0; font-size: 15px; font-weight: 500;
           color: ${C.muted}; line-height: 1.5;
         }
         @media (max-width: 600px) {
