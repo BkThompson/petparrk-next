@@ -19,7 +19,13 @@
   /* Text Colors */
   --color-ink: #1a1a1a;
   --color-slate: #4b5563;
-  --color-muted: #9ca3af;
+  /* #717A86, not #9ca3af. Every component that reads this token writes it
+     as var(--color-muted, #717A86) — the fallback they intended. But a
+     fallback only applies when the variable is undefined, and this one is
+     defined, so the lighter value won everywhere and the intended one
+     never rendered. On cream, #9ca3af is 2.24:1 and #717A86 is 3.83:1;
+     the placeholder and price-chip rules below use it for small text. */
+  --color-muted: #717a86;
   --color-ghost: #d1d5db;
 
   /* Border Colors */
