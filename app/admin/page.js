@@ -5789,7 +5789,10 @@ export default function AdminPage() {
           .adm-triage-card { min-width: 100%; flex: none; }
           .adm-log-main { flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 10px; }
           .adm-chiprow { display: none; }
-          .adm-clear-full { display: block; width: 100%; height: 42px; margin: -8px 0 20px; border: 1px solid #DAD3C5; background: #fff; border-radius: 10px; font-size: 15px; font-weight: 700; color: #CF5C36; cursor: pointer; font-family: 'Urbanist', sans-serif; }
+          .adm-clear-full { display: block; width: 100%; height: 42px; margin: -8px 0 20px; border: 2px solid #DAD3C5; background: #fff; border-radius: 10px; font-size: 15px; font-weight: 700; color: #CF5C36; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: background 0.2s, color 0.2s, border-color 0.2s; }
+          /* Inverts on hover: the text color becomes the fill, the fill
+             becomes the text, and the border takes the text color too. */
+          .adm-clear-full:hover { background: #CF5C36; color: #fff; border-color: #CF5C36; }
         }
         /* Pets — card grid (2-col desktop, 1-col mobile) */
         .adm-pet-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
@@ -9942,7 +9945,7 @@ export default function AdminPage() {
                             <span className="adm-user-email">{u.email}</span>
                             {u.invited_by && u.invited_by !== "system" && (
                               <span className="adm-team-invitedby">
-                                Invited by {u.invited_by}
+                                Invited by: {u.invited_by}
                               </span>
                             )}
                           </div>
