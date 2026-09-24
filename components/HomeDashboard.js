@@ -80,11 +80,17 @@ import {
 } from "../lib/levelSystem";
 import { ArtEmptyPets } from "./BrandArt";
 import {
+  BANNER_LUCIDE,
+  speciesBucket,
+  speciesCardGradient,
+} from "../lib/petTileHelpers";
+import {
   Stethoscope,
   PlusCircle,
   Search,
   ArrowRight,
   ChevronRight,
+  PawPrint,
 } from "lucide-react";
 
 const C = {
@@ -334,8 +340,11 @@ export default function HomeDashboard({ session, savedVets = [] }) {
         .hd-pets { display: flex; flex-direction: column; }
         .hd-pet { display: flex; align-items: center; gap: 16px; padding: 16px 0; transition: background 0.15s; }
         .hd-pet + .hd-pet { border-top: 1px solid ${C.border}; }
-        .hd-pet-top { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
+        .hd-pet-top { display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 0; }
         .hd-pet-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: ${C.cream}; border: 2px solid ${C.border}; }
+        /* Centres the species icon when there's no photo. The border stays so
+           a pet with a photo and one without are the same size and shape. */
+        .hd-pet-photo-ph { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; }
         .hd-pet-info { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .hd-pet-name { font-size: 20px; font-weight: 700; color: ${C.navyDark}; margin: 0; line-height: 1.15; }
         .hd-pet-breed { font-size: 16px; font-weight: 500; color: ${C.muted}; margin: 0; line-height: 1.2; }
@@ -502,17 +511,29 @@ export default function HomeDashboard({ session, savedVets = [] }) {
                           alt={pet.name}
                         />
                       ) : (
-                        <span
-                          className="hd-pet-photo"
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 24,
-                          }}
-                        >
-                          🐾
-                        </span>
+                        // Same fallback as the pet tiles and the care card: the
+                        // species icon on the species gradient. This was a paw
+                        // emoji, which matched nothing else on the site and
+                        // said nothing about the animal.
+                        (() => {
+                          const SpeciesIcon =
+                            BANNER_LUCIDE[speciesBucket(pet.species)] ||
+                            PawPrint;
+                          return (
+                            <span
+                              className="hd-pet-photo hd-pet-photo-ph"
+                              style={{
+                                background: speciesCardGradient(pet.species),
+                              }}
+                            >
+                              <SpeciesIcon
+                                size={30}
+                                strokeWidth={1.6}
+                                color="rgba(255,255,255,0.9)"
+                              />
+                            </span>
+                          );
+                        })()
                       )}
                       <div className="hd-pet-info">
                         <p className="hd-pet-name">{pet.name}</p>
