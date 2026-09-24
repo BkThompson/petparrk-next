@@ -176,13 +176,20 @@ const NAV_GROUPS = [
   },
 ];
 
+// Must match the vets_vet_type_allowed constraint in the database. Hospital
+// and Vaccine Clinic already existed in the data but were missing here, so
+// Susan could see those vets but not set or unset the type.
 const VET_TYPES = [
   "General Practice",
   "Emergency",
   "Urgent Care",
   "Specialty",
+  "Hospital",
   "Holistic",
   "Low-Cost / Non-Profit",
+  "Vaccine Clinic",
+  "Animal Shelter",
+  "Mobile / House Call",
 ];
 const OWNERSHIP_TYPES = ["Independent", "Corporate", "Other"];
 const STATUS_TYPES = ["active", "inactive", "pending"];
@@ -440,18 +447,16 @@ function cleanWebsiteUrl(url) {
 }
 
 // ── Auto-lookup neighborhood from Google Geocoding API ──────────────────────
-async function getNeighborhoodFromAddress(address, city, zipCode) {
-  // Goes through /api/geocode rather than calling Google directly. The key
-  // used to come from NEXT_PUBLIC_GOOGLE_PLACES_API_KEY, and anything with
-  // that prefix is compiled into the browser bundle — so the credential was
-  // readable by anyone who viewed source, and marking it Secret in Vercel
-  // changed nothing. The route keeps it server-side.
+// Same lookup, returning coordinates as well. New vets need latitude and
+// longitude so "vets near you" can rank by real distance — before the backfill
+// only 24 of 79 had them, because nothing recorded them at approval. Using the
+// one Google call for both avoids paying for it twice.
+async function lookupAddress(address, city, zipCode) {
   try {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (!session?.access_token) return null;
-
+    if (!session?.access_token) return {};
     const res = await fetch("/api/geocode", {
       method: "POST",
       headers: {
@@ -460,12 +465,16 @@ async function getNeighborhoodFromAddress(address, city, zipCode) {
       },
       body: JSON.stringify({ address, city, zipCode }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) return {};
     const data = await res.json();
-    return data.neighborhood || null;
+    return {
+      neighborhood: data.neighborhood || null,
+      latitude: typeof data.lat === "number" ? data.lat : null,
+      longitude: typeof data.lng === "number" ? data.lng : null,
+    };
   } catch (err) {
-    console.error("Neighborhood lookup failed:", err);
-    return null;
+    console.error("Address lookup failed:", err);
+    return {};
   }
 }
 
@@ -3763,11 +3772,12 @@ export default function AdminPage() {
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-|-$/g, "");
         // ── Auto-lookup neighborhood from Google Geocoding API ──
-        const autoNeighborhood = await getNeighborhoodFromAddress(
+        const geo = await lookupAddress(
           vetToSave.address,
           vetToSave.city,
           vetToSave.zip_code,
         );
+        const autoNeighborhood = geo.neighborhood || null;
         const { data: newVet, error: vetError } = await supabase
           .from("vets")
           .insert({
@@ -3782,6 +3792,8 @@ export default function AdminPage() {
             website: cleanWebsiteUrl(vetToSave.website),
             hours: vetToSave.hours,
             neighborhood: autoNeighborhood || vetToSave.neighborhood || null,
+            latitude: geo.latitude ?? null,
+            longitude: geo.longitude ?? null,
             vet_type: vetToSave.vet_type
               ? Array.isArray(vetToSave.vet_type)
                 ? vetToSave.vet_type
@@ -4536,11 +4548,8 @@ export default function AdminPage() {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
     // ── Auto-lookup neighborhood from Google Geocoding API ──
-    const autoNeighborhood = await getNeighborhoodFromAddress(
-      form.address,
-      form.city,
-      form.zip_code,
-    );
+    const geo = await lookupAddress(form.address, form.city, form.zip_code);
+    const autoNeighborhood = geo.neighborhood || null;
     const { error } = await supabase.from("vets").insert({
       name: form.name,
       slug,
@@ -4554,6 +4563,8 @@ export default function AdminPage() {
       hours: form.hours,
       // ── neighborhood: auto-lookup first, then manual entry, then null ──
       neighborhood: autoNeighborhood || form.neighborhood || null,
+      latitude: geo.latitude ?? null,
+      longitude: geo.longitude ?? null,
       vet_type: form.vet_type
         ? Array.isArray(form.vet_type)
           ? form.vet_type
@@ -5001,18 +5012,115 @@ export default function AdminPage() {
     vetGroupMap.get(vetKey).items.push(s);
   }
 
+  // Receipt viewing. The bucket is private, so each view needs a signed link.
+  // Generated only when Susan asks for one — links for every receipt on the
+  // page would exist whether or not anyone looked at them. They last an hour:
+  // long enough to be interrupted and come back, short enough that a link left
+  // in a browser history stops working the same day. The file itself never
+  // expires; a lapsed link just means clicking again.
+  const [receiptLinks, setReceiptLinks] = useState({});
+  const [receiptOpen, setReceiptOpen] = useState({});
+  const [receiptLoading, setReceiptLoading] = useState({});
+
+  async function toggleReceipt(path) {
+    if (!path) return;
+    if (receiptOpen[path]) {
+      setReceiptOpen((o) => ({ ...o, [path]: false }));
+      return;
+    }
+    if (receiptLinks[path]) {
+      setReceiptOpen((o) => ({ ...o, [path]: true }));
+      return;
+    }
+    setReceiptLoading((l) => ({ ...l, [path]: true }));
+    const { data, error } = await supabase.storage
+      .from("receipts")
+      .createSignedUrl(path, 3600);
+    setReceiptLoading((l) => ({ ...l, [path]: false }));
+    if (error || !data?.signedUrl) {
+      alert("Couldn't open that receipt — please try again.");
+      return;
+    }
+    setReceiptLinks((m) => ({ ...m, [path]: data.signedUrl }));
+    setReceiptOpen((o) => ({ ...o, [path]: true }));
+  }
+
+  // Shown under a submission so prices and the receipt can be read together —
+  // the actual job — rather than in a separate tab.
+  function ReceiptViewer({ path }) {
+    if (!path) return null;
+    const open = !!receiptOpen[path];
+    const url = receiptLinks[path];
+    const isPdf = /\.pdf($|\?)/i.test(path);
+    return (
+      <div className="adm-receipt">
+        <button
+          type="button"
+          className="adm-receipt-toggle"
+          onClick={() => toggleReceipt(path)}
+          disabled={!!receiptLoading[path]}
+        >
+          {receiptLoading[path]
+            ? "Opening…"
+            : open
+              ? "Hide receipt"
+              : "View receipt"}
+        </button>
+        {open &&
+          url &&
+          (isPdf ? (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="adm-receipt-open"
+            >
+              Open PDF in a new tab
+            </a>
+          ) : (
+            <div className="adm-receipt-panel">
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                <img src={url} alt="Submitted receipt" />
+              </a>
+            </div>
+          ))}
+      </div>
+    );
+  }
+
+  // True only when a rich-text value has actual words in it. RichTextEditor
+  // saves "<p></p>" or "<p><br></p>" for an empty field, and both are
+  // non-empty strings — so a plain truthiness check treats a blank note as
+  // content and opens a block with nothing in it.
+  function hasText(html) {
+    if (!html) return false;
+    return (
+      String(html)
+        .replace(/<[^>]*>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .trim().length > 0
+    );
+  }
+
   // Within each vet, split into receipt sub-groups.
   function subGroupsForVet(items) {
     const map = new Map();
     for (const s of items) {
       let key, kind;
-      // Reliable now: rows submitted together share receipt_batch_id.
-      // A batch with a receipt_url is a "receipt"; one without is a manual
-      // multi-entry. Rows with no batch id (legacy, pre-backfill) fall back
-      // to their own single entry.
-      if (s.receipt_batch_id) {
+      // Group by the receipt itself, not the batch. Someone can upload up to
+      // five receipts in one submission, and those rows all share a
+      // receipt_batch_id — so grouping by batch put prices from several
+      // different receipts under one heading, with View receipt showing only
+      // the first file. Prices then looked like they'd come from a receipt
+      // they hadn't.
+      // Manual entries have no receipt_url, so they still group by batch,
+      // which is what keeps a multi-entry manual submission together.
+      if (s.receipt_url) {
+        key = `receipt-${s.receipt_url}`;
+        kind = "receipt";
+      } else if (s.receipt_batch_id) {
         key = `batch-${s.receipt_batch_id}`;
-        kind = s.receipt_url ? "receipt" : "manual";
+        kind = "manual";
       } else {
         key = `single-${s.id}`;
         kind = s.receipt_url ? "receipt" : "manual";
@@ -5495,10 +5603,14 @@ export default function AdminPage() {
         .adm-price-value { font-size: 16px; font-weight: 800; color: #1A6641; }
         .adm-price-type { font-size: 14px; font-weight: 500; color: #717A86; }
         .adm-price-species { font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px; background: #EDF3F8; color: #2C4657; text-transform: capitalize;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
-        .adm-price-details { padding: 14px 0; border-top: 1px solid #ede8e0; border-bottom: 1px solid #ede8e0; display: flex; flex-direction: column; gap: 8px; }
+        /* Top border only. The line under it is the actions row's own top
+           border, which is always there — so an empty row shows one divider
+           and a row with a note or tags shows two. */
+        .adm-price-details { padding: 14px 0; border-top: 1px solid #ede8e0; display: flex; flex-direction: column; gap: 8px; }
+        .adm-price-actions { border-top: 1px solid #ede8e0; padding-top: 14px; margin-top: 14px; }
+        .adm-price-details + .adm-price-actions { margin-top: 0; }
         .adm-price-tags { display: flex; flex-wrap: wrap; gap: 6px; }
         .adm-price-tag { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 9999px; background: #EDFAF3; color: #1A6641;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
-        .adm-price-tag-quote { background: #FEF3EB; color: #8B3A1E; }
         .adm-price-note { font-size: 14px; font-weight: 500; color: #4b5563; line-height: 1.6; }
         .adm-price-note p { margin: 0 0 6px; }
         .adm-price-note p:last-child { margin-bottom: 0; }
@@ -5915,15 +6027,82 @@ export default function AdminPage() {
         .adm-subgroup { border-bottom: 1px solid #ede8e0; }
         .adm-subgroup:last-child { border-bottom: none; }
         .adm-subgroup-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; background: #fbfaf8; border-bottom: 1px solid #ede8e0; }
-        .adm-subgroup-meta { font-size: 16px; color: #4b5563; font-weight: 800; line-height: 1.6; }
-        .adm-subgroup-meta .from { display: inline-block; color: #4b5563; font-weight: 700; padding-top: 5px; }
+        /* Receipt viewer. Stacked, so the toggle sits on its own line with
+           whatever it opens beneath it. Panel matches the admin's card
+           treatment; the toggle is a plain text link, not a button competing
+           with Approve and Reject. */
+        /* Says where a price is governed from, in place of an Edit button
+           whose work the next sync would reverse. */
+        /* Same shape as .adm-status-pill so it sits beside Delete as a
+           sibling rather than a panel. Neutral colour: it reports where the
+           price is governed from, not a state that's good or bad. */
+        .adm-sheet-owned {
+          display: inline-flex; align-items: center; justify-content: center;
+          height: 42px; padding: 0 16px; border-radius: 9999px;
+          background: #f5f0e8; color: #717A86;
+          border: var(--pill-border-w, 2px) solid rgba(113, 122, 134, 0.26);
+          white-space: nowrap; box-sizing: border-box;
+        }
+        .adm-sheet-owned-title { font-size: 15px; font-weight: 700; }
+        /* One line above the list, not one per price. */
+        .adm-price-sheet-note {
+          margin: 0 0 14px; padding: 12px 14px;
+          background: #f5f0e8; border-radius: 10px;
+          font-size: 15px; font-weight: 500; line-height: 1.55;
+          color: #4b5563; 
+        }
+        .adm-receipt {
+          margin-top: 8px;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .adm-receipt-toggle {
+          padding: 0; border: none; background: none; cursor: pointer;
+          font-family: inherit; font-size: 15px; font-weight: 700;
+          color: #cf5c36; text-decoration: underline;
+        }
+        .adm-receipt-toggle:hover:not(:disabled) { color: #172531; }
+        .adm-receipt-toggle:disabled { opacity: 0.6; cursor: default; }
+        .adm-receipt-panel {
+          margin-top: 10px; padding: 12px; background: #fff;
+          border: 1px solid #ede8e0; border-radius: 12px; max-width: 520px;
+        }
+        .adm-receipt-panel img {
+          display: block; width: 100%; height: auto; border-radius: 8px;
+        }
+        /* Navy, not terracotta: terracotta is the primary action colour and
+           Approve/Reject are the decisions that matter here. The border looks
+           redundant until hover, when the fill turns white and it becomes the
+           visible edge. */
+        .adm-receipt-open {
+          margin-top: 10px;
+          display: inline-flex; align-items: center; justify-content: center;
+          height: 42px; padding: 0 24px; border-radius: 12px;
+          border: var(--pill-border-w, 2px) solid #172531;
+          background: #172531; color: #fff; font-size: 15px; font-weight: 700;
+          text-decoration: none; box-sizing: border-box;
+          transition: background 0.2s, color 0.2s;
+        }
+        .adm-receipt-open:hover { background: #fff; color: #172531; }
+        @media (max-width: 640px) {
+          .adm-receipt-open { display: flex; width: 100%; }
+        }
+        /* Matches .adm-line-caption exactly. A multi-item receipt header and a
+           single manual entry show the same three facts in the same place, so
+           they should look the same — the header was carrying its own heavier
+           weight for no reason. */
+        .adm-subgroup-meta { font-size: 16px; color: #4b5563; font-weight: 500; line-height: 1.6; }
+        .adm-subgroup-meta .adm-cap-kind { font-size: 16px; font-weight: 800; color: #4b5563; }
+        .adm-subgroup-meta .adm-cap-date { font-size: 14px; font-weight: 700; color: #717A86; }
+        .adm-subgroup-meta .from { display: inline-block; font-size: 14px; color: #717A86; font-weight: 500; padding-top: 5px; }
         .adm-subgroup-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
         .adm-subgroup-actions { display: flex; gap: 8px; flex-shrink: 0; }
         /* Caption on a single-item block (date/submitter attached to the line) */
         .adm-line-caption { font-size: 16px; color: #4b5563; font-weight: 500; margin: -2px 0 8px; line-height: 1.6; }
         .adm-line-caption .from { display: inline-block; font-size: 14px; color: #717A86; font-weight: 500; padding-top: 5px; }
-        .adm-line-caption .adm-cap-kind { font-size: 16px; font-weight: 500; color: #4b5563; }
-        .adm-line-caption .adm-cap-date { font-size: 14px; font-weight: 500; color: #717A86; }
+        .adm-line-caption .adm-cap-kind { font-size: 16px; font-weight: 800; color: #4b5563; }
+        .adm-line-caption .adm-cap-date { font-size: 14px; font-weight: 700; color: #717A86; }
         .adm-batch-head { display: flex; gap: 13px; padding: 16px 18px; background: #fff; border-bottom: 1px solid #ede8e0; align-items: center; }
         .adm-batch-ico { width: 38px; height: 38px; border-radius: 9px; background: #f5f0e8; display: flex; align-items: center; justify-content: center; color: #2c4657; flex-shrink: 0; }
         .adm-batch-info { flex: 1; min-width: 0; }
@@ -5997,6 +6176,11 @@ export default function AdminPage() {
         @media (max-width: 720px) {
           /* Sub-group header stacks; actions full-width stacked, Approve on top */
           .adm-subgroup-head { flex-direction: column; align-items: stretch; gap: 12px; }
+          /* Separate viewing the receipt from deciding on it. */
+          .adm-subgroup-head .adm-receipt {
+            padding-bottom: 12px;
+            border-bottom: 1px solid #ede8e0;
+          }
           .adm-subgroup-right { flex-direction: column; align-items: stretch; }
           .adm-status-pill { width: 100%; }
           .adm-subgroup-actions { width: 100%; flex-direction: column; }
@@ -6578,6 +6762,9 @@ export default function AdminPage() {
                           </span>
                           <br />
                           <span className="from">From: {sg.submitter}</span>
+                          {sg.kind === "receipt" && (
+                            <ReceiptViewer path={sg.items[0].receipt_url} />
+                          )}
                         </>
                       );
 
@@ -6596,16 +6783,23 @@ export default function AdminPage() {
                         <div key={sg.key} className="adm-subgroup">
                           <div className="adm-subgroup-head">
                             <div className="adm-subgroup-meta">
-                              {sg.kind === "receipt"
-                                ? "Receipt"
-                                : "Manual entry"}
+                              <span className="adm-cap-kind">
+                                {sg.kind === "receipt"
+                                  ? "Receipt"
+                                  : "Manual entry"}
+                              </span>
                               <br />
-                              {formatDate(sg.date)}
-                              {sg.kind === "receipt"
-                                ? ` · ${sg.items.length} items`
-                                : ` · ${sg.items.length} entries`}
+                              <span className="adm-cap-date">
+                                {formatDate(sg.date)}
+                                {sg.kind === "receipt"
+                                  ? ` · ${sg.items.length} items`
+                                  : ` · ${sg.items.length} entries`}
+                              </span>
                               <br />
                               <span className="from">From: {sg.submitter}</span>
+                              {sg.kind === "receipt" && (
+                                <ReceiptViewer path={sg.items[0].receipt_url} />
+                              )}
                             </div>
                             <div className="adm-subgroup-right">
                               {sg.kind === "receipt" && sg.clinicVerified && (
@@ -7395,6 +7589,19 @@ export default function AdminPage() {
 
                 {selectedVetId && (
                   <>
+                    {/* Said once per vet instead of on every row. Repeating
+                        the explanation beside fifteen prices made it noise;
+                        here it's read once, and only by someone looking at a
+                        vet that actually has sheet prices. */}
+                    {!pricesLoading &&
+                      vetPrices.some((p) => p.source === "sheet") && (
+                        <p className="adm-price-sheet-note">
+                          Prices from the call sheet are edited in the sheet,
+                          not here. To change one, edit the cell — or add a
+                          manual price for that service, which the sync never
+                          touches.
+                        </p>
+                      )}
                     <div className="adm-price-head">
                       <p className="adm-price-count">
                         {pricesLoading
@@ -7501,16 +7708,20 @@ export default function AdminPage() {
                               </div>
                             </div>
 
+                            {/* call_for_quote no longer belongs in either
+                                condition. It used to render a pill here; with
+                                that gone, a call-for-quote price with no note
+                                still opened this block and an empty tags row,
+                                leaving two dividers with nothing between
+                                them. */}
                             {(p.includes_bloodwork ||
                               p.includes_xrays ||
                               p.includes_anesthesia ||
-                              p.call_for_quote ||
-                              p.notes) && (
+                              hasText(p.notes)) && (
                               <div className="adm-price-details">
                                 {(p.includes_bloodwork ||
                                   p.includes_xrays ||
-                                  p.includes_anesthesia ||
-                                  p.call_for_quote) && (
+                                  p.includes_anesthesia) && (
                                   <div className="adm-price-tags">
                                     {p.includes_bloodwork && (
                                       <span className="adm-price-tag">
@@ -7527,14 +7738,14 @@ export default function AdminPage() {
                                         + Anesthesia
                                       </span>
                                     )}
-                                    {p.call_for_quote && (
-                                      <span className="adm-price-tag adm-price-tag-quote">
-                                        Call for quote
-                                      </span>
-                                    )}
+                                    {/* No "Call for quote" pill here. The
+                                        price value above already says it, and
+                                        this row is for what's included in a
+                                        price — bloodwork, x-rays, anesthesia —
+                                        not for the price itself. */}
                                   </div>
                                 )}
-                                {p.notes && (
+                                {hasText(p.notes) && (
                                   <div
                                     className="adm-price-note"
                                     dangerouslySetInnerHTML={{
@@ -7545,37 +7756,59 @@ export default function AdminPage() {
                               </div>
                             )}
 
-                            <div className="adm-user-actions adm-pv-actions">
-                              <button
-                                className="adm-b adm-b-outline"
-                                onClick={() => {
-                                  if (editing) {
-                                    setEditingPrice(null);
-                                  } else {
-                                    setShowAddPrice(false);
-                                    setEditingPrice(p.id);
-                                    setPriceForm({
-                                      service_id: p.service_id,
-                                      price_low: p.price_low ?? "",
-                                      price_high: p.price_high ?? "",
-                                      price_type: p.price_type || "",
-                                      includes_bloodwork: p.includes_bloodwork,
-                                      includes_xrays: p.includes_xrays,
-                                      includes_anesthesia:
-                                        p.includes_anesthesia,
-                                      species: p.species || "",
-                                      species_other: "",
-                                      call_for_quote: p.call_for_quote,
-                                      notes: p.notes || "",
-                                      vaccines_included:
-                                        p.vaccines_included || "",
-                                    });
-                                    setEditPriceError(false);
-                                  }
-                                }}
-                              >
-                                {editing ? "Cancel" : "Edit"}
-                              </button>
+                            <div className="adm-user-actions adm-pv-actions adm-price-actions">
+                              {/* Sheet prices are owned by the call sheet.
+                                  Editing one here would be undone: the sync
+                                  replaces sheet prices by value, sees this one
+                                  is no longer in the sheet, deletes it and
+                                  re-adds the sheet's version. Rather than let
+                                  someone lose that work, the edit is blocked
+                                  and the real routes are named. Deleting is
+                                  still allowed — that's how a bad price comes
+                                  off ahead of a sheet fix. */}
+                              {p.source === "sheet" ? (
+                                // Visible, not a title attribute. A tooltip
+                                // takes a second of hovering and never appears
+                                // on a tap — too hidden for the explanation of
+                                // why an Edit button isn't there.
+                                <span className="adm-sheet-owned">
+                                  <span className="adm-sheet-owned-title">
+                                    From call sheet
+                                  </span>
+                                </span>
+                              ) : (
+                                <button
+                                  className="adm-b adm-b-outline"
+                                  onClick={() => {
+                                    if (editing) {
+                                      setEditingPrice(null);
+                                    } else {
+                                      setShowAddPrice(false);
+                                      setEditingPrice(p.id);
+                                      setPriceForm({
+                                        service_id: p.service_id,
+                                        price_low: p.price_low ?? "",
+                                        price_high: p.price_high ?? "",
+                                        price_type: p.price_type || "",
+                                        includes_bloodwork:
+                                          p.includes_bloodwork,
+                                        includes_xrays: p.includes_xrays,
+                                        includes_anesthesia:
+                                          p.includes_anesthesia,
+                                        species: p.species || "",
+                                        species_other: "",
+                                        call_for_quote: p.call_for_quote,
+                                        notes: p.notes || "",
+                                        vaccines_included:
+                                          p.vaccines_included || "",
+                                      });
+                                      setEditPriceError(false);
+                                    }
+                                  }}
+                                >
+                                  {editing ? "Cancel" : "Edit"}
+                                </button>
+                              )}
                               {isDeleting ? (
                                 <div className="adm-team-confirm">
                                   <span className="adm-team-confirm-q">
@@ -7798,6 +8031,35 @@ export default function AdminPage() {
                                     </code>{" "}
                                     (first note → first price)
                                   </li>
+                                  <li>
+                                    These are <strong>public</strong> — they
+                                    show on the vet&rsquo;s page underneath the
+                                    price. Keep them about the price itself,
+                                    like <code>includes exam</code>
+                                  </li>
+                                </ul>
+                              </div>
+                              <div className="adm-sync-guide-item">
+                                <p className="adm-sync-guide-h">
+                                  Notes about the clinic
+                                </p>
+                                <ul>
+                                  <li>
+                                    Those go in the{" "}
+                                    <strong>Internal Admin Notes</strong> column
+                                    — what was said on the call, who to ask for,
+                                    when to try again
+                                  </li>
+                                  <li>
+                                    <strong>Never shown publicly.</strong> They
+                                    appear in Admin on the vet&rsquo;s record,
+                                    for us only
+                                  </li>
+                                  <li>
+                                    The sync fills these in only when a vet has
+                                    no notes in Admin yet, so anything written
+                                    in Admin is never overwritten by an import
+                                  </li>
                                 </ul>
                               </div>
                               <div className="adm-sync-guide-item">
@@ -7821,17 +8083,42 @@ export default function AdminPage() {
                                 </p>
                                 <ul>
                                   <li>
-                                    Matches on clinic <strong>name</strong> or{" "}
-                                    <strong>phone number</strong>
+                                    Every row has to land on the right clinic.
+                                    The sync matches on the{" "}
+                                    <strong>clinic name</strong> and the{" "}
+                                    <strong>phone number</strong> — either one
+                                    is enough
                                   </li>
                                   <li>
-                                    If either matches a vet in the directory,
-                                    the prices attach to it
+                                    <strong>
+                                      This is why the phone number matters.
+                                    </strong>{" "}
+                                    If the name is spelled differently from how
+                                    it&rsquo;s stored — &ldquo;St.&rdquo; for
+                                    &ldquo;Saint&rdquo;, a missing
+                                    &ldquo;Animal&rdquo; — the phone number
+                                    still finds it
                                   </li>
                                   <li>
-                                    If neither matches, a new pending vet is
-                                    created automatically — nothing is lost, it
-                                    just needs approving later
+                                    If <em>both</em> are different, the sync
+                                    can&rsquo;t tell it&rsquo;s the same clinic
+                                    and creates a second listing. Nothing is
+                                    lost, but someone has to merge them later —
+                                    so check the number before calling
+                                  </li>
+                                  <li>
+                                    For a clinic that genuinely isn&rsquo;t in
+                                    the directory, that&rsquo;s the right
+                                    outcome: it&rsquo;s added as{" "}
+                                    <strong>pending</strong>, with its prices
+                                    attached, and shows in the Pending Vets tab
+                                    for approval. Nothing goes live until
+                                    someone approves it
+                                  </li>
+                                  <li>
+                                    So you never need to add a clinic first —
+                                    call it, fill in the row, and the sync
+                                    creates it
                                   </li>
                                 </ul>
                               </div>
@@ -7869,6 +8156,18 @@ export default function AdminPage() {
                                 syncResult.pricesAdded,
                               ],
                               ["Duplicates skipped", syncResult.pricesSkipped],
+                              // The route has always counted removals; nothing
+                              // showed them. Sheet prices use replace
+                              // semantics, so a price cleared from the sheet is
+                              // deleted from the site — that needs to be
+                              // visible in the preview, not discovered after a
+                              // live run.
+                              [
+                                syncResult.dryRun
+                                  ? "Prices to remove"
+                                  : "Prices removed",
+                                syncResult.pricesRemoved,
+                              ],
                             ].map(([label, val]) => (
                               <div key={label} className="adm-sync-stat">
                                 <span className="adm-sync-stat-n">
@@ -7879,6 +8178,34 @@ export default function AdminPage() {
                             ))}
                           </div>
 
+                          {/* Which prices would disappear. A count alone
+                              doesn't tell you whether it's a clinic that
+                              genuinely changed its prices or a cell someone
+                              cleared by accident. */}
+                          {syncResult.removedList?.length > 0 && (
+                            <details className="adm-sync-detail">
+                              <summary>
+                                {syncResult.removedList.length} prices{" "}
+                                {syncResult.dryRun
+                                  ? "would be removed"
+                                  : "removed"}{" "}
+                                — no longer in the sheet
+                              </summary>
+                              <ul>
+                                {syncResult.removedList
+                                  .slice(0, 30)
+                                  .map((n, i) => (
+                                    <li key={i}>{n}</li>
+                                  ))}
+                                {syncResult.removedList.length > 30 && (
+                                  <li>
+                                    …and {syncResult.removedList.length - 30}{" "}
+                                    more
+                                  </li>
+                                )}
+                              </ul>
+                            </details>
+                          )}
                           {syncResult.autoCreatedList?.length > 0 && (
                             <details className="adm-sync-detail">
                               <summary>

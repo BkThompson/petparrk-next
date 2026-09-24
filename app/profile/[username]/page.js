@@ -2360,7 +2360,13 @@ export default function ProfilePage() {
           overflow: hidden;
           transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        /* Navy, matching .pp-pet-spec-value, and deliberately not the banner
+           accent. It used to be painted inline with the accent color, so the
+           allergy and medication text changed every time the banner did — and
+           an inline style overrides any class rule, which is why a CSS fix
+           alone had no effect. */
         .pp-medline-value {
+          color: ${C.navyDark};
           font-weight: 600;
           min-width: 0;
           display: block;
@@ -3332,7 +3338,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </button>
-              <Link href="/saved" className="pp-stat-link">
+              <Link href="/saved-vets" className="pp-stat-link">
                 <div className="pp-stat-outer">
                   <div className="pp-stat saved">
                     <p className="pp-stat-num">{counts.saved}</p>
@@ -4281,7 +4287,6 @@ function ClampedMedline({ C, label, value, accent }) {
         <span
           ref={textRef}
           className={`pp-medline-value${cssClamped ? " pp-medvalue-clamp" : ""}`}
-          style={{ color: accent }}
         >
           {text}
         </span>

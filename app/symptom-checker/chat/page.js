@@ -34,7 +34,7 @@ import {
   Clipboard,
   ChevronUp,
   ArrowLeft,
-  RotateCcw,
+  CircleCheck,
 } from "lucide-react";
 import PageLoader from "../../../components/PageLoader";
 import {
@@ -323,6 +323,35 @@ export default function SymptomCheckerChatPage() {
   const [followUpSummary, setFollowUpSummary] = useState(null);
   const [triageCardExpanded, setTriageCardExpanded] = useState(true);
   const [nearbyVets, setNearbyVets] = useState([]);
+
+  // Location-aware vets. Everything below feeds /api/vets/nearby, which ranks
+  // by triage, distance and open-now — the same route the home page uses, so
+  // the two can't disagree about what's near you.
+  const [specialistVets, setSpecialistVets] = useState([]);
+  const [nearbyCovered, setNearbyCovered] = useState(null); // null = not asked yet
+  const [nearbyLoading, setNearbyLoading] = useState(false);
+  const [userLocation, setUserLocation] = useState(null); // {lat,lng} or {zip}
+  const [zipInput, setZipInput] = useState("");
+  const [locError, setLocError] = useState("");
+  const LOCATION_KEY = "petparrk_location";
+
+  // Resuming a check after a guest signs up. The conversation is held in
+  // localStorage rather than this tab's sessionStorage, because confirming an
+  // email opens the link in a new tab — anything kept only in this tab would
+  // be gone by the time they came back.
+  const PENDING_KEY = "petparrk_pending_check";
+  const [pendingResume, setPendingResume] = useState(null);
+  const [resumedFromGuest, setResumedFromGuest] = useState(false);
+  const [showSavePet, setShowSavePet] = useState(false);
+  const [savePetName, setSavePetName] = useState("");
+  const [savingPet, setSavingPet] = useState(false);
+  const [savePetError, setSavePetError] = useState("");
+  const [savedPetName, setSavedPetName] = useState("");
+  // Pets the person already has. If they added one before coming back here —
+  // from the profile, say — the check should attach to it rather than create
+  // a duplicate. "new" means create a pet from what they told the checker.
+  const [ownPets, setOwnPets] = useState([]);
+  const [savePetChoice, setSavePetChoice] = useState("new");
   const [guestMode, setGuestMode] = useState(false);
   const [guestPet, setGuestPet] = useState({ species: "", breed: "", age: "" });
   const [freeCheckUsed, setFreeCheckUsed] = useState(false);
@@ -345,6 +374,21 @@ export default function SymptomCheckerChatPage() {
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const turnstileRef = useRef(null);
   const turnstileWidgetId = useRef(null);
+
+  // One id per check. Going back to Step 3 and re-picking a severity clears
+  // the messages and sends a fresh first message — which the route used to
+  // count as a second check. The id is created once when this page mounts, so
+  // it survives going back, and the server counts each id once. A genuinely
+  // new check always means a fresh mount: Start New Check navigates away to
+  // /symptom-checker and back.
+  const checkIdRef = useRef(null);
+  if (checkIdRef.current === null) {
+    checkIdRef.current =
+      (typeof crypto !== "undefined" &&
+        crypto.randomUUID &&
+        crypto.randomUUID()) ||
+      String(Date.now()) + Math.random().toString(36).slice(2);
+  }
 
   // A per-browser id so the guest allowance follows the device, not just the
   // network address. Clearable by the user, so the server treats it as one
@@ -380,6 +424,10 @@ export default function SymptomCheckerChatPage() {
       turnstileRef.current.dataset.rendered = "1";
       widgetId = window.turnstile.render(turnstileRef.current, {
         sitekey: TURNSTILE_SITE_KEY,
+        // Stay hidden unless Cloudflare actually needs the person to do
+        // something. Without this the widget could flash into view on the
+        // severity step and vanish again once it passed.
+        appearance: "interaction-only",
         callback: (token) => setGuestCaptchaToken(token),
         "expired-callback": () => setGuestCaptchaToken(null),
         "error-callback": () => setGuestCaptchaToken(null),
@@ -443,6 +491,46 @@ export default function SymptomCheckerChatPage() {
     if (initializedRef.current) return;
     initializedRef.current = true;
     try {
+      // Returning from sign-up? Restore the conversation still as a guest,
+      // with the wall up. It only unlocks once the sign-in is confirmed (see
+      // the effect below) — restoring it unlocked would let anyone type this
+      // address by hand and get an unlimited chat without an account.
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("resume") === "1") {
+          const pending = JSON.parse(
+            localStorage.getItem(PENDING_KEY) || "null",
+          );
+          const fresh =
+            pending && Date.now() - (pending.savedAt || 0) < 24 * 3600 * 1000;
+          if (fresh && pending.messages?.length) {
+            sessionStorage.setItem(
+              SESSION_KEY,
+              JSON.stringify({
+                messages: pending.messages,
+                triageResult: pending.triageResult || null,
+                differentials: pending.differentials || [],
+                guestMode: true,
+                guestPet: pending.guestPet || {
+                  species: "",
+                  breed: "",
+                  age: "",
+                },
+                freeCheckUsed: true,
+              }),
+            );
+            setPendingResume(pending);
+            // Drop resume=1 from the address. It has done its job, and a
+            // leftover flag reads as if something is still pending. This
+            // rewrites the address without reloading or adding history.
+            try {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("resume");
+              window.history.replaceState(null, "", url.pathname + url.search);
+            } catch {}
+          }
+        }
+      } catch {}
       const saved = sessionStorage.getItem(SESSION_KEY);
       if (!saved) {
         router.replace("/symptom-checker");
@@ -473,6 +561,7 @@ export default function SymptomCheckerChatPage() {
         if (parsed.recommendation) setRecommendation(parsed.recommendation);
         if (parsed.costEstimates) setCostEstimates(parsed.costEstimates);
         if (parsed.visitPrep) setVisitPrep(parsed.visitPrep);
+        if (parsed.resumedFromGuest) setResumedFromGuest(true);
         setGuidedStep("chat");
         setReady(true);
       } else {
@@ -501,6 +590,7 @@ export default function SymptomCheckerChatPage() {
           visitPrep,
           followUpCheckId,
           followUpSummary,
+          resumedFromGuest,
         }),
       );
     } catch (e) {}
@@ -537,13 +627,296 @@ export default function SymptomCheckerChatPage() {
           messagesAreaRef.current.scrollTo({ top: 0, behavior: "smooth" });
       }, 150);
     });
-    supabase
-      .from("vets")
-      .select("*")
-      .eq("status", "active")
-      .limit(3)
-      .then(({ data }) => setNearbyVets(data || []));
+    // Vets are loaded by the location effect below, not here. This used to
+    // fetch the first three active vets in the table — no location, no
+    // ordering — which is how a guest in Oakland was shown clinics in
+    // Yorba Linda and Coronado.
   }, [triageResult, guidedStep]);
+
+  // Remember where someone is, so they're asked once rather than every check.
+  // Signed-in users fall back to the ZIP on their profile.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LOCATION_KEY) || "null");
+      if (saved && (typeof saved.lat === "number" || saved.zip)) {
+        setUserLocation(saved);
+        return;
+      }
+    } catch {}
+    if (!session?.user?.id) return;
+    supabase
+      .from("profiles")
+      .select("zip_code")
+      .eq("id", session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.zip_code && /^\d{5}$/.test(data.zip_code)) {
+          setUserLocation({ zip: data.zip_code });
+        }
+      });
+  }, [session]);
+
+  // Load vets whenever there's a result that calls for one and a location to
+  // search from. Monitor-at-home results never ask.
+  useEffect(() => {
+    if (!triageResult || triageResult === "MONITOR" || !userLocation) return;
+    let cancelled = false;
+    setNearbyLoading(true);
+    const species = (selectedPet || guestPet)?.species || "";
+    fetch("/api/vets/nearby", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...(typeof userLocation.lat === "number"
+          ? { lat: userLocation.lat, lng: userLocation.lng }
+          : { zip: userLocation.zip }),
+        triage: triageResult,
+        differentials,
+        species,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.error) {
+          setLocError(
+            data.error === "zip_not_found"
+              ? "We couldn't find that ZIP code. Check it and try again."
+              : "Something went wrong finding vets. Try again.",
+          );
+          setNearbyVets([]);
+          setSpecialistVets([]);
+          setNearbyCovered(null);
+          // Clear the location so the prompt comes back with the error shown.
+          // Keeping it set hid the ZIP field, so a mistyped ZIP was a dead end.
+          setUserLocation(null);
+          try {
+            localStorage.removeItem(LOCATION_KEY);
+          } catch {}
+          return;
+        }
+        setNearbyVets(data.primary || []);
+        setSpecialistVets(data.specialists || []);
+        setNearbyCovered(!!data.covered);
+        // Keep the resolved point, so a ZIP isn't looked up again next time.
+        try {
+          localStorage.setItem(
+            LOCATION_KEY,
+            JSON.stringify({
+              lat: data.lat,
+              lng: data.lng,
+              zip: userLocation.zip || null,
+            }),
+          );
+        } catch {}
+      })
+      .catch(() => {
+        if (!cancelled)
+          setLocError("Something went wrong finding vets. Try again.");
+      })
+      .finally(() => {
+        if (!cancelled) setNearbyLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [triageResult, userLocation, differentials]);
+
+  function useMyLocation() {
+    setLocError("");
+    if (!navigator.geolocation) {
+      setLocError(
+        "Your browser can't share location. Enter a ZIP code instead.",
+      );
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) =>
+        setUserLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        }),
+      (err) => {
+        // Name the actual cause. On a Mac, "unavailable" usually means Location
+        // Services is off for the browser in System Settings — different from
+        // someone saying no, and not something a retry will fix.
+        if (err && err.code === 1) {
+          setLocError("Location access was blocked. Enter a ZIP code instead.");
+        } else if (err && err.code === 2) {
+          setLocError(
+            "Your location isn't available right now. Enter a ZIP code instead.",
+          );
+        } else {
+          setLocError(
+            "Finding your location took too long. Enter a ZIP code instead.",
+          );
+        }
+      },
+      { timeout: 10000, maximumAge: 600000 },
+    );
+  }
+
+  function submitZip(e) {
+    e?.preventDefault?.();
+    const z = zipInput.trim();
+    if (!/^\d{5}$/.test(z)) {
+      setLocError("Enter a 5-digit ZIP code.");
+      return;
+    }
+    setLocError("");
+    setUserLocation({ zip: z });
+  }
+
+  // Unlock a resumed check only once the sign-in is confirmed. Until then the
+  // conversation shows with the guest wall still up.
+  useEffect(() => {
+    if (!pendingResume || !session?.user?.id) return;
+    setGuestMode(false);
+    setFreeCheckUsed(false);
+    setResumedFromGuest(true);
+    setShowSavePet(true);
+    supabase
+      .from("pets")
+      .select("id, name, species, breed, slug")
+      .eq("owner_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        const list = data || [];
+        setOwnPets(list);
+        // If one of their pets matches what the checker was told, pick it —
+        // most likely they added this same pet from the profile.
+        const want = String(
+          pendingResume?.guestPet?.species || "",
+        ).toLowerCase();
+        const match = list.find(
+          (p) => want && String(p.species || "").toLowerCase() === want,
+        );
+        setSavePetChoice(match ? match.id : "new");
+      });
+  }, [pendingResume, session]);
+
+  // The checker asks for an age ("3 years", "7 months"); pets store a
+  // birthday. Estimate one from the age and flag it as estimated, so the pet's
+  // age keeps updating correctly instead of being frozen at what was typed.
+  function birthdayFromAge(age) {
+    const m = String(age || "")
+      .toLowerCase()
+      .match(/(\d+(?:\.\d+)?)\s*(year|yr|y|month|mo|week|wk)?/);
+    if (!m) return null;
+    const n = parseFloat(m[1]);
+    if (!Number.isFinite(n) || n <= 0) return null;
+    const unit = m[2] || "year";
+    const d = new Date();
+    if (unit.startsWith("w")) d.setDate(d.getDate() - Math.round(n * 7));
+    else if (unit.startsWith("m")) d.setMonth(d.getMonth() - Math.round(n));
+    else d.setMonth(d.getMonth() - Math.round(n * 12));
+    return d.toISOString().slice(0, 10);
+  }
+
+  function clearPendingResume() {
+    try {
+      localStorage.removeItem(PENDING_KEY);
+    } catch {}
+    setPendingResume(null);
+    setShowSavePet(false);
+  }
+
+  // Save the pet the guest described, then attach this check to it, so it
+  // lands in their health history. The database generates the pet's slug,
+  // the same way it does for pets added from the profile.
+  async function savePetAndCheck(e) {
+    e?.preventDefault?.();
+    if (!session?.user?.id) return;
+    const usingExisting = savePetChoice !== "new";
+    const name = savePetName.trim();
+    if (!usingExisting && !name) {
+      setSavePetError("Add your pet's name to save this check.");
+      return;
+    }
+    setSavingPet(true);
+    setSavePetError("");
+
+    let pet;
+    if (usingExisting) {
+      // Attach to a pet they already have — no new pet, no duplicate.
+      pet = ownPets.find((p) => p.id === savePetChoice);
+      if (!pet) {
+        setSavingPet(false);
+        setSavePetError("Choose a pet, or add a new one.");
+        return;
+      }
+    } else {
+      const birthday = birthdayFromAge(guestPet?.age);
+      const { data, error: petErr } = await supabase
+        .from("pets")
+        .insert({
+          owner_id: session.user.id,
+          name,
+          species: guestPet?.species || null,
+          breed: guestPet?.breed || null,
+          birthday,
+          is_birthday_estimated: !!birthday,
+        })
+        .select()
+        .single();
+      if (petErr || !data) {
+        setSavingPet(false);
+        setSavePetError("We couldn't save your pet. Please try again.");
+        return;
+      }
+      pet = data;
+    }
+    if (triageResult) {
+      const { error: checkErr } = await supabase.from("symptom_checks").insert({
+        pet_id: pet.id,
+        owner_id: session.user.id,
+        triage_result: triageResult,
+        differentials,
+        transcript: JSON.stringify(messages),
+        created_at: new Date().toISOString(),
+      });
+      if (checkErr)
+        console.error("symptom_checks insert failed:", checkErr.message);
+    }
+    setSelectedPet(pet);
+    setResumedFromGuest(false);
+    setSavedPetName(pet.name || name);
+    setSavingPet(false);
+    clearPendingResume();
+  }
+
+  // Keep the conversation without creating a pet. The chat stays open.
+  function skipSavePet() {
+    clearPendingResume();
+  }
+
+  // Hold the conversation before sending a guest to sign up, so it's still
+  // here when they return — in whatever tab that turns out to be.
+  function holdCheckForSignup() {
+    try {
+      localStorage.setItem(
+        PENDING_KEY,
+        JSON.stringify({
+          messages,
+          triageResult,
+          differentials,
+          guestPet,
+          savedAt: Date.now(),
+        }),
+      );
+    } catch {}
+  }
+
+  function changeLocation() {
+    try {
+      localStorage.removeItem(LOCATION_KEY);
+    } catch {}
+    setUserLocation(null);
+    setNearbyVets([]);
+    setSpecialistVets([]);
+    setNearbyCovered(null);
+    setZipInput("");
+  }
 
   useEffect(() => {
     if (guidedStep !== "chat") return;
@@ -669,7 +1042,7 @@ export default function SymptomCheckerChatPage() {
           role: m.role,
           content: m.content,
         })),
-        pet: selectedPet || (guestMode ? guestPet : null),
+        pet: selectedPet || (guestMode || resumedFromGuest ? guestPet : null),
         // Background from a prior check, when this is a follow-up. The route
         // appends it to the system prompt as context, never as a diagnosis.
         followUpContext: followUpSummary || null,
@@ -679,6 +1052,7 @@ export default function SymptomCheckerChatPage() {
         // it is no longer the first turn.
         captchaToken: session ? null : guestCaptchaToken || null,
         deviceId: session ? null : getDeviceId(),
+        checkId: session ? null : checkIdRef.current,
       }),
     });
     // Turnstile tokens are single-use. Once one has been spent on the first
@@ -1345,7 +1719,7 @@ export default function SymptomCheckerChatPage() {
                           display: "inline-block",
                           padding: "4px 12px",
                           background: "#fff",
-                          border: `1px solid ${cfg.border}`,
+                          border: `2px solid ${cfg.border}`,
                           borderRadius: "20px",
                           fontSize: "14px",
                           fontWeight: "700",
@@ -1358,49 +1732,82 @@ export default function SymptomCheckerChatPage() {
                   </div>
                 </div>
               )}
-              {cfg.vetLabel && recommendationLoading && !recommendation && (
-                <div style={{ marginBottom: "8px" }}>
-                  <p
-                    style={{
-                      margin: "0 0 10px",
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      color: C.muted,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    Finding vets that fit best…
+              {/* Where are you? Asked only when the result calls for a vet,
+                  and remembered after the first answer. "Use my location" is
+                  one tap and never touches the server's geocoder; ZIP is the
+                  fallback. */}
+              {cfg.vetLabel && !userLocation && (
+                <div className="triage-loc">
+                  <p className="triage-loc-title">Find vets near you</p>
+                  <p className="triage-loc-sub">
+                    {triageResult === "EMERGENCY"
+                      ? "Share your location to see the nearest emergency vets."
+                      : "Share your location or enter a ZIP code to see vets nearby."}
                   </p>
-                  <div className="triage-skeleton">
-                    <div className="triage-skeleton-line medium" />
-                    <div className="triage-skeleton-line short" />
-                    <div
-                      className="triage-skeleton-line long"
-                      style={{ marginBottom: 0 }}
-                    />
+                  <div className="triage-loc-row">
+                    <button
+                      type="button"
+                      className="triage-loc-btn"
+                      onClick={useMyLocation}
+                    >
+                      Use my location
+                    </button>
+                    <form className="triage-loc-zip" onSubmit={submitZip}>
+                      <input
+                        inputMode="numeric"
+                        maxLength={5}
+                        placeholder="ZIP code"
+                        aria-label="ZIP code"
+                        value={zipInput}
+                        onChange={(e) =>
+                          setZipInput(e.target.value.replace(/\D/g, ""))
+                        }
+                      />
+                      <button type="submit">Search</button>
+                    </form>
                   </div>
-                  <div className="triage-skeleton">
-                    <div className="triage-skeleton-line medium" />
-                    <div className="triage-skeleton-line short" />
-                    <div
-                      className="triage-skeleton-line long"
-                      style={{ marginBottom: 0 }}
-                    />
-                  </div>
-                  <div className="triage-skeleton">
-                    <div className="triage-skeleton-line medium" />
-                    <div className="triage-skeleton-line short" />
-                    <div
-                      className="triage-skeleton-line long"
-                      style={{ marginBottom: 0 }}
-                    />
-                  </div>
+                  {locError && <p className="triage-loc-error">{locError}</p>}
                 </div>
               )}
+
+              {cfg.vetLabel && userLocation && nearbyLoading && (
+                <p className="triage-loc-sub">Finding vets near you…</p>
+              )}
+
+              {cfg.vetLabel && userLocation && !nearbyLoading && locError && (
+                <p className="triage-loc-error">{locError}</p>
+              )}
+
+              {/* Outside the area the directory covers. Say so rather than
+                  showing the nearest vet two hundred miles away. For an
+                  emergency, still tell them what to do. */}
               {cfg.vetLabel &&
-                (recommendation?.rankedVets?.length > 0 ||
-                  (nearbyVets.length > 0 && !recommendationLoading)) && (
+                userLocation &&
+                !nearbyLoading &&
+                nearbyCovered === false && (
+                  <div className="triage-loc">
+                    <p className="triage-loc-title">
+                      We don't cover your area yet
+                    </p>
+                    <p className="triage-loc-sub">
+                      {triageResult === "EMERGENCY"
+                        ? "Search for a 24-hour emergency vet near you and call ahead — don't wait for us."
+                        : "We don't have vets listed near you yet. Your regular vet is the right first call."}
+                    </p>
+                    <button
+                      type="button"
+                      className="triage-loc-link"
+                      onClick={changeLocation}
+                    >
+                      Try a different location
+                    </button>
+                  </div>
+                )}
+
+              {cfg.vetLabel &&
+                userLocation &&
+                !nearbyLoading &&
+                nearbyVets.length > 0 && (
                   <div>
                     <p
                       style={{
@@ -1412,24 +1819,9 @@ export default function SymptomCheckerChatPage() {
                         letterSpacing: "0.06em",
                       }}
                     >
-                      {recommendation?.rankedVets?.length > 0
-                        ? `${cfg.vetLabel} — picked for this`
-                        : cfg.vetLabel}
+                      {cfg.vetLabel}
                     </p>
-                    {(recommendation?.rankedVets?.length > 0
-                      ? recommendation.rankedVets.map((v) => ({
-                          id: v.vet_id,
-                          slug: v.vet_slug,
-                          name: v.name,
-                          city: v.city,
-                          phone: v.phone,
-                          neighborhood: null,
-                          reasoning: v.reasoning,
-                          accepting_new_patients: v.accepting_new_patients,
-                          fit_signal: v.fit_signal,
-                        }))
-                      : nearbyVets
-                    ).map((vet) => (
+                    {nearbyVets.map((vet) => (
                       <div
                         key={vet.id}
                         style={{
@@ -1469,9 +1861,23 @@ export default function SymptomCheckerChatPage() {
                                 color: C.muted,
                               }}
                             >
-                              {[vet.neighborhood, vet.city]
+                              {[
+                                vet.city,
+                                typeof vet.distance_miles === "number"
+                                  ? `${vet.distance_miles} mi`
+                                  : null,
+                              ]
                                 .filter(Boolean)
                                 .join(" · ")}
+                              {vet.open_now === true && (
+                                <span className="triage-open"> · Open now</span>
+                              )}
+                              {vet.open_now === false && (
+                                <span className="triage-closed">
+                                  {" "}
+                                  · Closed now
+                                </span>
+                              )}
                             </p>
                             {vet.reasoning && (
                               <p
@@ -1522,7 +1928,7 @@ export default function SymptomCheckerChatPage() {
                                   {vet.phone}
                                 </a>
                               )}
-                              {recommendation?.rankedVets?.length > 0 &&
+                              {recommendation?.recommendationId &&
                                 !costEstimates[vet.id] &&
                                 !estimateLoading[vet.id] && (
                                   <button
@@ -1616,6 +2022,42 @@ export default function SymptomCheckerChatPage() {
                           </a>
                         </div>
                       </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="triage-loc-link"
+                      onClick={changeLocation}
+                    >
+                      Change location
+                    </button>
+                  </div>
+                )}
+
+              {/* Specialists that match the condition and are within reach.
+                  Framed as referral because that's how they work — most won't
+                  see a pet without a referral from its regular vet, so listing
+                  them as a first stop would send people to the wrong door. */}
+              {cfg.vetLabel &&
+                userLocation &&
+                !nearbyLoading &&
+                specialistVets.length > 0 && (
+                  <div className="triage-specialists">
+                    <p className="triage-spec-title">Specialists near you</p>
+                    <p className="triage-spec-sub">
+                      Usually seen by referral from your regular vet.
+                    </p>
+                    {specialistVets.map((v) => (
+                      <a
+                        key={v.id}
+                        href={`/vet/${v.slug}`}
+                        className="triage-spec-row"
+                      >
+                        <span className="triage-spec-name">{v.name}</span>
+                        <span className="triage-spec-meta">
+                          {(v.matched_specialties || []).join(", ")} ·{" "}
+                          {v.distance_miles} mi
+                        </span>
+                      </a>
                     ))}
                   </div>
                 )}
@@ -2294,7 +2736,7 @@ export default function SymptomCheckerChatPage() {
           cursor: pointer;
           display: flex; align-items: center; justify-content: center;
           font-size: 13px;
-          font-weight: 900;
+          font-weight: 800;
           line-height: 1;
           transition: background 0.15s, opacity 0.2s;
           flex-shrink: 0;
@@ -2316,6 +2758,81 @@ export default function SymptomCheckerChatPage() {
         .triage-phone-btn:hover { background:#fff !important; color:var(--btn-color) !important; border-color:var(--btn-color) !important; }
         .triage-estimate-btn { background:#fff; border:2px solid var(--btn-color); border-radius:999px; padding:8px 16px; font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,system-ui); color:var(--btn-color); transition:background 0.2s, color 0.2s; }
         .triage-estimate-btn:hover { background:var(--btn-color); color:#fff; }
+        /* Location prompt, not-covered notice and specialists. Uses the shared
+           control border so these match every other input on the site. */
+        .triage-loc { margin: 4px 0 16px; padding: 16px; border-radius: 12px; background: #fff; border: 1px solid ${C.border}; }
+        .triage-loc-title { margin: 0 0 4px; font-size: 16px; font-weight: 700; color: ${C.navyDark}; }
+        .triage-loc-sub { margin: 0 0 12px; font-size: 15px; font-weight: 500; color: ${C.muted}; line-height: 1.5; }
+        .triage-loc-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .triage-loc-btn { height: 42px; padding: 0 16px; border-radius: 12px; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s; }
+        .triage-loc-btn:hover { background: #fff; color: ${C.terracotta}; }
+        .triage-loc-zip { display: flex; gap: 8px; }
+        .triage-loc-zip input { width: 110px; height: 42px; padding: 0 12px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); font-family: inherit; font-size: 15px; font-weight: 500; color: ${C.navyDark}; background: #fff; box-sizing: border-box; }
+        .triage-loc-zip input:focus { outline: none; border-color: ${C.terracotta}; }
+        .triage-loc-zip button { height: 42px; padding: 0 14px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); background: #fff; color: ${C.navyDark}; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color 0.2s; }
+        .triage-loc-zip button:hover { background: ${C.navyDark}; color: #fff; border-color: ${C.navyDark}; }
+        .triage-loc-error { margin: 10px 0 0; font-size: 14px; font-weight: 600; color: #C94040; }
+        .triage-loc-link { margin: 4px 0 0; padding: 0; border: none; background: none; font-family: inherit; font-size: 14px; font-weight: 700; color: ${C.terracotta}; text-decoration: underline; cursor: pointer; }
+        @media (max-width: 640px) {
+          /* One column on a phone: each control full width, stacked, so every
+             target is easy to hit with a thumb. */
+          .triage-loc-row { flex-direction: column; align-items: stretch; }
+          .triage-loc-btn { width: 100%; }
+          /* ZIP field and its Search button stack too. Side by side they
+             overflowed the card at 375px. */
+          .triage-loc-zip { width: 100%; flex-direction: column; }
+          .triage-loc-zip input { width: 100%; }
+          .triage-loc-zip button { width: 100%; }
+          /* The call button is the main action — in an emergency it's the one
+             thing someone needs to hit, so it gets the full width. */
+          .triage-phone-btn { width: 100%; justify-content: center; box-sizing: border-box; }
+        }
+        /* Save-your-check panel. Same card, button and input treatment as the
+           location prompt: 42px terracotta button that inverts on hover, the
+           shared control border on the input, stacking full width on phones. */
+        .save-pet { margin: 0 0 24px; padding: 20px 20px; border-radius: 16px; background: #fff; border: 1px solid ${C.border}; box-shadow: 0 2px 12px rgba(23, 37, 49, 0.05); }
+        /* Doubled class so this beats the global paragraph line-height, which
+           otherwise stretched a two-line title far apart. */
+        .save-pet .save-pet-title { margin: 0 0 6px; font-size: 24px; line-height: 1.2; font-weight: 800; color: ${C.navyDark}; }
+        .save-pet .save-pet-sub { margin: 0 0 14px; font-size: 16px; font-weight: 500; color: ${C.muted}; line-height: 1.55; text-wrap: pretty; }
+        .save-pet-row { display: flex; gap: 10px; align-items: center; }
+        .save-pet-input { flex: 1; min-width: 0; height: 42px; padding: 0 14px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); font-family: inherit; font-size: 15px; font-weight: 500; color: ${C.navyDark}; background: #fff; box-sizing: border-box; }
+        .save-pet-input:focus { outline: none; border-color: ${C.terracotta}; }
+        .save-pet-btn { height: 42px; padding: 0 22px; border-radius: 12px; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s; flex-shrink: 0; }
+        .save-pet-btn:hover:not(:disabled) { background: #fff; color: ${C.terracotta}; }
+        .save-pet-btn:disabled { opacity: 0.6; cursor: default; }
+        /* Pet choices. Each is a full-width row with the shared control
+           border; the chosen one takes the terracotta border, the same
+           treatment as a focused field. */
+        .save-pet-choices { display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
+        .save-pet-choice { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); background: #fff; cursor: pointer; transition: border-color 0.15s, background 0.15s; box-sizing: border-box; }
+        .save-pet-choice input { width: 18px; height: 18px; margin: 0; accent-color: ${C.terracotta}; flex-shrink: 0; cursor: pointer; }
+        .save-pet-choice-name { font-size: 16px; font-weight: 700; color: ${C.navyDark}; }
+        .save-pet-choice-meta { font-size: 15px; font-weight: 500; color: ${C.muted}; }
+        .save-pet-choice.is-active { border-color: ${C.terracotta}; background: #FFF8F4; }
+        @media (hover: hover) {
+          .save-pet-choice:not(.is-active):hover { border-color: ${C.navyDark}; }
+        }
+        .save-pet-error { margin: 10px 0 0; font-size: 14px; font-weight: 600; color: #C94040; }
+        .save-pet-skip { margin: 12px 0 0; padding: 0; border: none; background: none; font-family: inherit; font-size: 15px; font-weight: 700; color: ${C.muted}; text-decoration: underline; cursor: pointer; }
+        .save-pet-skip:hover { color: ${C.navyDark}; }
+        .save-pet-done { display: flex; align-items: center; gap: 8px; margin: 0 0 24px; font-size: 16px; font-weight: 600; color: #1A6641; }
+        @media (max-width: 640px) {
+          .save-pet-row { flex-direction: column; align-items: stretch; }
+          /* No flex:1 when stacked. In a column, flex:1 grows along the
+             vertical axis from a zero basis, which squashed the field. */
+          .save-pet-input { flex: none; width: 100%; }
+          .save-pet-btn { width: 100%; }
+        }
+        .triage-open { color: #1A6641; font-weight: 700; }
+        .triage-closed { color: ${C.muted}; font-weight: 600; }
+        .triage-specialists { margin: 8px 0 16px; padding: 14px 16px; border-radius: 12px; background: #fff; border: 1px solid ${C.border}; }
+        .triage-spec-title { margin: 0 0 2px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: ${C.muted}; }
+        .triage-spec-sub { margin: 0 0 10px; font-size: 15px; font-weight: 500; color: ${C.muted}; }
+        .triage-spec-row { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; border-top: 1px solid ${C.border}; text-decoration: none; }
+        .triage-spec-row:first-of-type { border-top: none; }
+        .triage-spec-name { font-size: 16px; font-weight: 700; color: ${C.navyDark}; }
+        .triage-spec-meta { font-size: 15px; font-weight: 500; color: ${C.muted}; }
         .triage-view-profile { font-size:13px; color:${C.terracotta}; text-decoration:underline; white-space:nowrap; flex-shrink:0; margin-top:2px; font-weight:700; transition:color 0.15s; }
         .triage-view-profile:hover { color:${C.navyDark}; }
         .triage-body { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease; }
@@ -2403,26 +2920,26 @@ export default function SymptomCheckerChatPage() {
         {/* Scrollable messages area */}
         <div ref={messagesAreaRef} className="chat-messages">
           <div style={{ maxWidth: "768px", margin: "0 auto" }}>
+            {/* No way back to the steps once the chat has started. Going back
+                let someone re-pick their answers and get a different triage
+                after they'd already seen one — a way to shop for the answer
+                they wanted, and it left two results that couldn't both be
+                right. A wrong step is corrected by typing it in the chat, which
+                the chat handles naturally. A genuinely new check starts from
+                scratch and counts as one. */}
             <div
               style={{
                 marginBottom: "30px",
                 paddingTop: "5px",
                 display: "flex",
-                justifyContent: "space-between",
+                justifyContent: "flex-start",
                 alignItems: "center",
               }}
             >
-              <button
-                onClick={(e) => {
-                  e.currentTarget.blur();
-                  setGuidedStep(3);
-                  setMessages([]);
-                  setTriageResult(null);
-                  setDifferentials([]);
-                  setTriageMounted(false);
-                }}
-                className="back-btn"
-              >
+              {/* Leaves the check and returns to the landing page. Arriving
+                  there uses nothing — only starting another check does — so the
+                  label says where it goes rather than implying a cost. */}
+              <button onClick={resetSession} className="back-btn">
                 <ArrowLeft
                   size={14}
                   strokeWidth={2.4}
@@ -2430,15 +2947,110 @@ export default function SymptomCheckerChatPage() {
                 />{" "}
                 Back to Symptom Checker
               </button>
-              <button onClick={resetSession} className="start-over-btn">
-                <RotateCcw
-                  size={14}
-                  strokeWidth={2.4}
-                  style={{ marginRight: "4px", verticalAlign: "middle" }}
-                />{" "}
-                Start over
-              </button>
             </div>
+
+            {/* Returning from sign-up. The conversation is back; this offers
+                to save the pet they described and attach the check to it, so
+                it lands in their health history. Species, breed and age are
+                already known from the checker — only the name is asked. */}
+            {showSavePet && (
+              <form className="save-pet" onSubmit={savePetAndCheck}>
+                <p className="save-pet-title">
+                  Save this check to your account
+                </p>
+                <p className="save-pet-sub">
+                  {ownPets.length > 0
+                    ? "Which pet is this for? We'll keep this result in their health history, so you can see how things change."
+                    : `Add your ${guestPet?.breed || guestPet?.species || "pet"}'s name and we'll keep this result in their health history, so you can see how things change.`}
+                </p>
+
+                {/* Their existing pets, as choices. Shown only when they have
+                    any — typically because they added one from the profile
+                    before coming back here. Choosing one attaches the check
+                    to it instead of creating a duplicate. */}
+                {ownPets.length > 0 && (
+                  <div
+                    className="save-pet-choices"
+                    role="radiogroup"
+                    aria-label="Choose a pet"
+                  >
+                    {ownPets.map((p) => (
+                      <label
+                        key={p.id}
+                        className={`save-pet-choice${savePetChoice === p.id ? " is-active" : ""}`}
+                      >
+                        <input
+                          type="radio"
+                          name="save-pet-choice"
+                          value={p.id}
+                          checked={savePetChoice === p.id}
+                          onChange={() => setSavePetChoice(p.id)}
+                        />
+                        <span className="save-pet-choice-name">{p.name}</span>
+                        {(p.breed || p.species) && (
+                          <span className="save-pet-choice-meta">
+                            {p.breed || p.species}
+                          </span>
+                        )}
+                      </label>
+                    ))}
+                    <label
+                      className={`save-pet-choice${savePetChoice === "new" ? " is-active" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="save-pet-choice"
+                        value="new"
+                        checked={savePetChoice === "new"}
+                        onChange={() => setSavePetChoice("new")}
+                      />
+                      <span className="save-pet-choice-name">A new pet</span>
+                    </label>
+                  </div>
+                )}
+
+                <div className="save-pet-row">
+                  {savePetChoice === "new" && (
+                    <input
+                      className="save-pet-input"
+                      placeholder="Pet's name"
+                      aria-label="Pet's name"
+                      value={savePetName}
+                      onChange={(e) => setSavePetName(e.target.value)}
+                      maxLength={60}
+                      autoFocus={ownPets.length === 0}
+                    />
+                  )}
+                  <button
+                    type="submit"
+                    className="save-pet-btn"
+                    disabled={savingPet}
+                  >
+                    {savingPet ? "Saving…" : "Save"}
+                  </button>
+                </div>
+                {savePetError && (
+                  <p className="save-pet-error">{savePetError}</p>
+                )}
+                <button
+                  type="button"
+                  className="save-pet-skip"
+                  onClick={skipSavePet}
+                >
+                  Not now — just continue
+                </button>
+              </form>
+            )}
+
+            {/* A calm confirmation. The green and the check mark carry the
+                success; an exclamation mark would shout about something that
+                just quietly worked. */}
+            {savedPetName && !showSavePet && (
+              <p className="save-pet-done">
+                <CircleCheck size={18} strokeWidth={2.4} aria-hidden="true" />
+                Saved to {savedPetName}'s health history.
+              </p>
+            )}
             <PetChip selectedPet={selectedPet} onStartOver={resetSession} />
             {/* Triage card — at top of messages, auto-scrolled to on appearance */}
             {triageResult && renderTriageCard()}
@@ -2478,7 +3090,13 @@ export default function SymptomCheckerChatPage() {
                   Your account keeps a record of every check, so you can see how
                   things change over time.
                 </p>
-                <Link href="/auth" className="sc-signup-btn">
+                <Link
+                  href={`/auth?tab=signup&redirect=${encodeURIComponent(
+                    "/symptom-checker/chat?resume=1",
+                  )}`}
+                  className="sc-signup-btn"
+                  onClick={holdCheckForSignup}
+                >
                   Sign Up Free
                 </Link>
               </div>

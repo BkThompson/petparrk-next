@@ -53,6 +53,27 @@ const SERVICES = [
   { id: 16, name: "Vaccine Package — Dog" },
   { id: 17, name: "Vaccine Package — Cat" },
   { id: 18, name: "Canine Influenza Vaccine" },
+  // 19-33 were missing, so the model was never told these services existed and
+  // could not match them — a receipt line reading "Bloodwork" came back
+  // unmatched and fell through to "Other", even though the form offers
+  // Bloodwork in its dropdown. Ids are the real ones from the services table.
+  { id: 19, name: "Urinalysis" },
+  { id: 20, name: "X-Ray" },
+  { id: 21, name: "Heartworm Prevention" },
+  { id: 22, name: "Ultrasound" },
+  { id: 23, name: "Nail Trim" },
+  { id: 24, name: "Ear Infection Treatment" },
+  { id: 25, name: "Flea & Tick Treatment" },
+  { id: 26, name: "Wound Treatment" },
+  { id: 27, name: "Microchipping" },
+  { id: 28, name: "Bloodwork" },
+  { id: 29, name: "Eye Treatment" },
+  { id: 30, name: "Dental Extraction" },
+  { id: 31, name: "Fecal Test" },
+  { id: 32, name: "Heartworm Test" },
+  { id: 33, name: "Skin / Allergy Treatment" },
+  { id: 34, name: "Acupuncture" },
+  { id: 35, name: "Physical Rehabilitation" },
 ];
 
 const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
@@ -125,7 +146,7 @@ Extract:
 3. LINE ITEMS — every billable line with a price. For each, classify it:
    - "mapped": matches one of these known services. Use the service's id.
 ${servicesList}
-   - "unmapped_service": a real clinical service NOT in the list above (e.g. bloodwork panel, cytology, ear cytology, fecal test, urinalysis, imaging). Set service_id to null.
+   - "unmapped_service": a real clinical service NOT in the list above (e.g. cytology, biopsy, anesthesia, hospitalization, fluids). Set service_id to null. Note that common lab work and imaging ARE in the list above — match those rather than calling them unmapped.
    - "product": a medication or physical product (e.g. Cytopoint, Simparica, Apoquel, prescription food, flea/tick preventative). Set service_id to null.
 
    DO NOT include: administrative or zero-dollar lines such as "Charges Complete", "No Treatment Progress Exam Needed", "The doctor has not recommended...", subtotals, tax lines, payment lines, or totals. Skip anything that is not an actual priced service or product.
@@ -143,6 +164,11 @@ Also extract, when present on the receipt (these describe the clinic/visit and h
 
 IMPORTANT — date: the visit/service date must be within the last 12 months. If the receipt's date is clearly older than one year, still report it accurately in visit_date so it can be filtered out.
 
+SENSITIVE DATA — separately, report whether the document displays either of these:
+   - full_card_number: a complete payment card number (13 or more consecutive digits, or a number printed in full such as 4111 1111 1111 1111). A masked number showing only the last four digits — "VISA ****1234", "ending in 1234", "XXXXXXXXXXXX1234" — is NOT a full card number and must be reported as false. Most receipts show only the last four; do not flag those.
+   - ssn: a Social Security Number, printed as 123-45-6789 or labelled SSN.
+Report these accurately. A customer's name, address, phone number or email is NOT sensitive for this purpose — do not flag those.
+
 Respond with ONLY this JSON, nothing else:
 {
   "clinic_name": "exact clinic name or null",
@@ -151,7 +177,8 @@ Respond with ONLY this JSON, nothing else:
   "species": "dog | cat | other | null",
   "line_items": [
     { "raw_label": "...", "classification": "mapped|unmapped_service|product", "service_id": number or null, "price": number }
-  ]
+  ],
+  "sensitive": { "full_card_number": true or false, "ssn": true or false }
 }`;
 
   let extraction;
@@ -175,6 +202,25 @@ Respond with ONLY this JSON, nothing else:
     return NextResponse.json(
       { error: "We couldn't read this document. Please try a clearer photo." },
       { status: 200 }, // 200 with error field so the client can mark this file failed without failing the batch
+    );
+  }
+
+  // Refuse a receipt showing a full card number or an SSN. This happens here,
+  // in memory, before the file is ever uploaded — the browser only uploads
+  // receipts that produced entries, so a refusal means it never reaches
+  // storage at all. Redacting after the fact would mean holding the original
+  // first, which is the thing worth avoiding.
+  //
+  // Deliberately not logged: no file name, no page content, nothing that would
+  // put the sensitive value in a log line instead of a bucket.
+  const flagged = extraction?.sensitive || {};
+  if (flagged.full_card_number || flagged.ssn) {
+    return NextResponse.json(
+      {
+        rejected: "sensitive_data",
+        sensitive_kind: flagged.full_card_number ? "card" : "ssn",
+      },
+      { status: 200 },
     );
   }
 
@@ -230,6 +276,15 @@ Respond with ONLY this JSON, nothing else:
       service_id:
         li.classification === "mapped" && li.service_id != null
           ? Number(li.service_id)
+          : null,
+      // Return the matched service's name, not just its id. The form's
+      // dropdown is keyed by name, and having the client keep its own copy of
+      // this list would be one more pair of things to drift apart. An id that
+      // doesn't match anything here resolves to null, and the form falls back
+      // to "Other".
+      service_name:
+        li.classification === "mapped" && li.service_id != null
+          ? SERVICES.find((sv) => sv.id === Number(li.service_id))?.name || null
           : null,
       price: Math.round(Number(li.price) * 100) / 100,
     }));

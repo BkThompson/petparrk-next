@@ -96,6 +96,27 @@ const C = {
 export default function SymptomCheckerHomePage() {
   const router = useRouter();
   const [session, setSession] = useState(undefined);
+
+  // A check waiting to be saved: a guest reached a result, signed up, and left
+  // before saving it — often via the welcome modal to the profile or badges.
+  // Without this, the only way back to it was the automatic return from
+  // sign-up, so it was stranded. Same key and window as the chat.
+  const [pendingCheck, setPendingCheck] = useState(null);
+  useEffect(() => {
+    if (!session) {
+      setPendingCheck(null);
+      return;
+    }
+    try {
+      const p = JSON.parse(
+        localStorage.getItem("petparrk_pending_check") || "null",
+      );
+      const fresh = p && Date.now() - (p.savedAt || 0) < 24 * 3600 * 1000;
+      setPendingCheck(fresh && p.messages?.length ? p : null);
+    } catch {
+      setPendingCheck(null);
+    }
+  }, [session]);
   const [pets, setPets] = useState([]);
   const [resumeData, setResumeData] = useState(null);
   const [guestPet, setGuestPet] = useState({ species: "", breed: "", age: "" });
@@ -413,13 +434,24 @@ export default function SymptomCheckerHomePage() {
           font-weight: 500;
           color: ${C.muted};
         }
+        /* Unsaved-check banner. Same card and 42px inverting button as the
+           rest of the checker; stacks full width on phones. */
+        .sc-pending { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 32px; padding: 20px; border-radius: 16px; background: #fff; border: 1px solid ${C.border}; box-shadow: 0 2px 12px rgba(23, 37, 49, 0.05); }
+        .sc-pending .sc-pending-title { margin: 0 0 4px; font-size: 18px; line-height: 1.3; font-weight: 800; color: ${C.navyDark}; }
+        .sc-pending .sc-pending-sub { margin: 0; font-size: 16px; font-weight: 500; line-height: 1.5; color: ${C.muted}; text-wrap: pretty; }
+        .sc-pending-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px; border-radius: 12px; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: background 0.2s, color 0.2s; box-sizing: border-box; }
+        .sc-pending-btn:hover { background: #fff; color: ${C.terracotta}; }
+        @media (max-width: 640px) {
+          .sc-pending { flex-direction: column; align-items: stretch; }
+          .sc-pending-btn { width: 100%; }
+        }
         .sc-limit-note {
           margin-bottom: 16px;
           padding: 14px 16px;
           border-radius: 12px;
           background: #FFFBEB;
           border: 1px solid #FCD34D;
-          font-size: 15px;
+          font-size: 16px;
           font-weight: 500;
           color: ${C.navyDark};
           line-height: 1.55;
@@ -662,6 +694,24 @@ export default function SymptomCheckerHomePage() {
           }}
         >
           <div className="pp-container-text">
+            {pendingCheck && (
+              <div className="sc-pending">
+                <div className="sc-pending-text">
+                  <p className="sc-pending-title">
+                    You have a check waiting to be saved
+                  </p>
+                  <p className="sc-pending-sub">
+                    Save it to your pet so it stays in their health history.
+                  </p>
+                </div>
+                <Link
+                  href="/symptom-checker/chat?resume=1"
+                  className="sc-pending-btn"
+                >
+                  Save my check
+                </Link>
+              </div>
+            )}
             {/* ── HOW IT WORKS ── */}
             <div style={{ marginBottom: "48px" }}>
               <p

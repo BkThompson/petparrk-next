@@ -169,27 +169,27 @@ const VALUES = [
   {
     number: "01",
     title: "Pet Owners First",
-    body: "Every decision we make starts with one question: does this help the pet owner? Not the advertiser, not us — the person trying to do right by their pet.",
+    body: "Every decision we make starts with one question: does this help the pet owner? Not the advertiser, not us — the person trying to do right by their pet. No vet can pay to rank higher here.",
   },
   {
     number: "02",
     title: "Transparency Always",
-    body: "Honest pricing. Clear information. No hidden agendas. We show you where our data comes from, and we don't charge you for what should have been free all along.",
+    body: "Honest pricing. Clear information. No hidden agendas. We'd rather tell you what we don't know than pretend we do.",
   },
   {
     number: "03",
     title: "Prevention Over Reaction",
-    body: "The best vet visit is the one you were prepared for. We're building tools that help you stay ahead — not just tools for when things go wrong.",
+    body: "The best vet visit is the one you saw coming. We're building tools that help you stay ahead — not just tools for when things go wrong.",
   },
   {
     number: "04",
     title: "Community Over Competition",
-    body: "Not replacing vets — helping you work with them better. Great vets deserve to be found. Pet owners deserve to find them.",
+    body: "We're not here to replace your vet, and we never will be. We're here so you arrive knowing what to ask and what it may cost. Great vets deserve to be found. Pet owners deserve to find them.",
   },
   {
     number: "05",
     title: "Accessibility for All",
-    body: "Pet care shouldn't be a privilege. We're keeping the core platform free, and we're freeing information that's been trapped behind phone calls for too long.",
+    body: "Pet care shouldn't be a privilege, and neither should understanding it. No one should learn what it costs at the counter, when saying no isn't really an option.",
   },
 ];
 
@@ -816,7 +816,7 @@ export default function AboutPage() {
             lineHeight: "1.75",
           }}
         >
-          Built in Oakland. Built for every pet owner who deserves better.
+          Because "it depends" isn't an answer when your pet needs care.
         </p>
       </div>
     </div>
@@ -1101,7 +1101,7 @@ export default function AboutPage() {
             lineHeight: "1.75",
           }}
         >
-          Built in Oakland. Built for every pet owner who deserves better.
+          Because "it depends" isn't an answer when your pet needs care.
         </p>
       </div>
     </div>

@@ -109,9 +109,44 @@ async function getUser(req) {
 
 // Only NEW conversations count. Follow-up turns inside a check the guest has
 // already started are free, or the limit would fire mid-conversation.
-async function allowGuest(req, isNewCheck, deviceId) {
+// Is this request a continuation of a check that already passed the captcha
+// and was already counted? Going back to Step 3 and re-picking a severity sends
+// a fresh first message with the same checkId. That check was verified and
+// billed on its first submit, so it should neither be charged again nor asked
+// for another captcha — asking was what produced the 403 on a re-pick.
+//
+// Bounded so the id can't be replayed as a free pass: it only counts as a
+// continuation from the same address or device that created it, and only for
+// 30 minutes. Someone going back a step is inside both; a script lifting one
+// id to run checks elsewhere or later is outside them.
+async function isContinuation(req, checkId, deviceId) {
+  if (!checkId) return false;
+  const db = admin();
+  const ip_hash = hashIp(req);
+  const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  const { data, error } = await db
+    .from("guest_check_usage")
+    .select("ip_hash, device_hash")
+    .eq("check_id", checkId)
+    .gte("created_at", since)
+    .limit(1);
+  if (error || !data || data.length === 0) return false;
+  const row = data[0];
+  if (row.ip_hash === ip_hash) return true;
+  if (deviceId) {
+    const device_hash = crypto
+      .createHash("sha256")
+      .update(String(deviceId) + (process.env.GUEST_LIMIT_SALT || ""))
+      .digest("hex");
+    if (row.device_hash === device_hash) return true;
+  }
+  return false;
+}
+
+async function allowGuest(req, isNewCheck, deviceId, checkId) {
   if (!isNewCheck) return { ok: true };
   const db = admin();
+
   // Two signals, because neither is sufficient alone.
   //
   // The IP hash catches someone opening a fresh browser or a private window,
@@ -169,7 +204,7 @@ async function allowGuest(req, isNewCheck, deviceId) {
 
   const { error: insertError } = await db
     .from("guest_check_usage")
-    .insert({ ip_hash, device_hash });
+    .insert({ ip_hash, device_hash, check_id: checkId || null });
   if (insertError) {
     console.error("[guest-limit] insert failed:", insertError.message);
   }
@@ -215,7 +250,7 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const { messages, pet, followUpContext, captchaToken, deviceId } =
+    const { messages, pet, followUpContext, captchaToken, deviceId, checkId } =
       await req.json();
 
     // Size limits apply to everyone: a signed-in account is free to create, so
@@ -245,7 +280,18 @@ export async function POST(req) {
           { status: 401 },
         );
       }
-      if (isNewCheck && !(await verifyTurnstile(captchaToken, req))) {
+      const continuing =
+        isNewCheck &&
+        (await isContinuation(
+          req,
+          typeof checkId === "string" ? checkId : null,
+          typeof deviceId === "string" ? deviceId : null,
+        ));
+      if (
+        isNewCheck &&
+        !continuing &&
+        !(await verifyTurnstile(captchaToken, req))
+      ) {
         return Response.json(
           {
             error: "captcha_failed",
@@ -258,8 +304,9 @@ export async function POST(req) {
       // alongside the IP, never the only one.
       const gate = await allowGuest(
         req,
-        isNewCheck,
+        isNewCheck && !continuing,
         typeof deviceId === "string" ? deviceId : null,
+        typeof checkId === "string" ? checkId : null,
       );
       if (!gate.ok) {
         return Response.json(

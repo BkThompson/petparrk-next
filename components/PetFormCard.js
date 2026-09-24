@@ -81,7 +81,7 @@ export default function PetFormCard({
           </div>
           <h3
             style={{
-              fontSize: "22px",
+              fontSize: "24px",
               fontWeight: 800,
               color: C.navyDark,
               margin: "0 0 8px",
@@ -93,7 +93,7 @@ export default function PetFormCard({
           </h3>
           <p
             style={{
-              fontSize: "15px",
+              fontSize: "18px",
               fontWeight: 500,
               color: C.slate || "#4B5563",
               margin: "0 0 28px",
@@ -264,7 +264,7 @@ export default function PetFormCard({
                 .join(" · ") || "Fill in the details below"}
             </p>
             <p className="field-hint" style={{ marginTop: 4 }}>
-              (optional · JPG, PNG · max 5MB)
+              Optional · JPG or PNG · max 5MB
             </p>
           </div>
         </div>

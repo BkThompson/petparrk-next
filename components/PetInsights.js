@@ -319,7 +319,7 @@ const profileCss = `
     flex-shrink: 0;
   }
   .pin-profile-text {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--color-navy-dark, #172531);
     line-height: 1.5;

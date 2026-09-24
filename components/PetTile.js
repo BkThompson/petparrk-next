@@ -207,7 +207,13 @@ export function PetTileStyles() {
           overflow: hidden;
           transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        /* Navy, matching .pp-pet-spec-value, and deliberately not the banner
+           accent. The value used to be painted inline with the accent passed
+           into ClampedMedline, so allergy and medication text changed every
+           time the banner did — and an inline style overrides any class rule.
+           No accent is passed any more, so this rule is what applies. */
         .pp-medline-value {
+          color: ${C.navyDark};
           font-weight: 600;
           min-width: 0;
           display: block;
@@ -493,18 +499,8 @@ export default function PetTile({
           </div>
 
           <div className="pp-pet-medlines">
-            <ClampedMedline
-              C={C}
-              label="Allergies:"
-              value={pet.allergies}
-              accent={bannerPalette?.accent}
-            />
-            <ClampedMedline
-              C={C}
-              label="Meds:"
-              value={pet.medications}
-              accent={bannerPalette?.accent}
-            />
+            <ClampedMedline C={C} label="Allergies:" value={pet.allergies} />
+            <ClampedMedline C={C} label="Meds:" value={pet.medications} />
           </div>
         </div>
 

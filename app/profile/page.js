@@ -135,6 +135,26 @@ export default function ProfilePage() {
     emptyPetForm,
   } = useProfileState();
 
+  // A check waiting to be saved — a guest reached a result, signed up, then
+  // came here (often from the welcome modal) before saving it. This is the
+  // most likely place they land, so it's where the banner matters most.
+  const [pendingCheck, setPendingCheck] = useState(null);
+  useEffect(() => {
+    if (!session) {
+      setPendingCheck(null);
+      return;
+    }
+    try {
+      const p = JSON.parse(
+        localStorage.getItem("petparrk_pending_check") || "null",
+      );
+      const fresh = p && Date.now() - (p.savedAt || 0) < 24 * 3600 * 1000;
+      setPendingCheck(fresh && p.messages?.length ? p : null);
+    } catch {
+      setPendingCheck(null);
+    }
+  }, [session]);
+
   // Local: collapses the "Submit a vet price" toggle while the form's success
   // card is showing, so the two don't compete. Resets whenever the form closes.
   const [priceSubmitted, setPriceSubmitted] = useState(false);
@@ -608,12 +628,32 @@ export default function ProfilePage() {
         @media (max-width: 640px) {
           .pp-edit-full-link { display: flex; width: 100%; }
         }
-        .pp-add-pet-mobile.pp-add-pet-mobile--single { display: block; }
+        /* Add a pet lives in one place per screen size, at every pet count.
+           Tablet and desktop: top right, beside the family count. Mobile:
+           under the last card, where the thumb already is after scrolling.
+           It used to depend on the count too — bottom with one pet, top with
+           two — so adding a second pet moved the button away from where the
+           person had just used it.
+           Two classes, not one: profileStyles.js sets .pp-add-pet-mobile to
+           display:block at every width, and a single-class rule here would
+           tie on specificity and depend on which stylesheet loaded last. */
+        .pp-add-pet-mobile.pp-add-pet-mobile--single,
         .pp-add-pet-mobile.pp-add-pet-mobile--multi { display: none; }
         @media (max-width: 767px) {
+          .pp-add-pet-mobile.pp-add-pet-mobile--single,
           .pp-add-pet-mobile.pp-add-pet-mobile--multi { display: block; }
-          /* Top-right button hidden once cards stack. */
           .pp-pack-head .pp-add-pet-top { display: none; }
+        }
+        /* Unsaved-check banner. Same card and 42px inverting button as the
+           checker; stacks full width on phones. */
+        .pp-pending { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 30px 0 24px; padding: 20px; border-radius: 16px; background: #fff; border: 1px solid ${C.border}; box-shadow: 0 2px 12px rgba(23, 37, 49, 0.05); }
+        .pp-pending .pp-pending-title { margin: 0 0 4px; font-size: 18px; line-height: 1.3; font-weight: 800; color: ${C.navyDark}; }
+        .pp-pending .pp-pending-sub { margin: 0; font-size: 16px; font-weight: 500; line-height: 1.5; color: ${C.muted}; text-wrap: pretty; }
+        .pp-pending-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px; border-radius: 12px; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: background 0.2s, color 0.2s; box-sizing: border-box; }
+        .pp-pending-btn:hover { background: #fff; color: ${C.terracotta}; }
+        @media (max-width: 640px) {
+          .pp-pending { flex-direction: column; align-items: stretch; }
+          .pp-pending-btn { width: 100%; }
         }
         @media (min-width: 768px) and (max-width: 1023px) {
           .pp-container-mixed { max-width: 760px; }
@@ -931,7 +971,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </button>
-              <Link href="/saved" className="pp-stat-link">
+              <Link href="/saved-vets" className="pp-stat-link">
                 <div className="pp-stat-outer">
                   <div className="pp-stat saved">
                     <p className="pp-stat-num">{counts.saved}</p>
@@ -1033,13 +1073,31 @@ export default function ProfilePage() {
               </div>
 
               {/* Pack section */}
+              {pendingCheck && isOwner && (
+                <div className="pp-pending">
+                  <div className="pp-pending-text">
+                    <p className="pp-pending-title">
+                      You have a check waiting to be saved
+                    </p>
+                    <p className="pp-pending-sub">
+                      Save it to your pet so it stays in their health history.
+                    </p>
+                  </div>
+                  <Link
+                    href="/symptom-checker/chat?resume=1"
+                    className="pp-pending-btn"
+                  >
+                    Save my check
+                  </Link>
+                </div>
+              )}
               <div ref={packSectionRef} className="pp-pack-section">
                 <div className="pp-pack-head">
                   <div>
                     <p className="pp-pack-eyebrow">My Pack</p>
                     <h2 className="pp-pack-title">{familyCount}</h2>
                   </div>
-                  {isOwner && pets.length >= 2 && (
+                  {isOwner && pets.length >= 1 && (
                     <button
                       className="pp-add-pet-btn pp-add-pet-top"
                       onClick={handleStartAddPet}

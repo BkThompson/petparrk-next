@@ -94,11 +94,16 @@ export default function InlineSubmitPriceForm({
 
   // ── Contribution mode: type prices in, or upload receipts for AI extraction.
   // Both paths end in the same editable `entries` rows and the same submit.
-  const [mode, setMode] = useState("manual"); // 'manual' | 'upload'
+  const [mode] = useState("upload"); // receipts are required; there is no manual-only path // 'manual' | 'upload'
   const [receiptFiles, setReceiptFiles] = useState([]); // {id,file,status,result}
   const [extracting, setExtracting] = useState(false);
   const [extractionRan, setExtractionRan] = useState(false);
   const [extractNotices, setExtractNotices] = useState([]); // skipped/mismatch messages
+  // The clinic a mismatched receipt actually came from — offered as a switch
+  // when the form isn't tied to one vet. Only when every mismatch points at
+  // the same clinic; two different ones is a batch to sort out, not a choice.
+  const [detectedClinic, setDetectedClinic] = useState(null);
+  const [switchingClinic, setSwitchingClinic] = useState(false);
   const receiptInputRef = useRef(null);
 
   const fileInputRef = useRef(null);
@@ -174,6 +179,39 @@ export default function InlineSubmitPriceForm({
     setVetSearch(vet.name);
     setShowDropdown(false);
   }
+
+  // Switch to the clinic the receipts actually came from, then read them
+  // again. Nothing was uploaded — mismatched receipts never leave the browser —
+  // so re-running costs only the extraction itself.
+  function switchToDetectedClinic() {
+    if (!detectedClinic) return;
+    const want = detectedClinic.toLowerCase();
+    const target =
+      vets.find((v) => (v.name || "").toLowerCase() === want) ||
+      vets.find((v) => (v.name || "").toLowerCase().includes(want));
+    if (!target) {
+      setFormStatus("error");
+      setErrorMsg(
+        `We couldn't find ${detectedClinic} in the directory. Search for it above, or add it as a new clinic.`,
+      );
+      return;
+    }
+    pickVet(target);
+    setExtractNotices([]);
+    setDetectedClinic(null);
+    setExtractionRan(false);
+    setReceiptFiles((prev) => prev.map((f) => ({ ...f, status: "pending" })));
+    setSwitchingClinic(true);
+  }
+
+  // Re-read once the new clinic is actually in state. Calling runExtraction
+  // straight after pickVet would use the previous vet, because state updates
+  // don't apply until the next render.
+  useEffect(() => {
+    if (!switchingClinic || !selectedVet) return;
+    setSwitchingClinic(false);
+    runExtraction();
+  }, [switchingClinic, selectedVet]);
   function clearVet() {
     setSelectedVet(null);
     setVetSearch("");
@@ -185,11 +223,40 @@ export default function InlineSubmitPriceForm({
     );
   }
   function addEntry() {
-    setEntries((prev) => [...prev, { ...SUBMIT_EMPTY_ENTRY }]);
+    setEntries((prev) => {
+      // Inherit the receipt from the last row. Manually added rows are
+      // normally a line the reader missed on a receipt that's already here,
+      // and every entry has to trace to one to be submitted.
+      const lastWithReceipt = [...prev].reverse().find((e) => e._receiptFileId);
+      return [
+        ...prev,
+        {
+          ...SUBMIT_EMPTY_ENTRY,
+          _receiptFileId: lastWithReceipt?._receiptFileId || null,
+          _source: lastWithReceipt ? "receipt_manual_add" : undefined,
+        },
+      ];
+    });
   }
   function removeEntry(idx) {
     setEntries((prev) => prev.filter((_, i) => i !== idx));
   }
+  // At least one entry traceable to a receipt. Drives both the dropzone and
+  // the entry fields: if a batch produced nothing usable — all too old, or all
+  // from another clinic — the person needs the dropzone back, not a set of
+  // fields they can't legitimately submit.
+  const hasBackedEntries = entries.some((e) => e._receiptFileId);
+
+  // Receipts that haven't been read yet. The read button used to reappear
+  // after every run saying "Read 1 receipt", inviting you to re-read something
+  // already done. Now it only shows when there's actually something new.
+  // "queued" is what a newly added file gets; "pending" is what a reset sets.
+  // Counting only "pending" meant a fresh upload looked already-read and the
+  // button never appeared at all.
+  const unreadReceipts = receiptFiles.filter(
+    (f) => !f.status || f.status === "queued" || f.status === "pending",
+  );
+
   function validateAndSetFile(file) {
     const ok = ["image/jpeg", "image/png", "application/pdf"].includes(
       file.type,
@@ -263,10 +330,14 @@ export default function InlineSubmitPriceForm({
     setExtracting(true);
     setErrorMsg("");
     const notices = [];
+    const detectedClinics = new Set();
     const newEntries = [];
     let earliestDate = "";
 
-    for (const item of receiptFiles) {
+    const toRead = receiptFiles.filter(
+      (f) => !f.status || f.status === "queued" || f.status === "pending",
+    );
+    for (const item of toRead) {
       setReceiptFiles((prev) =>
         prev.map((x) =>
           x.id === item.id ? { ...x, status: "processing" } : x,
@@ -284,6 +355,15 @@ export default function InlineSubmitPriceForm({
         if (result.error) {
           status = "failed";
           notices.push(`We couldn't read ${item.file.name}.`);
+        } else if (result.rejected === "sensitive_data") {
+          // Refused before upload. Nothing was stored, so re-uploading a
+          // covered version is the whole fix.
+          status = "sensitive";
+          notices.push(
+            result.sensitive_kind === "ssn"
+              ? `${item.file.name} appears to show a Social Security Number, so we didn't accept it. Cover it and upload again — nothing was saved.`
+              : `${item.file.name} appears to show a full card number, so we didn't accept it. Cover all but the last four digits and upload again — nothing was saved.`,
+          );
         } else if (result.rejected === "too_old") {
           status = "too_old";
           notices.push(
@@ -291,8 +371,16 @@ export default function InlineSubmitPriceForm({
           );
         } else if (result.clinic_match === "mismatch") {
           status = "mismatch";
+          // When the vet isn't fixed by the page, a mismatch usually just means
+          // the wrong clinic was picked. Remember the detected name so the
+          // notice can offer to switch rather than refusing.
+          if (!vetLocked && result.clinic_name) {
+            detectedClinics.add(result.clinic_name);
+          }
           notices.push(
-            `${item.file.name} looks like it's from ${result.clinic_name || "another clinic"}. To keep pricing accurate, we've set it aside from this batch — you can add it on that clinic's page whenever you'd like.`,
+            vetLocked
+              ? `${item.file.name} looks like it's from ${result.clinic_name || "another clinic"}, not this one. Open that clinic's page and add it there, so the price lands on the right vet.`
+              : `${item.file.name} looks like it's from ${result.clinic_name || "another clinic"}, not the clinic selected above.`,
           );
         } else if (!result.line_items || result.line_items.length === 0) {
           status = "empty";
@@ -302,9 +390,18 @@ export default function InlineSubmitPriceForm({
           if (result.visit_date && !earliestDate)
             earliestDate = result.visit_date;
           for (const li of result.line_items) {
+            // A matched line selects that service in the dropdown. Everything
+            // else — a real service we don't list, or a product — goes to
+            // "Other" with the receipt's own wording typed in, so nothing is
+            // lost and the person only has to correct what's actually wrong.
+            // Previously every row arrived as raw receipt text, which the
+            // dropdown couldn't match, so even recognised services looked
+            // unrecognised.
+            const matched = li.service_name || null;
             newEntries.push({
               ...SUBMIT_EMPTY_ENTRY,
-              service_name: li.raw_label,
+              service_name: matched || "__other__",
+              service_other: matched ? "" : li.raw_label,
               price_type: "exact",
               price_low: String(li.price),
               price_high: "",
@@ -339,6 +436,9 @@ export default function InlineSubmitPriceForm({
       if (earliestDate && !visitDate) setVisitDate(earliestDate);
     }
     setExtractNotices(notices);
+    setDetectedClinic(
+      detectedClinics.size === 1 ? [...detectedClinics][0] : null,
+    );
     setExtractionRan(true);
     setExtracting(false);
   }
@@ -361,6 +461,18 @@ export default function InlineSubmitPriceForm({
         );
         return;
       }
+    }
+    // Every entry must trace back to a receipt. Without this, a row left over
+    // after all the receipts were set aside — too old, or from another clinic —
+    // could still be typed into and submitted, saving a price with no proof
+    // behind it. That is the exact thing requiring receipts was meant to stop.
+    const unbacked = entries.some((e) => !e._receiptFileId);
+    if (unbacked) {
+      setFormStatus("error");
+      setErrorMsg(
+        "Every price needs a receipt behind it. Add a receipt from this clinic, dated within the past year.",
+      );
+      return;
     }
     const valid = entries.every(
       (e) =>
@@ -539,7 +651,6 @@ export default function InlineSubmitPriceForm({
     setVisitDate("");
     setSubmitterNote("");
     setSubmitFile(null);
-    setMode("manual");
     setReceiptFiles([]);
     setExtracting(false);
     setExtractionRan(false);
@@ -555,7 +666,6 @@ export default function InlineSubmitPriceForm({
     setVisitDate("");
     setSubmitterNote("");
     setSubmitFile(null);
-    setMode("manual");
     setReceiptFiles([]);
     setExtracting(false);
     setExtractionRan(false);
@@ -608,7 +718,8 @@ export default function InlineSubmitPriceForm({
         }
         .isp-head-subtitle {
           margin: 10px 0 0;
-          font-size: 15px; font-weight: 500;
+          font-size: 16px; 
+          font-weight: 500;
           color: ${C.slate};
           line-height: 1.6;
           /* text-wrap: balance; */
@@ -739,12 +850,24 @@ export default function InlineSubmitPriceForm({
           border-radius: 12px;
           padding: 20px;
           border: 1px solid ${C.border};
-          margin-bottom: 12px;
+          margin-bottom: 20px;
           box-shadow: 0 1px 3px rgba(23,37,49,0.04);
         }
         .isp-entry-head {
-          display: flex; justify-content: space-between; align-items: center;
+          display: flex; 
+          justify-content: space-between; 
+          align-items: flex-start;
           margin-bottom: 14px;
+        }
+        .isp-entry-source {
+          display: block;
+          margin-top: 2px;
+          font-size: 13px;
+          font-weight: 500;
+          letter-spacing: 0;
+          text-transform: none;
+          color: ${C.muted};
+          overflow-wrap: anywhere;
         }
         .isp-entry-num {
           margin: 0;
@@ -770,7 +893,7 @@ export default function InlineSubmitPriceForm({
           color: ${C.muted};
           margin-bottom: 6px;
           text-transform: uppercase;
-          letter-spacing: 0.10em;
+          letter-spacing: 0.02em;
         }
         .isp-required { color: ${C.terracotta}; }
 
@@ -795,7 +918,7 @@ export default function InlineSubmitPriceForm({
         .isp-input:focus, .isp-select:focus { border-color: ${C.terracotta}; }
         textarea.isp-input { padding: 12px 14px; height: auto; min-height: 80px; resize: none; }
         .isp-select {
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23717A86' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23717A86' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
           background-repeat: no-repeat; background-position: right 12px center;
           padding-right: 38px;
           cursor: pointer;
@@ -811,6 +934,10 @@ export default function InlineSubmitPriceForm({
 
         /* Price type segmented control */
         .isp-seg-group { display: flex; gap: 8px; }
+        @media (max-width: 640px) {
+          .isp-seg-group { flex-direction: column; align-items: stretch; }
+          .isp-seg-group .isp-seg-btn { width: 100%; }
+        }
         .isp-seg-btn {
           flex: 1;
           padding: 10px 6px;
@@ -819,7 +946,7 @@ export default function InlineSubmitPriceForm({
           background: #fff;
           color: ${C.slate};
           font-weight: 700;
-          font-size: 14px;
+          font-size: 15px;
           cursor: pointer;
           transition: all 0.15s;
           text-align: center;
@@ -885,8 +1012,11 @@ export default function InlineSubmitPriceForm({
           background: ${C.terracotta}; color: #fff; border-color: ${C.terracotta};
         }
         .isp-mode-hint {
-          margin: 12px 0 0; font-size: 14px; font-weight: 500;
-          color: ${C.slate}; line-height: 1.6;
+          margin: 12px 0 0; 
+          font-size: 15px; 
+          font-weight: 500;
+          color: ${C.slate}; 
+          line-height: 1.6;
         }
         /* Receipt drop + list (upload mode) */
         .isp-receipt-drop {
@@ -904,9 +1034,76 @@ export default function InlineSubmitPriceForm({
           padding: 10px 12px; border: 1px solid ${C.border}; border-radius: 12px;
           background: #fff; color: ${C.muted};
         }
+        @media (max-width: 640px) {
+          /* Stack on a phone. Inline, the filename was being cut to a few
+             characters — useless for telling two receipts apart — while the
+             status pill held its full width. The name gets the row; the
+             status sits beneath it, indented past the icon. */
+          .isp-receipt-row {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            grid-template-areas:
+              "icon name remove"
+              ".    state state";
+            align-items: center;
+            row-gap: 8px;
+          }
+          .isp-receipt-row .isp-receipt-ico { grid-area: icon; }
+          .isp-receipt-name {
+            grid-area: name;
+            white-space: normal;
+            overflow-wrap: anywhere;
+          }
+          .isp-receipt-remove { grid-area: remove; }
+          .isp-receipt-row .isp-receipt-state,
+          .isp-receipt-row .isp-receipt-status {
+            grid-area: state;
+            margin-left: 0;
+            justify-self: start;
+          }
+        }
+        /* Tinted tile, matching the admin's attention rows: a white card with
+           the icon alone at the left, standing for the row beside it. Neutral
+           because a file is neutral — the outcome is carried by the status
+           pill, not by this.
+           Fill only, no border. The admin's attention rows sit inside one card
+           with dividers, so there the tile's outline is the only edge. A
+           receipt row already has its own border, and a bordered tile inside
+           it nests two outlines a few pixels apart — which also shrinks the
+           fill and washes the colour out. */
+        .isp-receipt-ico {
+          width: 34px; height: 34px; border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0; box-sizing: border-box;
+          background: ${C.cream}; color: ${C.muted};
+        }
         .isp-receipt-name {
-          flex: 1; min-width: 0; font-size: 14px; font-weight: 600; color: ${C.navyDark};
+          flex: 1; min-width: 0; font-size: 15px; font-weight: 600; color: ${C.navyDark};
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        /* Per-file outcome. Green for read, amber for anything that needs a
+           second look — same status colours as the rest of the product. */
+        .isp-receipt-state {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          margin-left: auto;
+          padding: 3px 10px;
+          border-radius: 999px;
+          font-size: 13px;
+          font-weight: 700;
+          white-space: nowrap;
+          border: var(--pill-border-w, 2px) solid transparent;
+        }
+        .isp-receipt-state--ok {
+          color: #1a6641;
+          background: rgba(26, 102, 65, 0.1);
+          border-color: rgba(26, 102, 65, 0.28);
+        }
+        .isp-receipt-state--warn {
+          color: #8c6a11;
+          background: rgba(217, 162, 27, 0.14);
+          border-color: rgba(217, 162, 27, 0.34);
         }
         .isp-receipt-status {
           display: inline-flex; align-items: center; gap: 5px;
@@ -927,10 +1124,48 @@ export default function InlineSubmitPriceForm({
         }
         .isp-extract-btn:hover:not(:disabled) { background: #fff; color: ${C.terracotta}; }
         .isp-extract-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        /* Switch-clinic offer. 42px terracotta button that inverts on hover,
+           matching every other primary action on the site; stacks full width
+           on phones. */
+        .isp-switch-clinic {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-top: 12px;
+        }
+        .isp-switch-btn {
+          height: 42px;
+          padding: 0 18px;
+          border-radius: 12px;
+          border: 2px solid ${C.terracotta};
+          background: ${C.terracotta};
+          color: #fff;
+          font-family: inherit;
+          font-size: 15px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s;
+          box-sizing: border-box;
+        }
+        .isp-switch-btn:hover:not(:disabled) {
+          background: #fff;
+          color: ${C.terracotta};
+        }
+        .isp-switch-btn:disabled { opacity: 0.6; cursor: default; }
+        .isp-switch-hint {
+          font-size: 14px;
+          font-weight: 500;
+          color: ${C.muted};
+        }
+        @media (max-width: 640px) {
+          .isp-switch-clinic { flex-direction: column; align-items: stretch; }
+          .isp-switch-btn { width: 100%; }
+        }
         .isp-extract-notice {
           display: flex; align-items: flex-start; gap: 8px; margin: 0 0 10px;
           padding: 12px 14px; background: #FEF6E9; border: 1px solid #F5E0BC;
-          border-radius: 12px; font-size: 13px; font-weight: 500;
+          border-radius: 12px; font-size: 16px; font-weight: 500;
           color: ${C.navyDark}; line-height: 1.5;
         }
         .isp-extract-notice svg { color: #8C6A11; flex-shrink: 0; margin-top: 2px; }
@@ -978,12 +1213,12 @@ export default function InlineSubmitPriceForm({
           background: ${C.cream};
           border-radius: 8px;
           padding: 10px 14px;
-          margin-top: 10px;
+          margin: 20px 0;
           border: 1px solid ${C.border};
         }
         .isp-before-upload p {
           margin: 0;
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 500;
           color: ${C.navyDark};
           line-height: 1.6;
@@ -1064,13 +1299,13 @@ export default function InlineSubmitPriceForm({
         }
         .isp-success h4 {
           margin: 0 0 8px;
-          font-size: 22px; 
+          font-size: 24px; 
           font-weight: 800;
           color: ${C.navyDark};
         }
         .isp-success p {
           margin: 0 0 20px;
-          font-size: 15px; 
+          font-size: 16px; 
           font-weight: 500;
           color: ${C.slate};
           line-height: 1.6;
@@ -1452,39 +1687,32 @@ export default function InlineSubmitPriceForm({
               </>
             )}
 
-            {/* ── Contribution mode toggle ── */}
+            {/* No mode choice any more. A price without a receipt can't be
+                verified, and a directory that publishes unverifiable prices
+                isn't a source of truth. Upload first, then review and correct
+                what we read — the receipt stays attached either way. */}
             <div className="isp-section">
               <p className="isp-section-num">
-                {vetLocked ? "1" : "2"}. How would you like to add prices?
+                {vetLocked ? "1" : "2"}. Add your receipt
               </p>
-              <div className="isp-mode-toggle">
-                <button
-                  type="button"
-                  className={`isp-mode-btn ${mode === "manual" ? "is-active" : ""}`}
-                  onClick={() => setMode("manual")}
-                >
-                  Enter them myself
-                </button>
-                <button
-                  type="button"
-                  className={`isp-mode-btn ${mode === "upload" ? "is-active" : ""}`}
-                  onClick={() => setMode("upload")}
-                >
-                  Upload receipts
-                </button>
-              </div>
-              {mode === "upload" && (
-                <p className="isp-mode-hint">
-                  Drop up to 5 receipts from the past year and we'll read the
-                  prices for you. You can review and adjust everything before
-                  submitting.
-                </p>
-              )}
+              <p className="isp-mode-hint">
+                Drop up to 5 receipts from the past year and we'll read the
+                prices for you. You can review and adjust everything before
+                anything is submitted.
+              </p>
             </div>
-
-            {/* ── Upload panel (upload mode, before extraction) ── */}
-            {mode === "upload" && !extractionRan && (
+            {mode === "upload" && (
               <div className="isp-section">
+                {/* Moved here from the old manual-only block. Every submission
+                    comes through this dropzone now, so this is the one place
+                    the guidance is guaranteed to be seen. */}
+                <div className="isp-before-upload">
+                  <p>
+                    <strong>Privacy first:</strong> Remove or black out any
+                    account numbers, card numbers, or billing details. We only
+                    use the service name and price.
+                  </p>
+                </div>
                 <div
                   className={`isp-receipt-drop ${isDragging ? "drag" : ""} ${receiptFiles.length >= MAX_RECEIPTS ? "full" : ""}`}
                   onDragOver={(e) => {
@@ -1514,7 +1742,7 @@ export default function InlineSubmitPriceForm({
                       : "Drop receipts here, or click to browse"}
                   </p>
                   <p className="isp-receipt-drop-sub">
-                    Up to 5 · JPG, PNG, or PDF · past 12 months
+                    Up to 5 · JPG, PNG, or PDF · Past 12 months
                   </p>
                   <input
                     ref={receiptInputRef}
@@ -1533,33 +1761,83 @@ export default function InlineSubmitPriceForm({
                   <div className="isp-receipt-list">
                     {receiptFiles.map((rf) => (
                       <div key={rf.id} className="isp-receipt-row">
-                        <FileText size={16} strokeWidth={2} />
+                        <span className="isp-receipt-ico">
+                          <FileText size={24} strokeWidth={2} />
+                        </span>
                         <span className="isp-receipt-name">{rf.file.name}</span>
+                        {/* Every file says where it got to. Before this, only
+                            "Reading…" ever showed, so a file that failed looked
+                            identical to one that worked — and with prices from
+                            an earlier receipt still on screen, a failure read
+                            as a contradiction. */}
                         {rf.status === "processing" ? (
                           <span className="isp-receipt-status">
                             <Loader2
-                              size={13}
+                              size={17}
                               strokeWidth={2.4}
                               className="isp-spin"
                             />
                             Reading…
                           </span>
-                        ) : !extracting ? (
-                          <button
-                            type="button"
-                            className="isp-receipt-remove"
-                            onClick={() => removeReceipt(rf.id)}
-                            aria-label="Remove"
-                          >
-                            <X size={15} strokeWidth={2.2} />
-                          </button>
-                        ) : null}
+                        ) : (
+                          (() => {
+                            const found = entries.filter(
+                              (e) => e._receiptFileId === rf.id,
+                            ).length;
+                            const label = {
+                              done: found
+                                ? `${found} ${found === 1 ? "price" : "prices"} found`
+                                : "Read",
+                              failed: "Couldn't read this one",
+                              empty: "No prices found",
+                              too_old: "Older than a year",
+                              mismatch: "Different clinic",
+                              sensitive: "Not accepted",
+                            }[rf.status];
+                            const tone =
+                              rf.status === "done"
+                                ? "ok"
+                                : rf.status
+                                  ? "warn"
+                                  : "idle";
+                            return (
+                              <>
+                                {label && (
+                                  <span
+                                    className={`isp-receipt-state isp-receipt-state--${tone}`}
+                                  >
+                                    {rf.status === "done" ? (
+                                      <Check size={17} strokeWidth={2.6} />
+                                    ) : (
+                                      <AlertTriangle
+                                        size={17}
+                                        strokeWidth={2.4}
+                                      />
+                                    )}
+                                    {label}
+                                  </span>
+                                )}
+                                {!extracting && (
+                                  <button
+                                    type="button"
+                                    className="isp-receipt-remove"
+                                    onClick={() => removeReceipt(rf.id)}
+                                    aria-label="Remove"
+                                  >
+                                    <X size={15} strokeWidth={2.2} />
+                                  </button>
+                                )}
+                              </>
+                            );
+                          })()
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
 
-                {receiptFiles.length > 0 && (
+                {/* Only when something is actually waiting to be read. */}
+                {(unreadReceipts.length > 0 || extracting) && (
                   <button
                     type="button"
                     className="isp-extract-btn"
@@ -1570,7 +1848,7 @@ export default function InlineSubmitPriceForm({
                       ? "Reading receipts…"
                       : !selectedVet
                         ? "Choose a vet first"
-                        : `Read ${receiptFiles.length} ${receiptFiles.length === 1 ? "receipt" : "receipts"}`}
+                        : `Read ${unreadReceipts.length} ${unreadReceipts.length === 1 ? "receipt" : "receipts"}`}
                   </button>
                 )}
               </div>
@@ -1579,18 +1857,39 @@ export default function InlineSubmitPriceForm({
             {/* ── Notices from extraction (skipped / mismatched / too old) ── */}
             {extractNotices.length > 0 && (
               <div className="isp-section">
+                {/* No icon on these. The status pill on the file just above
+                    already carries one for the same problem, and this panel is
+                    amber with its own border — the colour says "warning"
+                    without repeating the symbol a few pixels away. */}
                 {extractNotices.map((n, i) => (
                   <p key={i} className="isp-extract-notice">
-                    <AlertTriangle size={15} strokeWidth={2.2} />
                     <span>{n}</span>
                   </p>
                 ))}
+                {/* Every mismatch pointed at the same clinic and the page isn't
+                    tied to a vet — so this is almost certainly the wrong one
+                    selected, not the wrong receipt. Offer the fix. */}
+                {detectedClinic && !vetLocked && (
+                  <div className="isp-switch-clinic">
+                    <button
+                      type="button"
+                      className="isp-switch-btn"
+                      onClick={switchToDetectedClinic}
+                      disabled={extracting}
+                    >
+                      Use {detectedClinic} instead
+                    </button>
+                    <span className="isp-switch-hint">
+                      We'll read your receipts again for that clinic.
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Entries — shown for manual mode always, and for upload mode
                 once extraction has produced rows to review. */}
-            {(mode === "manual" || extractionRan) && (
+            {hasBackedEntries && (
               <div className="isp-section">
                 <p className="isp-section-num">
                   {vetLocked ? "2" : "3"}.{" "}
@@ -1601,7 +1900,23 @@ export default function InlineSubmitPriceForm({
                 {entries.map((entry, idx) => (
                   <div key={idx} className="isp-entry">
                     <div className="isp-entry-head">
-                      <p className="isp-entry-num">Service {idx + 1}</p>
+                      <p className="isp-entry-num">
+                        Service {idx + 1}
+                        {/* Which receipt this row came from. Without it, a row
+                            and a failed file on the same screen look related
+                            when they aren't — especially when two receipts
+                            hold the same visit. */}
+                        {(() => {
+                          const src = receiptFiles.find(
+                            (f) => f.id === entry._receiptFileId,
+                          );
+                          return src ? (
+                            <span className="isp-entry-source">
+                              From: {src.file.name}
+                            </span>
+                          ) : null;
+                        })()}
+                      </p>
                       {entries.length > 1 && (
                         <button
                           type="button"
@@ -1674,6 +1989,8 @@ export default function InlineSubmitPriceForm({
                           <option>Skin / Allergy Treatment</option>
                           <option>Wound Treatment</option>
                           <option>Dental Extraction</option>
+                          <option>Acupuncture</option>
+                          <option>Physical Rehabilitation</option>
                         </optgroup>
                         <optgroup label="Other">
                           <option value="__other__">Other (type it in)</option>
@@ -1879,12 +2196,14 @@ export default function InlineSubmitPriceForm({
                   </div>
                 ))}
 
+                {/* For a line on the receipt the reader missed. The row
+                    inherits that receipt, so it still has proof behind it. */}
                 <button
                   type="button"
                   className="isp-add-entry"
                   onClick={addEntry}
                 >
-                  + Add another service
+                  + Add a service we missed
                 </button>
               </div>
             )}
@@ -1927,85 +2246,6 @@ export default function InlineSubmitPriceForm({
                   minHeight="80px"
                 />
               </div>
-
-              {/* Receipt upload — with inline privacy guidance.
-                  Only in manual mode; upload mode already has the receipts. */}
-              {mode === "manual" && (
-                <div className="isp-field" style={{ marginBottom: "20px" }}>
-                  <label className="isp-label">
-                    Receipt or Invoice{" "}
-                    <span
-                      style={{
-                        fontWeight: 500,
-                        color: C.muted,
-                        textTransform: "none",
-                        letterSpacing: "0",
-                      }}
-                    >
-                      (optional · JPG, PNG, PDF · max 5MB)
-                    </span>
-                  </label>
-                  <div
-                    className={`isp-upload-zone${submitFile ? " has-file" : isDragging ? " drag" : ""}`}
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setIsDragging(true);
-                    }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      setIsDragging(false);
-                      const f = e.dataTransfer.files?.[0];
-                      if (f) validateAndSetFile(f);
-                    }}
-                  >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".jpg,.jpeg,.png,.pdf"
-                      style={{ display: "none" }}
-                      onChange={(e) => {
-                        if (e.target.files?.[0])
-                          validateAndSetFile(e.target.files[0]);
-                      }}
-                    />
-                    {submitFile ? (
-                      <>
-                        <div className="isp-upload-icon">
-                          <Upload size={28} strokeWidth={1.8} />
-                        </div>
-                        <p className="isp-upload-name">{submitFile.name}</p>
-                        <p
-                          className="isp-upload-hint"
-                          style={{ marginTop: "4px" }}
-                        >
-                          Tap to change.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <div className="isp-upload-icon">
-                          <Upload size={28} strokeWidth={1.8} />
-                        </div>
-                        <p className="isp-upload-text">
-                          Drag and drop, or tap to upload.
-                        </p>
-                        <p className="isp-upload-hint">
-                          JPG, PNG, or PDF — max 5MB.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                  <div className="isp-before-upload">
-                    <p>
-                      <strong>Privacy first:</strong> Remove or black out any
-                      account numbers, card numbers, or billing details. We only
-                      use the service name and price.
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
 
             {formStatus === "error" && errorMsg && (

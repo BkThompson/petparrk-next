@@ -1026,22 +1026,6 @@ function PetPickerView({ pets }) {
             </Link>
           </div>
 
-          {/* HERO CARDS */}
-          <div className="pc-hub-section pc-hub-section--hero">
-            <div className="pc-hub-section-head">
-              <span className="pc-hub-section-icon">
-                <ArtHeroCard size={26} />
-              </span>
-              <h2 className="pc-hub-section-title">Hero Cards</h2>
-              <span className="pc-hub-section-count">{pets.length}</span>
-            </div>
-            <div className={`pc-hub-grid pc-hub-grid--hero cols-${heroCols}`}>
-              {pets.map((pet) => (
-                <HeroPreviewTile key={pet.id} pet={pet} />
-              ))}
-            </div>
-          </div>
-
           {/* CARE CARDS */}
           <div className="pc-hub-section">
             <div className="pc-hub-section-head">
@@ -1054,6 +1038,22 @@ function PetPickerView({ pets }) {
             <div className={`pc-hub-grid pc-hub-grid--care cols-${careCols}`}>
               {pets.map((pet) => (
                 <CarePreviewTile key={pet.id} pet={pet} />
+              ))}
+            </div>
+          </div>
+
+          {/* HERO CARDS */}
+          <div className="pc-hub-section pc-hub-section--hero">
+            <div className="pc-hub-section-head">
+              <span className="pc-hub-section-icon">
+                <ArtHeroCard size={26} />
+              </span>
+              <h2 className="pc-hub-section-title">Hero Cards</h2>
+              <span className="pc-hub-section-count">{pets.length}</span>
+            </div>
+            <div className={`pc-hub-grid pc-hub-grid--hero cols-${heroCols}`}>
+              {pets.map((pet) => (
+                <HeroPreviewTile key={pet.id} pet={pet} />
               ))}
             </div>
           </div>

@@ -63,7 +63,16 @@ const COL = {
   dentalNoAnesthesia: 28,
   emergencyVisit: 32,
   urgentCare: 33,
-  verifiedBySusan: 36,
+  // AJ — "Internal Admin Notes" on the call sheet: what Susan and the VAs
+  // write after phoning a clinic. Admin-only; never published.
+  internalNotes: 35,
+  // 36 is the old "verified by Susan" column. Deliberately not read: every
+  // sheet price was marked verified regardless of whether anyone ticked it, so
+  // it claimed a check that wasn't happening. Admin has real price
+  // verification. The column stays in the sheet as a spacer — removing it
+  // there would shift every column after it and the sync would silently read
+  // the wrong ones.
+  // AL — price notes, shown publicly beneath each price.
   priceNotes: 37,
 };
 
@@ -245,11 +254,11 @@ export async function POST(request) {
 
   const existingVets = await loadAll(
     "vets",
-    "id, name, phone, accepting_new_patients, carecredit",
+    "id, name, phone, accepting_new_patients, carecredit, internal_notes",
   );
   const existingPending = await loadAll(
     "pending_vets",
-    "id, name, phone, accepting_new_patients, carecredit",
+    "id, name, phone, accepting_new_patients, carecredit, internal_notes",
   );
 
   const existingPrices = await loadAll(
@@ -353,6 +362,7 @@ export async function POST(request) {
       const hours = (row[COL.hours] || "").trim();
       const acceptingNewPatients = parseBoolean(row[COL.acceptingNewPatients]);
       const carecredit = parseBoolean(row[COL.carecredit]);
+      const internalNotes = (row[COL.internalNotes] || "").trim();
       const normalizedName = normalize(name);
       const relaxedName = relaxName(name);
 
@@ -429,6 +439,10 @@ export async function POST(request) {
           source: `VA Call Sheet - ${sheet.region}`,
           accepting_new_patients: acceptingNewPatients,
           carecredit,
+          // Carried on creation too, so a clinic added by the sync arrives
+          // with the call context already attached rather than needing a
+          // second pass.
+          internal_notes: internalNotes || null,
         });
         scheduledByExactName.set(normalizedName, idx);
         if (relaxedName) scheduledByRelaxedName.set(relaxedName, idx);
@@ -454,6 +468,12 @@ export async function POST(request) {
         }
         if (carecredit !== null && existingRecord.carecredit === null) {
           upd.carecredit = carecredit;
+        }
+        // Call notes from the sheet, but never over the top of notes already
+        // written in Admin — same rule as the flags above. Someone typing in
+        // Admin is making a deliberate edit; the sheet is a bulk import.
+        if (internalNotes && !existingRecord.internal_notes) {
+          upd.internal_notes = internalNotes;
         }
         if (Object.keys(upd).length > 0) {
           vetFlagUpdates.push({

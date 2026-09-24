@@ -923,8 +923,9 @@ export default function VetPage() {
                 lineHeight: "1.7",
               }}
             >
-              Prices shown are estimates based on community submissions and may
-              have changed.
+              These are verified estimates, not quotes. Each price shows when it
+              was last checked. Costs vary by pet and by visit, so confirm with
+              the clinic before you book.
             </p>
             <p
               style={{

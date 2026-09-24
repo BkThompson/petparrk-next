@@ -109,7 +109,7 @@ const STEPS = [
     title: "Check Symptoms",
     href: "/symptom-checker",
     description:
-      "Not sure if it's urgent? Get instant AI triage guidance personalized to your pet — 24/7. Try it without an account; sign up free to keep going and to save every check. No subscription, ever.",
+      "Not sure if it's urgent? Get instant AI triage guidance personalized to your pet — 24/7. Try it without an account, or sign up free to keep going and save every check.",
   },
   {
     number: "03",
@@ -734,7 +734,7 @@ export default function HowItWorksPage() {
                 margin: "0 auto 36px",
               }}
             >
-              Browse verified vets across California. Free to look around.
+              Browse verified vets across California. No account needed.
             </p>
             <div
               style={{

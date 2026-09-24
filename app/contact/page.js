@@ -42,7 +42,7 @@ const REASONS = [
   {
     icon: Hospital,
     label: "Vet partnerships",
-    body: "Are you a vet or clinic interested in being featured or partnering with us? We'd love to connect.",
+    body: "If you're a vet or clinic, we'd like to hear from you. We want your information shown accurately, and we welcome veterinarians who help keep our guidance clinically sound.",
   },
   {
     icon: Newspaper,

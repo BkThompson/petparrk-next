@@ -113,51 +113,52 @@ if (
   document.head.appendChild(l);
 }
 
+// Decorative pins, not vet locations. They sketch the areas PetParrk covers
+// while the map settles; nothing here comes from the database, and no pin
+// corresponds to a real clinic. Delays run to roughly 11.6s, so a new pin
+// should take an existing slot rather than being appended, or the sequence
+// gets longer.
 const CA_PINS = [
-  // NorCal — Bay Area
   { lng: -122.416, lat: 37.774, color: "#CF5C36", delay: 400 },
-  { lng: -122.255, lat: 37.878, color: "#EFC88B", delay: 750 },
-  { lng: -122.434, lat: 37.591, color: "#CF5C36", delay: 1100 },
-  { lng: -122.065, lat: 37.905, color: "#EFC88B", delay: 1450 },
-  { lng: -121.988, lat: 37.51, color: "#CF5C36", delay: 1800 },
-  // NorCal — Sacramento
-  { lng: -121.494, lat: 38.581, color: "#EFC88B", delay: 2150 },
-  { lng: -121.352, lat: 38.756, color: "#CF5C36", delay: 2500 },
-  // NorCal — Wine Country / North Bay
-  { lng: -122.499, lat: 38.441, color: "#EFC88B", delay: 2850 },
-  { lng: -122.267, lat: 38.298, color: "#CF5C36", delay: 3200 },
-  // Central CA — Fresno / Central Valley
-  { lng: -119.787, lat: 36.737, color: "#CF5C36", delay: 3550 },
-  { lng: -118.762, lat: 35.841, color: "#EFC88B", delay: 3900 },
-  { lng: -120.997, lat: 37.638, color: "#CF5C36", delay: 4250 },
-  { lng: -121.334, lat: 36.988, color: "#EFC88B", delay: 4600 },
-  { lng: -119.082, lat: 36.412, color: "#CF5C36", delay: 4950 },
-  { lng: -120.423, lat: 37.302, color: "#EFC88B", delay: 5300 },
-  { lng: -118.201, lat: 35.214, color: "#CF5C36", delay: 5650 },
-  // NorCal — Chico / Redding
-  { lng: -121.837, lat: 39.728, color: "#CF5C36", delay: 6000 },
-  { lng: -122.391, lat: 40.586, color: "#EFC88B", delay: 6350 },
-  // SoCal — Los Angeles
-  { lng: -118.243, lat: 34.052, color: "#CF5C36", delay: 6700 },
-  { lng: -118.445, lat: 34.064, color: "#EFC88B", delay: 7050 },
-  { lng: -118.127, lat: 34.095, color: "#CF5C36", delay: 7400 },
-  // SoCal — Orange County
-  { lng: -117.826, lat: 33.675, color: "#EFC88B", delay: 7750 },
-  { lng: -117.924, lat: 33.812, color: "#CF5C36", delay: 8100 },
-  // SoCal — San Diego
-  { lng: -117.161, lat: 32.716, color: "#EFC88B", delay: 8450 },
-  { lng: -117.074, lat: 32.602, color: "#CF5C36", delay: 8800 },
-  { lng: -116.971, lat: 33.498, color: "#CF5C36", delay: 9150 },
-  // SoCal — Inland Empire
-  { lng: -117.375, lat: 33.953, color: "#EFC88B", delay: 9500 },
-  { lng: -116.999, lat: 34.055, color: "#CF5C36", delay: 9850 },
-  { lng: -117.588, lat: 34.106, color: "#EFC88B", delay: 10200 },
-  // SoCal — Santa Barbara / Ventura
-  { lng: -119.698, lat: 34.42, color: "#EFC88B", delay: 10550 },
-  { lng: -119.177, lat: 34.274, color: "#CF5C36", delay: 10900 },
-  // NorCal — Peninsula / South Bay
-  { lng: -122.025, lat: 37.354, color: "#CF5C36", delay: 11250 },
-  { lng: -122.057, lat: 37.175, color: "#EFC88B", delay: 11600 },
+  { lng: -122.255, lat: 37.878, color: "#EFC88B", delay: 703 },
+  { lng: -122.434, lat: 37.591, color: "#CF5C36", delay: 1005 },
+  { lng: -122.065, lat: 37.905, color: "#EFC88B", delay: 1308 },
+  { lng: -121.988, lat: 37.51, color: "#CF5C36", delay: 1611 },
+  { lng: -121.494, lat: 38.581, color: "#EFC88B", delay: 1914 },
+  { lng: -121.352, lat: 38.756, color: "#CF5C36", delay: 2216 },
+  { lng: -122.499, lat: 38.441, color: "#EFC88B", delay: 2519 },
+  { lng: -122.267, lat: 38.298, color: "#CF5C36", delay: 2822 },
+  { lng: -119.787, lat: 36.737, color: "#CF5C36", delay: 3124 },
+  { lng: -118.762, lat: 35.841, color: "#EFC88B", delay: 3427 },
+  { lng: -120.997, lat: 37.638, color: "#CF5C36", delay: 3730 },
+  { lng: -121.334, lat: 36.988, color: "#EFC88B", delay: 4032 },
+  { lng: -119.082, lat: 36.412, color: "#CF5C36", delay: 4335 },
+  { lng: -120.423, lat: 37.302, color: "#EFC88B", delay: 4638 },
+  { lng: -118.201, lat: 35.214, color: "#CF5C36", delay: 4941 },
+  { lng: -121.837, lat: 39.728, color: "#CF5C36", delay: 5243 },
+  { lng: -122.391, lat: 40.586, color: "#EFC88B", delay: 5546 },
+  { lng: -118.243, lat: 34.052, color: "#CF5C36", delay: 5849 },
+  { lng: -118.445, lat: 34.064, color: "#EFC88B", delay: 6151 },
+  { lng: -118.127, lat: 34.095, color: "#CF5C36", delay: 6454 },
+  { lng: -117.826, lat: 33.675, color: "#EFC88B", delay: 6757 },
+  { lng: -117.924, lat: 33.812, color: "#CF5C36", delay: 7059 },
+  { lng: -117.161, lat: 32.716, color: "#EFC88B", delay: 7362 },
+  { lng: -117.074, lat: 32.602, color: "#CF5C36", delay: 7665 },
+  { lng: -116.971, lat: 33.498, color: "#CF5C36", delay: 7968 },
+  { lng: -117.375, lat: 33.953, color: "#EFC88B", delay: 8270 },
+  { lng: -116.999, lat: 34.055, color: "#CF5C36", delay: 8573 },
+  { lng: -117.588, lat: 34.106, color: "#EFC88B", delay: 8876 },
+  { lng: -119.698, lat: 34.42, color: "#EFC88B", delay: 9178 },
+  { lng: -119.177, lat: 34.274, color: "#CF5C36", delay: 9481 },
+  { lng: -122.025, lat: 37.354, color: "#CF5C36", delay: 9784 },
+  { lng: -122.057, lat: 37.175, color: "#EFC88B", delay: 10086 },
+  { lng: -121.29, lat: 37.958, color: "#CF5C36", delay: 10389 },
+  { lng: -120.997, lat: 37.639, color: "#EFC88B", delay: 10692 },
+  { lng: -119.292, lat: 36.33, color: "#CF5C36", delay: 10995 },
+  // Central Coast — San Luis Obispo
+  { lng: -120.659, lat: 35.283, color: "#EFC88B", delay: 11297 },
+  // Central Coast — Los Osos
+  { lng: -120.854, lat: 35.37, color: "#CF5C36", delay: 11600 },
 ];
 
 function MapHeader({ isMobile, onReady }) {
