@@ -68,7 +68,19 @@ export async function GET(request) {
             .eq("id", user.id)
             .single();
           if (profile && profile.has_seen_welcome === false) {
-            destination.searchParams.set("welcome", "1");
+            // Send a first-time user home to meet the intro, carrying where
+            // they were headed. Flagging the destination itself dropped them
+            // straight into the chat with the modal on top of a restored
+            // conversation — and because opening marks it seen, the home-page
+            // moment was gone for good. The modal reads `next` and carries
+            // them on when they dismiss it.
+            const onward = destination.pathname + destination.search;
+            const home = new URL("/", origin);
+            home.searchParams.set("welcome", "1");
+            if (onward && onward !== "/") {
+              home.searchParams.set("next", onward);
+            }
+            return NextResponse.redirect(home);
           }
         }
       } catch (e) {

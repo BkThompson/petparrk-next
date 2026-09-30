@@ -74,6 +74,11 @@ const COL = {
   // the wrong ones.
   // AL — price notes, shown publicly beneath each price.
   priceNotes: 37,
+  // AM — the clinic's note about its pricing as a whole, shown publicly under
+  // the price list: why a price needs an exam first, what a range assumes.
+  // Lands in vets.pricing_note, the field Admin already calls "Public pricing
+  // note".
+  publicNotes: 38,
 };
 
 const SERVICE_MAP = [
@@ -254,11 +259,11 @@ export async function POST(request) {
 
   const existingVets = await loadAll(
     "vets",
-    "id, name, phone, accepting_new_patients, carecredit, internal_notes",
+    "id, name, phone, accepting_new_patients, carecredit, internal_notes, pricing_note",
   );
   const existingPending = await loadAll(
     "pending_vets",
-    "id, name, phone, accepting_new_patients, carecredit, internal_notes",
+    "id, name, phone, accepting_new_patients, carecredit, internal_notes, pricing_note",
   );
 
   const existingPrices = await loadAll(
@@ -363,6 +368,7 @@ export async function POST(request) {
       const acceptingNewPatients = parseBoolean(row[COL.acceptingNewPatients]);
       const carecredit = parseBoolean(row[COL.carecredit]);
       const internalNotes = (row[COL.internalNotes] || "").trim();
+      const publicNotes = (row[COL.publicNotes] || "").trim();
       const normalizedName = normalize(name);
       const relaxedName = relaxName(name);
 
@@ -443,6 +449,7 @@ export async function POST(request) {
           // with the call context already attached rather than needing a
           // second pass.
           internal_notes: internalNotes || null,
+          pricing_note: publicNotes || null,
         });
         scheduledByExactName.set(normalizedName, idx);
         if (relaxedName) scheduledByRelaxedName.set(relaxedName, idx);
@@ -474,6 +481,11 @@ export async function POST(request) {
         // Admin is making a deliberate edit; the sheet is a bulk import.
         if (internalNotes && !existingRecord.internal_notes) {
           upd.internal_notes = internalNotes;
+        }
+        // Same rule: fill it, never overwrite. Someone typing in Admin is
+        // making a deliberate edit; the sheet is a bulk import.
+        if (publicNotes && !existingRecord.pricing_note) {
+          upd.pricing_note = publicNotes;
         }
         if (Object.keys(upd).length > 0) {
           vetFlagUpdates.push({
@@ -731,8 +743,17 @@ export async function POST(request) {
         );
       }
     }
-    // Flag conflict if this vet+service has both sheet and non-sheet prices.
-    if (existingNonSheet.length > 0 && g.entries.length > 0) {
+    // Flag a conflict only when the values actually disagree. This used to
+    // fire whenever a service had both a sheet and a non-sheet price, without
+    // comparing them — so Susan entering the same price in Admin and in the
+    // call sheet flagged it as a dispute and hid both from the vet's page.
+    // Of 527 flagged, 433 were identical. Two sources agreeing is
+    // confirmation, not a conflict.
+    const nonSheetSigs = new Set(existingNonSheet.map(rowSig));
+    const valuesDiffer =
+      existingNonSheet.some((r) => !newSigs.has(rowSig(r))) ||
+      g.entries.some((e) => !nonSheetSigs.has(entrySig(e)));
+    if (existingNonSheet.length > 0 && g.entries.length > 0 && valuesDiffer) {
       conflictKeysToFlag.push({
         vetId: g.vetId,
         isPending: g.isPending,

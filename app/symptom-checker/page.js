@@ -456,6 +456,13 @@ export default function SymptomCheckerHomePage() {
           color: ${C.navyDark};
           line-height: 1.55;
         }
+        /* Quieter than the amber used when they're out. Having one left is
+           information, not a problem — amber here would read as a warning
+           about something that hasn't happened. */
+        .sc-limit-note--last {
+          background: ${C.cream};
+          border-color: ${C.border};
+        }
         .sc-btn-outline { height:44px; padding:0 28px; background:transparent; color:${C.navyDark}; border:2px solid ${C.navyDark}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
         .sc-btn-outline:hover { background:${C.navyDark}; color:#fff; }
 
@@ -1252,7 +1259,7 @@ export default function SymptomCheckerHomePage() {
                     <h3
                       style={{
                         margin: "0 0 8px",
-                        fontSize: "22px",
+                        fontSize: "24px",
                         fontWeight: "800",
                         color: C.navyDark,
                         fontFamily: "var(--font-urbanist,system-ui)",
@@ -1362,6 +1369,17 @@ export default function SymptomCheckerHomePage() {
                       margin: "0 0 20px",
                     }}
                   />
+                  {/* Say it before they start, not after. Someone on their
+                      last check had no warning, so the wall on the next
+                      attempt arrived as a surprise — after they'd already
+                      picked a symptom, a duration and a severity. */}
+                  {guestRemaining === 1 && (
+                    <div className="sc-limit-note sc-limit-note--last">
+                      This is your last free check. Creating a free account
+                      keeps them coming — and saves each one, so you can see how
+                      things change over time.
+                    </div>
+                  )}
                   {guestRemaining === 0 && (
                     <div className="sc-limit-note">
                       You&apos;ve used both of your free checks. Create a free

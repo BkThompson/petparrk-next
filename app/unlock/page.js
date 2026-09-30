@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Unlock() {
   const [val, setVal] = useState("");
   const [error, setError] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   function unlock() {
     if (!val.trim()) {
@@ -59,28 +61,60 @@ export default function Unlock() {
       >
         This site is in private preview. Enter the password to continue.
       </p>
-      <input
-        type="password"
-        placeholder="Enter password"
-        value={val}
-        autoFocus
-        onChange={(e) => {
-          setVal(e.target.value);
-          if (error) setError(false);
-        }}
-        onKeyDown={(e) => e.key === "Enter" && unlock()}
-        style={{
-          padding: "12px 14px",
-          fontSize: "16px",
-          width: "260px",
-          maxWidth: "100%",
-          border: `1px solid ${error ? "#CF5C36" : "#2c3d4b"}`,
-          borderRadius: "10px",
-          background: "#0f1a24",
-          color: "#F5F0E8",
-          outline: "none",
-        }}
-      />
+      {/* Wrapped so the reveal button can sit inside the field. A password
+          typed blind on a shared link is easy to get wrong, and the retry
+          message doesn't say which character was fumbled. */}
+      <div style={{ position: "relative", width: "260px", maxWidth: "100%" }}>
+        <input
+          type={showPw ? "text" : "password"}
+          placeholder="Enter password"
+          value={val}
+          autoFocus
+          onChange={(e) => {
+            setVal(e.target.value);
+            if (error) setError(false);
+          }}
+          onKeyDown={(e) => e.key === "Enter" && unlock()}
+          style={{
+            padding: "12px 44px 12px 14px",
+            fontSize: "16px",
+            width: "100%",
+            boxSizing: "border-box",
+            border: `1px solid ${error ? "#CF5C36" : "#2c3d4b"}`,
+            borderRadius: "10px",
+            background: "#0f1a24",
+            color: "#F5F0E8",
+            outline: "none",
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPw((v) => !v)}
+          aria-label={showPw ? "Hide password" : "Show password"}
+          style={{
+            position: "absolute",
+            right: "6px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "34px",
+            height: "34px",
+            padding: 0,
+            border: "none",
+            background: "none",
+            color: "#8fa3b3",
+            cursor: "pointer",
+          }}
+        >
+          {showPw ? (
+            <EyeOff size={18} strokeWidth={2} />
+          ) : (
+            <Eye size={18} strokeWidth={2} />
+          )}
+        </button>
+      </div>
       {(error || showRetry) && (
         <p
           style={{

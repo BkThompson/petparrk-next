@@ -66,12 +66,55 @@ export default function WelcomeModal() {
   // Guards against the close handler running twice (Escape + click, etc.)
   const dismissedRef = useRef(false);
 
-  // Open only when the callback flagged this load with ?welcome=1.
+  // Two ways in, because relying on ?welcome=1 alone proved unreliable: a
+  // confirmation link that doesn't pass through /auth/callback arrives without
+  // the flag, and the person never sees the intro.
+  //
+  //   1. ?welcome=1 — the flag, when it is there. Works on any page.
+  //   2. Otherwise, on the home page only: ask the profile directly. Signed
+  //      in and has_seen_welcome is false means they haven't seen it,
+  //      whatever route they arrived by.
+  //
+  // Home only for the second path, deliberately. Someone signing up mid
+  // symptom-check lands back in the chat with a result to save; a modal on top
+  // of that is the wrong moment. They meet it next time they're on the home
+  // page.
   useEffect(() => {
-    if (searchParams.get("welcome") === "1" && !dismissedRef.current) {
+    if (dismissedRef.current) return;
+    if (searchParams.get("welcome") === "1") {
       setOpen(true);
+      return;
     }
-  }, [searchParams]);
+    if (pathname !== "/") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user || cancelled) return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("has_seen_welcome")
+          .eq("id", user.id)
+          .maybeSingle();
+        // A missing row counts as not seen — a brand-new account is exactly
+        // who this is for.
+        if (
+          !cancelled &&
+          !dismissedRef.current &&
+          profile?.has_seen_welcome !== true
+        ) {
+          setOpen(true);
+        }
+      } catch (e) {
+        // Never block the page over an intro modal.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, pathname]);
 
   // Persist that the user has seen onboarding (idempotent, best-effort).
   const persistSeen = useCallback(async () => {
@@ -99,6 +142,13 @@ export default function WelcomeModal() {
   // exit animation and remove ?welcome=1 in place.
   const finish = useCallback(
     async (navigateTo) => {
+      // Where they were headed before the intro. The callback sends a
+      // first-time user home with ?next=… so they meet the modal here rather
+      // than on top of a restored conversation; dismissing carries them on.
+      if (!navigateTo) {
+        const onward = searchParams.get("next");
+        if (onward && onward.startsWith("/")) navigateTo = onward;
+      }
       if (dismissedRef.current) return;
       dismissedRef.current = true;
       setSaving(true);
@@ -314,7 +364,9 @@ export default function WelcomeModal() {
             onClick={() => finish()}
             disabled={saving}
           >
-            I'll explore first
+            {searchParams.get("next")
+              ? "Back to my check"
+              : "I'll explore first"}
           </button>
         </div>
       </div>

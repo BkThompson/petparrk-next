@@ -318,10 +318,13 @@ export default function SymptomCheckerChatPage() {
   const [visitPrep, setVisitPrep] = useState(null); // { visitPrepId, prepContent }
   const [visitPrepLoading, setVisitPrepLoading] = useState(false);
   const [visitPrepExpanded, setVisitPrepExpanded] = useState(false);
+  const [visitPrepError, setVisitPrepError] = useState("");
   // Follow-up: links this check to a prior one and supplies background context.
   const [followUpCheckId, setFollowUpCheckId] = useState(null);
   const [followUpSummary, setFollowUpSummary] = useState(null);
   const [triageCardExpanded, setTriageCardExpanded] = useState(true);
+  // Transitions stay off until a toggle is pressed — see .triage-body.
+  const [toggleUsed, setToggleUsed] = useState(false);
   const [nearbyVets, setNearbyVets] = useState([]);
 
   // Location-aware vets. Everything below feeds /api/vets/nearby, which ranks
@@ -347,6 +350,8 @@ export default function SymptomCheckerChatPage() {
   const [savingPet, setSavingPet] = useState(false);
   const [savePetError, setSavePetError] = useState("");
   const [savedPetName, setSavedPetName] = useState("");
+  const [unansweredQuestion, setUnansweredQuestion] = useState("");
+  const [autoSend, setAutoSend] = useState(false);
   // Pets the person already has. If they added one before coming back here —
   // from the profile, say — the check should attach to it rather than create
   // a duplicate. "new" means create a pet from what they told the checker.
@@ -483,7 +488,15 @@ export default function SymptomCheckerChatPage() {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    } = supabase.auth.onAuthStateChange((_e, s) =>
+      // Only when the user actually changes. Supabase fires an event when a
+      // tab regains focus and hands back a fresh session object; taking it
+      // re-ran every effect keyed on `session`, which refetched the location
+      // and the nearby vets and rebuilt the triage card underneath you.
+      setSession((prev) =>
+        prev?.user?.id === s?.user?.id && !!prev === !!s ? prev : s,
+      ),
+    );
     return () => subscription.unsubscribe();
   }, []);
 
@@ -617,8 +630,20 @@ export default function SymptomCheckerChatPage() {
   }, [messages]);
 
   // When triage first appears — scroll messages area to TOP so user sees result card
+  const animatedTriageRef = useRef(null);
   useEffect(() => {
     if (!triageResult || guidedStep !== "chat") return;
+    // Animate once per result. This unmounts the card and remounts it to
+    // replay the entrance — fine the first time, but it re-ran on any render
+    // that re-triggered the effect, and switching browser tabs does exactly
+    // that: Supabase fires an auth state change on focus. The card blinked
+    // open and shut every time you came back.
+    const key = JSON.stringify(triageResult);
+    if (animatedTriageRef.current === key) {
+      setTriageMounted(true);
+      return;
+    }
+    animatedTriageRef.current = key;
     setTriageMounted(false);
     requestAnimationFrame(() => {
       setTriageMounted(true);
@@ -651,7 +676,11 @@ export default function SymptomCheckerChatPage() {
       .maybeSingle()
       .then(({ data }) => {
         if (data?.zip_code && /^\d{5}$/.test(data.zip_code)) {
-          setUserLocation({ zip: data.zip_code });
+          // Same guard: a new object here would refetch vets for a ZIP we
+          // already have.
+          setUserLocation((prev) =>
+            prev?.zip === data.zip_code ? prev : { zip: data.zip_code },
+          );
         }
       });
   }, [session]);
@@ -775,6 +804,28 @@ export default function SymptomCheckerChatPage() {
     setFreeCheckUsed(false);
     setResumedFromGuest(true);
     setShowSavePet(true);
+    // The wall message is still sitting in the transcript, telling someone
+    // who now has an account that they're out of checks. Replace rather than
+    // remove — a message vanishing from a conversation they just read is its
+    // own small confusion.
+    setMessages((prev) => {
+      const replaced = prev.map((m) =>
+        m.role === "assistant" &&
+        typeof m.content === "string" &&
+        m.content.startsWith("You've used both of your free checks")
+          ? {
+              ...m,
+              content: "You're signed in now. Let's pick up where we left off.",
+            }
+          : m,
+      );
+      // A third attempt is blocked before the check runs, so the question was
+      // never answered — they'd come back to their own words and nothing
+      // else. Offer to run it rather than making them retype it.
+      const lastUser = [...replaced].reverse().find((m) => m.role === "user");
+      setUnansweredQuestion(lastUser && !triageResult ? lastUser.content : "");
+      return replaced;
+    });
     supabase
       .from("pets")
       .select("id, name, species, breed, slug")
@@ -881,6 +932,18 @@ export default function SymptomCheckerChatPage() {
     setSelectedPet(pet);
     setResumedFromGuest(false);
     setSavedPetName(pet.name || name);
+    // Saving swaps the add-pet block for the prep control, which sits further
+    // down the triage card — so the thing they just unlocked was off screen
+    // and they had to find it. Bring it to them.
+    setTimeout(() => {
+      // start, not center — centring left it sitting somewhere different from
+      // where the block had been, so it felt like the page had moved.
+      const el = document.querySelector(".triage-prep-toggle");
+      if (el) {
+        const y = el.getBoundingClientRect().top + window.scrollY - 120;
+        window.scrollTo({ top: y, behavior: "smooth" });
+      }
+    }, 120);
     setSavingPet(false);
     clearPendingResume();
   }
@@ -1207,7 +1270,19 @@ export default function SymptomCheckerChatPage() {
     setStreaming(false);
   }
 
+  useEffect(() => {
+    if (!autoSend || !input.trim() || loading || streaming) return;
+    setAutoSend(false);
+    sendMessage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSend, input, loading, streaming]);
+
   async function sendMessage() {
+    // Typing usually means they've moved on, so the panel steps aside — but
+    // not while the check is still unattached. The visit prep button points
+    // at this panel, and hiding it left an instruction with nothing to act
+    // on. "Not now" still dismisses it deliberately.
+    if (selectedPet?.id) setShowSavePet(false);
     if (!input.trim() || loading || streaming || (guestMode && freeCheckUsed))
       return;
     const userMsg = { role: "user", content: input.trim() };
@@ -1490,37 +1565,10 @@ export default function SymptomCheckerChatPage() {
             if (!Array.isArray(val) || val.length === 0) return null;
             return (
               <div key={sec.key}>
-                <p
-                  style={{
-                    margin: "0 0 8px",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    color: C.muted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  {sec.label}
-                </p>
-                <ul
-                  style={{
-                    margin: 0,
-                    paddingLeft: "18px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
-                  }}
-                >
+                <p className="triage-prep-h">{sec.label}</p>
+                <ul className="triage-prep-list">
                   {val.map((item, i) => (
-                    <li
-                      key={i}
-                      style={{
-                        fontSize: "14px",
-                        color: C.navyDark,
-                        lineHeight: "1.6",
-                        fontWeight: 500,
-                      }}
-                    >
+                    <li key={i} className="triage-prep-item">
                       {item}
                     </li>
                   ))}
@@ -1531,29 +1579,10 @@ export default function SymptomCheckerChatPage() {
           if (!val || typeof val !== "string") return null;
           return (
             <div key={sec.key}>
-              <p
-                style={{
-                  margin: "0 0 6px",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  color: C.muted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                {sec.label}
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "14px",
-                  color: C.navyDark,
-                  lineHeight: "1.6",
-                  fontWeight: 500,
-                }}
-              >
-                {val}
-              </p>
+              {/* Same classes as the list sections above — "What to expect"
+                  and "On cost" are headings and body like any other. */}
+              <p className="triage-prep-h">{sec.label}</p>
+              <p className="triage-prep-item">{val}</p>
             </div>
           );
         })}
@@ -1562,6 +1591,8 @@ export default function SymptomCheckerChatPage() {
   }
 
   async function getVisitPrep() {
+    setToggleUsed(true);
+    setVisitPrepError("");
     if (visitPrep || visitPrepLoading) {
       setVisitPrepExpanded((v) => !v);
       return;
@@ -1577,8 +1608,11 @@ export default function SymptomCheckerChatPage() {
       });
       setVisitPrep(data);
       setVisitPrepExpanded(true);
+      setVisitPrepError("");
     } catch (err) {
+      // Was console-only, so a failure looked like a button that did nothing.
       console.error("Visit prep failed:", err);
+      setVisitPrepError("We couldn't prepare this just now. Try again.");
     }
     setVisitPrepLoading(false);
   }
@@ -1665,6 +1699,7 @@ export default function SymptomCheckerChatPage() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                setToggleUsed(true);
                 setTriageCardExpanded(!triageCardExpanded);
               }}
               className="triage-toggle-btn"
@@ -1681,7 +1716,9 @@ export default function SymptomCheckerChatPage() {
           </div>
         </div>
         {/* Animated body */}
-        <div className={`triage-body ${triageCardExpanded ? "open" : ""}`}>
+        <div
+          className={`triage-body ${toggleUsed ? "animated" : ""} ${triageCardExpanded ? "open" : ""}`}
+        >
           <div className="triage-body-inner">
             <div style={{ padding: "0 22px 22px" }}>
               <p
@@ -1985,7 +2022,7 @@ export default function SymptomCheckerChatPage() {
                                     <p
                                       style={{
                                         margin: "0 0 0",
-                                        fontSize: "14px",
+                                        fontSize: "15px",
                                         color: C.navyDark,
                                         lineHeight: "1.6",
                                         fontWeight: 500,
@@ -2061,38 +2098,83 @@ export default function SymptomCheckerChatPage() {
                     ))}
                   </div>
                 )}
-              {cfg.vetLabel && session && (
+              {/* Every triage, not just the ones suggesting a vet. It was
+                  gated on cfg.vetLabel, which is null for monitor-at-home — so
+                  it vanished on green. A panel that appears on two results and
+                  disappears on the third is how someone learns it isn't
+                  there. */}
+              {session && (
                 <div className="triage-prep">
-                  <button
-                    type="button"
-                    className="triage-prep-toggle"
-                    onClick={getVisitPrep}
-                    style={{
-                      ["--btn-color"]: cfg.color,
-                      background: cfg.pillBg,
-                      color: cfg.color,
-                    }}
-                  >
-                    <Clipboard size={16} strokeWidth={2.2} />
-                    {visitPrepLoading
-                      ? "Preparing…"
-                      : visitPrep
-                        ? visitPrepExpanded
-                          ? "Hide visit prep"
-                          : "Show visit prep"
-                        : "Prep me for this visit"}
-                    {visitPrep && (
+                  {!selectedPet?.id ? (
+                    // One line, not a disabled button plus a hint repeating
+                    // it. The save panel is on screen directly above, so a
+                    // link to open it did nothing.
+                    // A button, not a signpost. The panel it used to point at
+                    // is gone after a refresh or after "Not now", and the
+                    // check still has no pet — so pointing upward left a dead
+                    // end. This opens the panel wherever it went and scrolls
+                    // to it.
+                    <div className="triage-prep-hint triage-prep-block">
+                      <p className="triage-prep-hint-text">
+                        Add your pet and we&rsquo;ll prepare you for the visit —
+                        what to ask, what to bring, what to expect.
+                      </p>
+                      <button
+                        type="button"
+                        className="triage-prep-hint-cta"
+                        onClick={() => {
+                          setShowSavePet(true);
+                          setTimeout(() => {
+                            document
+                              .querySelector(".save-pet")
+                              ?.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                          }, 60);
+                        }}
+                      >
+                        Add your pet
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="triage-prep-toggle"
+                      onClick={getVisitPrep}
+                      disabled={visitPrepLoading}
+                      style={{
+                        ["--btn-color"]: cfg.color,
+                        background: cfg.pillBg,
+                        color: cfg.color,
+                      }}
+                    >
+                      <Clipboard size={16} strokeWidth={2.2} />
+                      {visitPrepLoading
+                        ? "Preparing…"
+                        : visitPrep
+                          ? visitPrepExpanded
+                            ? "Hide visit prep"
+                            : "Show visit prep"
+                          : "Prep me for this visit"}
+                      {/* Always shown, hard right. It used to appear only after
+                        the prep had loaded, so before that the row gave no
+                        sign it opened anything — which is why it was
+                        overlooked. */}
                       <span
                         className={`triage-chevron ${visitPrepExpanded ? "open" : ""}`}
                         style={{ marginLeft: "auto" }}
                       >
-                        <ChevronDown size={15} strokeWidth={2.2} />
+                        <ChevronDown size={18} strokeWidth={2.4} />
                       </span>
-                    )}
-                  </button>
+                    </button>
+                  )}
+                  {visitPrepError && (
+                    <p className="triage-prep-error">{visitPrepError}</p>
+                  )}
                   {visitPrep && (
                     <div
-                      className={`triage-prep-body ${visitPrepExpanded ? "open" : ""}`}
+                      className={`triage-prep-body ${toggleUsed ? "animated" : ""} ${visitPrepExpanded ? "open" : ""}`}
                     >
                       <div className="triage-prep-body-inner">
                         <div style={{ paddingTop: "14px" }}>
@@ -2115,7 +2197,10 @@ export default function SymptomCheckerChatPage() {
                 <button onClick={resetSession} className="triage-outline-btn">
                   Start New Check
                 </button>
-                {session && (
+                {/* Only with a pet to look at. Signed in but nothing saved
+                    means this lands on an empty profile, right beside the
+                    button asking them to add one. */}
+                {session && selectedPet?.id && (
                   <Link
                     href="/profile"
                     className="triage-primary-btn"
@@ -2827,7 +2912,7 @@ export default function SymptomCheckerChatPage() {
         .triage-open { color: #1A6641; font-weight: 700; }
         .triage-closed { color: ${C.muted}; font-weight: 600; }
         .triage-specialists { margin: 8px 0 16px; padding: 14px 16px; border-radius: 12px; background: #fff; border: 1px solid ${C.border}; }
-        .triage-spec-title { margin: 0 0 2px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: ${C.muted}; }
+        .triage-spec-title { margin: 0 0 2px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: ${C.muted}; }
         .triage-spec-sub { margin: 0 0 10px; font-size: 15px; font-weight: 500; color: ${C.muted}; }
         .triage-spec-row { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; border-top: 1px solid ${C.border}; text-decoration: none; }
         .triage-spec-row:first-of-type { border-top: none; }
@@ -2835,7 +2920,13 @@ export default function SymptomCheckerChatPage() {
         .triage-spec-meta { font-size: 15px; font-weight: 500; color: ${C.muted}; }
         .triage-view-profile { font-size:13px; color:${C.terracotta}; text-decoration:underline; white-space:nowrap; flex-shrink:0; margin-top:2px; font-weight:700; transition:color 0.15s; }
         .triage-view-profile:hover { color:${C.navyDark}; }
-        .triage-body { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease; }
+        /* No transition until someone presses a toggle. A backgrounded tab is
+           throttled, and on return the browser recalculates layout — which
+           replays a grid-template-rows transition from its starting value.
+           That's the blink when switching tabs. Opening and closing still
+           animates, because pressing the toggle adds .animated. */
+        .triage-body { display:grid; grid-template-rows:0fr; opacity:0; }
+        .triage-body.animated { transition:grid-template-rows 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease; }
         .triage-body.open { grid-template-rows:1fr; opacity:1; }
         .triage-body-inner { overflow:hidden; }
         .triage-toggle-btn { background:none; border:none; cursor:pointer; padding:4px 6px; font-weight:700; font-size:13px; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; transition:opacity 0.15s; }
@@ -2851,9 +2942,56 @@ export default function SymptomCheckerChatPage() {
         .triage-skeleton-line.long { width:85%; }
         .fit-badge { display:inline-flex; align-items:center; padding:4px 10px; margin-top:8px; border-radius:9999px; font-size:12px; font-weight:600; letter-spacing:0.02em; white-space:nowrap; }
         .triage-prep { margin-top:16px; }
-        .triage-prep-toggle { width:100%; display:inline-flex; align-items:center; gap:8px; height:46px; padding:0 16px; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,system-ui); transition:filter 0.15s; }
+        /* Taller, larger type, and a border in its own colour. At 46px with
+           14px text and no outline it read as a caption rather than a control,
+           which is why it was overlooked entirely. */
+        .triage-prep-toggle { width:100%; display:inline-flex; align-items:center; gap:10px; min-height:54px; padding:0 18px; border:var(--pill-border-w, 2px) solid currentColor; border-radius:12px; font-size:16px; font-weight:800; cursor:pointer; font-family:var(--font-urbanist,system-ui); transition:filter 0.15s; text-align:left; }
+        /* Section headings and bullets inside visit prep, classed so they can
+           be styled without touching the component. */
+        .triage-prep-h { margin:0 0 8px; font-size:14px; font-weight:700; color:${C.muted}; text-transform:uppercase; letter-spacing:0.06em; }
+        .triage-prep-list { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; }
+        .triage-prep-item { font-size:15px; font-weight:500; line-height:1.6; color:${C.navyDark}; }
+        .triage-prep-error { margin:8px 0 0; font-size:14px; font-weight:600; color:#C94040; }
+        .sc-resume-run { display:flex; justify-content:center; margin:4px 0 8px; }
+        .sc-resume-run-btn {
+          height:44px; padding:0 22px; border-radius:12px;
+          border:var(--pill-border-w, 2px) solid ${C.terracotta};
+          background:${C.terracotta}; color:#fff;
+          font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
+          transition:background 0.2s, color 0.2s;
+        }
+        .sc-resume-run-btn:hover { background:#fff; color:${C.terracotta}; }
+        .triage-prep-hint-btn { padding:0; border:none; background:none; font-family:inherit; font-size:14px; font-weight:700; color:${C.terracotta}; text-decoration:underline; cursor:pointer; }
+        .triage-prep-hint-btn:hover { color:${C.navyDark}; }
+        .triage-prep-hint { margin:8px 0 0; font-size:16px; font-weight:700; color:${C.navyDark}; line-height:1.55; text-wrap: pretty;}
+        .triage-prep-hint-text { margin:0 0 10px; }
+        /* Set apart from the triage itself: adding a pet isn't part of the
+           result, it's what unlocks the prep that will sit in this slot. */
+        .triage-prep-block { padding-top:16px; margin-top:16px; border-top:1px solid ${C.border}; }
+        /* Navy, not terracotta. Every other button in this card — the phone
+           numbers, View Pet Profile — is terracotta, so a terracotta button
+           here disappeared among them. */
+        .triage-prep-hint-cta {
+          height: 42px;
+          padding: 0 24px;
+          border-radius: 12px;
+          border: var(--pill-border-w, 2px) solid #172531;
+          background: #172531;
+          color: #fff;
+          font-family: inherit;
+          font-size: 15px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s;
+        }
+        .triage-prep-hint-cta:hover { background:#fff; color:#172531; }
+        @media (max-width: 640px) {
+          .triage-prep-hint-cta { width: 100%; box-sizing: border-box; }
+        }
+        .triage-prep-toggle:disabled { opacity:0.65; cursor:not-allowed; }
         .triage-prep-toggle:hover { filter:brightness(0.96); }
-        .triage-prep-body { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease; }
+        .triage-prep-body { display:grid; grid-template-rows:0fr; opacity:0; }
+        .triage-prep-body.animated { transition:grid-template-rows 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease; }
         .triage-prep-body.open { grid-template-rows:1fr; opacity:1; }
         .triage-prep-body-inner { overflow:hidden; }
         @media (max-width: 600px) {
@@ -2956,12 +3094,12 @@ export default function SymptomCheckerChatPage() {
             {showSavePet && (
               <form className="save-pet" onSubmit={savePetAndCheck}>
                 <p className="save-pet-title">
-                  Save this check to your account
+                  Add your pet to save this and get visit prep
                 </p>
                 <p className="save-pet-sub">
                   {ownPets.length > 0
-                    ? "Which pet is this for? We'll keep this result in their health history, so you can see how things change."
-                    : `Add your ${guestPet?.breed || guestPet?.species || "pet"}'s name and we'll keep this result in their health history, so you can see how things change.`}
+                    ? "Which pet is this for? We'll keep this result in their health history, and prepare you for the vet visit — what to ask, what to bring, what to expect."
+                    : `Add your ${guestPet?.breed || guestPet?.species || "pet"}'s name and we'll keep this in their health history, then prepare you for the vet visit — what to ask, what to bring, what to expect.`}
                 </p>
 
                 {/* Their existing pets, as choices. Shown only when they have
@@ -3037,7 +3175,7 @@ export default function SymptomCheckerChatPage() {
                   className="save-pet-skip"
                   onClick={skipSavePet}
                 >
-                  Not now — just continue
+                  Not now
                 </button>
               </form>
             )}
@@ -3056,6 +3194,25 @@ export default function SymptomCheckerChatPage() {
             {triageResult && renderTriageCard()}
             {/* Messages */}
             {messages.map((msg, i) => renderMsg(msg, i))}
+            {/* Their question is in the transcript with no answer under it,
+                because the third attempt was blocked before the check ran.
+                One tap runs it through the normal send path rather than
+                making them type it again. */}
+            {unansweredQuestion && !triageResult && !loading && !streaming && (
+              <div className="sc-resume-run">
+                <button
+                  type="button"
+                  className="sc-resume-run-btn"
+                  onClick={() => {
+                    setInput(unansweredQuestion);
+                    setUnansweredQuestion("");
+                    setAutoSend(true);
+                  }}
+                >
+                  Continue where we left off
+                </button>
+              </div>
+            )}
             {guestMode && freeCheckUsed && (
               <div
                 style={{

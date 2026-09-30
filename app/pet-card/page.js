@@ -120,11 +120,31 @@ export default function PetCardLandingPage() {
   const [pets, setPets] = useState(null); // null = loading, [] = none
   const [loadError, setLoadError] = useState("");
 
+  // If either the session or the pets never resolve, the page would spin
+  // forever with no way out. After twelve seconds, say so and offer a refresh
+  // rather than leaving someone looking at a spinner.
+  const [tookTooLong, setTookTooLong] = useState(false);
+  useEffect(() => {
+    if (pets !== null) return;
+    const t = setTimeout(() => setTookTooLong(true), 12000);
+    return () => clearTimeout(t);
+  }, [pets]);
+
   // Watch session
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session || null);
-    });
+    // .catch matters as much as .then. Without it a rejected session lookup
+    // leaves session undefined forever, and the page spins before it even
+    // tries to load pets. Treating a failure as signed-out at least shows
+    // something.
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        setSession(data.session || null);
+      })
+      .catch((e) => {
+        console.error("Pet cards: session lookup failed", e);
+        setSession(null);
+      });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_e, s) => {
@@ -142,14 +162,26 @@ export default function PetCardLandingPage() {
     }
     let cancelled = false;
     (async () => {
-      const { data, error } = await getOwnerPets();
-      if (cancelled) return;
-      if (error) {
+      // try/catch matters here. This handled a returned error but not a
+      // thrown one — and an expired token or a network failure throws. The
+      // promise rejected, setPets was never called, and the page spun
+      // forever with no way out. That's why it hung for some accounts and
+      // not others: it depends on the state of that session, not the code.
+      try {
+        const { data, error } = await getOwnerPets(session.user.id);
+        if (cancelled) return;
+        if (error) {
+          setLoadError("Could not load your pets. Please refresh.");
+          setPets([]);
+          return;
+        }
+        setPets(data || []);
+      } catch (e) {
+        if (cancelled) return;
+        console.error("Pet cards: loading pets failed", e);
         setLoadError("Could not load your pets. Please refresh.");
         setPets([]);
-        return;
       }
-      setPets(data || []);
     })();
     return () => {
       cancelled = true;
@@ -162,6 +194,38 @@ export default function PetCardLandingPage() {
 
   // Loading (session unknown OR pets loading for a signed-in user)
   if (session === undefined || (session && pets === null)) {
+    // Twelve seconds in, something is wrong. Say so rather than spinning.
+    if (tookTooLong) {
+      return (
+        <div className="pc-hub-stuck">
+          <p className="pc-hub-stuck-title">
+            This is taking longer than it should
+          </p>
+          <p className="pc-hub-stuck-sub">
+            Your cards are still loading. Refreshing usually sorts it.
+          </p>
+          <button
+            type="button"
+            className="pc-hub-stuck-btn"
+            onClick={() => window.location.reload()}
+          >
+            Refresh the page
+          </button>
+          <style>{`
+            .pc-hub-stuck { max-width: 460px; margin: 80px auto; padding: 0 24px; text-align: center; }
+            .pc-hub-stuck-title { margin: 0 0 6px; font-size: 20px; font-weight: 800; color: #172531; }
+            .pc-hub-stuck-sub { margin: 0 0 18px; font-size: 16px; font-weight: 500; color: #717A86; line-height: 1.55; }
+            .pc-hub-stuck-btn {
+              height: 42px; padding: 0 22px; border-radius: 12px;
+              border: 2px solid #cf5c36; background: #cf5c36; color: #fff;
+              font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+              transition: background 0.2s, color 0.2s;
+            }
+            .pc-hub-stuck-btn:hover { background: #fff; color: #cf5c36; }
+          `}</style>
+        </div>
+      );
+    }
     return <PageLoader for="petCards" />;
   }
 
@@ -175,10 +239,12 @@ export default function PetCardLandingPage() {
     return <EmptyPetsView error={loadError} />;
   }
 
-  // Signed-in, 1 pet: PageLoader visible during redirect
-  if (pets.length === 1) {
-    return <PageLoader for="openingCard" />;
-  }
+  // No special case for a single pet. This used to return a loader reading
+  // "Opening your card" while a redirect took over — but no redirect was ever
+  // written, so anyone with exactly one pet sat on that loader forever. It
+  // also had nowhere obvious to go: a pet has a hero card, a care card and an
+  // editor, not one canonical card. The hub works the same for one pet as for
+  // three.
 
   // Signed-in, 2+ pets: picker
   return <PetPickerView pets={pets} />;
@@ -854,8 +920,12 @@ function PetPickerView({ pets }) {
         .pc-hub-grid--hero.cols-4 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
         /* Care — capped at 2-up */
-        .pc-hub-grid--care.cols-1 { grid-template-columns: minmax(0, 460px); justify-content: center; }
-        .pc-hub-grid--care.cols-2 { grid-template-columns: repeat(2, minmax(0, 460px)); justify-content: center; }
+        /* Same widths as the hero grid above. These were 460px, so with one or
+           two pets a care card sat visibly wider than the hero card beneath
+           it. At three or more both use 1fr and already matched, which is why
+           it only looked wrong at low counts. */
+        .pc-hub-grid--care.cols-1 { grid-template-columns: 320px; justify-content: center; }
+        .pc-hub-grid--care.cols-2 { grid-template-columns: repeat(2, 300px); justify-content: center; }
         .pc-hub-grid--care.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .pc-hub-grid--care.cols-4 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 

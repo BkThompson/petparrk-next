@@ -753,14 +753,14 @@ export default function HealthHistoryPage() {
           background: ${C.white}; border: 1px solid ${C.border}; border-radius: 16px;
         }
         .hh-empty svg { margin-bottom: 14px; }
-        .hh-empty-title { font-size: 19px; font-weight: 800; margin: 0 0 8px; }
+        .hh-empty-title { font-size: 24px; font-weight: 800; margin: 0 0 8px; }
         .hh-empty-sub {
-          font-size: 15px; font-weight: 500; color: ${C.slate};
+          font-size: 16px; font-weight: 500; color: ${C.slate};
           margin: 0 auto 20px; max-width: 420px; line-height: 1.55;
         }
         .hh-empty-btn {
-          display: inline-flex; align-items: center; gap: 7px;
-          padding: 11px 22px; border-radius: 999px;
+          display: inline-flex; align-items: center; gap: 7px; height: 42px; border-radius: 12px;
+          padding: 0px 24px;
           background: ${C.terracotta}; color: #fff; border: 2px solid ${C.terracotta};
           font-size: 15px; font-weight: 700; text-decoration: none;
           transition: background 0.15s, color 0.15s;

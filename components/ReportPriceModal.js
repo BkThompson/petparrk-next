@@ -6,6 +6,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 
 const C = {
@@ -76,7 +77,14 @@ export default function ReportPriceModal({
         body.style.position = prev.position;
         body.style.top = prev.top;
         body.style.width = prev.width;
+        // Instant, not animated. globals.css sets scroll-behavior: smooth on
+        // the page, so this restore scrolled visibly back to a position the
+        // reader never left — it looked like the page moved on close.
+        const root = document.documentElement;
+        const prevBehavior = root.style.scrollBehavior;
+        root.style.scrollBehavior = "auto";
         window.scrollTo(0, scrollY);
+        root.style.scrollBehavior = prevBehavior;
       };
     }
   }, [open]);
@@ -124,7 +132,14 @@ export default function ReportPriceModal({
     setSubmitting(false);
   }
 
-  return (
+  // Rendered into <body>, not where it sits in the tree. backdrop-filter
+  // stops working if any ancestor has a filter, transform, perspective or
+  // will-change — the tint showed but the blur never did, because this modal
+  // lives deep inside the vet page while the pricing modal sits near the root.
+  // A portal takes it out of all of that.
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div className="rpm-overlay" onClick={onClose}>
       <div className="rpm-card" onClick={(e) => e.stopPropagation()}>
         <button
@@ -168,8 +183,15 @@ export default function ReportPriceModal({
 
         {result?.success ? (
           <div className="rpm-success">
+            {/* The heading said "Thanks for the report" and the server's
+                message said "Thanks for the report — we'll review it", so it
+                appeared twice. The heading thanks them; the body says what
+                happens next. */}
             <h4>Thanks for the report</h4>
-            <p>{result.success}</p>
+            {/* No promise. "We'll check it with the clinic" commits us to
+                contacting them, which may never happen. This thanks them and
+                says why it mattered. */}
+            <p>This helps keep prices accurate for everyone.</p>
           </div>
         ) : (
           <>
@@ -275,12 +297,17 @@ export default function ReportPriceModal({
           position: fixed;
           inset: 0;
           background: rgba(23, 37, 49, 0.55);
+          /* Matches every other modal — .modal-overlay on the vet page,
+             pp-modal-backdrop on Profile, pce-modal-overlay on Care. */
+          /* Prefixed first, unprefixed last — the standard property should win
+             wherever both are understood. Safari needs the -webkit- form. */
+          -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 16px;
           z-index: 9999;
-          animation: rpm-fade-in 0.2s ease;
         }
         @keyframes rpm-fade-in {
           from {
@@ -291,6 +318,11 @@ export default function ReportPriceModal({
           }
         }
         .rpm-card {
+          /* The fade lives here, not on the overlay. Animating opacity on the
+             overlay made it its own compositing group, and backdrop-filter
+             then had nothing behind it to blur — the background darkened but
+             never blurred. */
+          animation: rpm-fade-in 0.2s ease;
           position: relative;
           background: #fff;
           border: 1.5px solid ${C.terracotta};
@@ -360,7 +392,7 @@ export default function ReportPriceModal({
           gap: 3px;
         }
         .rpm-subtitle-line {
-          font-size: 15px;
+          font-size: 16px;
           font-weight: 700;
           color: ${C.navyDark};
           line-height: 1.4;
@@ -372,7 +404,7 @@ export default function ReportPriceModal({
         .rpm-subtitle-line-price {
           font-weight: 500;
           color: ${C.muted};
-          font-size: 14px;
+          font-size: 15px;
           margin-top: 2px;
         }
 
@@ -540,7 +572,7 @@ export default function ReportPriceModal({
         }
 
         .rpm-success {
-          padding: 32px 24px;
+          padding: 20px 20px;
           text-align: center;
         }
         .rpm-success h4 {
@@ -551,7 +583,7 @@ export default function ReportPriceModal({
         }
         .rpm-success p {
           margin: 0;
-          font-size: 15px;
+          font-size: 16px;
           font-weight: 500;
           color: ${C.slate};
           line-height: 1.6;
@@ -573,6 +605,7 @@ export default function ReportPriceModal({
           }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body,
   );
 }

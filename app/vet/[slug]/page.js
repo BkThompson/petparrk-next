@@ -327,6 +327,20 @@ function parseHours(s) {
   if (split.length > 1) return split.map((p) => p.trim()).filter(Boolean);
   return [s.trim()];
 }
+// True only when a rich-text value has words in it. The editor saves
+// "<p></p>" or "<p><br></p>" when a field is cleared, and both are non-empty
+// strings — so a plain truthiness check leaves an empty panel, its heading and
+// its margin sitting in the pricing section with nothing in them.
+function hasText(html) {
+  if (!html) return false;
+  return (
+    String(html)
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .trim().length > 0
+  );
+}
+
 function parseNotes(n) {
   if (!n) return [];
   return n.split(" / ").map((x) => x.trim());
@@ -580,11 +594,11 @@ export default function VetPage() {
         .single();
       const { data: priceData } = await supabase
         .from("vet_prices")
-        .select("*, services(id,name)")
+        .select("*, services(id,name,category,sort_order)")
         .eq("vet_id", vetData?.id);
       const { data: allPricesData } = await supabase
         .from("vet_prices")
-        .select("*, services(id,name), vets(city)");
+        .select("*, services(id,name,category,sort_order), vets(city)");
       setVet(vetData);
       // Prices flagged in_conflict have competing values under review — never
       // show a contested number publicly. Filter them out of the displayed
@@ -592,7 +606,25 @@ export default function VetPage() {
       // "pricing under review" note instead.
       const allVetPrices = priceData || [];
       const conflicted = allVetPrices.filter((p) => p.in_conflict);
-      const cleanPrices = allVetPrices.filter((p) => !p.in_conflict);
+      // Two sources can hold the same price — Susan types it in Admin and it
+      // also comes through the call sheet. That's agreement, not a duplicate
+      // worth printing twice, so collapse identical rows for a service.
+      const seenPrice = new Set();
+      const cleanPrices = allVetPrices
+        .filter((p) => !p.in_conflict)
+        .filter((p) => {
+          const key = [
+            p.service_id,
+            p.price_low,
+            p.price_high,
+            p.price_type,
+            p.call_for_quote,
+            p.species || "",
+          ].join("|");
+          if (seenPrice.has(key)) return false;
+          seenPrice.add(key);
+          return true;
+        });
       const reviewServiceNames = Array.from(
         new Set(conflicted.map((p) => p.services?.name).filter(Boolean)),
       );
@@ -698,6 +730,33 @@ export default function VetPage() {
   });
   const pricedRows = prices.filter((p) => p.price_low !== null);
 
+  // Grouped for reading, not in whatever order they came back. Order comes
+  // from services.sort_order in the database, so Susan can reorganise without
+  // a deploy. Anything without a category falls to the end under "Other
+  // services" rather than disappearing.
+  const pricedGroups = (() => {
+    const map = new Map();
+    for (const row of pricedRows) {
+      const cat = row.services?.category || "Other services";
+      if (!map.has(cat)) {
+        map.set(cat, {
+          name: cat,
+          order: row.services?.sort_order ?? 900,
+          rows: [],
+        });
+      }
+      map.get(cat).rows.push(row);
+    }
+    return [...map.values()]
+      .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
+      .map((g) => ({
+        ...g,
+        rows: g.rows.sort((a, b) =>
+          (a.services?.name || "").localeCompare(b.services?.name || ""),
+        ),
+      }));
+  })();
+
   if (loading) return <PageLoader message="Loading vet profile…" />;
   if (!vet)
     return (
@@ -761,7 +820,7 @@ export default function VetPage() {
         .save-animating{animation:heartPop 0.4s ease forwards;}
         .acc-wrap{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 0.38s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease;}
         .acc-wrap.open{grid-template-rows:1fr;opacity:1;}
-        .acc-inner{overflow:hidden;}
+        .acc-inner{overflow:hidden; margin-top: 15px;}
         .expand-btn{position:relative;width:28px;height:28px;border-radius:50%;border:1.5px solid ${C.terracotta};background:transparent;color:${C.terracotta};cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s,color 0.2s;outline:none;}
         .expand-btn:hover,.expand-btn.is-open{background:${C.terracotta};color:#fff;}
         .expand-btn.is-open:hover{background:#a8471d;border-color:#a8471d;}
@@ -774,7 +833,7 @@ export default function VetPage() {
         .vs-detail-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:14px;font-weight:700;border:var(--pill-border-w,2px) solid transparent;width:fit-content;}
         .report-price-btn{background:none;border:none;color:${C.muted};font-size:13px;font-weight:600;cursor:pointer;padding:14px 10px;text-decoration:underline;font-family:inherit;transition:color 0.15s;}
         .report-price-btn:hover{color:${C.terracotta};}
-        .price-row{padding:16px 0px;}
+        .price-row{padding:16px 0 0;}
         /* Canonical modal backdrop: navy 55% + 4px blur. Same treatment as
            pp-modal-backdrop (Profile), pce-modal-overlay (Care) and
            ucm-backdrop (UnsavedChanges). This one was still on plain black. */
@@ -789,6 +848,38 @@ export default function VetPage() {
         .share-btn:hover{color:${C.slate};}
         .submit-cta-btn{padding:0 20px;height:42px;background:${C.terracotta};color:#fff;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.2s,color 0.2s;border:2px solid ${C.terracotta};font-family:var(--font-urbanist,'Urbanist',sans-serif);display:inline-flex;align-items:center;justify-content:center;}
         .submit-cta-btn:hover{background:#fff;color:${C.terracotta};}
+        /* No prices yet, and the near-empty case. Tiled icon on the page's
+           own cream, copy that says why rather than just what. */
+        .vs-noprice{text-align:center;padding:28px 20px 32px;max-width:460px;margin:0 auto;}
+        .vs-noprice-title{margin:0 0 8px;font-size:18px;font-weight:800;color:${C.navyDark};line-height:1.35;}
+        .vs-noprice-body{margin:0;font-size:15px;font-weight:500;color:${C.muted};line-height:1.6;}
+        /* Set apart, because it addresses a different reader. The two lines
+           above answer someone who wants a price now; this speaks to someone
+           who has already been and could add one. Run together they read as a
+           deflection — a favour asked right after saying no. */
+        .vs-noprice-invite{margin:20px auto 0;padding-top:16px;border-top:1px solid ${C.border};max-width:340px;font-size:14px;font-weight:500;color:${C.muted};line-height:1.6;}
+        /* Group headings. Quiet — they organise the list rather than
+           competing with the service names and prices under them. */
+        .vs-pricegroup{margin-top:22px;}
+        .vs-pricegroup:first-of-type{margin-top:4px;}
+        /* Navy, and bigger than the service names beneath it. The colour was
+           never the problem — at 14px against 16px service names, the heading
+           read as weaker body text however it was coloured. */
+        .vs-pricegroup-h{margin:0 0 4px;font-size:18px;font-weight:800;letter-spacing:0.02em;text-transform:uppercase;color:${C.navyDark};}
+        .vs-section-h{margin:0 0 4px;font-size:22px;font-weight:800;color:${C.navyDark};font-family:var(--font-urbanist,system-ui);}
+        .vs-service-name{font-size:16px;font-weight:600;color:${C.navyDark};overflow-wrap:break-word;}
+        /* Matches the per-service note panels — same surface, radius, padding
+           and label treatment — so it belongs to the page rather than sitting
+           on it. Separated by a rule and more space above, because it's about
+           the whole list rather than the price it happens to follow. */
+        .vs-clinicnote{margin:0 0 18px;padding:20px;background:#f9f9f7;border-radius:10px;}
+        .vs-clinicnote-h{margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:${C.muted};}
+        .vs-clinicnote-body{margin:0;font-size:15px;font-weight:500;color:${C.navyDark};line-height:1.6;max-width:70ch;}
+        /* The note is rich text from Admin, so its paragraphs are real <p>
+           elements — they need the size set explicitly to be targetable. */
+        .vs-clinicnote-body p{margin:0 0 8px;font-size:15px;line-height:1.6;}
+        .vs-clinicnote-body p:last-child{margin:0;}
+        .vs-fewprice{margin:16px 0 0;padding:12px 14px;background:${C.cream};border-radius:10px;font-size:14px;font-weight:500;color:${C.muted};line-height:1.6;}
         .vs-check-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;height:42px;border-radius:12px;border:2px solid ${C.terracotta};background:#fff;color:${C.terracotta};font-size:15px;font-weight:700;text-decoration:none;font-family:var(--font-urbanist,'Urbanist',sans-serif);transition:background 0.2s,color 0.2s;}
         .vs-check-link:hover{background:${C.terracotta};color:#fff;}
         .toaster-create-btn{display:block;padding:14px;background:${C.terracotta};color:#fff;border:2px solid ${C.terracotta};border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;transition:background 0.18s,color 0.18s;}
@@ -933,7 +1024,7 @@ export default function VetPage() {
                 fontSize: "15px",
                 fontWeight: 500,
                 color: C.slate,
-                lineHeight: "1.7",
+                lineHeight: "1.6",
                 textWrap: "pretty",
               }}
             >
@@ -1345,17 +1436,7 @@ export default function VetPage() {
                   border: `1px solid ${C.border}`,
                 }}
               >
-                <h3
-                  style={{
-                    margin: "0 0 4px",
-                    fontSize: "18px",
-                    fontWeight: "800",
-                    color: C.navyDark,
-                    fontFamily: "var(--font-urbanist,system-ui)",
-                  }}
-                >
-                  Price Comparison
-                </h3>
+                <h3 className="vs-section-h">Price Comparison</h3>
                 <p
                   style={{
                     margin: "0 0 20px",
@@ -1380,224 +1461,238 @@ export default function VetPage() {
                     </div>
                   )}
                   <div className="price-gate-inner">
-                    {prices.map((price) => {
-                      if (price.price_type === "starting") return null;
-                      const serviceName = price.services?.name;
-                      const vetPrice = price.price_low || price.price_paid;
-                      const vetRegion = getRegion(vet?.city);
-                      const allForSvc = allPrices.filter(
-                        (p) =>
-                          p.services?.name === serviceName &&
-                          p.price_low &&
-                          p.services?.id !== 8 &&
-                          p.price_type !== "starting" &&
-                          getRegion(p.vets?.city) === vetRegion,
-                      );
-                      const avg =
-                        allForSvc.length > 0
-                          ? Math.round(
-                              allForSvc.reduce((s, p) => s + p.price_low, 0) /
-                                allForSvc.length,
-                            )
-                          : null;
-                      if (!vetPrice || !avg) return null;
-                      const isEqual = vetPrice === avg;
-                      const isCheaper = vetPrice < avg;
-                      const max = Math.max(vetPrice, avg) * 1.2;
-                      const isLast =
-                        visibleChartPrices[visibleChartPrices.length - 1]
-                          ?.id === price.id;
-                      const badgeBg = isEqual
-                        ? "#F5F0E8"
-                        : isCheaper
-                          ? "#EDFAF3"
-                          : "#FCEAEA";
-                      const badgeColor = isEqual
-                        ? C.slate
-                        : isCheaper
-                          ? C.success
-                          : C.error;
-                      // Border derived from the same three states, so below,
-                      // at, and above average each keep their own outline.
-                      const badgeBorder = isEqual
-                        ? "#EDE8E0"
-                        : isCheaper
-                          ? "rgba(26,102,65,0.22)"
-                          : "rgba(201,64,64,0.24)";
-                      const badgeLabel = isEqual ? (
-                        "≈ At average"
-                      ) : isCheaper ? (
-                        <>
-                          <Check size={12} strokeWidth={2.6} /> Below average
-                        </>
-                      ) : (
-                        <>
-                          <ArrowUp size={12} strokeWidth={2.6} /> Above average
-                        </>
-                      );
-                      const barColor = isEqual
-                        ? C.muted
-                        : isCheaper
-                          ? C.success
-                          : C.error;
-                      return (
-                        <div key={price.id}>
-                          <div style={{ marginBottom: "20px" }}>
-                            <div className="chart-row-header">
-                              <span
-                                style={{
-                                  fontSize: "15px",
-                                  fontWeight: "700",
-                                  color: C.navyDark,
-                                  overflowWrap: "break-word",
-                                }}
-                              >
-                                {serviceName}
-                              </span>
-                              <span
-                                style={{
-                                  fontSize: "13px",
-                                  fontWeight: "700",
-                                  padding: "3px 10px",
-                                  borderRadius: "20px",
-                                  background: badgeBg,
-                                  color: badgeColor,
-                                  border: `2px solid ${badgeBorder}`,
-                                  whiteSpace: "nowrap",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                {badgeLabel}
-                              </span>
-                            </div>
-                            {[
-                              {
-                                label: "This vet",
-                                width: Math.round((vetPrice / max) * 100),
-                                value: vetPrice,
-                                barColor,
-                              },
-                              {
-                                label: `${vetRegion} avg`,
-                                width: Math.round((avg / max) * 100),
-                                value: avg,
-                                barColor: C.muted,
-                              },
-                            ].map((bar) => (
-                              <div
-                                key={bar.label}
-                                style={{ marginBottom: "8px" }}
-                              >
-                                <div
+                    {/* Same order as the price list above — grouped order
+                        from services.sort_order, then by name. Two lists of
+                        the same services in different orders is hard to read
+                        against each other. */}
+                    {[...prices]
+                      .sort(
+                        (a, b) =>
+                          (a.services?.sort_order ?? 900) -
+                            (b.services?.sort_order ?? 900) ||
+                          (a.services?.name || "").localeCompare(
+                            b.services?.name || "",
+                          ),
+                      )
+                      .map((price) => {
+                        if (price.price_type === "starting") return null;
+                        const serviceName = price.services?.name;
+                        const vetPrice = price.price_low || price.price_paid;
+                        const vetRegion = getRegion(vet?.city);
+                        const allForSvc = allPrices.filter(
+                          (p) =>
+                            p.services?.name === serviceName &&
+                            p.price_low &&
+                            p.services?.id !== 8 &&
+                            p.price_type !== "starting" &&
+                            getRegion(p.vets?.city) === vetRegion,
+                        );
+                        const avg =
+                          allForSvc.length > 0
+                            ? Math.round(
+                                allForSvc.reduce((s, p) => s + p.price_low, 0) /
+                                  allForSvc.length,
+                              )
+                            : null;
+                        if (!vetPrice || !avg) return null;
+                        const isEqual = vetPrice === avg;
+                        const isCheaper = vetPrice < avg;
+                        const max = Math.max(vetPrice, avg) * 1.2;
+                        const isLast =
+                          visibleChartPrices[visibleChartPrices.length - 1]
+                            ?.id === price.id;
+                        const badgeBg = isEqual
+                          ? "#F5F0E8"
+                          : isCheaper
+                            ? "#EDFAF3"
+                            : "#FCEAEA";
+                        const badgeColor = isEqual
+                          ? C.slate
+                          : isCheaper
+                            ? C.success
+                            : C.error;
+                        // Border derived from the same three states, so below,
+                        // at, and above average each keep their own outline.
+                        const badgeBorder = isEqual
+                          ? "#EDE8E0"
+                          : isCheaper
+                            ? "rgba(26,102,65,0.22)"
+                            : "rgba(201,64,64,0.24)";
+                        const badgeLabel = isEqual ? (
+                          "≈ At average"
+                        ) : isCheaper ? (
+                          <>
+                            <Check size={12} strokeWidth={2.6} /> Below average
+                          </>
+                        ) : (
+                          <>
+                            <ArrowUp size={12} strokeWidth={2.6} /> Above
+                            average
+                          </>
+                        );
+                        const barColor = isEqual
+                          ? C.muted
+                          : isCheaper
+                            ? C.success
+                            : C.error;
+                        return (
+                          <div key={price.id}>
+                            <div style={{ marginBottom: "20px" }}>
+                              <div className="chart-row-header">
+                                <span
                                   style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "10px",
+                                    fontSize: "16px",
+                                    fontWeight: "700",
+                                    color: C.navyDark,
+                                    overflowWrap: "break-word",
                                   }}
                                 >
-                                  <span
-                                    style={{
-                                      fontSize: "14px",
-                                      color: C.muted,
-                                      width: "84px",
-                                      flexShrink: 0,
-                                      fontWeight: "600",
-                                    }}
-                                  >
-                                    {bar.label}
-                                  </span>
+                                  {serviceName}
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: "13px",
+                                    fontWeight: "700",
+                                    padding: "3px 10px",
+                                    borderRadius: "20px",
+                                    background: badgeBg,
+                                    color: badgeColor,
+                                    border: `2px solid ${badgeBorder}`,
+                                    whiteSpace: "nowrap",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                >
+                                  {badgeLabel}
+                                </span>
+                              </div>
+                              {[
+                                {
+                                  label: "This vet",
+                                  width: Math.round((vetPrice / max) * 100),
+                                  value: vetPrice,
+                                  barColor,
+                                },
+                                {
+                                  label: `${vetRegion} avg`,
+                                  width: Math.round((avg / max) * 100),
+                                  value: avg,
+                                  barColor: C.muted,
+                                },
+                              ].map((bar) => (
+                                <div
+                                  key={bar.label}
+                                  style={{ marginBottom: "8px" }}
+                                >
                                   <div
                                     style={{
-                                      flex: 1,
-                                      background: "#f0ede8",
-                                      borderRadius: "5px",
-                                      height: "30px",
-                                      overflow: "visible",
-                                      position: "relative",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "10px",
                                     }}
                                   >
+                                    <span
+                                      style={{
+                                        fontSize: "15px",
+                                        color: C.muted,
+                                        width: "84px",
+                                        flexShrink: 0,
+                                        fontWeight: "600",
+                                      }}
+                                    >
+                                      {bar.label}
+                                    </span>
                                     <div
                                       style={{
-                                        width: chartVisible
-                                          ? `${bar.width}%`
-                                          : "0%",
-                                        height: "100%",
-                                        background: bar.barColor,
+                                        flex: 1,
+                                        background: "#f0ede8",
                                         borderRadius: "5px",
-                                        transition:
-                                          "width 0.9s cubic-bezier(0.4,0,0.2,1)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "flex-end",
-                                        paddingRight:
-                                          bar.width >= 15 ? "10px" : "0",
-                                        boxSizing: "border-box",
+                                        height: "30px",
+                                        overflow: "visible",
                                         position: "relative",
                                       }}
                                     >
-                                      {bar.width >= 15 ? (
-                                        <span
-                                          style={{
-                                            fontSize: "13px",
-                                            color: "#fff",
-                                            fontWeight: "700",
-                                            whiteSpace: "nowrap",
-                                          }}
-                                        >
-                                          $
-                                          {Number(bar.value) % 1 === 0
-                                            ? bar.value.toLocaleString()
-                                            : bar.value.toLocaleString(
-                                                "en-US",
-                                                {
-                                                  minimumFractionDigits: 2,
-                                                  maximumFractionDigits: 2,
-                                                },
-                                              )}
-                                        </span>
-                                      ) : (
-                                        <span
-                                          style={{
-                                            fontSize: "13px",
-                                            color: C.navyDark,
-                                            fontWeight: "700",
-                                            whiteSpace: "nowrap",
-                                            position: "absolute",
-                                            left: "calc(100% + 6px)",
-                                          }}
-                                        >
-                                          $
-                                          {Number(bar.value) % 1 === 0
-                                            ? bar.value.toLocaleString()
-                                            : bar.value.toLocaleString(
-                                                "en-US",
-                                                {
-                                                  minimumFractionDigits: 2,
-                                                  maximumFractionDigits: 2,
-                                                },
-                                              )}
-                                        </span>
-                                      )}
+                                      <div
+                                        style={{
+                                          width: chartVisible
+                                            ? `${bar.width}%`
+                                            : "0%",
+                                          height: "100%",
+                                          background: bar.barColor,
+                                          borderRadius: "5px",
+                                          transition:
+                                            "width 0.9s cubic-bezier(0.4,0,0.2,1)",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "flex-end",
+                                          paddingRight:
+                                            bar.width >= 15 ? "10px" : "0",
+                                          boxSizing: "border-box",
+                                          position: "relative",
+                                        }}
+                                      >
+                                        {bar.width >= 15 ? (
+                                          <span
+                                            style={{
+                                              fontSize: "13px",
+                                              color: "#fff",
+                                              fontWeight: "700",
+                                              whiteSpace: "nowrap",
+                                            }}
+                                          >
+                                            $
+                                            {Number(bar.value) % 1 === 0
+                                              ? bar.value.toLocaleString()
+                                              : bar.value.toLocaleString(
+                                                  "en-US",
+                                                  {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                  },
+                                                )}
+                                          </span>
+                                        ) : (
+                                          <span
+                                            style={{
+                                              fontSize: "13px",
+                                              color: C.navyDark,
+                                              fontWeight: "700",
+                                              whiteSpace: "nowrap",
+                                              position: "absolute",
+                                              left: "calc(100% + 6px)",
+                                            }}
+                                          >
+                                            $
+                                            {Number(bar.value) % 1 === 0
+                                              ? bar.value.toLocaleString()
+                                              : bar.value.toLocaleString(
+                                                  "en-US",
+                                                  {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                  },
+                                                )}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
+                            {!isLast && (
+                              <div
+                                style={{
+                                  height: "1px",
+                                  background: C.border,
+                                  marginBottom: "20px",
+                                }}
+                              />
+                            )}
                           </div>
-                          {!isLast && (
-                            <div
-                              style={{
-                                height: "1px",
-                                background: C.border,
-                                marginBottom: "20px",
-                              }}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                   </div>
                 </div>
               </div>
@@ -1679,17 +1774,7 @@ export default function VetPage() {
                       marginBottom: "4px",
                     }}
                   >
-                    <h2
-                      style={{
-                        margin: 0,
-                        fontSize: "18px",
-                        fontWeight: "800",
-                        color: C.navyDark,
-                        fontFamily: "var(--font-urbanist,system-ui)",
-                      }}
-                    >
-                      Pricing
-                    </h2>
+                    <h2 className="vs-section-h">Pricing</h2>
                     <button
                       onClick={() => setShowPricingModal(true)}
                       className="vs-price-link"
@@ -1776,210 +1861,242 @@ export default function VetPage() {
                           </p>
                         </div>
                       )}
-                      {pricedRows.length === 0 ? (
-                        <div
-                          style={{
-                            textAlign: "center",
-                            padding: "24px 0 28px",
-                          }}
-                        >
-                          <ArtNoPricing width={140} />
-                          <p
-                            style={{
-                              color: C.muted,
-                              fontSize: "15px",
-                              fontWeight: 500,
-                              margin: "12px 0 0",
+                      {/* The clinic's own note about its pricing — why a price
+                          needs an exam first, what a range assumes. Admin has
+                          had this field ("Public pricing note") all along and
+                          it was never displayed anywhere. Below the list,
+                          because it explains what's above it; shown even with
+                          no prices, since a clinic with none often has the
+                          best reason. */}
+                      {hasText(vet.pricing_note) && (
+                        <div className="vs-clinicnote">
+                          <p className="vs-clinicnote-h">About pricing here</p>
+                          <div
+                            className="vs-clinicnote-body"
+                            dangerouslySetInnerHTML={{
+                              __html: vet.pricing_note,
                             }}
-                          >
-                            No pricing available yet.
+                          />
+                        </div>
+                      )}
+                      {pricedRows.length === 0 ? (
+                        // A plus-sign illustration read as "add a price" — an
+                        // invitation to do something, on a page where there is
+                        // nothing to do. A clock says the same thing the copy
+                        // says: not yet, come back.
+                        // No icon. A clock meant "later", which is a promise
+                        // we can't make — some clinics will never share
+                        // pricing. The heading carries it.
+                        <div className="vs-noprice">
+                          <p className="vs-noprice-title">
+                            No prices yet for this clinic
+                          </p>
+                          <p className="vs-noprice-body">
+                            Calling ahead is the best way to get an estimate
+                            before you go.
+                          </p>
+                          <p className="vs-noprice-invite">
+                            Been here recently? Adding a price from your receipt
+                            helps the next person who&rsquo;s looking.
                           </p>
                         </div>
                       ) : (
-                        pricedRows.map((p, i, arr) => {
-                          const accordionCopy = ACCORDION_COPY[p.services?.id];
-                          const isExpanded = !!expandedRows[p.id];
-                          const noteLines = parseNotes(p.notes);
-                          const isLast = i === arr.length - 1;
-                          return (
-                            <div key={p.id}>
-                              <div className="price-row">
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <div style={{ flex: 1, minWidth: 0 }}>
-                                    <span
+                        pricedGroups.map((group) => (
+                          <div key={group.name} className="vs-pricegroup">
+                            <p className="vs-pricegroup-h">{group.name}</p>
+                            {group.rows.map((p, i, arr) => {
+                              const accordionCopy =
+                                ACCORDION_COPY[p.services?.id];
+                              const isExpanded = !!expandedRows[p.id];
+                              const noteLines = parseNotes(p.notes);
+                              // Every row keeps its divider now. Without it the
+                              // last row of a group ran straight into the next
+                              // group's heading with nothing between them.
+                              const isLast = false;
+                              return (
+                                <div key={p.id}>
+                                  <div className="price-row">
+                                    <div
                                       style={{
-                                        fontSize: "16px",
-                                        fontWeight: "600",
-                                        color: C.navyDark,
-                                        overflowWrap: "break-word",
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
                                       }}
                                     >
-                                      {p.services?.name}
-                                    </span>
-                                    {noteLines.map((note, j) => (
-                                      <p
-                                        key={j}
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <span className="vs-service-name">
+                                          {p.services?.name}
+                                        </span>
+                                        {noteLines.map((note, j) => (
+                                          <p
+                                            key={j}
+                                            style={{
+                                              margin: "2px 0 0",
+                                              fontSize: "15px",
+                                              fontWeight: 500,
+                                              maxWidth: "710px",
+                                              color: C.muted,
+                                              overflowWrap: "break-word",
+                                            }}
+                                          >
+                                            {note}
+                                          </p>
+                                        ))}
+                                      </div>
+                                      <div
                                         style={{
-                                          margin: "2px 0 0",
-                                          fontSize: "14px",
-                                          fontWeight: 500,
-                                          color: C.muted,
-                                          overflowWrap: "break-word",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "12px",
+                                          marginLeft: "16px",
+                                          flexShrink: 0,
                                         }}
                                       >
-                                        {note}
-                                      </p>
-                                    ))}
+                                        <span
+                                          style={{
+                                            fontSize: "16px",
+                                            fontWeight: "800",
+                                            color: C.navyDark,
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          {formatPrice(
+                                            p.price_low,
+                                            p.price_high,
+                                            p.price_type,
+                                          )}
+                                        </span>
+                                        {accordionCopy && (
+                                          <button
+                                            className={`expand-btn${isExpanded ? " is-open" : ""}`}
+                                            onClick={() => toggleRow(p.id)}
+                                            aria-label={
+                                              isExpanded ? "Collapse" : "Expand"
+                                            }
+                                          >
+                                            <svg
+                                              className={`expand-icon${isExpanded ? " open" : ""}`}
+                                              width="12"
+                                              height="12"
+                                              viewBox="0 0 12 12"
+                                              fill="none"
+                                              aria-hidden="true"
+                                            >
+                                              <line
+                                                x1="6"
+                                                y1="0"
+                                                x2="6"
+                                                y2="12"
+                                                stroke="currentColor"
+                                                strokeWidth="1.8"
+                                                strokeLinecap="round"
+                                              />
+                                              <line
+                                                x1="0"
+                                                y1="6"
+                                                x2="12"
+                                                y2="6"
+                                                stroke="currentColor"
+                                                strokeWidth="1.8"
+                                                strokeLinecap="round"
+                                              />
+                                            </svg>
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
+                                  {accordionCopy && (
+                                    <div
+                                      className={`acc-wrap${isExpanded ? " open" : ""}`}
+                                    >
+                                      <div className="acc-inner">
+                                        <div
+                                          style={{
+                                            background: "#f9f9f7",
+                                            borderRadius: "10px",
+                                            padding: "20px",
+                                            // marginBottom: "8px",
+                                          }}
+                                        >
+                                          {/* Body copy capped near 70ch. At 1024
+                                          the full 900px track ran 117. */}
+                                          <p
+                                            style={{
+                                              margin: "0 0 6px",
+                                              fontSize: "11px",
+                                              fontWeight: "700",
+                                              color: C.muted,
+                                              textTransform: "uppercase",
+                                              letterSpacing: "0.10em",
+                                            }}
+                                          >
+                                            {accordionCopy.heading}
+                                          </p>
+                                          <p
+                                            style={{
+                                              margin: 0,
+                                              fontSize: "14px",
+                                              fontWeight: 500,
+                                              color: C.slate,
+                                              lineHeight: "1.6",
+                                            }}
+                                          >
+                                            {accordionCopy.body}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                   <div
                                     style={{
                                       display: "flex",
-                                      alignItems: "center",
-                                      gap: "12px",
-                                      marginLeft: "16px",
-                                      flexShrink: 0,
+                                      justifyContent: "flex-end",
+                                      // marginTop: "4px",
                                     }}
                                   >
-                                    <span
-                                      style={{
-                                        fontSize: "16px",
-                                        fontWeight: "800",
-                                        color: C.navyDark,
-                                        whiteSpace: "nowrap",
-                                      }}
+                                    <button
+                                      type="button"
+                                      className="report-price-btn"
+                                      onClick={() =>
+                                        setReportingPrice({
+                                          id: p.id,
+                                          serviceName: p.services?.name || "",
+                                          serviceId: p.service_id,
+                                          display: formatPrice(
+                                            p.price_low,
+                                            p.price_high,
+                                            p.price_type,
+                                          ),
+                                        })
+                                      }
                                     >
-                                      {formatPrice(
-                                        p.price_low,
-                                        p.price_high,
-                                        p.price_type,
-                                      )}
-                                    </span>
-                                    {accordionCopy && (
-                                      <button
-                                        className={`expand-btn${isExpanded ? " is-open" : ""}`}
-                                        onClick={() => toggleRow(p.id)}
-                                        aria-label={
-                                          isExpanded ? "Collapse" : "Expand"
-                                        }
-                                      >
-                                        <svg
-                                          className={`expand-icon${isExpanded ? " open" : ""}`}
-                                          width="12"
-                                          height="12"
-                                          viewBox="0 0 12 12"
-                                          fill="none"
-                                          aria-hidden="true"
-                                        >
-                                          <line
-                                            x1="6"
-                                            y1="0"
-                                            x2="6"
-                                            y2="12"
-                                            stroke="currentColor"
-                                            strokeWidth="1.8"
-                                            strokeLinecap="round"
-                                          />
-                                          <line
-                                            x1="0"
-                                            y1="6"
-                                            x2="12"
-                                            y2="6"
-                                            stroke="currentColor"
-                                            strokeWidth="1.8"
-                                            strokeLinecap="round"
-                                          />
-                                        </svg>
-                                      </button>
-                                    )}
+                                      Report incorrect price
+                                    </button>
                                   </div>
-                                </div>
-                              </div>
-                              {accordionCopy && (
-                                <div
-                                  className={`acc-wrap${isExpanded ? " open" : ""}`}
-                                >
-                                  <div className="acc-inner">
+                                  {!isLast && (
                                     <div
                                       style={{
-                                        background: "#f9f9f7",
-                                        borderRadius: "10px",
-                                        padding: "20px",
-                                        // marginBottom: "8px",
+                                        height: "1px",
+                                        background: C.border,
+                                        margin: "0",
                                       }}
-                                    >
-                                      {/* Body copy capped near 70ch. At 1024
-                                          the full 900px track ran 117. */}
-                                      <p
-                                        style={{
-                                          margin: "0 0 6px",
-                                          fontSize: "11px",
-                                          fontWeight: "700",
-                                          color: C.muted,
-                                          textTransform: "uppercase",
-                                          letterSpacing: "0.10em",
-                                        }}
-                                      >
-                                        {accordionCopy.heading}
-                                      </p>
-                                      <p
-                                        style={{
-                                          margin: 0,
-                                          fontSize: "15px",
-                                          fontWeight: 500,
-                                          color: C.slate,
-                                          lineHeight: "1.6",
-                                        }}
-                                      >
-                                        {accordionCopy.body}
-                                      </p>
-                                    </div>
-                                  </div>
+                                    />
+                                  )}
                                 </div>
-                              )}
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "flex-end",
-                                  // marginTop: "4px",
-                                }}
-                              >
-                                <button
-                                  type="button"
-                                  className="report-price-btn"
-                                  onClick={() =>
-                                    setReportingPrice({
-                                      id: p.id,
-                                      serviceName: p.services?.name || "",
-                                      serviceId: p.service_id,
-                                      display: formatPrice(
-                                        p.price_low,
-                                        p.price_high,
-                                        p.price_type,
-                                      ),
-                                    })
-                                  }
-                                >
-                                  Report incorrect price
-                                </button>
-                              </div>
-                              {!isLast && (
-                                <div
-                                  style={{
-                                    height: "1px",
-                                    background: C.border,
-                                    margin: "0",
-                                  }}
-                                />
-                              )}
-                            </div>
-                          );
-                        })
+                              );
+                            })}
+                          </div>
+                        ))
+                      )}
+                      {pricedRows.length > 0 && pricedRows.length <= 3 && (
+                        // A clinic with one or two prices looks like a clinic
+                        // we know little about. Saying why is better than
+                        // letting the gap speak for itself.
+                        <p className="vs-fewprice">
+                          These are the prices we have for this clinic so far.
+                          Ask them for an estimate on anything not listed.
+                        </p>
                       )}
                     </div>
                   </div>

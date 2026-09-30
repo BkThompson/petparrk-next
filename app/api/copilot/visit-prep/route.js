@@ -89,6 +89,7 @@ export async function POST(request) {
   }
 
   // ── If from a symptom check, verify + pull data
+  let ownerWords = "";
   let effectiveDifferentials = differentials || [];
   let effectiveTriage = triageResult || null;
   let effectiveReason = visitReason || null;
@@ -96,7 +97,7 @@ export async function POST(request) {
   if (symptomCheckId) {
     const { data: check } = await supabaseAdmin
       .from("symptom_checks")
-      .select("id, owner_id, pet_id, triage_result, differentials")
+      .select("id, owner_id, pet_id, triage_result, differentials, transcript")
       .eq("id", symptomCheckId)
       .maybeSingle();
 
@@ -108,6 +109,11 @@ export async function POST(request) {
     }
     effectiveDifferentials = check.differentials || effectiveDifferentials;
     effectiveTriage = check.triage_result || effectiveTriage;
+    // What the owner actually said. Without this the prep only sees the pet's
+    // record and a "reason" taken from the first differential — so someone who
+    // asked about behaviour at the dog park got questions about an old knee
+    // surgery and a benign cyst. The conversation is the concern.
+    ownerWords = extractOwnerWords(check.transcript);
     if (!effectiveReason) {
       effectiveReason =
         effectiveDifferentials.length > 0
@@ -132,6 +138,12 @@ export async function POST(request) {
     }
   }
 
+  // Fall back to what the owner actually said before falling back to
+  // "Checkup". A prep headed "routine checkup" above an emergency triage is
+  // confusing, and the first thing they typed is almost always the reason.
+  if (!effectiveReason && ownerWords) {
+    effectiveReason = ownerWords.split("\n")[0].slice(0, 160);
+  }
   if (!effectiveReason) effectiveReason = "Checkup";
 
   // ── Generate prep content
@@ -140,6 +152,7 @@ export async function POST(request) {
     visitReason: effectiveReason,
     triageResult: effectiveTriage,
     differentials: effectiveDifferentials,
+    ownerWords,
   });
 
   let prepContent = {};
@@ -186,7 +199,33 @@ export async function POST(request) {
   });
 }
 
-function buildPrepPrompt({ pet, visitReason, triageResult, differentials }) {
+// Pull just the owner's own messages out of a stored transcript. Their words
+// are the anchor; the assistant's replies are already summarised by the triage
+// and the differentials.
+function extractOwnerWords(transcript) {
+  if (!transcript) return "";
+  try {
+    const msgs =
+      typeof transcript === "string" ? JSON.parse(transcript) : transcript;
+    if (!Array.isArray(msgs)) return "";
+    return msgs
+      .filter((m) => m && m.role === "user" && typeof m.content === "string")
+      .map((m) => m.content.trim())
+      .filter(Boolean)
+      .join("\n")
+      .slice(0, 2000);
+  } catch {
+    return "";
+  }
+}
+
+function buildPrepPrompt({
+  pet,
+  visitReason,
+  triageResult,
+  differentials,
+  ownerWords,
+}) {
   const petBits = [];
   if (pet.name) petBits.push(pet.name);
   if (pet.species) petBits.push(pet.species);
@@ -210,14 +249,16 @@ ${pet.medical_conditions ? `EXISTING CONDITIONS: ${pet.medical_conditions}` : ""
 VISIT REASON: ${visitReason}
 LIKELY ISSUES: ${diffText}
 ${triageText}
+${ownerWords ? `\nWHAT THE OWNER SAID, IN THEIR OWN WORDS:\n${ownerWords}\n` : ""}
+ANCHOR EVERYTHING TO WHAT THE OWNER CAME IN ABOUT. Their own words above are the concern; the triage and likely issues describe it. The pet's allergies and existing conditions are background — a vet wants to know they exist, but they are not why this visit is happening. Do not let background crowd out the actual concern.
 
 Generate prep content as JSON. Be specific to this pet and reason — not generic. Keep each item short and scannable.
 
 Rules:
-- questions_to_ask: 3-5 specific questions the owner should ask the vet. IMPORTANT: at least one question MUST cover home care after the visit — what to watch for at home and how to know if the pet is NOT improving (e.g. "What symptoms mean I should come back or call?"). This is high-value and often forgotten.
-- symptoms_to_mention: 2-4 things about the pet's condition worth flagging (only if relevant; empty array if routine). Separate stating known facts from observations to make before going where possible.
+- questions_to_ask: 3-5 specific questions the owner should ask the vet. ALL of them must be about the concern the owner described — not the pet's unrelated history. If a past condition genuinely bears on this concern, one question may connect the two, but only one. At least one question MUST cover home care after the visit — what to watch for at home and how to know if the pet is NOT improving (e.g. "What symptoms mean I should come back or call?"). This is high-value and often forgotten.
+- symptoms_to_mention: 2-4 items. Lead with what the owner observed about THIS concern — when it started, what triggers it, how often, what they have already tried. Existing conditions, past surgeries and known allergies may appear here, but at most one line each and only as brief background a vet would want on file. Separate known facts from observations to make before going. Empty array if routine.
 - what_to_bring: 2-4 practical items (records, current meds, a stool/urine sample only if GI/urinary, etc.). If the visit may involve tests or a procedure, include a note to call ahead about whether the pet should eat beforehand (fasting).
-- what_to_expect: 1-2 sentences on what the visit might involve. Do NOT promise outcomes. Do NOT give absolute cost claims.
+- what_to_expect: 1-2 sentences on what the visit might involve, for THIS concern. Do not describe examination of unrelated body systems unless the concern calls for it. Do NOT promise outcomes. Do NOT give absolute cost claims.
 - cost_note: 1 sentence, general. Do NOT invent specific prices. Something like "Ask for an estimate before any tests or procedures, and share your budget so the vet can prioritize."
 
 Respond with ONLY this JSON, nothing else:

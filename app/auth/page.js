@@ -302,7 +302,7 @@ function AuthPageContent() {
   const inputStyle = {
     width: "100%",
     padding: "12px 14px",
-    borderRadius: "10px",
+    borderRadius: "12px",
     border: "1.5px solid var(--color-border, #EDE8E0)",
     fontSize: "16px",
     fontWeight: "500",
@@ -331,7 +331,7 @@ function AuthPageContent() {
     justifyContent: "center",
     color: "#fff",
     border: "2px solid var(--color-terracotta, #CF5C36)",
-    borderRadius: "10px",
+    borderRadius: "12px",
     fontSize: "15px",
     fontWeight: "700",
     cursor: loading ? "not-allowed" : "pointer",
@@ -346,7 +346,7 @@ function AuthPageContent() {
     background: "#fff",
     color: "var(--color-navy-dark, #172531)",
     border: "1.5px solid var(--color-border, #EDE8E0)",
-    borderRadius: "10px",
+    borderRadius: "12px",
     fontSize: "15px",
     fontWeight: "500",
     cursor: "pointer",
@@ -361,7 +361,8 @@ function AuthPageContent() {
   const linkBtn = {
     background: "none",
     border: "none",
-    color: "var(--color-terracotta, #CF5C36)",
+    // Colour lives in CSS (.auth-link) so :hover can win — an inline
+    // colour overrides any stylesheet rule, which is why hover did nothing.
     cursor: "pointer",
     fontSize: "14px",
     fontWeight: "600",
@@ -473,169 +474,190 @@ function AuthPageContent() {
   }
 
   return (
-    <div
-      className="auth-page-wrap"
-      style={{
-        minHeight: "calc(100vh - 64px)",
-        background: "var(--color-cream, #F5F0E8)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        paddingTop: "48px",
-        paddingBottom: "80px",
-        fontFamily: "var(--font-urbanist, system-ui)",
-      }}
-    >
+    <>
+      {/* Hover states. These three are inline-styled buttons, and inline
+          styles can't express :hover — so they had none. Navy on hover for
+          all three: terracotta is the primary action colour here (the sign-in
+          button), and a second terracotta hover on a quiet text link competes
+          with it. */}
+      <style jsx global>{`
+        .auth-link {
+          color: var(--color-terracotta, #cf5c36);
+          transition: color 0.18s ease;
+        }
+        .auth-browse {
+          color: var(--color-muted, #717a86);
+          transition: color 0.18s ease;
+        }
+        .auth-link:hover,
+        .auth-browse:hover,
+        .auth-browse:hover svg {
+          color: var(--color-navy-dark, #172531);
+        }
+      `}</style>
       <div
+        className="auth-page-wrap"
         style={{
-          background: "#fff",
-          borderRadius: "20px",
-          padding: "40px 36px",
-          width: "100%",
-          maxWidth: "420px",
-          boxShadow: "0 4px 24px rgba(23,37,49,0.08)",
-          border: "1px solid var(--color-border, #EDE8E0)",
+          minHeight: "calc(100vh - 64px)",
+          background: "var(--color-cream, #F5F0E8)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          paddingTop: "48px",
+          paddingBottom: "80px",
+          fontFamily: "var(--font-urbanist, system-ui)",
         }}
       >
-        {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <div style={{ fontSize: "32px", marginBottom: "6px" }}>🐾</div>
-          <h1
-            style={{
-              margin: 0,
-              color: "var(--color-navy-dark, #172531)",
-              fontSize: "22px",
-              fontWeight: "800",
-              fontFamily: "var(--font-urbanist, system-ui)",
-              letterSpacing: "-0.025em",
-            }}
-          >
-            PetParrk
-          </h1>
-          <p
-            style={{
-              margin: "6px 0 0",
-              color: "var(--color-muted, #717A86)",
-              fontSize: "15px",
-              fontWeight: "500",
-            }}
-          >
-            {mode === "signin" && "Welcome back"}
-            {mode === "signup" && "Create your free account"}
-            {mode === "forgot" && "Reset your password"}
-          </p>
-        </div>
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: "20px",
+            padding: "40px 36px",
+            width: "100%",
+            maxWidth: "420px",
+            boxShadow: "0 4px 24px rgba(23,37,49,0.08)",
+            border: "1px solid var(--color-border, #EDE8E0)",
+          }}
+        >
+          {/* Logo */}
+          <div style={{ textAlign: "center", marginBottom: "28px" }}>
+            <div style={{ fontSize: "32px", marginBottom: "6px" }}>🐾</div>
+            <h1
+              style={{
+                margin: 0,
+                color: "var(--color-navy-dark, #172531)",
+                fontSize: "22px",
+                fontWeight: "800",
+                fontFamily: "var(--font-urbanist, system-ui)",
+                letterSpacing: "-0.025em",
+              }}
+            >
+              PetParrk
+            </h1>
+            <p
+              style={{
+                margin: "6px 0 0",
+                color: "var(--color-muted, #717A86)",
+                fontSize: "15px",
+                fontWeight: "500",
+              }}
+            >
+              {mode === "signin" && "Welcome back"}
+              {mode === "signup" && "Create your free account"}
+              {mode === "forgot" && "Reset your password"}
+            </p>
+          </div>
 
-        {/* Mode tabs — sliding pill */}
-        {mode !== "forgot" && (
-          <div
-            style={{
-              position: "relative",
-              display: "flex",
-              background: "var(--color-cream, #F5F0E8)",
-              borderRadius: "10px",
-              padding: "4px",
-              marginBottom: "24px",
-            }}
-          >
-            {/* Sliding pill */}
+          {/* Mode tabs — sliding pill */}
+          {mode !== "forgot" && (
             <div
               style={{
-                position: "absolute",
-                top: "4px",
-                bottom: "4px",
-                left: mode === "signin" ? "4px" : "calc(50% + 2px)",
-                width: "calc(50% - 6px)",
-                background: "#fff",
-                borderRadius: "7px",
-                boxShadow: "0 1px 4px rgba(23,37,49,0.1)",
-                transition: "left 0.22s cubic-bezier(0.4,0,0.2,1)",
-                pointerEvents: "none",
-              }}
-            />
-            <button
-              onClick={() => switchMode("signin")}
-              style={{
-                flex: 1,
-                padding: "13px 8px",
-                borderRadius: "7px",
-                border: "none",
-                background: "transparent",
-                color:
-                  mode === "signin"
-                    ? "var(--color-navy-dark, #172531)"
-                    : "var(--color-muted, #717A86)",
-                fontSize: "15px",
-                fontWeight: "600",
-                cursor: "pointer",
-                fontFamily: "var(--font-urbanist, system-ui)",
                 position: "relative",
-                zIndex: 1,
-                transition: "color 0.22s ease",
+                display: "flex",
+                background: "var(--color-cream, #F5F0E8)",
+                borderRadius: "12px",
+                padding: "4px",
+                marginBottom: "24px",
               }}
             >
-              Sign In
-            </button>
-            <button
-              onClick={() => switchMode("signup")}
-              style={{
-                flex: 1,
-                padding: "13px 8px",
-                borderRadius: "7px",
-                border: "none",
-                background: "transparent",
-                color:
-                  mode === "signup"
-                    ? "var(--color-navy-dark, #172531)"
-                    : "var(--color-muted, #717A86)",
-                fontSize: "15px",
-                fontWeight: "600",
-                cursor: "pointer",
-                fontFamily: "var(--font-urbanist, system-ui)",
-                position: "relative",
-                zIndex: 1,
-                transition: "color 0.22s ease",
-              }}
-            >
-              Create Account
-            </button>
-          </div>
-        )}
+              {/* Sliding pill */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "4px",
+                  bottom: "4px",
+                  left: mode === "signin" ? "4px" : "calc(50% + 2px)",
+                  width: "calc(50% - 6px)",
+                  background: "#fff",
+                  borderRadius: "7px",
+                  boxShadow: "0 1px 4px rgba(23,37,49,0.1)",
+                  transition: "left 0.22s cubic-bezier(0.4,0,0.2,1)",
+                  pointerEvents: "none",
+                }}
+              />
+              <button
+                onClick={() => switchMode("signin")}
+                style={{
+                  flex: 1,
+                  padding: "13px 8px",
+                  borderRadius: "7px",
+                  border: "none",
+                  background: "transparent",
+                  color:
+                    mode === "signin"
+                      ? "var(--color-navy-dark, #172531)"
+                      : "var(--color-muted, #717A86)",
+                  fontSize: "15px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-urbanist, system-ui)",
+                  position: "relative",
+                  zIndex: 1,
+                  transition: "color 0.22s ease",
+                }}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => switchMode("signup")}
+                style={{
+                  flex: 1,
+                  padding: "13px 8px",
+                  borderRadius: "7px",
+                  border: "none",
+                  background: "transparent",
+                  color:
+                    mode === "signup"
+                      ? "var(--color-navy-dark, #172531)"
+                      : "var(--color-muted, #717A86)",
+                  fontSize: "15px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-urbanist, system-ui)",
+                  position: "relative",
+                  zIndex: 1,
+                  transition: "color 0.22s ease",
+                }}
+              >
+                Create Account
+              </button>
+            </div>
+          )}
 
-        {/* Banners */}
-        {error && (
-          <div
-            style={{
-              background: "#FCEAEA",
-              color: "#C94040",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              fontSize: "14px",
-              fontWeight: "500",
-              marginBottom: "16px",
-              animation: "fadeIn 0.2s ease",
-            }}
-          >
-            {error}
-          </div>
-        )}
-        {successMsg && (
-          <div
-            style={{
-              background: "#EDFAF3",
-              color: "#1A6641",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              fontSize: "14px",
-              fontWeight: "500",
-              marginBottom: "16px",
-              animation: "fadeIn 0.2s ease",
-            }}
-          >
-            {successMsg}
-          </div>
-        )}
-        <style>{`
+          {/* Banners */}
+          {error && (
+            <div
+              style={{
+                background: "#FCEAEA",
+                color: "#C94040",
+                borderRadius: "8px",
+                padding: "10px 14px",
+                fontSize: "14px",
+                fontWeight: "500",
+                marginBottom: "16px",
+                animation: "fadeIn 0.2s ease",
+              }}
+            >
+              {error}
+            </div>
+          )}
+          {successMsg && (
+            <div
+              style={{
+                background: "#EDFAF3",
+                color: "#1A6641",
+                borderRadius: "8px",
+                padding: "10px 14px",
+                fontSize: "14px",
+                fontWeight: "500",
+                marginBottom: "16px",
+                animation: "fadeIn 0.2s ease",
+              }}
+            >
+              {successMsg}
+            </div>
+          )}
+          <style>{`
           @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
           .auth-page-wrap { padding-left: 20px; padding-right: 20px; }
           @media (max-width: 640px) { .auth-page-wrap { padding-left: 16px; padding-right: 16px; } }
@@ -644,260 +666,272 @@ function AuthPageContent() {
           .auth-google-btn:hover { border-color: var(--color-navy-dark, #172531) !important; background: var(--color-navy-dark, #172531) !important; color: #fff !important; }
         `}</style>
 
-        {/* SIGN IN */}
-        {mode === "signin" && (
-          <div className="auth-form-content">
-            <button
-              className="auth-google-btn"
-              style={googleBtn}
-              onClick={handleGoogleSignIn}
-            >
-              <GoogleIcon /> Continue with Google
-            </button>
-            {divider}
-            <form onSubmit={handleSignIn}>
-              <div style={{ marginBottom: "16px" }}>
-                <label style={labelStyle}>Email</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ marginBottom: "8px" }}>
-                <label style={labelStyle}>Password</label>
-                <div style={{ position: "relative" }}>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Your password"
-                    style={{ ...inputStyle, paddingRight: "44px" }}
-                  />
-                  {eyeBtn}
-                </div>
-              </div>
-              <div style={{ textAlign: "right", marginBottom: "20px" }}>
-                <button
-                  type="button"
-                  style={linkBtn}
-                  onClick={() => switchMode("forgot")}
-                >
-                  Forgot password?
-                </button>
-              </div>
-              {TURNSTILE_SITE_KEY && (
-                <div
-                  ref={turnstileRef}
-                  className="cf-turnstile"
-                  style={{ margin: "0 0 16px" }}
-                />
-              )}
+          {/* SIGN IN */}
+          {mode === "signin" && (
+            <div className="auth-form-content">
               <button
-                type="submit"
-                className="auth-primary-btn"
-                style={primaryBtn}
-                disabled={loading}
+                className="auth-google-btn"
+                style={googleBtn}
+                onClick={handleGoogleSignIn}
               >
-                {loading ? "Signing in…" : "Sign In"}
+                <GoogleIcon /> Continue with Google
               </button>
-            </form>
-          </div>
-        )}
+              {divider}
+              <form onSubmit={handleSignIn}>
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={labelStyle}>Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ marginBottom: "8px" }}>
+                  <label style={labelStyle}>Password</label>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Your password"
+                      style={{ ...inputStyle, paddingRight: "44px" }}
+                    />
+                    {eyeBtn}
+                  </div>
+                </div>
+                <div style={{ textAlign: "right", marginBottom: "20px" }}>
+                  <button
+                    type="button"
+                    className="auth-link"
+                    style={linkBtn}
+                    onClick={() => switchMode("forgot")}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                {TURNSTILE_SITE_KEY && (
+                  <div
+                    ref={turnstileRef}
+                    className="cf-turnstile"
+                    style={{ margin: "0 0 16px" }}
+                  />
+                )}
+                <button
+                  type="submit"
+                  className="auth-primary-btn"
+                  style={primaryBtn}
+                  disabled={loading}
+                >
+                  {loading ? "Signing in…" : "Sign In"}
+                </button>
+              </form>
+            </div>
+          )}
 
-        {/* SIGN UP */}
-        {mode === "signup" && (
-          <div className="auth-form-content">
-            <button
-              className="auth-google-btn"
-              style={googleBtn}
-              onClick={handleGoogleSignIn}
-            >
-              <GoogleIcon /> Continue with Google
-            </button>
-            {divider}
-            <form onSubmit={handleSignUp}>
-              <div style={{ marginBottom: "16px" }}>
-                <label style={labelStyle}>Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Your name"
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ marginBottom: "16px" }}>
-                <label style={labelStyle}>Email</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ marginBottom: "16px" }}>
-                <label style={labelStyle}>Password</label>
-                <div style={{ position: "relative" }}>
+          {/* SIGN UP */}
+          {mode === "signup" && (
+            <div className="auth-form-content">
+              <button
+                className="auth-google-btn"
+                style={googleBtn}
+                onClick={handleGoogleSignIn}
+              >
+                <GoogleIcon /> Continue with Google
+              </button>
+              {divider}
+              <form onSubmit={handleSignUp}>
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={labelStyle}>Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Your name"
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={labelStyle}>Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={labelStyle}>Password</label>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Create a strong password"
+                      style={{ ...inputStyle, paddingRight: "44px" }}
+                    />
+                    {eyeBtn}
+                  </div>
+                  <p
+                    style={{
+                      margin: "6px 2px 0",
+                      fontSize: "12.5px",
+                      lineHeight: 1.4,
+                      color: "var(--color-muted, #717A86)",
+                    }}
+                  >
+                    At least 8 characters, with an uppercase and lowercase
+                    letter, a number, and a symbol.
+                  </p>
+                </div>
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={labelStyle}>Confirm Password</label>
                   <input
                     type={showPassword ? "text" : "password"}
                     required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a strong password"
-                    style={{ ...inputStyle, paddingRight: "44px" }}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat your password"
+                    style={inputStyle}
                   />
-                  {eyeBtn}
                 </div>
+                {TURNSTILE_SITE_KEY && (
+                  <div
+                    ref={turnstileRef}
+                    className="cf-turnstile"
+                    style={{ margin: "0 0 16px" }}
+                  />
+                )}
+                <button
+                  type="submit"
+                  className="auth-primary-btn"
+                  style={primaryBtn}
+                  disabled={loading}
+                >
+                  {loading ? "Creating account…" : "Create Account"}
+                </button>
                 <p
                   style={{
-                    margin: "6px 2px 0",
-                    fontSize: "12.5px",
-                    lineHeight: 1.4,
+                    fontSize: "13px",
+                    fontWeight: "500",
                     color: "var(--color-muted, #717A86)",
+                    textAlign: "center",
+                    marginTop: "12px",
                   }}
                 >
-                  At least 8 characters, with an uppercase and lowercase letter,
-                  a number, and a symbol.
+                  By signing up you agree to our Terms &amp; Privacy Policy.
                 </p>
-              </div>
-              <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>Confirm Password</label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat your password"
-                  style={inputStyle}
-                />
-              </div>
-              {TURNSTILE_SITE_KEY && (
-                <div
-                  ref={turnstileRef}
-                  className="cf-turnstile"
-                  style={{ margin: "0 0 16px" }}
-                />
-              )}
-              <button
-                type="submit"
-                className="auth-primary-btn"
-                style={primaryBtn}
-                disabled={loading}
-              >
-                {loading ? "Creating account…" : "Create Account"}
-              </button>
+              </form>
+            </div>
+          )}
+
+          {/* FORGOT PASSWORD */}
+          {mode === "forgot" && (
+            <>
               <p
                 style={{
-                  fontSize: "13px",
+                  fontSize: "15px",
                   fontWeight: "500",
-                  color: "var(--color-muted, #717A86)",
-                  textAlign: "center",
-                  marginTop: "12px",
+                  color: "var(--color-slate, #4B5563)",
+                  marginBottom: "20px",
+                  lineHeight: "1.65",
                 }}
               >
-                By signing up you agree to our Terms &amp; Privacy Policy.
+                Enter your email and we'll send you a link to reset your
+                password.
               </p>
-            </form>
-          </div>
-        )}
-
-        {/* FORGOT PASSWORD */}
-        {mode === "forgot" && (
-          <>
-            <p
-              style={{
-                fontSize: "15px",
-                color: "var(--color-slate, #4B5563)",
-                marginBottom: "20px",
-                lineHeight: "1.65",
-              }}
-            >
-              Enter your email and we'll send you a link to reset your password.
-            </p>
-            <form onSubmit={handleForgotPassword}>
-              <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>Email</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  style={inputStyle}
-                />
-              </div>
-              {TURNSTILE_SITE_KEY && (
-                <div
-                  ref={turnstileRef}
-                  className="cf-turnstile"
-                  style={{ margin: "0 0 16px" }}
-                />
-              )}
-              <button
-                type="submit"
-                className="auth-primary-btn"
-                style={primaryBtn}
-                disabled={loading}
+              <form onSubmit={handleForgotPassword}>
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={labelStyle}>Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    style={inputStyle}
+                  />
+                </div>
+                {TURNSTILE_SITE_KEY && (
+                  <div
+                    ref={turnstileRef}
+                    className="cf-turnstile"
+                    style={{ margin: "0 0 16px" }}
+                  />
+                )}
+                <button
+                  type="submit"
+                  className="auth-primary-btn"
+                  style={primaryBtn}
+                  disabled={loading}
+                >
+                  {loading ? "Sending…" : "Send Reset Link"}
+                </button>
+              </form>
+              <p
+                style={{
+                  textAlign: "center",
+                  marginTop: "20px",
+                  fontSize: "14px",
+                }}
               >
-                {loading ? "Sending…" : "Send Reset Link"}
-              </button>
-            </form>
+                <button
+                  className="auth-link"
+                  style={linkBtn}
+                  onClick={() => switchMode("signin")}
+                >
+                  <ArrowLeft
+                    size={14}
+                    strokeWidth={2.4}
+                    style={{ marginRight: "4px", verticalAlign: "middle" }}
+                  />{" "}
+                  Back to Sign In
+                </button>
+              </p>
+            </>
+          )}
+
+          {/* Browse without account */}
+          {mode !== "forgot" && (
             <p
               style={{
                 textAlign: "center",
-                marginTop: "20px",
+                marginTop: "16px",
                 fontSize: "14px",
               }}
             >
-              <button style={linkBtn} onClick={() => switchMode("signin")}>
-                <ArrowLeft
+              <button
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  fontFamily: "var(--font-urbanist, system-ui)",
+                  padding: 0,
+                }}
+                className="auth-browse"
+                onClick={() => router.push("/")}
+              >
+                Browse without an account{" "}
+                <ArrowRight
                   size={14}
                   strokeWidth={2.4}
-                  style={{ marginRight: "4px", verticalAlign: "middle" }}
-                />{" "}
-                Back to Sign In
+                  style={{ marginLeft: "4px", verticalAlign: "middle" }}
+                />
               </button>
             </p>
-          </>
-        )}
-
-        {/* Browse without account */}
-        {mode !== "forgot" && (
-          <p
-            style={{ textAlign: "center", marginTop: "16px", fontSize: "14px" }}
-          >
-            <button
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--color-muted, #717A86)",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-                fontFamily: "var(--font-urbanist, system-ui)",
-                padding: 0,
-              }}
-              onClick={() => router.push("/")}
-            >
-              Browse without an account{" "}
-              <ArrowRight
-                size={14}
-                strokeWidth={2.4}
-                style={{ marginLeft: "4px", verticalAlign: "middle" }}
-              />
-            </button>
-          </p>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -14,12 +14,13 @@ const ADMIN_EMAILS = ["bkalthompson@gmail.com", "maggie.tursi@gmail.com"];
 // Temporary guard: pause live "Sync now" writes while the upgraded
 // source-aware sync route is being finished. Preview (dry-run) is unaffected.
 // Flip to false to re-enable live sync once the new route is deployed.
-const SYNC_WRITE_DISABLED = true;
+const SYNC_WRITE_DISABLED = false;
 
 const TABS = [
   "Submissions",
   "Pending Vets",
   "Price Conflicts",
+  "Price Reports",
   "Vets",
   "Prices",
   "Call Sheet",
@@ -86,6 +87,16 @@ const NAV_GROUPS = [
             <path d="M7 21h10" />
             <path d="M12 3v18" />
             <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
+          </>,
+        ),
+      },
+      {
+        name: "Price Reports",
+        icon: _navIco(
+          <>
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
           </>,
         ),
       },
@@ -3227,7 +3238,28 @@ export default function AdminPage() {
     fetchCallQueue();
     fetchUnverifiedPrices();
     fetchConflicts();
+    fetchReports();
     fetchAdminUsers();
+  }, [authorized]);
+
+  // Reload when the tab is actually returned to — not on window focus, which
+  // also fires when devtools opens, and not more than once a minute.
+  const lastRefreshRef = useRef(Date.now());
+  useEffect(() => {
+    if (!authorized) return;
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastRefreshRef.current < 60000) return;
+      lastRefreshRef.current = Date.now();
+      fetchSubmissions();
+      fetchPendingVets();
+      fetchStats();
+      fetchConflicts();
+      fetchReports();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authorized]);
 
   async function fetchStats() {
@@ -3562,7 +3594,7 @@ export default function AdminPage() {
     setUnverifiedLoading(true);
     const { data } = await supabase
       .from("vet_prices")
-      .select("*, services(name), vets(name), pending_vets(name)")
+      .select("*, services(name), vets(name, slug), pending_vets(name)")
       .eq("is_verified", false)
       .eq("source", "ai_scraper")
       .order("created_at", { ascending: false });
@@ -3585,11 +3617,75 @@ export default function AdminPage() {
   }
 
   // ── Price conflicts: prices flagged in_conflict for the same vet+service. ──
+  // ── Price reports: what visitors told us is wrong. ──
+  const [reports, setReports] = useState([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsFilter, setReportsFilter] = useState("pending");
+
+  async function fetchReports() {
+    setReportsLoading(true);
+    let q = supabase
+      .from("price_reports")
+      .select(
+        "*, services(name), vets(name, slug), vet_prices(price_low, price_high, price_type, call_for_quote, source)",
+      )
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (reportsFilter !== "all") q = q.eq("status", reportsFilter);
+    const { data, error } = await q;
+    if (error) console.error("price_reports:", error.message);
+    setReports(data || []);
+    setReportsLoading(false);
+  }
+
+  async function setReportStatus(id, status) {
+    const { error } = await supabase
+      .from("price_reports")
+      .update({ status, reviewed_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) {
+      alert("Couldn't update that report — please try again.");
+      return;
+    }
+    fetchReports();
+  }
+
+  // Only where it would hold. A sheet price is owned by the call sheet:
+  // deleting it here looks like it worked and the next sync writes it back.
+  async function removeReportedPrice(report) {
+    const price = report.vet_prices;
+    if (!report.vet_price_id || !price || price.source === "sheet") return;
+    if (
+      !confirm(
+        "Remove this price from the site? This deletes it — it can't be undone.",
+      )
+    )
+      return;
+    const { error } = await supabase
+      .from("vet_prices")
+      .delete()
+      .eq("id", report.vet_price_id);
+    if (error) {
+      alert("Couldn't remove that price — please try again.");
+      return;
+    }
+    setReportStatus(report.id, "resolved");
+  }
+
+  // View page shows what a visitor sees; this goes where the work happens.
+  function openReportInPrices(report) {
+    if (!report.vet_id) return;
+    setSelectedVetId(report.vet_id);
+    setTab("Prices");
+    setPricesLoading(true);
+    fetchPricesForVet(report.vet_id);
+  }
+
   async function fetchConflicts() {
     setConflictLoading(true);
     const { data } = await supabase
       .from("vet_prices")
-      .select("*, services(name), vets(name), pending_vets(name)")
+      .select("*, services(name), vets(name, slug), pending_vets(name)")
       .eq("in_conflict", true)
       .order("conflict_key", { ascending: true })
       .order("created_at", { ascending: true });
@@ -3602,6 +3698,7 @@ export default function AdminPage() {
         groups[key] = {
           key,
           vetName: row.vets?.name || row.pending_vets?.name || "Unknown vet",
+          vetSlug: row.vets?.slug || null,
           serviceName: row.services?.name || "Unknown service",
           rows: [],
         };
@@ -4574,6 +4671,10 @@ export default function AdminPage() {
       carecredit: form.carecredit ?? false,
       status: "inactive",
       internal_notes: form.notes || form.internal_notes || null,
+      // Carried through approval. The sync can put a pricing note on a pending
+      // vet from column AM, and without this it was captured and then dropped
+      // the moment Susan approved them.
+      pricing_note: form.pricing_note || null,
     });
     if (error) {
       alert("Error approving: " + error.message);
@@ -4958,15 +5059,20 @@ export default function AdminPage() {
       timeZoneName: "short",
     });
   }
+  // One format across Admin: "Sep 29, 2026", and "… at 4:12 PM" where the
+  // time matters. The built-in version rendered "Sep 29, 2026, 4:12 PM" — a
+  // comma doing two jobs in one string.
   function formatDateTime(iso) {
     if (!iso) return "—";
-    return new Date(iso).toLocaleDateString("en-US", {
+    const d = new Date(iso);
+    return `${d.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
+    })} at ${d.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
-    });
+    })}`;
   }
   function formatPrice(low, high, type) {
     if (!low) return "—";
@@ -5733,16 +5839,58 @@ export default function AdminPage() {
         .adm-sync-actions { display: flex; gap: 8px; flex-shrink: 0; }
         .adm-sync-paused { margin: 16px 0 0; font-size: 15px; font-weight: 600; color: #8B3A1E; display: flex; flex-direction: column; gap: 4px; }
         /* Price conflicts review */
+        /* Price reports reuse the conflict card, head, option and price
+           classes. These are the only additions. */
+        .adm-reports-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+        .adm-reports-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+        .adm-reports-filter { height: 34px; padding: 0 14px; border-radius: 999px; border: var(--pill-border-w, 2px) solid #ede8e0; background: #fff; color: #717A86; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .adm-reports-filter.active { border-color: #172531; color: #172531; }
+        /* The problem in words, under the service. Amber where the claim is
+           that the row shouldn't exist rather than that the number is wrong. */
+        .adm-report-problem { margin: 6px 0 0; font-size: 16px; font-weight: 800; color: #C94040; }
+        .adm-report-problem.is-warn { color: #8B3A1E; }
+        .adm-report-new { color: #1A6641; }
+        /* Their own words, so it shouldn't look like another data box. White
+           with a terracotta edge — a quotation rather than a panel. */
+        .adm-report-reason { margin: 14px 0 0; padding: 12px 16px; background: #fff; border-left: 3px solid #cf5c36; border-radius: 0 10px 10px 0; font-size: 156x; font-weight: 500; line-height: 1.6; color: #172531; font-style: italic; }
+        /* Who and when on the left, the two links hard right on the same line. */
+        .adm-report-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
+        .adm-report-meta { margin: 0; font-size: 15px; font-weight: 500; color: #717A86; }
+        .adm-report-meta-label { display: block; font-weight: 700; color: #4b5563; }
+        .adm-report-who, .adm-report-date { display: block; }
+        .adm-report-links { display: flex; gap: 16px; align-items: center; }
+        /* Pill and price centred together. They're one unit — a left-aligned
+           pill sitting over a centred number reads as a mistake. */
+        .adm-opt-centred { align-items: center; text-align: center; }
+        .adm-conflict-opt-main { align-items: center; text-align: center; }
+        .adm-conflict-opt-meta { justify-content: center; }
+        .adm-report-noprice { font-size: 16px; font-weight: 700; color: #717A86; }
+        /* Navigation stays a link — it leaves the page rather than deciding. */
+        .adm-report-link { padding: 0; border: none; background: none; font-family: inherit; font-size: 15px; font-weight: 700; color: #cf5c36; text-decoration: underline; cursor: pointer; white-space: nowrap; }
+        .adm-report-link:hover { color: #172531; }
+        /* The decisions, divided from everything above them. */
+        .adm-report-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin-top: 14px; padding-top: 14px; border-top: 1px solid #EDE8E0; }
+        .adm-report-sheetnote { margin: 12px 0 0; font-size: 14px; font-weight: 500; color: #717A86; line-height: 1.55; }
+        /* View page sits below "Both are valid", divided, hard right. */
+        .adm-conflict-viewrow { display: flex; justify-content: flex-end; margin-top: 14px; padding-top: 14px; border-top: 1px solid #EDE8E0; }
+        @media (max-width: 720px) {
+          .adm-report-foot { flex-direction: column; align-items: stretch; gap: 12px; }
+          /* Links side by side and centred, so neither is the obvious one. */
+          .adm-report-links { justify-content: center; gap: 24px; }
+          .adm-report-actions { flex-direction: column; align-items: stretch; }
+          .adm-report-actions .adm-b { width: 100%; }
+          .adm-conflict-viewrow { justify-content: center; }
+        }
         .adm-conflict-list { display: flex; flex-direction: column; gap: 14px; }
         .adm-conflict-card { border: 1px solid #EDE8E0; border-radius: 14px; background: #fff; padding: 18px 20px; }
         .adm-conflict-head { margin-bottom: 14px; }
-        .adm-conflict-vet { margin: 0 0 2px; font-size: 16px; font-weight: 800; color: #172531; }
-        .adm-conflict-svc { margin: 0; font-size: 15px; font-weight: 600; color: #717A86; }
+        .adm-conflict-vet { margin: 0 0 2px; font-size: 18px; font-weight: 800; color: #172531; }
+        .adm-conflict-svc { margin: 0; font-size: 16px; font-weight: 600; color: #717A86; }
         .adm-conflict-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .adm-conflict-opt { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: #faf9f7; border: 1px solid #EDE8E0; border-radius: 12px; }
         .adm-conflict-opt-main { display: flex; flex-direction: column; gap: 6px; }
         .adm-conflict-price { font-size: 20px; font-weight: 800; color: #172531; }
-        .adm-conflict-src { display: inline-flex; align-items: center; align-self: flex-start; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; text-transform: capitalize; background: #EDE8E0; color: #4b5563;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
+        .adm-conflict-src { display: inline-flex; align-items: center; align-self: center; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; text-transform: capitalize; background: #EDE8E0; color: #4b5563;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-src-sheet { background: #EDFAF3; color: #1A6641; }
         .adm-src-manual { background: #FEF3EB; color: #8B3A1E; }
         .adm-src-scraper { background: #eef1fb; color: #3a4a8b; }
@@ -5753,7 +5901,7 @@ export default function AdminPage() {
         .adm-conflict-pick { width: 100%; }
         .adm-conflict-foot { margin-top: 14px; display: flex; justify-content: center; }
         .adm-conflict-keepboth { min-width: 260px; }
-        .adm-sync-guide-toggle { margin-top: 14px; display: inline-flex; align-items: center; gap: 7px; border: none; background: none; padding: 0; font-size: 14px; font-weight: 700; color: #CF5C36; cursor: pointer; font-family: 'Urbanist', sans-serif; }
+        .adm-sync-guide-toggle { margin-top: 14px; display: inline-flex; align-items: center; gap: 7px; border: none; background: none; padding: 0; font-size: 16px; font-weight: 700; color: #CF5C36; cursor: pointer; font-family: 'Urbanist', sans-serif; }
         .adm-sync-guide-toggle:hover { color: #A8471D; }
         .adm-sync-chev { transition: transform 0.25s ease-in-out; }
         .adm-sync-chev.open { transform: rotate(180deg); }
@@ -7125,6 +7273,191 @@ export default function AdminPage() {
             )}
 
             {/* ── PRICE CONFLICTS ── */}
+            {tab === "Price Reports" && (
+              <div>
+                <div className="adm-reports-head">
+                  <p className="adm-price-count">
+                    {reportsLoading
+                      ? "Loading…"
+                      : `${reports.length} report${reports.length === 1 ? "" : "s"}`}
+                  </p>
+                  <div className="adm-reports-filters">
+                    {["pending", "resolved", "dismissed", "all"].map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        className={`adm-reports-filter${reportsFilter === f ? " active" : ""}`}
+                        onClick={() => setReportsFilter(f)}
+                      >
+                        {f[0].toUpperCase() + f.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {!reportsLoading && reports.length === 0 && (
+                  <p className="adm-conflict-svc">
+                    Nothing here. Reports appear when someone tells us a price
+                    is wrong.
+                  </p>
+                )}
+                <div className="adm-conflict-list">
+                  {reports.map((r) => {
+                    const cur = r.vet_prices;
+                    const fmt = (lo, hi, type, cfq) =>
+                      cfq
+                        ? "Call for quote"
+                        : lo == null
+                          ? "—"
+                          : hi
+                            ? `$${lo}–$${hi}`
+                            : type === "starting"
+                              ? `$${lo}+`
+                              : `$${lo}`;
+                    const problem =
+                      {
+                        too_high: "Price is too high",
+                        too_low: "Price is too low",
+                        not_offered: "Clinic doesn't offer this service",
+                        wrong_service: "Wrong service label",
+                        other: "Something else",
+                      }[r.reason_category] || r.reason_category;
+                    const suggested =
+                      r.suggested_price_low != null
+                        ? fmt(
+                            r.suggested_price_low,
+                            r.suggested_price_high,
+                            null,
+                            false,
+                          )
+                        : null;
+                    const listed = cur
+                      ? fmt(
+                          cur.price_low,
+                          cur.price_high,
+                          cur.price_type,
+                          cur.call_for_quote,
+                        )
+                      : "No longer on the site";
+                    const canRemove =
+                      !!r.vet_price_id && cur && cur.source !== "sheet";
+                    return (
+                      <div key={r.id} className="adm-conflict-card">
+                        <div className="adm-conflict-head">
+                          <p className="adm-conflict-vet">
+                            {r.vets?.name || "Unknown vet"}
+                          </p>
+                          <p className="adm-conflict-svc">
+                            {r.services?.name || "Unknown service"}
+                          </p>
+                          <p
+                            className={`adm-report-problem${r.reason_category === "not_offered" || r.reason_category === "wrong_service" ? " is-warn" : ""}`}
+                          >
+                            {problem}
+                          </p>
+                        </div>
+                        <div className="adm-conflict-options">
+                          <div className="adm-conflict-opt adm-opt-centred">
+                            <span className="adm-conflict-src">Listed now</span>
+                            <span className="adm-conflict-price">{listed}</span>
+                          </div>
+                          <div className="adm-conflict-opt adm-opt-centred">
+                            <span className="adm-conflict-src adm-src-community">
+                              Reported as
+                            </span>
+                            {suggested ? (
+                              <span className="adm-conflict-price adm-report-new">
+                                {suggested}
+                              </span>
+                            ) : (
+                              // No number was given, because the claim isn't
+                              // about the number. Say which claim it is rather
+                              // than leaving the column empty.
+                              <span className="adm-report-noprice">
+                                {r.reason_category === "not_offered"
+                                  ? "Not offered here"
+                                  : r.reason_category === "wrong_service"
+                                    ? "Wrong service"
+                                    : "No price given"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {r.reason_text && (
+                          <p className="adm-report-reason">{r.reason_text}</p>
+                        )}
+                        <div className="adm-report-foot">
+                          <p className="adm-report-meta">
+                            <span className="adm-report-meta-label">
+                              Reported by:
+                            </span>
+                            <span className="adm-report-who">
+                              {r.contact_email
+                                ? r.contact_email
+                                : r.reporter_id
+                                  ? "a signed-in user"
+                                  : "someone not signed in"}
+                            </span>
+                            <span className="adm-report-date">
+                              {formatDate(r.created_at)}
+                            </span>
+                          </p>
+                          <span className="adm-report-links">
+                            {r.vets?.slug && (
+                              <a
+                                className="adm-report-link"
+                                href={`/vet/${r.vets.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                View page
+                              </a>
+                            )}
+                            <button
+                              className="adm-report-link"
+                              onClick={() => openReportInPrices(r)}
+                            >
+                              Open in Prices
+                            </button>
+                          </span>
+                        </div>
+                        <div className="adm-report-actions">
+                          {canRemove && (
+                            <button
+                              className="adm-b adm-b-outline"
+                              onClick={() => removeReportedPrice(r)}
+                            >
+                              Remove price
+                            </button>
+                          )}
+                          {r.status !== "dismissed" && (
+                            <button
+                              className="adm-b adm-b-outline"
+                              onClick={() => setReportStatus(r.id, "dismissed")}
+                            >
+                              Dismiss
+                            </button>
+                          )}
+                          {r.status !== "resolved" && (
+                            <button
+                              className="adm-b adm-b-primary"
+                              onClick={() => setReportStatus(r.id, "resolved")}
+                            >
+                              Mark fixed
+                            </button>
+                          )}
+                        </div>
+                        {!canRemove && r.vet_price_id && (
+                          <p className="adm-report-sheetnote">
+                            This price comes from the call sheet — remove it by
+                            putting N/A in that cell, not here.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {tab === "Price Conflicts" && (
               <div>
                 <h2 className="adm-view-title">Price Conflicts</h2>
@@ -7165,6 +7498,15 @@ export default function AdminPage() {
                             {group.rows.map((row) => (
                               <div key={row.id} className="adm-conflict-opt">
                                 <div className="adm-conflict-opt-main">
+                                  {/* Source above the price, matching Price
+                                      Reports. Side by side, the labels line up
+                                      so the numbers sit level. */}
+                                  <span
+                                    className={`adm-conflict-src adm-src-${row.source}`}
+                                  >
+                                    {row.source}
+                                    {row.region ? ` · ${row.region}` : ""}
+                                  </span>
                                   <span className="adm-conflict-price">
                                     {row.call_for_quote
                                       ? "Call for quote"
@@ -7176,12 +7518,6 @@ export default function AdminPage() {
                                             row.price_type,
                                           )}
                                   </span>
-                                  <span
-                                    className={`adm-conflict-src adm-src-${row.source}`}
-                                  >
-                                    {row.source}
-                                    {row.region ? ` · ${row.region}` : ""}
-                                  </span>
                                 </div>
                                 <div className="adm-conflict-opt-meta">
                                   {row.is_verified && (
@@ -7190,9 +7526,7 @@ export default function AdminPage() {
                                     </span>
                                   )}
                                   <span className="adm-conflict-date">
-                                    {new Date(
-                                      row.created_at,
-                                    ).toLocaleDateString()}
+                                    {formatDate(row.created_at)}
                                   </span>
                                 </div>
                                 <button
@@ -7218,6 +7552,18 @@ export default function AdminPage() {
                               Both are valid — keep both
                             </button>
                           </div>
+                          {group.vetSlug && (
+                            <div className="adm-conflict-viewrow">
+                              <a
+                                className="adm-report-link"
+                                href={`/vet/${group.vetSlug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                View page
+                              </a>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -7927,6 +8273,9 @@ export default function AdminPage() {
                         className="adm-sync-guide-toggle"
                         onClick={() => setShowSyncGuide((s) => !s)}
                       >
+                        {/* Chevron after the label, not before it — it points
+                            at what it opens rather than sitting out front. */}
+                        How to format the Google Sheet
                         <svg
                           className={`adm-sync-chev${showSyncGuide ? " open" : ""}`}
                           width="16"
@@ -7940,7 +8289,6 @@ export default function AdminPage() {
                         >
                           <path d="M6 9l6 6 6-6" />
                         </svg>
-                        How to format the Google Sheet
                       </button>
                       <div
                         className={`adm-sync-guide-wrap${showSyncGuide ? " open" : ""}`}
@@ -8036,6 +8384,35 @@ export default function AdminPage() {
                                     show on the vet&rsquo;s page underneath the
                                     price. Keep them about the price itself,
                                     like <code>includes exam</code>
+                                  </li>
+                                </ul>
+                              </div>
+                              <div className="adm-sync-guide-item">
+                                <p className="adm-sync-guide-h">
+                                  Why a price needs an exam first
+                                </p>
+                                <ul>
+                                  <li>
+                                    Put it in the <strong>Public Notes</strong>{" "}
+                                    column (AM) — for anything that explains the
+                                    clinic&rsquo;s pricing as a whole:
+                                    &ldquo;dental needs an exam first&rdquo;,
+                                    &ldquo;this range assumes anesthesia&rdquo;,
+                                    &ldquo;bloodwork is required before
+                                    surgery&rdquo;
+                                  </li>
+                                  <li>
+                                    <strong>Public.</strong> It shows on the
+                                    vet&rsquo;s page beneath their prices, so
+                                    someone understands why a price is missing
+                                    or why a range is wide
+                                  </li>
+                                  <li>
+                                    This is the same field as{" "}
+                                    <strong>Public pricing note</strong> on the
+                                    vet&rsquo;s record here in Admin. The sync
+                                    fills it only when that&rsquo;s empty, so
+                                    anything written here is never overwritten
                                   </li>
                                 </ul>
                               </div>
