@@ -26,8 +26,9 @@ const TABS = [
   "Call Sheet",
   "Users",
   "Pets",
-  "Symptom Logs",
   "Team",
+  "Waitlist",
+  "Symptom Logs",
 ];
 
 // Sidebar nav grouping. Icons are inline lucide-style SVGs.
@@ -165,6 +166,15 @@ const NAV_GROUPS = [
           <>
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             <path d="M9 12l2 2 4-4" />
+          </>,
+        ),
+      },
+      {
+        name: "Waitlist",
+        icon: _navIco(
+          <>
+            <path d="M4 4h16v16H4z" />
+            <path d="M22 6l-10 7L2 6" />
           </>,
         ),
       },
@@ -2861,6 +2871,9 @@ export default function AdminPage() {
   function switchTab(t) {
     const doSwitch = () => {
       setTab(t);
+      // Pull fresh data when opening the Waitlist tab so new signups show
+      // without a manual page refresh.
+      if (t === "Waitlist") fetchWaitlist();
       // Reflect the tab in the URL (?tab=slug) so a refresh stays on this tab.
       const slug = t.toLowerCase().replace(/\s+/g, "-");
       const url = new URL(window.location.href);
@@ -2994,6 +3007,10 @@ export default function AdminPage() {
   const [pets, setPets] = useState([]);
   const [petsLoading, setPetsLoading] = useState(false);
   const [petSearch, setPetSearch] = useState("");
+
+  // Waitlist
+  const [waitlist, setWaitlist] = useState([]);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
 
   // Symptom Logs
   const [symptomLogs, setSymptomLogs] = useState([]);
@@ -3234,6 +3251,7 @@ export default function AdminPage() {
     fetchUsers();
     fetchPets();
     fetchSymptomLogs();
+    fetchWaitlist();
     fetchStats();
     fetchCallQueue();
     fetchUnverifiedPrices();
@@ -3256,6 +3274,7 @@ export default function AdminPage() {
       fetchStats();
       fetchConflicts();
       fetchReports();
+      fetchWaitlist();
     }
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
@@ -4519,6 +4538,38 @@ export default function AdminPage() {
     setTeamDeletingId(null);
   }
 
+  async function fetchWaitlist() {
+    setWaitlistLoading(true);
+    const { data } = await supabase
+      .from("waitlist")
+      .select("id, email, source, created_at")
+      .order("created_at", { ascending: false });
+    setWaitlist(data || []);
+    setWaitlistLoading(false);
+  }
+
+  // Download the waitlist as a CSV (email + signup date + source).
+  function exportWaitlistCsv() {
+    const rows = [["Email", "Signed up", "Source"]];
+    waitlist.forEach((w) => {
+      rows.push([
+        w.email || "",
+        w.created_at ? new Date(w.created_at).toISOString() : "",
+        w.source || "",
+      ]);
+    });
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `petparrk-waitlist-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function fetchSymptomLogs() {
     setSymptomLoading(true);
     const { data } = await supabase
@@ -5349,7 +5400,7 @@ export default function AdminPage() {
         select.adm-input { cursor: pointer; padding-right: 28px; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
         /* 42px is the site-wide button height. These were sized by padding alone,
            so they came out shorter than every other button in the product. */
-        .adm-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: system-ui, sans-serif; white-space: nowrap; box-sizing: border-box; }
+        .adm-btn { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: system-ui, sans-serif; white-space: nowrap; box-sizing: border-box; }
         .adm-btn-green { background: #2d6a4f; color: #fff; }
         .adm-btn-green:hover { background: #245a42; }
         .adm-btn-red { background: #fce8e8; color: #c62828; border: var(--pill-border-w, 2px) solid #f5c6c6; }
@@ -5602,7 +5653,7 @@ export default function AdminPage() {
         .adm-drawer-signed { margin: 0 0 10px; font-size: 13px; font-weight: 500; color: #717A86; word-break: break-word; }
         .adm-view-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .adm-refresh { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 16px; border: 2px solid #DAD3C5; background: #fff; border-radius: 12px; font-size: 15px; font-weight: 700; color: #172531; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: background 0.15s, border-color 0.15s; flex-shrink: 0; }
-        .adm-addbtn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 44px; padding: 0 20px; border: 2px solid #172531; background: #172531; border-radius: 12px; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: background 0.15s, color 0.15s; flex-shrink: 0; }
+        .adm-addbtn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 40px; padding: 0 20px; border: 2px solid #172531; background: #172531; border-radius: 12px; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer; font-family: 'Urbanist', sans-serif; transition: background 0.15s, color 0.15s; flex-shrink: 0; }
         .adm-addbtn:hover { background: #fff; color: #172531; }
         .adm-refresh:hover:not(:disabled) { background: #f5f0e8; border-color: #CF5C36; color: #CF5C36; }
         .adm-refresh:disabled { opacity: 0.6; cursor: default; }
@@ -6015,6 +6066,21 @@ export default function AdminPage() {
            by the space-between header row. Users tab is unaffected. */
         .adm-user-id-editing { flex: 1 1 100%; width: 100%; }
         .adm-team-edit-btns { display: flex; gap: 8px; margin-bottom: 10px; }
+        /* Waitlist table */
+        .adm-wl-export { height: 40px; padding: 0 24px; border-radius: 12px; background: #172531; color: #fff; border: 2px solid #172531; font-size: 15px; font-weight: 700; font-family: 'Urbanist', sans-serif; cursor: pointer; transition: background 0.15s, color 0.15s; }
+        .adm-wl-export:hover { background: #fff; color: #172531; }
+        .adm-wl-table { border: 1px solid #EDE8E0; border-radius: 12px; overflow: hidden; margin-top: 8px; }
+        .adm-wl-head { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; padding: 12px 16px; background: var(--color-cream, #F5F0E8); font-size: 13px; font-weight: 700; color: var(--color-muted, #717a86); text-transform: uppercase; letter-spacing: 0.05em; }
+        .adm-wl-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; padding: 14px 16px; align-items: center; }
+        .adm-wl-row + .adm-wl-row { border-top: 1px solid #EDE8E0; }
+        .adm-wl-email { font-size: 16px; font-weight: 600; color: var(--color-navy-dark, #172531); word-break: break-all; }
+        .adm-wl-date { font-size: 16px; font-weight: 500; color: var(--color-slate, #4b5563); }
+        .adm-wl-source { font-size: 16px; font-weight: 500; color: var(--color-muted, #717a86); text-transform: capitalize; }
+        @media (max-width: 640px) {
+          .adm-wl-head { display: none; }
+          .adm-wl-row { grid-template-columns: 1fr; gap: 4px; }
+        }
+
         /* Symptom Logs — triage filter cards + log list */
         .adm-filter-label { display: block; font-size: 13px; font-weight: 700; color: #717A86; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
         .adm-triage-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
@@ -6120,7 +6186,7 @@ export default function AdminPage() {
         .adm-user-stat-n { font-size: 18px; font-weight: 800; color: #172531; }
         .adm-user-stat-l { font-size: 15px; color: #4b5563; font-weight: 600; }
         .adm-user-actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; }
-        .adm-user-status-select { height: 44px; padding: 0 38px 0 14px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); border-radius: 12px; font-size: 15px; font-weight: 600; font-family: 'Urbanist', sans-serif; color: #172531; background: #fff; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23717A86' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+        .adm-user-status-select { height: 40px; padding: 0 38px 0 14px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); border-radius: 12px; font-size: 15px; font-weight: 600; font-family: 'Urbanist', sans-serif; color: #172531; background: #fff; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23717A86' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
         @media (max-width: 620px) {
           .adm-user-meta { grid-template-columns: repeat(2, 1fr); gap: 0; padding: 4px 0; }
           .adm-user-main { flex-direction: column; align-items: flex-start; gap: 8px; }
@@ -6287,7 +6353,7 @@ export default function AdminPage() {
         .adm-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 240px; color: #717a86; gap: 12px; text-align: center; }
 
         /* Buttons — EXACT mockup values (fill-to-outline hover, 2px border) */
-        .adm-b { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 24px; height: 44px; border-radius: 12px; font-size: 15px; font-weight: 700; border: 2px solid transparent; cursor: pointer; font-family: 'Urbanist', sans-serif; white-space: nowrap; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+        .adm-b { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 24px; height: 40px; border-radius: 12px; font-size: 15px; font-weight: 700; border: 2px solid transparent; cursor: pointer; font-family: 'Urbanist', sans-serif; white-space: nowrap; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
         .adm-b.adm-b-notes { height: 38px !important; }
         .adm-b:disabled { cursor: not-allowed; opacity: 0.45; }
         /* Disabled primary reads as clearly inert (not a faded live button) */
@@ -6451,7 +6517,8 @@ export default function AdminPage() {
             {/* Drawer footer — signed-in + back-to-site, shown only in mobile drawer */}
             <div className="adm-drawer-footer">
               <p className="adm-drawer-signed">
-                Signed in: {session?.user?.email}
+                <strong>Signed in: </strong>
+                {session?.user?.email}
               </p>
               <Link href="/" className="adm-drawer-back">
                 ← Back to site
@@ -11012,6 +11079,68 @@ export default function AdminPage() {
                         <path d="M9 18l6-6-6-6" />
                       </svg>
                     </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === "Waitlist" && (
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: "16px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div>
+                    <h2 className="adm-view-title">Waitlist</h2>
+                    <p className="adm-view-sub">
+                      {waitlist.length}{" "}
+                      {waitlist.length === 1 ? "signup" : "signups"}
+                    </p>
+                  </div>
+                  {waitlist.length > 0 && (
+                    <button
+                      className="adm-wl-export"
+                      onClick={exportWaitlistCsv}
+                    >
+                      Export CSV
+                    </button>
+                  )}
+                </div>
+
+                {waitlistLoading ? (
+                  <p className="adm-view-sub">Loading…</p>
+                ) : waitlist.length === 0 ? (
+                  <p className="adm-view-sub">No signups yet.</p>
+                ) : (
+                  <div className="adm-wl-table">
+                    <div className="adm-wl-head">
+                      <span>Email</span>
+                      <span>Signed up</span>
+                      <span>Source</span>
+                    </div>
+                    {waitlist.map((w) => (
+                      <div className="adm-wl-row" key={w.id}>
+                        <span className="adm-wl-email">{w.email}</span>
+                        <span className="adm-wl-date">
+                          {w.created_at
+                            ? new Date(w.created_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                },
+                              )
+                            : "—"}
+                        </span>
+                        <span className="adm-wl-source">{w.source || "—"}</span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
