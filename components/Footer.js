@@ -115,6 +115,7 @@ export default function Footer() {
             {[
               ["About", "/about"],
               ["How It Works", "/how-it-works"],
+              ["Blog", "/blog"],
               ["Contact", "/contact"],
             ].map(([label, href]) => (
               <Link key={href} href={href} className="footer-link">
@@ -173,7 +174,7 @@ export default function Footer() {
           >
             © 2026 PetParrk, LLC.
           </p>
-          {/* 
+          {/*
           <p
             style={{
               fontSize: "13px",
