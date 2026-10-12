@@ -23,6 +23,7 @@ import { supabase } from "../../lib/supabase";
 import PageLoader from "../../components/PageLoader";
 import HeroNameplate from "../../components/HeroNameplate";
 import { getOwnerPets } from "../../lib/petCardApi";
+import { HERO_DEFAULTS, BANNER_PALETTE } from "../../lib/palettes";
 
 // =============================================================
 // SPECIES ICON + COLOR MAPPING (matches Profile page conventions)
@@ -40,12 +41,12 @@ const SPECIES_ICON = {
 // Soft tinted backgrounds per species (lighter than Profile's hero gradients,
 // suitable as a card-size empty-state placeholder)
 const SPECIES_TINT = {
-  dog: { bg: "rgba(185,90,24,0.10)", icon: "#B95A18" },
-  cat: { bg: "rgba(106,38,96,0.10)", icon: "#6A2660" },
-  bird: { bg: "rgba(27,92,130,0.10)", icon: "#1B5C82" },
-  small_furry: { bg: "rgba(181,118,20,0.10)", icon: "#B57614" },
-  reptile_fish: { bg: "rgba(26,102,56,0.10)", icon: "#1A6638" },
-  mixed: { bg: "rgba(107,63,203,0.10)", icon: "#6B3FCB" },
+  dog: { bg: `color-mix(in srgb, ${BANNER_PALETTE.dog.accent} 10%, transparent)`, icon: BANNER_PALETTE.dog.accent },
+  cat: { bg: `color-mix(in srgb, ${BANNER_PALETTE.cat.accent} 10%, transparent)`, icon: BANNER_PALETTE.cat.accent },
+  bird: { bg: `color-mix(in srgb, ${BANNER_PALETTE.bird.accent} 10%, transparent)`, icon: BANNER_PALETTE.bird.accent },
+  small_furry: { bg: `color-mix(in srgb, ${BANNER_PALETTE.small_furry.accent} 10%, transparent)`, icon: BANNER_PALETTE.small_furry.accent },
+  reptile_fish: { bg: `color-mix(in srgb, ${BANNER_PALETTE.reptile_fish.accent} 10%, transparent)`, icon: BANNER_PALETTE.reptile_fish.accent },
+  mixed: { bg: `color-mix(in srgb, ${BANNER_PALETTE.mixed.accent} 10%, transparent)`, icon: BANNER_PALETTE.mixed.accent },
 };
 
 // Map raw species string to bucket key (matches Profile's speciesBucket)
@@ -213,15 +214,15 @@ export default function PetCardLandingPage() {
           </button>
           <style>{`
             .pc-hub-stuck { max-width: 460px; margin: 80px auto; padding: 0 24px; text-align: center; }
-            .pc-hub-stuck-title { margin: 0 0 6px; font-size: 20px; font-weight: 800; color: #172531; }
-            .pc-hub-stuck-sub { margin: 0 0 18px; font-size: 16px; font-weight: 500; color: #717A86; line-height: 1.55; }
+            .pc-hub-stuck-title { margin: 0 0 6px; font-size: 20px; font-weight: 800; color: var(--color-navy-dark); }
+            .pc-hub-stuck-sub { margin: 0 0 18px; font-size: 16px; font-weight: 500; color: var(--color-muted); line-height: 1.55; }
             .pc-hub-stuck-btn {
               height: 42px; padding: 0 22px; border-radius: 12px;
-              border: 2px solid #cf5c36; background: #cf5c36; color: #fff;
+              border: 2px solid var(--color-terracotta-600); background: var(--color-terracotta-600); color: var(--color-white);
               font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
               transition: background 0.2s, color 0.2s;
             }
-            .pc-hub-stuck-btn:hover { background: #fff; color: #cf5c36; }
+            @media (hover: hover) { .pc-hub-stuck-btn:hover { background: var(--color-white); color: var(--color-terracotta-700); } }
           `}</style>
         </div>
       );
@@ -261,7 +262,7 @@ function MarketingView() {
         /* No min-height: forcing 100vh left a slab of empty cream below the
            closing CTA whenever the content came up short. The footer sits
            directly beneath, so the section can end where it ends. */
-        .pc-marketing { background: var(--color-cream, #F5F0E8); }
+        .pc-marketing { background: var(--color-cream); }
         /* Widow control. "balance" evens the last line of short headings so a
            single word isn't stranded; "pretty" does the same for body copy.
            Both fall back to normal wrapping where unsupported. */
@@ -276,14 +277,14 @@ function MarketingView() {
           font-weight: 700;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           margin-bottom: 14px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pc-hero h1 {
           font-size: clamp(30px, 5.5vw, 56px);
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           letter-spacing: -0.025em;
           line-height: 1.05;
           margin: 0 0 18px;
@@ -292,7 +293,7 @@ function MarketingView() {
         .pc-hero p.pc-lede {
           font-size: 17px;
           font-weight: 500;
-          color: var(--color-slate, #4B5563);
+          color: var(--color-slate);
           line-height: 1.6;
           max-width: 640px;
           margin: 0 auto 32px;
@@ -307,9 +308,9 @@ function MarketingView() {
           height: 42px;
           padding: 0 24px;
           line-height: 1;
-          background: var(--color-terracotta, #CF5C36);
-          color: #fff;
-          border: 2px solid var(--color-terracotta, #CF5C36);
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
+          border: 2px solid var(--color-terracotta-600);
           border-radius: 12px;
           text-decoration: none;
           font-weight: 700;
@@ -317,7 +318,7 @@ function MarketingView() {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: background 0.2s, color 0.2s;
         }
-        .pc-btn-primary:hover { background: #fff; color: var(--color-terracotta, #CF5C36); }
+        @media (hover: hover) { .pc-btn-primary:hover { background: var(--color-white); color: var(--color-terracotta-700); } }
         .pc-btn-secondary {
           display: inline-flex;
           align-items: center;
@@ -326,8 +327,8 @@ function MarketingView() {
           padding: 0 24px;
           line-height: 1;
           background: transparent;
-          color: var(--color-navy-dark, #172531);
-          border: 2px solid var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
+          border: 2px solid var(--color-navy-dark);
           border-radius: 12px;
           text-decoration: none;
           font-weight: 700;
@@ -343,9 +344,9 @@ function MarketingView() {
           height: 48px !important;
           padding: 0 24px;
           line-height: 1;
-          background: var(--color-terracotta, #CF5C36);
-          color: #fff;
-          border: 2px solid var(--color-terracotta, #CF5C36);
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
+          border: 2px solid var(--color-terracotta-600);
           border-radius: 12px;
           text-decoration: none;
           font-weight: 700;
@@ -354,22 +355,22 @@ function MarketingView() {
           transition: background 0.2s, color 0.2s;
         }
 
-         .pc-btn-primary-signed-out:hover { background: #fff; color: var(--color-terracotta, #CF5C36);}
+         @media (hover: hover) { .pc-btn-primary-signed-out:hover { background: var(--color-white); color: var(--color-terracotta-700);} }
 
 
-        .pc-btn-secondary:hover { background: var(--color-navy-dark, #172531); color: #fff; }
+        @media (hover: hover) { .pc-btn-secondary:hover { background: var(--color-navy-dark); color: var(--color-white); } }
 
         /* Three features section. Section padding tightened on the bottom
            so the closing CTA sits closer to the cards instead of floating
            in a large vertical gap. */
         .pc-features { padding: 12px 0 20px; }
         .pc-feature-card:nth-child(2) .pc-feature-icon-wrap {
-          background: rgba(239,200,139,0.30);
-          border-color: rgba(203,150,60,0.38);
+          background: rgb(var(--color-gold-rgb) / 0.3);
+          border-color: rgb(var(--color-caution-rgb) / 0.38);
         }
         .pc-feature-card:nth-child(3) .pc-feature-icon-wrap {
-          background: rgba(100,160,210,0.14);
-          border-color: rgba(100,160,210,0.25);
+          background: rgb(var(--color-slate-blue-rgb) / 0.14);
+          border-color: rgb(var(--color-slate-blue-rgb) / 0.25);
         }
         .pc-features-grid {
           display: grid;
@@ -383,18 +384,20 @@ function MarketingView() {
            HIW step cards in structure (centered content, hover lift), but
            with the cream-page light theme. */
         .pc-feature-card {
-          background: #fff;
+          background: var(--color-white);
           border-radius: 16px;
           padding: 36px 28px;
-          border: 1px solid #EDE8E0;
+          border: 1px solid var(--color-border);
           text-align: center;
           transition: transform 0.3s ease, border-color 0.2s,
                       box-shadow 0.2s;
         }
-        .pc-feature-card:hover {
-          transform: translateY(-4px);
-          border-color: rgba(207,92,54,0.25);
-          box-shadow: 0 16px 40px rgba(23,37,49,0.10);
+        @media (hover: hover) {
+          .pc-feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgb(var(--color-terracotta-rgb) / 0.25);
+            box-shadow: 0 16px 40px rgb(var(--color-navy-dark-rgb) / 0.1);
+          }
         }
         /* Icon centered via auto margins (text-align centers inline-flex
            too, but auto margins are more explicit and reliable). */
@@ -405,18 +408,18 @@ function MarketingView() {
           width: 68px;
           height: 68px;
           border-radius: 18px;
-          background: rgba(207,92,54,0.14);
-          border: 1px solid rgba(207,92,54,0.28);
+          background: rgb(var(--color-terracotta-rgb) / 0.14);
+          border: 1px solid rgb(var(--color-terracotta-rgb) / 0.28);
           display: flex;
           align-items: center;
           justify-content: center;
           margin: 0 auto 20px;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta);
         }
         .pc-feature-card h3 {
           font-size: 22px;
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0 0 12px;
           letter-spacing: -0.025em;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -424,7 +427,7 @@ function MarketingView() {
         .pc-feature-card p {
           font-size: 15px;
           font-weight: 500;
-          color: var(--color-slate, #4B5563);
+          color: var(--color-slate);
           line-height: 1.7;
           margin: 0;
         }
@@ -438,7 +441,7 @@ function MarketingView() {
         .pc-closing h2 {
           font-size: clamp(26px, 3.5vw, 34px);
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0 0 14px;
           letter-spacing: -0.025em;
           line-height: 1.15;
@@ -447,7 +450,7 @@ function MarketingView() {
         .pc-closing p {
           font-size: 16px;
           font-weight: 500;
-          color: var(--color-slate, #4B5563);
+          color: var(--color-slate);
           line-height: 1.6;
           margin: 0 0 26px;
           max-width: 520px;
@@ -557,31 +560,31 @@ function EmptyPetsView({ error }) {
   return (
     <>
       <style>{`
-        .pc-empty { background: var(--color-cream, #F5F0E8); min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
+        .pc-empty { background: var(--color-cream); min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
         .pc-empty-card {
-          background: #fff;
+          background: var(--color-white);
           border-radius: 20px;
           padding: 48px 36px;
           max-width: 460px;
           width: 100%;
           text-align: center;
-          border: 1px solid rgba(23,37,49,0.06);
+          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.06);
         }
         .pc-empty-icon {
           width: 72px;
           height: 72px;
           border-radius: 18px;
-          background: rgba(207,92,54,0.10);
+          background: rgb(var(--color-terracotta-rgb) / 0.1);
           display: inline-flex;
           align-items: center;
           justify-content: center;
           margin-bottom: 20px;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta);
         }
         .pc-empty h2 {
           font-size: 22px;
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0 0 10px;
           letter-spacing: -0.01em;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -589,13 +592,13 @@ function EmptyPetsView({ error }) {
         .pc-empty p {
           font-size: 16px;
           font-weight: 500;
-          color: var(--color-slate, #4B5563);
+          color: var(--color-slate);
           line-height: 1.6;
           margin: 0 0 24px;
         }
         .pc-empty-err {
           font-size: 14px;
-          color: #C94040;
+          color: var(--color-error);
           margin: 0 0 16px;
         }
         @media (max-width: 480px) {
@@ -627,9 +630,9 @@ function EmptyPetsView({ error }) {
           height: 42px;
           padding: 0 24px;
           line-height: 1;
-          background: var(--color-terracotta, #CF5C36);
-          color: #fff;
-          border: 2px solid var(--color-terracotta, #CF5C36);
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
+          border: 2px solid var(--color-terracotta-600);
           border-radius: 12px;
           text-decoration: none;
           font-weight: 700;
@@ -637,7 +640,7 @@ function EmptyPetsView({ error }) {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: background 0.2s, color 0.2s;
         }
-        .pc-btn-primary:hover { background: #fff; color: var(--color-terracotta, #CF5C36); }
+        @media (hover: hover) { .pc-btn-primary:hover { background: var(--color-white); color: var(--color-terracotta-700); } }
 
           .pc-btn-primary-signed-out {
           display: inline-flex;
@@ -646,9 +649,9 @@ function EmptyPetsView({ error }) {
           height: 48px !important;
           padding: 0 24px;
           line-height: 1;
-          background: var(--color-terracotta, #CF5C36);
-          color: #fff;
-          border: 2px solid var(--color-terracotta, #CF5C36);
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
+          border: 2px solid var(--color-terracotta-600);
           border-radius: 12px;
           text-decoration: none;
           font-weight: 700;
@@ -657,7 +660,7 @@ function EmptyPetsView({ error }) {
           transition: background 0.2s, color 0.2s;
         }
 
-         .pc-btn-primary-signed-out:hover { background: #fff; color: var(--color-terracotta, #CF5C36); }
+         @media (hover: hover) { .pc-btn-primary-signed-out:hover { background: var(--color-white); color: var(--color-terracotta-700); } }
 
       `}</style>
     </>
@@ -673,8 +676,8 @@ function EmptyPetsView({ error }) {
 
 // Default Hero theme colors (bg/card) for the mini preview when a pet hasn't
 // customized them. Rarity + accent are owned by the shared HeroNameplate.
-const HUB_DEFAULT_BG = "#F8EFE2";
-const HUB_DEFAULT_CARD = "#FFFFFF";
+const HUB_DEFAULT_BG = HERO_DEFAULTS.bg;
+const HUB_DEFAULT_CARD = "var(--color-white)";
 
 function hubMeaningful(v) {
   if (v == null) return false;
@@ -766,7 +769,7 @@ function CarePreviewTile({ pet }) {
                   <SpeciesIcon
                     size={44}
                     strokeWidth={1.5}
-                    color="rgba(255,255,255,0.9)"
+                    color="rgb(var(--color-white-rgb) / 0.9)"
                   />
                 </div>
               );
@@ -803,7 +806,7 @@ function PetPickerView({ pets }) {
     <>
       <style>{`
         .pc-hub { 
-          background: var(--color-cream, #F5F0E8); 
+          background: var(--color-cream); 
           // min-height: calc(100vh - 64px); 
           padding: 56px 0 60px; 
         }
@@ -827,25 +830,25 @@ function PetPickerView({ pets }) {
         .pc-hub-header-text { text-align: left; }
         .pc-hub-eyebrow {
           margin: 0 0 4px; font-size: 11px; font-weight: 700;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           text-transform: uppercase; letter-spacing: 0.10em;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pc-hub-header-text h1 {
           margin: 0; font-size: clamp(30px, 2.6vw, 30px); font-weight: 800;
-          color: var(--color-navy-dark, #172531); letter-spacing: -0.025em;
+          color: var(--color-navy-dark); letter-spacing: -0.025em;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         /* Subtitle only — scoped to the sibling <p> after h1 so it never
            overrides the eyebrow <p>'s (inline) accent color. */
         .pc-hub-header-text h1 + p {
-          margin: 6px 0 0; color: var(--color-slate, #4B5563); font-size: 16px; font-weight: 500;
+          margin: 6px 0 0; color: var(--color-slate); font-size: 16px; font-weight: 500;
         }
         /* Add-a-pet button — MATCHES ProfileMain's .pp-add-pet-btn exactly. */
         .pc-hub-add {
           padding: 0 24px; height: 42px;
-          background: var(--color-navy-dark, #172531); color: #fff;
-          border: 2px solid var(--color-navy-dark, #172531); border-radius: 10px;
+          background: var(--color-navy-dark); color: var(--color-white);
+          border: 2px solid var(--color-navy-dark); border-radius: 10px;
           font-size: 15px; font-weight: 700;
           cursor: pointer; white-space: nowrap; text-decoration: none;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -853,10 +856,12 @@ function PetPickerView({ pets }) {
           transition: background 0.15s, border-color 0.15s, color 0.15s;
           flex-shrink: 0;
         }
-        .pc-hub-add:hover {
-          background: #fff;
-          color: var(--color-navy-dark, #172531);
-          border-color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .pc-hub-add:hover {
+            background: var(--color-white);
+            color: var(--color-navy-dark);
+            border-color: var(--color-navy-dark);
+          }
         }
         .pc-hub-add-mobile { display: none; margin-top: 28px; }
         .pc-hub-add-mobile .pc-hub-add { width: 100%; }
@@ -873,15 +878,15 @@ function PetPickerView({ pets }) {
         .pc-hub-section-head {
           display: flex; align-items: center; gap: 9px;
           margin-bottom: 16px; padding-top: 30px;
-          border-top: 1px solid var(--color-border, #EDE8E0);
+          border-top: 1px solid var(--color-border);
         }
         .pc-hub-section-title {
           font-size: 18px; font-weight: 800; letter-spacing: 0.04em;
-          text-transform: uppercase; color: var(--color-navy-dark, #172531); margin: 0;
+          text-transform: uppercase; color: var(--color-navy-dark); margin: 0;
         }
         .pc-hub-section-count {
-          font-size: 13px; font-weight: 800; color: var(--color-navy-dark, #172531);
-          background: rgba(23,37,49,0.10); border-radius: 999px; padding: 2px 10px;
+          font-size: 13px; font-weight: 800; color: var(--color-navy-dark);
+          background: rgb(var(--color-navy-dark-rgb) / 0.1); border-radius: 999px; padding: 2px 10px;
           line-height: 1.6;
         }
         /* A tile behind the section marks. Without it the Care Card art is
@@ -889,21 +894,21 @@ function PetPickerView({ pets }) {
            navy header bar and the cross, which reads as a stray line. The
            tile also matches how these spots are treated elsewhere. */
         .pc-hub-section-icon {
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta);
           display: inline-flex;
           align-items: center;
           justify-content: center;
           width: 40px;
           height: 40px;
           border-radius: 11px;
-          background: rgba(207,92,54,0.14);
-          border: 1px solid rgba(207,92,54,0.28);
+          background: rgb(var(--color-terracotta-rgb) / 0.14);
+          border: 1px solid rgb(var(--color-terracotta-rgb) / 0.28);
           flex-shrink: 0;
         }
         /* Hero keeps the gold it has on the marketing page. */
         .pc-hub-section--hero .pc-hub-section-icon {
-          background: rgba(239,200,139,0.30);
-          border-color: rgba(203,150,60,0.38);
+          background: rgb(var(--color-gold-rgb) / 0.3);
+          border-color: rgb(var(--color-caution-rgb) / 0.38);
         }
 
         /* ── Grids ── */
@@ -961,18 +966,18 @@ function PetPickerView({ pets }) {
         /* ── Shared tile base ── */
         /* Frame look mirrors Profile's .pp-pet-card-outer / .pp-pet-card:
            18px radius, a resting 1.5px border-color frame, matching shadow,
-           and a soft-gold frame on hover (rgba(239,200,139,0.5)). */
+           and a soft-gold frame on hover (rgb(var(--color-gold-rgb) / 0.5)). */
         /* TWO-LAYER FRAME (mirrors Profile's .pp-pet-card-outer / .pp-pet-card):
            the tile is the OUTER — 1.5px of frame-color padding shows as a ring
            around the inner content; radius 18px outer / 16.5px inner. On hover
-           the frame turns soft gold (rgba(239,200,139,0.5)), exactly like
+           the frame turns soft gold (rgb(var(--color-gold-rgb) / 0.5)), exactly like
            Profile. Because the frame is a background behind 1.5px of padding
            (not a same-color border on cream), it stays visible on any bg. */
         .pc-hub-tile {
           display: block; text-decoration: none;
           border-radius: 18px; padding: 1.5px;
-          background: var(--color-border, #EDE8E0);
-          box-shadow: 0 2px 12px rgba(23,37,49,0.07);
+          background: var(--color-border);
+          box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.07);
           transition: transform 0.3s, background 0.25s ease, box-shadow 0.25s;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
@@ -980,12 +985,16 @@ function PetPickerView({ pets }) {
            frame goes soft gold (0.5), and the inner card gets a 0.9 gold ring
            via box-shadow + lift. The 0.9 ring is drawn ON the inner edge so it
            reads on BOTH the white Care inner and the dark Hero inner. */
-        .pc-hub-tile:hover {
-          transform: translateY(-3px);
-          background: rgba(239,200,139,0.5);
+        @media (hover: hover) {
+          .pc-hub-tile:hover {
+            transform: translateY(-3px);
+            background: rgb(var(--color-gold-rgb) / 0.5);
+          }
         }
-        .pc-hub-tile:hover > .pc-hub-inner {
-          box-shadow: 0 0 0 1.5px rgba(239,200,139,0.9), 0 16px 48px rgba(23,37,49,0.13);
+        @media (hover: hover) {
+          .pc-hub-tile:hover > .pc-hub-inner {
+            box-shadow: 0 0 0 1.5px rgb(var(--color-gold-rgb) / 0.9), 0 16px 48px rgb(var(--color-navy-dark-rgb) / 0.13);
+          }
         }
         /* Inner surface — the actual card content, clipped to a slightly
            smaller radius so the frame shows around it. */
@@ -1007,8 +1016,8 @@ function PetPickerView({ pets }) {
         /* Setup is a dashed CTA, not a framed card — override the frame: no
            padding-frame, a real dashed border, transparent inner. */
         .pc-hub-tile--setup {
-          background: #fff; padding: 0;
-          border: 1.5px dashed var(--color-border-strong, #DAD3C5);
+          background: var(--color-white); padding: 0;
+          border: 1.5px dashed var(--color-border-strong);
           box-shadow: none;
         }
         .pc-hub-tile--setup > .pc-hub-inner {
@@ -1016,10 +1025,12 @@ function PetPickerView({ pets }) {
           display: flex; align-items: center; justify-content: center;
           aspect-ratio: 4 / 5;
         }
-        .pc-hub-tile--setup:hover {
-          background: #fff;
-          border-color: var(--color-terracotta, #CF5C36);
-          box-shadow: 0 10px 28px rgba(23,37,49,0.10);
+        @media (hover: hover) {
+          .pc-hub-tile--setup:hover {
+            background: var(--color-white);
+            border-color: var(--color-terracotta);
+            box-shadow: 0 10px 28px rgb(var(--color-navy-dark-rgb) / 0.1);
+          }
         }
         .pc-hub-setup-inner {
           display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; text-align: center;
@@ -1028,24 +1039,24 @@ function PetPickerView({ pets }) {
           /* Gold tint, not cream: the Hero Card art has a cream inner panel
              that vanished against a cream circle. */
           width: 56px; height: 56px; border-radius: 50%;
-          background: rgba(239,200,139,0.30);
-          border: 1px solid rgba(203,150,60,0.38);
+          background: rgb(var(--color-gold-rgb) / 0.3);
+          border: 1px solid rgb(var(--color-caution-rgb) / 0.38);
           box-sizing: border-box;
           display: flex; align-items: center; justify-content: center;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta);
         }
         .pc-hub-setup-name {
           margin: 0; font-size: 18px; font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
         }
         .pc-hub-setup-cta {
           display: inline-flex; align-items: center; gap: 5px;
-          font-size: 14px; font-weight: 700; color: var(--color-terracotta, #CF5C36);
+          font-size: 14px; font-weight: 700; color: var(--color-terracotta-700);
         }
 
         /* ── CARE mini preview (pcc- visual language) ── */
         .pc-hub-tile--care > .pc-hub-inner {
-          background: #fff; display: flex; align-items: center; gap: 14px; padding: 14px;
+          background: var(--color-white); display: flex; align-items: center; gap: 14px; padding: 14px;
         }
         .pc-hub-care-photo {
           width: 64px; height: 64px; border-radius: 12px; overflow: hidden; flex-shrink: 0;
@@ -1058,24 +1069,24 @@ function PetPickerView({ pets }) {
              look the same. Species is carried by the icon's shape; colouring
              the background by species as well would say it twice and split the
              two placeholders apart. */
-          background: linear-gradient(135deg, #2C4657 0%, #172531 100%);
+          background: linear-gradient(135deg, var(--color-navy-mid) 0%, var(--color-navy-dark) 100%);
         }
         .pc-hub-care-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
         .pc-hub-care-eyebrow {
           display: inline-flex; align-items: center; gap: 5px;
           font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
         }
         .pc-hub-care-name {
-          font-size: 18px; font-weight: 800; color: var(--color-navy-dark, #172531);
+          font-size: 18px; font-weight: 800; color: var(--color-navy-dark);
           line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .pc-hub-care-breed {
-          font-size: 14px; font-weight: 500; color: var(--color-, #4B5563);
+          font-size: 14px; font-weight: 500; color: var(--color-, var(--color-slate));
           overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
-        .pc-hub-care-arrow { color: var(--color-terracotta, #CF5C36); flex-shrink: 0; transition: transform 0.15s; }
-        .pc-hub-tile--care:hover .pc-hub-care-arrow { transform: translateX(3px); }
+        .pc-hub-care-arrow { color: var(--color-terracotta); flex-shrink: 0; transition: transform 0.15s; }
+        @media (hover: hover) { .pc-hub-tile--care:hover .pc-hub-care-arrow { transform: translateX(3px); } }
 
         @media (max-width: 480px) {
           .pc-hub { padding: 40px 0 72px; }

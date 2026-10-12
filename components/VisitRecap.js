@@ -10,19 +10,8 @@
 import { useState, useRef } from "react";
 import { ClipboardList, Camera, Pencil, Check, X, Loader2 } from "lucide-react";
 import { triggerVisitRecap, confirmRecapItems } from "../lib/copilotApi";
+import { C } from "../lib/tokens";
 
-const C = {
-  navyDark: "#172531",
-  terracotta: "#cf5c36",
-  cream: "#f5f0e8",
-  slate: "#4b5563",
-  muted: "#717A86",
-  border: "#ede8e0",
-  borderStrong: "#d1c9bd",
-  success: "#2a7d4f",
-  successLight: "#edfaf3",
-  successText: "#1a6641",
-};
 
 export default function VisitRecap({ petId, visitPrepId, onComplete }) {
   const [mode, setMode] = useState("idle"); // idle | typing | extracting | review | done
@@ -320,7 +309,7 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           display: flex;
           gap: 12px;
           align-items: flex-start;
-          color: var(--color-terracotta, #cf5c36);
+          color: var(--color-terracotta);
         }
         .vr-idle-head :global(svg) {
           flex-shrink: 0;
@@ -331,7 +320,7 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           margin: 0 0 4px;
           font-size: 17px;
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           font-family: var(--font-urbanist, "Urbanist", sans-serif);
           line-height: 1.3;
         }
@@ -339,7 +328,7 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           margin: 0;
           font-size: 16px;
           font-weight: 500;
-          color: #4b5563;
+          color: var(--color-slate);
           line-height: 1.6;
         }
         .vr-idle-actions {
@@ -357,12 +346,12 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           gap: 8px;
           height: 48px;
           padding: 0 24px;
-          background: #fff;
-          border: 2px solid var(--color-border, #ede8e0);
+          background: var(--color-white);
+          border: 2px solid var(--color-border);
           border-radius: 12px;
           font-size: 15px;
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           cursor: pointer;
           font-family: inherit;
           transition:
@@ -370,15 +359,17 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
             border-color 0.2s,
             color 0.2s;
         }
-        .vr-choice-btn:hover {
-          background: var(--color-navy-dark, #172531);
-          border-color: var(--color-navy-dark, #172531);
-          color: #fff;
+        @media (hover: hover) {
+          .vr-choice-btn:hover {
+            background: var(--color-navy-dark);
+            border-color: var(--color-navy-dark);
+            color: var(--color-white);
+          }
         }
         .vr-label {
           font-size: 11px;
           font-weight: 700;
-          color: var(--color-terracotta, #cf5c36);
+          color: var(--color-terracotta-700);
           text-transform: uppercase;
           letter-spacing: 0.12em;
           margin: 0 0 8px;
@@ -387,13 +378,13 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
         .vr-textarea {
           width: 100%;
           padding: 14px;
-          border: 1.5px solid var(--color-border, #ede8e0);
+          border: 1.5px solid var(--color-border);
           border-radius: 12px;
           font-size: 16px;
           font-weight: 500;
           font-family: inherit;
-          color: var(--color-navy-dark, #172531);
-          background: #fff;
+          color: var(--color-navy-dark);
+          background: var(--color-white);
           resize: vertical;
           min-height: 120px;
           box-sizing: border-box;
@@ -402,7 +393,7 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
         }
         .vr-textarea:focus {
           outline: none;
-          border-color: var(--color-terracotta, #cf5c36);
+          border-color: var(--color-terracotta);
         }
         .vr-row-actions {
           display: flex;
@@ -413,9 +404,9 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
         .vr-cancel-btn {
           padding: 0 24px;
           height: 42px;
-          background: #fff;
-          color: var(--color-navy-dark, #172531);
-          border: 2px solid var(--color-border, #ede8e0);
+          background: var(--color-white);
+          color: var(--color-navy-dark);
+          border: 2px solid var(--color-border);
           border-radius: 12px;
           font-size: 15px;
           font-weight: 700;
@@ -426,17 +417,19 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
             color 0.2s,
             border-color 0.2s;
         }
-        .vr-cancel-btn:hover {
-          background: var(--color-navy-dark, #172531);
-          color: #fff;
-          border-color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .vr-cancel-btn:hover {
+            background: var(--color-navy-dark);
+            color: var(--color-white);
+            border-color: var(--color-navy-dark);
+          }
         }
         .vr-submit-btn {
           padding: 0 24px;
           height: 42px;
-          background: var(--color-terracotta, #cf5c36);
-          color: #fff;
-          border: 2px solid var(--color-terracotta, #cf5c36);
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
+          border: 2px solid var(--color-terracotta-600);
           border-radius: 12px;
           font-size: 15px;
           font-weight: 700;
@@ -446,9 +439,11 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
             background 0.2s,
             color 0.2s;
         }
-        .vr-submit-btn:hover:not(:disabled) {
-          background: #fff;
-          color: var(--color-terracotta, #cf5c36);
+        @media (hover: hover) {
+          .vr-submit-btn:hover:not(:disabled) {
+            background: var(--color-white);
+            color: var(--color-terracotta-700);
+          }
         }
         .vr-submit-btn:disabled {
           opacity: 0.5;
@@ -457,10 +452,10 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
         .vr-error {
           margin: 14px 0 0;
           padding: 12px 14px;
-          background: var(--color-error-light, #fceaea);
-          border: 1px solid #f5c6c6;
+          background: var(--color-error-light);
+          border: 1px solid rgb(var(--color-error-rgb) / 0.24);
           border-radius: 10px;
-          color: var(--color-error, #c94040);
+          color: var(--color-error);
           font-size: 14px;
           font-weight: 600;
         }
@@ -475,11 +470,11 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           margin: 0;
           font-size: 16px;
           font-weight: 600;
-          color: #4b5563;
+          color: var(--color-slate);
         }
         :global(.vr-spin) {
           animation: vr-spin 1s linear infinite;
-          color: var(--color-terracotta, #cf5c36);
+          color: var(--color-terracotta);
         }
         @keyframes vr-spin {
           to {
@@ -490,14 +485,14 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           margin: 0;
           font-size: 16px;
           font-weight: 500;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           line-height: 1.6;
         }
         .vr-review-sub {
           margin: 0 0 14px;
           font-size: 14px;
           font-weight: 500;
-          color: #717a86;
+          color: var(--color-muted);
           line-height: 1.5;
         }
         .vr-group {
@@ -506,7 +501,7 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
         .vr-group-label {
           font-size: 11px;
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           text-transform: uppercase;
           letter-spacing: 0.08em;
           margin: 0 0 8px;
@@ -522,8 +517,8 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           gap: 12px;
           padding: 14px 16px;
           border-radius: 12px;
-          border: 1.5px solid var(--color-border, #ede8e0);
-          background: #fff;
+          border: 1.5px solid var(--color-border);
+          background: var(--color-white);
           cursor: pointer;
           text-align: left;
           width: 100%;
@@ -534,15 +529,15 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
             opacity 0.15s;
         }
         .vr-item.is-accepted {
-          border-color: var(--color-success, #2a7d4f);
-          background: var(--color-success-light, #edfaf3);
+          border-color: var(--color-success);
+          background: var(--color-success-light);
         }
         .vr-item.is-rejected {
           opacity: 0.5;
         }
         .vr-item--info {
           cursor: default;
-          background: var(--color-cream, #f5f0e8);
+          background: var(--color-cream);
           border-color: transparent;
         }
         .vr-item-dot {
@@ -559,7 +554,7 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: var(--color-muted, #717a86);
+          background: var(--color-muted);
         }
         .vr-item-check {
           display: inline-flex;
@@ -569,13 +564,13 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           height: 26px;
           border-radius: 50%;
           flex-shrink: 0;
-          color: #fff;
+          color: var(--color-white);
         }
         .vr-item.is-accepted .vr-item-check {
-          background: var(--color-success, #2a7d4f);
+          background: var(--color-success);
         }
         .vr-item.is-rejected .vr-item-check {
-          background: #717a86;
+          background: var(--color-muted);
         }
         .vr-item-body {
           display: flex;
@@ -586,13 +581,13 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
         .vr-item-label {
           font-size: 16px;
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           line-height: 1.3;
         }
         .vr-item-target {
           font-size: 13px;
           font-weight: 500;
-          color: #717a86;
+          color: var(--color-muted);
         }
         .vr-done {
           display: flex;
@@ -606,8 +601,8 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           width: 52px;
           height: 52px;
           border-radius: 50%;
-          background: var(--color-success-light, #edfaf3);
-          color: var(--color-success, #2a7d4f);
+          background: var(--color-success-light);
+          color: var(--color-success);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -616,13 +611,13 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
           margin: 0;
           font-size: 20px;
           font-weight: 800;
-          color: var(--color-success-text, #1a6641);
+          color: var(--color-success-text);
         }
         .vr-done-sub {
           margin: 0 0 8px;
           font-size: 15px;
           font-weight: 500;
-          color: #4b5563;
+          color: var(--color-slate);
         }
         @media (max-width: 600px) {
           .vr-idle-actions {

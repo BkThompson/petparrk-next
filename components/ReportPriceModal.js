@@ -8,22 +8,8 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
+import { C } from "../lib/tokens";
 
-const C = {
-  navyDark: "#172531",
-  terracotta: "#CF5C36",
-  cream: "#F5F0E8",
-  slate: "#4B5563",
-  muted: "#717A86",
-  border: "#EDE8E0",
-  borderStrong: "#DAD3C5",
-  errorBg: "#FCEAEA",
-  errorBorder: "#F5C6C6",
-  errorText: "#C94040",
-  successBg: "#EDFAF3",
-  successBorder: "#A7F3D0",
-  successText: "#1A6641",
-};
 
 const CATEGORIES = [
   { value: "too_high", label: "Price is too high" },
@@ -296,7 +282,7 @@ export default function ReportPriceModal({
         .rpm-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(23, 37, 49, 0.55);
+          background: rgb(var(--color-navy-dark-rgb) / 0.55);
           /* Matches every other modal — .modal-overlay on the vet page,
              pp-modal-backdrop on Profile, pce-modal-overlay on Care. */
           /* Prefixed first, unprefixed last — the standard property should win
@@ -324,13 +310,13 @@ export default function ReportPriceModal({
              never blurred. */
           animation: rpm-fade-in 0.2s ease;
           position: relative;
-          background: #fff;
+          background: var(--color-white);
           border: 1.5px solid ${C.terracotta};
           border-radius: 16px;
           padding: 28px;
           box-shadow:
-            0 4px 20px rgba(207, 92, 54, 0.08),
-            0 24px 60px rgba(23, 37, 49, 0.25);
+            0 4px 20px rgb(var(--color-terracotta-rgb) / 0.08),
+            0 24px 60px rgb(var(--color-navy-dark-rgb) / 0.25);
           font-family: var(--font-urbanist, "Urbanist", sans-serif);
           max-width: 480px;
           width: 100%;
@@ -367,9 +353,11 @@ export default function ReportPriceModal({
             color 0.15s;
           z-index: 10;
         }
-        .rpm-close:hover {
-          background: ${C.cream};
-          color: ${C.navyDark};
+        @media (hover: hover) {
+          .rpm-close:hover {
+            background: ${C.cream};
+            color: ${C.navyDark};
+          }
         }
 
         .rpm-head {
@@ -421,7 +409,7 @@ export default function ReportPriceModal({
           letter-spacing: 0.1em;
         }
         .rpm-required {
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
         }
 
         .rpm-input {
@@ -432,7 +420,7 @@ export default function ReportPriceModal({
           border-radius: 10px;
           font-size: 15px;
           font-weight: 500;
-          background: #fff;
+          background: var(--color-white);
           color: ${C.navyDark};
           outline: none;
           font-family: var(--font-urbanist, "Urbanist", sans-serif);
@@ -476,8 +464,10 @@ export default function ReportPriceModal({
             background 0.15s,
             border-color 0.15s;
         }
-        .rpm-radio-row:hover {
-          background: ${C.cream};
+        @media (hover: hover) {
+          .rpm-radio-row:hover {
+            background: ${C.cream};
+          }
         }
         .rpm-radio-row.is-selected {
           background: ${C.cream};
@@ -510,7 +500,7 @@ export default function ReportPriceModal({
         .rpm-cancel-btn {
           padding: 0 24px;
           height: 42px;
-          background: #fff;
+          background: var(--color-white);
           color: ${C.navyDark};
           border: 1.5px solid ${C.border};
           border-radius: 12px;
@@ -528,17 +518,19 @@ export default function ReportPriceModal({
           justify-content: center;
           white-space: nowrap;
         }
-        .rpm-cancel-btn:hover:not(:disabled) {
-          background: ${C.navyDark};
-          color: #fff;
-          border-color: ${C.navyDark};
+        @media (hover: hover) {
+          .rpm-cancel-btn:hover:not(:disabled) {
+            background: ${C.navyDark};
+            color: var(--color-white);
+            border-color: ${C.navyDark};
+          }
         }
         .rpm-submit-btn {
           padding: 0 24px;
           height: 42px;
-          background: ${C.terracotta};
-          color: #fff;
-          border: 2px solid ${C.terracotta};
+          background: ${C.terracotta600};
+          color: var(--color-white);
+          border: 2px solid ${C.terracotta600};
           border-radius: 12px;
           font-size: 15px;
           font-weight: 700;
@@ -553,9 +545,11 @@ export default function ReportPriceModal({
           line-height: 1;
           white-space: nowrap;
         }
-        .rpm-submit-btn:hover:not(:disabled) {
-          background: #fff;
-          color: ${C.terracotta};
+        @media (hover: hover) {
+          .rpm-submit-btn:hover:not(:disabled) {
+            background: var(--color-white);
+            color: ${C.terracotta700};
+          }
         }
         .rpm-submit-btn:disabled,
         .rpm-cancel-btn:disabled {

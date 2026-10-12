@@ -11,29 +11,20 @@ import { ChevronDown, PawPrint, RefreshCw } from "lucide-react";
 import { BANNER_LUCIDE, speciesBucket } from "../../lib/petTileHelpers";
 import { getCopilotDataForCheck } from "../../lib/copilotApi";
 import { renderMarkdown } from "../../lib/renderMarkdown";
+import { C } from "../../lib/tokens";
 
 // Palette (matches lib/petTileHelpers C + app-wide vars)
-const C = {
-  navyDark: "#172531",
-  terracotta: "#CF5C36",
-  cream: "#F5F0E8",
-  slate: "#4B5563",
-  muted: "#717A86",
-  border: "#EDE8E0",
-  borderStrong: "#DAD3C5",
-  white: "#FFFFFF",
-};
 
 // Triage → color + label. Identical mapping to the pet-tile badges so the
 // history reads consistently with the rest of the app.
 function triageMeta(result) {
   if (result === "EMERGENCY")
-    return { dot: "#C94040", text: "#A62F2F", label: "Emergency" };
+    return { dot: "var(--color-error)", text: "var(--color-error-text)", label: "Emergency" };
   if (result === "SEE_VET")
-    return { dot: "#EFC88B", text: "#8A6420", label: "See vet soon" };
+    return { dot: "var(--color-caution)", text: "var(--color-caution-text)", label: "See vet soon" };
   if (result === "MONITOR")
-    return { dot: "#1A6641", text: "#155534", label: "Monitor at home" };
-  return { dot: "#888", text: "#4B5563", label: result || "—" };
+    return { dot: "var(--color-success)", text: "var(--color-success-text)", label: "Monitor at home" };
+  return { dot: "var(--color-muted)", text: "var(--color-slate)", label: result || "—" };
 }
 
 function relativeTime(iso) {
@@ -519,7 +510,7 @@ export default function HealthHistoryPage() {
         .hh-head { padding: 8px 0 24px; }
         .hh-eyebrow {
           font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
-          text-transform: uppercase; color: ${C.terracotta}; margin: 0 0 8px;
+          text-transform: uppercase; color: ${C.terracotta700}; margin: 0 0 8px;
         }
         .hh-title { font-size: 28px; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.01em; }
         .hh-sub { font-size: 15px; font-weight: 500; color: ${C.slate}; margin: 0; }
@@ -541,9 +532,9 @@ export default function HealthHistoryPage() {
           cursor: pointer; 
           transition: background 0.15s, color 0.15s, border-color 0.15s;
         }
-        .hh-pill:hover { border-color: ${C.terracotta}; color: ${C.terracotta}; }
+        @media (hover: hover) { .hh-pill:hover { border-color: ${C.terracotta}; color: ${C.terracotta700}; } }
         .hh-pill.is-active {
-          background: ${C.navyDark}; border-color: ${C.navyDark}; color: #fff;
+          background: ${C.navyDark}; border-color: ${C.navyDark}; color: var(--color-white);
         }
 
         /* List */
@@ -553,13 +544,15 @@ export default function HealthHistoryPage() {
           overflow: hidden;
           transition: box-shadow 0.18s, border-color 0.18s;
         }
-        .hh-item:hover {
-          border-color: rgba(239,200,139,0.9);
-          box-shadow: 0 0 0 1px rgba(239,200,139,0.9), 0 8px 24px rgba(23,37,49,0.08);
+        @media (hover: hover) {
+          .hh-item:hover {
+            border-color: rgb(var(--color-gold-rgb) / 0.9);
+            box-shadow: 0 0 0 1px rgb(var(--color-gold-rgb) / 0.9), 0 8px 24px rgb(var(--color-navy-dark-rgb) / 0.08);
+          }
         }
         .hh-item.is-open {
-          border-color: rgba(239,200,139,0.9);
-          box-shadow: 0 0 0 1px rgba(239,200,139,0.9), 0 8px 24px rgba(23,37,49,0.08);
+          border-color: rgb(var(--color-gold-rgb) / 0.9);
+          box-shadow: 0 0 0 1px rgb(var(--color-gold-rgb) / 0.9), 0 8px 24px rgb(var(--color-navy-dark-rgb) / 0.08);
         }
         /* align-items:flex-start on the row, not center. Centring the row tied
            the photo and the chevron together — both sat on the same vertical
@@ -570,7 +563,7 @@ export default function HealthHistoryPage() {
           padding: 14px 16px; background: transparent; border: none; cursor: pointer;
           text-align: left; font-family: inherit;
         }
-        .hh-row:hover { background: transparent; }
+        @media (hover: hover) { .hh-row:hover { background: transparent; } }
 
         /* .hh-pet is the wrapper that actually sits in .hh-row, so the
            alignment belongs here — align-self on the photo inside it has no
@@ -585,7 +578,7 @@ export default function HealthHistoryPage() {
         }
         .hh-pet-fallback {
           display: flex; align-items: center; justify-content: center;
-          background: ${C.navyDark}; color: rgba(255,255,255,0.85);
+          background: ${C.navyDark}; color: rgb(var(--color-white-rgb) / 0.85);
         }
 
         .hh-main { flex: 1 1 auto; min-width: 0; }
@@ -658,7 +651,7 @@ export default function HealthHistoryPage() {
         .hh-msg ul, .hh-msg ol { margin: 0 0 12px; padding-left: 20px; }
         .hh-msg li { margin-bottom: 4px; }
         .hh-msg-user {
-          align-self: flex-end; background: ${C.navyDark}; color: #fff;
+          align-self: flex-end; background: ${C.navyDark}; color: var(--color-white);
           border-top-left-radius: 12px; border-top-right-radius: 4px;
         }
         .hh-no-transcript { font-size: 14px; color: ${C.muted}; font-style: italic; margin: 12px 0 0; }
@@ -698,20 +691,20 @@ export default function HealthHistoryPage() {
         .hh-vet-phone {
           display: inline-flex; align-items: center; height: 35px; padding: 0 18px;
           border-radius: 12px; font-size: 14px; font-weight: 700;
-          color: ${C.white}; background: ${C.terracotta}; text-decoration: none;
-          border: 2px solid ${C.terracotta};
+          color: ${C.white}; background: ${C.terracotta600}; text-decoration: none;
+          border: 2px solid ${C.terracotta600};
           transition: background 0.2s, color 0.2s;
         }
-        .hh-vet-phone:hover { background: ${C.white}; color: ${C.terracotta}; }
+        @media (hover: hover) { .hh-vet-phone:hover { background: ${C.white}; color: ${C.terracotta700}; } }
         /* Price block — matches the chat estimate panel: tinted card, large
            bold amount, reasoning beneath. */
         .hh-vet-est-block {
           margin-top: 10px; padding: 14px 14px;
-          background: #FFF7ED; border: 1px solid #FCD9B6;
+          background: var(--color-caution-light); border: 1px solid rgb(var(--color-caution-rgb) / 0.4);
           border-radius: 12px;
         }
         .hh-vet-est-amount {
-          font-weight: 800; font-size: 16px; color: ${C.terracotta};
+          font-weight: 800; font-size: 16px; color: ${C.terracotta700};
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
         }
         .hh-vet-est-reason {
@@ -719,11 +712,11 @@ export default function HealthHistoryPage() {
           line-height: 1.6; font-weight: 500;
         }
         .hh-vet-link {
-          font-size: 13px; color: ${C.terracotta}; text-decoration: underline;
+          font-size: 13px; color: ${C.terracotta700}; text-decoration: underline;
           white-space: nowrap; flex-shrink: 0; margin-top: 2px;
           font-weight: 700; transition: color 0.15s;
         }
-        .hh-vet-link:hover { color: ${C.navyDark}; }
+        @media (hover: hover) { .hh-vet-link:hover { color: ${C.navyDark}; } }
         .hh-copilot-note {
           margin: 12px 0 0; font-size: 13px; font-weight: 600;
           color: ${C.muted}; line-height: 1.5;
@@ -746,8 +739,10 @@ export default function HealthHistoryPage() {
           cursor: pointer;
           transition: background 0.2s, color 0.2s, border-color 0.2s;
         }
-        .hh-followup-btn:hover {
-          background: ${C.navyDark}; color: ${C.white}; border-color: ${C.navyDark};
+        @media (hover: hover) {
+          .hh-followup-btn:hover {
+            background: ${C.navyDark}; color: ${C.white}; border-color: ${C.navyDark};
+          }
         }
         .hh-followup-note {
           margin: 10px 0 0; font-size: 15px; font-weight: 500;
@@ -771,11 +766,11 @@ export default function HealthHistoryPage() {
         .hh-empty-btn {
           display: inline-flex; align-items: center; gap: 7px; height: 42px; border-radius: 12px;
           padding: 0px 24px;
-          background: ${C.terracotta}; color: #fff; border: 2px solid ${C.terracotta};
+          background: ${C.terracotta600}; color: var(--color-white); border: 2px solid ${C.terracotta600};
           font-size: 15px; font-weight: 700; text-decoration: none;
           transition: background 0.15s, color 0.15s;
         }
-        .hh-empty-btn:hover { background: transparent; color: ${C.terracotta}; }
+        @media (hover: hover) { .hh-empty-btn:hover { background: transparent; color: ${C.terracotta700}; } }
 
         @media (max-width: 768px) {
           .hh-container { padding: 0 16px 48px; }

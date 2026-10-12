@@ -262,17 +262,17 @@ export default function HowItWorksPage() {
 
 
         .sc-outer { position:relative; border-radius:22px; padding:1.5px; transition:transform 0.3s ease; height:100%; }
-        .sc-outer:hover { transform:translateY(-4px); }
-        .sc { border-radius:20px; padding:36px 28px; background:linear-gradient(160deg,rgba(42,62,78,.97) 0%,rgba(26,42,55,.97) 100%); text-align:center; transition:background .3s,box-shadow .3s; height:100%; box-sizing:border-box; }
-        .sc-outer:hover .sc { background:linear-gradient(160deg,rgba(50,72,90,.98) 0%,rgba(34,54,68,.98) 100%); box-shadow:0 20px 50px rgba(0,0,0,.3); }
+        @media (hover: hover) { .sc-outer:hover { transform:translateY(-4px); } }
+        .sc { border-radius:20px; padding:36px 28px; background:linear-gradient(160deg,color-mix(in srgb, var(--color-navy-mid) 70%, var(--color-navy-dark)) 0%,color-mix(in srgb, var(--color-navy-mid) 15%, var(--color-navy-dark)) 100%); text-align:center; transition:background .3s,box-shadow .3s; height:100%; box-sizing:border-box; }
+        @media (hover: hover) { .sc-outer:hover .sc { background:linear-gradient(160deg,var(--color-navy-mid) 0%,color-mix(in srgb, var(--color-navy-mid) 50%, var(--color-navy-dark)) 100%); box-shadow:0 20px 50px rgb(var(--color-black-rgb) / 0.3); } }
         .sg { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; align-items:stretch; }
         @media(max-width:900px){.sg{grid-template-columns:1fr;}}
 
 
 
 
-        .fq { border-top:1px solid rgba(255,255,255,.07); padding:24px 0; cursor:pointer; }
-        .fq:last-child { border-bottom:1px solid rgba(255,255,255,.07); }
+        .fq { border-top:1px solid rgb(var(--color-white-rgb) / 0.07); padding:24px 0; cursor:pointer; }
+        .fq:last-child { border-bottom:1px solid rgb(var(--color-white-rgb) / 0.07); }
         .fa { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows .38s cubic-bezier(.4,0,.2,1),opacity .3s; }
         .fa.open { grid-template-rows:1fr; opacity:1; }
         .fa-inner { overflow:hidden; }
@@ -281,10 +281,10 @@ export default function HowItWorksPage() {
 
 
         .bt { height:48px; padding:0 24px; line-height:0; border-radius:12px; font-size:15px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; font-family:var(--font-urbanist,'Urbanist',sans-serif); transition:background .25s,color .25s; }
-        .bt-tc { background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); }
-        .bt-tc:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
-        .bt-dk { background:transparent; color:var(--color-navy-dark,#172531); border:2px solid var(--color-navy-dark,#172531); }
-        .bt-dk:hover { background:var(--color-navy-dark,#172531); color:#fff; }
+        .bt-tc { background:var(--color-terracotta-600); color:var(--color-white); border:2px solid var(--color-terracotta-600); }
+        @media (hover: hover) { .bt-tc:hover { background:var(--color-white); color:var(--color-terracotta-700); } }
+        .bt-dk { background:transparent; color:var(--color-navy-dark); border:2px solid var(--color-navy-dark); }
+        @media (hover: hover) { .bt-dk:hover { background:var(--color-navy-dark); color:var(--color-white); } }
 
 
 
@@ -305,13 +305,13 @@ export default function HowItWorksPage() {
       <div
         className="hiw-header"
         style={{
-          background: "var(--color-navy-dark, #172531)",
+          background: "var(--color-navy-dark)",
           padding: "80px 0 88px",
           minHeight: "393px",
           height: "393px",
           position: "relative",
           overflow: "hidden",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid rgb(var(--color-white-rgb) / 0.08)",
           boxSizing: "border-box",
         }}
       >
@@ -322,7 +322,7 @@ export default function HowItWorksPage() {
             inset: 0,
             pointerEvents: "none",
             background:
-              "radial-gradient(ellipse 75% 85% at 50% 50%, rgba(44,70,87,0.5) 0%, rgba(23,37,49,0.0) 45%, rgba(10,18,26,0.6) 80%, rgba(6,12,18,0.85) 100%)",
+              "radial-gradient(ellipse 75% 85% at 50% 50%, rgb(var(--color-navy-mid-rgb) / 0.5) 0%, rgb(var(--color-navy-dark-rgb) / 0) 45%, rgb(var(--color-navy-deeper-rgb) / 0.6) 80%, rgb(var(--color-navy-deeper-rgb) / 0.85) 100%)",
           }}
         />
         <div
@@ -333,7 +333,7 @@ export default function HowItWorksPage() {
             pointerEvents: "none",
             zIndex: 0,
             background:
-              "linear-gradient(to right, rgba(6,14,22,0.7) 0%, rgba(6,14,22,0.2) 18%, transparent 35%, transparent 65%, rgba(6,14,22,0.2) 82%, rgba(6,14,22,0.7) 100%)",
+              "linear-gradient(to right, rgb(var(--color-navy-deeper-rgb) / 0.7) 0%, rgb(var(--color-navy-deeper-rgb) / 0.2) 18%, transparent 35%, transparent 65%, rgb(var(--color-navy-deeper-rgb) / 0.2) 82%, rgb(var(--color-navy-deeper-rgb) / 0.7) 100%)",
           }}
         />
         <div
@@ -343,7 +343,7 @@ export default function HowItWorksPage() {
             pointerEvents: "none",
             zIndex: 0,
             background:
-              "linear-gradient(to bottom, rgba(6,14,22,0.5) 0%, transparent 25%, transparent 75%, rgba(6,14,22,0.5) 100%)",
+              "linear-gradient(to bottom, rgb(var(--color-navy-deeper-rgb) / 0.5) 0%, transparent 25%, transparent 75%, rgb(var(--color-navy-deeper-rgb) / 0.5) 100%)",
           }}
         />
 
@@ -361,7 +361,7 @@ export default function HowItWorksPage() {
               pointerEvents: "none",
             }}
           >
-            <PawShape fill="rgba(255,255,255,1)" />
+            <PawShape fill="rgb(var(--color-white-rgb) / 1)" />
           </div>
         ))}
 
@@ -387,7 +387,7 @@ export default function HowItWorksPage() {
               pointerEvents: "none",
             }}
           >
-            <PawShape fill="rgba(239,200,139,1)" />
+            <PawShape fill="rgb(var(--color-gold-rgb) / 1)" />
           </div>
         ))}
 
@@ -401,7 +401,7 @@ export default function HowItWorksPage() {
               fontWeight: "700",
               letterSpacing: "0.10em",
               textTransform: "uppercase",
-              color: "var(--color-gold,#EFC88B)",
+              color: "var(--color-gold)",
               marginBottom: "12px",
             }}
           >
@@ -411,7 +411,7 @@ export default function HowItWorksPage() {
             style={{
               fontSize: "clamp(30px,5.5vw,56px)",
               fontWeight: "800",
-              color: "#fff",
+              color: "var(--color-white)",
               fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
               marginBottom: "16px",
               letterSpacing: "-0.025em",
@@ -426,7 +426,7 @@ export default function HowItWorksPage() {
             style={{
               fontSize: "17px",
               fontWeight: 500,
-              color: "rgba(255,255,255,0.65)",
+              color: "rgb(var(--color-white-rgb) / 0.65)",
               margin: 0,
               lineHeight: "1.75",
               maxWidth: "520px",
@@ -441,7 +441,7 @@ export default function HowItWorksPage() {
       {/* STEPS */}
       <section
         style={{
-          background: "var(--color-navy-mid,#2C4657)",
+          background: "var(--color-navy-mid)",
           padding: "88px 0",
           position: "relative",
           overflow: "hidden",
@@ -452,7 +452,7 @@ export default function HowItWorksPage() {
             position: "absolute",
             inset: 0,
             backgroundImage:
-              "radial-gradient(rgba(255,255,255,0.025) 1px,transparent 1px)",
+              "radial-gradient(rgb(var(--color-white-rgb) / 0.025) 1px,transparent 1px)",
             backgroundSize: "36px 36px",
             pointerEvents: "none",
           }}
@@ -473,7 +473,7 @@ export default function HowItWorksPage() {
                   className="sc-outer"
                   style={{
                     background:
-                      "linear-gradient(135deg,rgba(255,255,255,0.14) 0%,rgba(255,255,255,0.04) 28%,transparent 42%,transparent 58%,rgba(255,255,255,0.04) 72%,rgba(255,255,255,0.14) 100%)",
+                      "linear-gradient(135deg,rgb(var(--color-white-rgb) / 0.14) 0%,rgb(var(--color-white-rgb) / 0.04) 28%,transparent 42%,transparent 58%,rgb(var(--color-white-rgb) / 0.04) 72%,rgb(var(--color-white-rgb) / 0.14) 100%)",
                     display: "block",
                     textDecoration: "none",
                   }}
@@ -486,7 +486,7 @@ export default function HowItWorksPage() {
                         right: "20px",
                         fontSize: "76px",
                         fontWeight: "800",
-                        color: "rgba(255,255,255,0.04)",
+                        color: "rgb(var(--color-white-rgb) / 0.04)",
                         lineHeight: 1,
                         userSelect: "none",
                       }}
@@ -498,13 +498,13 @@ export default function HowItWorksPage() {
                         width: "60px",
                         height: "60px",
                         borderRadius: "16px",
-                        background: "rgba(255,255,255,0.08)",
-                        border: "1px solid rgba(255,255,255,0.14)",
+                        background: "rgb(var(--color-white-rgb) / 0.08)",
+                        border: "1px solid rgb(var(--color-white-rgb) / 0.14)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         margin: "0 auto 20px",
-                        color: "#fff",
+                        color: "var(--color-white)",
                       }}
                     >
                       <step.icon size={28} strokeWidth={2} />
@@ -513,7 +513,7 @@ export default function HowItWorksPage() {
                       style={{
                         fontSize: "22px",
                         fontWeight: "800",
-                        color: "#fff",
+                        color: "var(--color-white)",
                         marginBottom: "12px",
                         fontFamily:
                           "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -525,7 +525,7 @@ export default function HowItWorksPage() {
                       style={{
                         fontSize: "16px",
                         fontWeight: 500,
-                        color: "rgba(255,255,255,0.55)",
+                        color: "rgb(var(--color-white-rgb) / 0.55)",
                         lineHeight: "1.75",
                         margin: 0,
                       }}
@@ -543,7 +543,7 @@ export default function HowItWorksPage() {
       {/* FAQ */}
       <section
         style={{
-          background: "var(--color-navy-dark,#172531)",
+          background: "var(--color-navy-dark)",
           padding: "88px 0",
         }}
       >
@@ -564,7 +564,7 @@ export default function HowItWorksPage() {
                   fontWeight: "700",
                   letterSpacing: "0.10em",
                   textTransform: "uppercase",
-                  color: "var(--color-gold,#EFC88B)",
+                  color: "var(--color-gold)",
                   marginBottom: "16px",
                 }}
               >
@@ -574,7 +574,7 @@ export default function HowItWorksPage() {
                 style={{
                   fontSize: "clamp(26px,3.5vw,44px)",
                   fontWeight: "800",
-                  color: "#fff",
+                  color: "var(--color-white)",
                   lineHeight: "1.1",
                   fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                   marginBottom: "20px",
@@ -589,7 +589,7 @@ export default function HowItWorksPage() {
                 style={{
                   fontSize: "16px",
                   fontWeight: 500,
-                  color: "rgba(255,255,255,0.5)",
+                  color: "rgb(var(--color-white-rgb) / 0.5)",
                   lineHeight: "1.75",
                   marginBottom: "20px",
                   textWrap: "pretty",
@@ -607,7 +607,7 @@ export default function HowItWorksPage() {
                   minHeight: "44px",
                   fontSize: "14px",
                   fontWeight: "700",
-                  color: "var(--color-gold,#EFC88B)",
+                  color: "var(--color-gold)",
                   textDecoration: "none",
                 }}
               >
@@ -638,7 +638,7 @@ export default function HowItWorksPage() {
                       style={{
                         fontSize: "18px",
                         fontWeight: "800",
-                        color: "#fff",
+                        color: "var(--color-white)",
                         margin: 0,
                         fontFamily:
                           "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -650,7 +650,7 @@ export default function HowItWorksPage() {
                       style={{
                         fontSize: "26px",
                         fontWeight: "300",
-                        color: "var(--color-gold,#EFC88B)",
+                        color: "var(--color-gold)",
                         flexShrink: 0,
                         lineHeight: 1,
                         transition: "transform .3s",
@@ -667,7 +667,7 @@ export default function HowItWorksPage() {
                         style={{
                           fontSize: "15px",
                           fontWeight: 500,
-                          color: "rgba(255,255,255,0.55)",
+                          color: "rgb(var(--color-white-rgb) / 0.55)",
                           lineHeight: "1.75",
                           margin: "14px 0 0",
                           paddingRight: "32px",
@@ -686,7 +686,7 @@ export default function HowItWorksPage() {
 
       {/* CTA */}
       <section
-        style={{ background: "var(--color-cream,#F5F0E8)", padding: "96px 0" }}
+        style={{ background: "var(--color-cream)", padding: "96px 0" }}
       >
         <div className="pp-container">
           <div
@@ -704,7 +704,7 @@ export default function HowItWorksPage() {
                 fontWeight: "700",
                 letterSpacing: "0.10em",
                 textTransform: "uppercase",
-                color: "var(--color-terracotta,#CF5C36)",
+                color: "var(--color-terracotta-700)",
                 marginBottom: "16px",
               }}
             >
@@ -714,7 +714,7 @@ export default function HowItWorksPage() {
               style={{
                 fontSize: "clamp(26px,4vw,44px)",
                 fontWeight: "800",
-                color: "var(--color-navy-dark,#172531)",
+                color: "var(--color-navy-dark)",
                 marginBottom: "16px",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                 letterSpacing: "-0.025em",
@@ -727,7 +727,7 @@ export default function HowItWorksPage() {
               style={{
                 fontSize: "17px",
                 fontWeight: 500,
-                color: "var(--color-slate,#4B5563)",
+                color: "var(--color-slate)",
                 lineHeight: "1.7",
                 // marginBottom: "36px",
                 maxWidth: "90%",

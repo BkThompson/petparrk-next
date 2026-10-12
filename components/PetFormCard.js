@@ -70,8 +70,8 @@ export default function PetFormCard({
               height: "64px",
               margin: "0 auto 16px",
               borderRadius: "50%",
-              background: "rgba(26,102,65,0.10)",
-              color: "#1A6641",
+              background: "rgb(var(--color-success-text-rgb) / 0.1)",
+              color: "var(--color-success-text)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -95,7 +95,7 @@ export default function PetFormCard({
             style={{
               fontSize: "18px",
               fontWeight: 500,
-              color: C.slate || "#4B5563",
+              color: C.slate || "var(--color-slate)",
               margin: "0 0 28px",
               lineHeight: 1.55,
             }}
@@ -209,14 +209,14 @@ export default function PetFormCard({
                 width: "32px",
                 height: "32px",
                 borderRadius: "50%",
-                background: C.terracotta,
-                color: "#fff",
-                border: `3px solid #fff`,
+                background: C.terracotta600,
+                color: "var(--color-white)",
+                border: `3px solid var(--color-white)`,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.20)",
+                boxShadow: "0 2px 6px rgb(var(--color-black-rgb) / 0.2)",
                 lineHeight: 1,
               }}
               title="Add photo"

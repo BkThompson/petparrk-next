@@ -11,6 +11,7 @@ import {
   PawPrint,
   Mail,
 } from "lucide-react";
+import { CONTACT_ART } from "../../lib/palettes";
 
 function useScrollReveal(threshold = 0.08) {
   const ref = useRef(null);
@@ -121,22 +122,22 @@ export default function ContactPage() {
           .cg { grid-template-columns:1fr; gap:48px; }
           .ci { display:none; }
         }
-        .cr { display:flex; gap:16px; align-items:flex-start; padding:20px 0; border-bottom:1px solid rgba(23,37,49,0.08); }
+        .cr { display:flex; gap:16px; align-items:flex-start; padding:20px 0; border-bottom:1px solid rgb(var(--color-navy-dark-rgb) / 0.08); }
         /* the last row keeps its rule — it separates the reasons from the
            two contact buttons below */
-        .cr:last-child { border-bottom:1px solid rgba(23,37,49,0.08); margin-bottom:28px; }
+        .cr:last-child { border-bottom:1px solid rgb(var(--color-navy-dark-rgb) / 0.08); margin-bottom:28px; }
         /* Same tile as every other spot on the site, scaled for a list row:
            68/44 proportion held at 52/34. */
-        .ri { width:52px; height:52px; border-radius:14px; background:rgba(207,92,54,0.1); border:1px solid rgba(207,92,54,0.18); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .ri { width:52px; height:52px; border-radius:14px; background:rgb(var(--color-terracotta-rgb) / 0.1); border:1px solid rgb(var(--color-terracotta-rgb) / 0.18); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .eb { display:inline-flex; align-items:center; gap:10px; padding:16px 24px; border-radius:12px; text-decoration:none; font-weight:700; font-size:16px; font-family:var(--font-urbanist,'Urbanist',sans-serif); transition:background .25s,color .25s; width:100%; box-sizing:border-box; justify-content:flex-start; }
-        .eb-p { background:var(--color-navy-dark,#172531); color:#fff; border:2px solid var(--color-navy-dark,#172531); }
-        .eb-p:hover { background:transparent; color:var(--color-navy-dark,#172531); }
-        .eb-s { background:transparent; color:var(--color-navy-dark,#172531); border:2px solid var(--color-navy-dark,#172531); }
-        .eb-s:hover { background:var(--color-navy-dark,#172531); color:#fff; }
-        .ico { position:relative; max-width:515px; margin:0 auto; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgba(239,200,139,0.4) 0%,rgba(207,92,54,0.2) 15%,transparent 35%,transparent 65%,rgba(207,92,54,0.15) 85%,rgba(239,200,139,0.35) 100%); }
-        .ici { border-radius:20px; overflow:hidden; background:linear-gradient(160deg,#2C4657 0%,#172531 100%); }
-        .bc { height:48px; padding:0 24px; line-height:1; background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px; font-size:15px; font-weight:700; text-decoration:none; font-family:var(--font-urbanist,'Urbanist',sans-serif); display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:background .25s,color .25s; }
-        .bc:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
+        .eb-p { background:var(--color-navy-dark); color:var(--color-white); border:2px solid var(--color-navy-dark); }
+        @media (hover: hover) { .eb-p:hover { background:transparent; color:var(--color-navy-dark); } }
+        .eb-s { background:transparent; color:var(--color-navy-dark); border:2px solid var(--color-navy-dark); }
+        @media (hover: hover) { .eb-s:hover { background:var(--color-navy-dark); color:var(--color-white); } }
+        .ico { position:relative; max-width:515px; margin:0 auto; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgb(var(--color-gold-rgb) / 0.4) 0%,rgb(var(--color-terracotta-rgb) / 0.2) 15%,transparent 35%,transparent 65%,rgb(var(--color-terracotta-rgb) / 0.15) 85%,rgb(var(--color-gold-rgb) / 0.35) 100%); }
+        .ici { border-radius:20px; overflow:hidden; background:linear-gradient(160deg,var(--color-navy-mid) 0%,var(--color-navy-dark) 100%); }
+        .bc { height:48px; padding:0 24px; line-height:1; background:var(--color-terracotta-600); color:var(--color-white); border:2px solid var(--color-terracotta-600); border-radius:12px; font-size:15px; font-weight:700; text-decoration:none; font-family:var(--font-urbanist,'Urbanist',sans-serif); display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:background .25s,color .25s; }
+        @media (hover: hover) { .bc:hover { background:var(--color-white); color:var(--color-terracotta-700); } }
         .contact-header { min-height:393px; height:393px; overflow:hidden; }
         @media (max-width: 768px) {
           .contact-header { height:auto !important; min-height:368px !important; padding:80px 0 88px !important; overflow:hidden; }
@@ -157,12 +158,12 @@ export default function ContactPage() {
       <div
         className="contact-header"
         style={{
-          background: "var(--color-navy-dark, #172531)",
+          background: "var(--color-navy-dark)",
           padding: "80px 0 88px",
           minHeight: "393px",
           position: "relative",
           overflow: "hidden",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          borderBottom: "1px solid rgb(var(--color-white-rgb) / 0.07)",
           boxSizing: "border-box",
         }}
       >
@@ -172,7 +173,7 @@ export default function ContactPage() {
             inset: 0,
             pointerEvents: "none",
             background:
-              "radial-gradient(ellipse 75% 85% at 50% 50%, rgba(44,70,87,0.5) 0%, rgba(23,37,49,0) 45%, rgba(10,18,26,0.6) 80%, rgba(6,12,18,0.85) 100%)",
+              "radial-gradient(ellipse 75% 85% at 50% 50%, rgb(var(--color-navy-mid-rgb) / 0.5) 0%, rgb(var(--color-navy-dark-rgb) / 0) 45%, rgb(var(--color-navy-deeper-rgb) / 0.6) 80%, rgb(var(--color-navy-deeper-rgb) / 0.85) 100%)",
           }}
         />
         <div
@@ -181,7 +182,7 @@ export default function ContactPage() {
             inset: 0,
             pointerEvents: "none",
             background:
-              "linear-gradient(to right, rgba(6,14,22,0.65) 0%, rgba(6,14,22,0.18) 18%, transparent 35%, transparent 65%, rgba(6,14,22,0.18) 82%, rgba(6,14,22,0.65) 100%)",
+              "linear-gradient(to right, rgb(var(--color-navy-deeper-rgb) / 0.65) 0%, rgb(var(--color-navy-deeper-rgb) / 0.18) 18%, transparent 35%, transparent 65%, rgb(var(--color-navy-deeper-rgb) / 0.18) 82%, rgb(var(--color-navy-deeper-rgb) / 0.65) 100%)",
           }}
         />
         <div
@@ -190,7 +191,7 @@ export default function ContactPage() {
             inset: 0,
             pointerEvents: "none",
             background:
-              "linear-gradient(to bottom, rgba(6,14,22,0.45) 0%, transparent 28%, transparent 72%, rgba(6,14,22,0.45) 100%)",
+              "linear-gradient(to bottom, rgb(var(--color-navy-deeper-rgb) / 0.45) 0%, transparent 28%, transparent 72%, rgb(var(--color-navy-deeper-rgb) / 0.45) 100%)",
           }}
         />
 
@@ -215,13 +216,13 @@ export default function ContactPage() {
                 x2="100%"
                 y2="0%"
               >
-                <stop offset="0%" stopColor="#CF5C36" stopOpacity="0.5" />
-                <stop offset="18%" stopColor="#EFC88B" stopOpacity="0.85" />
-                <stop offset="38%" stopColor="#FFF4DC" stopOpacity="1" />
-                <stop offset="52%" stopColor="#EFC88B" stopOpacity="1" />
-                <stop offset="68%" stopColor="#FFF4DC" stopOpacity="0.95" />
-                <stop offset="84%" stopColor="#EFC88B" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#CF5C36" stopOpacity="0.45" />
+                <stop offset="0%" stopColor="var(--color-terracotta)" stopOpacity="0.5" />
+                <stop offset="18%" stopColor="var(--color-gold)" stopOpacity="0.85" />
+                <stop offset="38%" stopColor={CONTACT_ART.cream50} stopOpacity="1" />
+                <stop offset="52%" stopColor="var(--color-gold)" stopOpacity="1" />
+                <stop offset="68%" stopColor={CONTACT_ART.cream50} stopOpacity="0.95" />
+                <stop offset="84%" stopColor="var(--color-gold)" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="var(--color-terracotta)" stopOpacity="0.45" />
               </linearGradient>
               <linearGradient
                 id="silverChromeMobile"
@@ -230,11 +231,11 @@ export default function ContactPage() {
                 x2="100%"
                 y2="0%"
               >
-                <stop offset="0%" stopColor="#EFC88B" stopOpacity="0.3" />
-                <stop offset="25%" stopColor="rgba(255,255,255,0.8)" />
-                <stop offset="50%" stopColor="#FFF4DC" stopOpacity="1" />
-                <stop offset="75%" stopColor="rgba(255,255,255,0.8)" />
-                <stop offset="100%" stopColor="#EFC88B" stopOpacity="0.3" />
+                <stop offset="0%" stopColor="var(--color-gold)" stopOpacity="0.3" />
+                <stop offset="25%" stopColor="rgb(var(--color-white-rgb) / 0.8)" />
+                <stop offset="50%" stopColor={CONTACT_ART.cream50} stopOpacity="1" />
+                <stop offset="75%" stopColor="rgb(var(--color-white-rgb) / 0.8)" />
+                <stop offset="100%" stopColor="var(--color-gold)" stopOpacity="0.3" />
               </linearGradient>
             </defs>
             {ARC_RADII.map((r, i) => {
@@ -280,18 +281,18 @@ export default function ContactPage() {
           >
             <defs>
               <linearGradient id="goldChrome" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#CF5C36" stopOpacity="0.5" />
-                <stop offset="18%" stopColor="#EFC88B" stopOpacity="0.85" />
-                <stop offset="38%" stopColor="#FFF4DC" stopOpacity="1" />
-                <stop offset="52%" stopColor="#EFC88B" stopOpacity="1" />
-                <stop offset="68%" stopColor="#FFF4DC" stopOpacity="0.95" />
-                <stop offset="84%" stopColor="#EFC88B" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#CF5C36" stopOpacity="0.45" />
+                <stop offset="0%" stopColor="var(--color-terracotta)" stopOpacity="0.5" />
+                <stop offset="18%" stopColor="var(--color-gold)" stopOpacity="0.85" />
+                <stop offset="38%" stopColor={CONTACT_ART.cream50} stopOpacity="1" />
+                <stop offset="52%" stopColor="var(--color-gold)" stopOpacity="1" />
+                <stop offset="68%" stopColor={CONTACT_ART.cream50} stopOpacity="0.95" />
+                <stop offset="84%" stopColor="var(--color-gold)" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="var(--color-terracotta)" stopOpacity="0.45" />
               </linearGradient>
               <radialGradient id="dotGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#EFC88B" stopOpacity="0.7" />
-                <stop offset="60%" stopColor="#CF5C36" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#CF5C36" stopOpacity="0.1" />
+                <stop offset="0%" stopColor="var(--color-gold)" stopOpacity="0.7" />
+                <stop offset="60%" stopColor="var(--color-terracotta)" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="var(--color-terracotta)" stopOpacity="0.1" />
               </radialGradient>
               <linearGradient
                 id="silverChrome"
@@ -300,11 +301,11 @@ export default function ContactPage() {
                 x2="100%"
                 y2="0%"
               >
-                <stop offset="0%" stopColor="#EFC88B" stopOpacity="0.3" />
-                <stop offset="25%" stopColor="rgba(255,255,255,0.8)" />
-                <stop offset="50%" stopColor="#FFF4DC" stopOpacity="1" />
-                <stop offset="75%" stopColor="rgba(255,255,255,0.8)" />
-                <stop offset="100%" stopColor="#EFC88B" stopOpacity="0.3" />
+                <stop offset="0%" stopColor="var(--color-gold)" stopOpacity="0.3" />
+                <stop offset="25%" stopColor="rgb(var(--color-white-rgb) / 0.8)" />
+                <stop offset="50%" stopColor={CONTACT_ART.cream50} stopOpacity="1" />
+                <stop offset="75%" stopColor="rgb(var(--color-white-rgb) / 0.8)" />
+                <stop offset="100%" stopColor="var(--color-gold)" stopOpacity="0.3" />
               </linearGradient>
             </defs>
             <circle
@@ -351,7 +352,7 @@ export default function ContactPage() {
                   d={`M ${sx},1 A ${r},${r} 0 0,1 ${ex},1`}
                   fill="none"
                   stroke={
-                    isGold ? "rgba(239,200,139,1)" : "rgba(255,255,255,1)"
+                    isGold ? "rgb(var(--color-gold-rgb) / 1)" : "rgb(var(--color-white-rgb) / 1)"
                   }
                   strokeWidth={isPulsing ? 2.2 : sw}
                   strokeLinecap="round"
@@ -379,7 +380,7 @@ export default function ContactPage() {
               fontWeight: "700",
               letterSpacing: "0.10em",
               textTransform: "uppercase",
-              color: "var(--color-gold,#EFC88B)",
+              color: "var(--color-gold)",
               marginBottom: "12px",
             }}
           >
@@ -389,7 +390,7 @@ export default function ContactPage() {
             style={{
               fontSize: "clamp(30px,5.5vw,56px)",
               fontWeight: "800",
-              color: "#fff",
+              color: "var(--color-white)",
               fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
               marginBottom: "16px",
               letterSpacing: "-0.025em",
@@ -404,7 +405,7 @@ export default function ContactPage() {
             style={{
               fontSize: "17px",
               fontWeight: 500,
-              color: "rgba(255,255,255,0.65)",
+              color: "rgb(var(--color-white-rgb) / 0.65)",
               margin: 0,
               maxWidth: "460px",
               lineHeight: "1.75",
@@ -418,7 +419,7 @@ export default function ContactPage() {
 
       {/* MAIN CONTENT */}
       <section
-        style={{ background: "var(--color-cream,#F5F0E8)", padding: "88px 0" }}
+        style={{ background: "var(--color-cream)", padding: "88px 0" }}
       >
         <div className="pp-container">
           <div className="cg">
@@ -433,7 +434,7 @@ export default function ContactPage() {
                       <item.icon
                         size={34}
                         strokeWidth={2}
-                        color="var(--color-terracotta,#CF5C36)"
+                        color="var(--color-terracotta)"
                       />
                     </div>
                     <div>
@@ -441,7 +442,7 @@ export default function ContactPage() {
                         style={{
                           fontSize: "15px",
                           fontWeight: "700",
-                          color: "var(--color-navy-dark,#172531)",
+                          color: "var(--color-navy-dark)",
                           marginBottom: "4px",
                           fontFamily:
                             "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -453,7 +454,7 @@ export default function ContactPage() {
                         style={{
                           fontSize: "16px",
                           fontWeight: 500,
-                          color: "var(--color-slate,#4B5563)",
+                          color: "var(--color-slate)",
                           lineHeight: "1.7",
                           margin: 0,
                           maxWidth: "68ch",
@@ -516,7 +517,7 @@ export default function ContactPage() {
       {/* BOTTOM CTA */}
       <section
         style={{
-          background: "var(--color-navy-dark,#172531)",
+          background: "var(--color-navy-dark)",
           paddingTop: "48px",
           paddingBottom: "0",
         }}
@@ -536,7 +537,7 @@ export default function ContactPage() {
               marginLeft: "auto",
               marginRight: "auto",
               fontWeight: 500,
-              color: "rgba(255,255,255,0.65)",
+              color: "rgb(var(--color-white-rgb) / 0.65)",
               lineHeight: "1.7",
               marginBottom: "24px",
             }}
@@ -557,7 +558,7 @@ export default function ContactPage() {
           style={{
             height: "1px",
             background:
-              "linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,0.2) 20%,rgba(255,255,255,0.2) 80%,rgba(255,255,255,0))",
+              "linear-gradient(to right,rgb(var(--color-white-rgb) / 0),rgb(var(--color-white-rgb) / 0.2) 20%,rgb(var(--color-white-rgb) / 0.2) 80%,rgb(var(--color-white-rgb) / 0))",
             margin: 0,
           }}
         />

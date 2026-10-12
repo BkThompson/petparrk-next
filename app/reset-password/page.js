@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
-const GREEN = "#2d6a4f";
+const GREEN = "var(--color-success)";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -73,24 +73,24 @@ function ResetPasswordForm() {
 
   const inputStyle = {
     width: "100%", padding: "12px 14px", borderRadius: "8px",
-    border: "1.5px solid #ddd", fontSize: "15px",
+    border: "1.5px solid var(--color-border)", fontSize: "15px",
     fontFamily: "system-ui, sans-serif", outline: "none", boxSizing: "border-box",
   };
 
   return (
     <div style={{
-      minHeight: "calc(100vh - 64px)", background: "#f7f9f7", display: "flex",
+      minHeight: "calc(100vh - 64px)", background: "var(--color-white)", display: "flex",
       alignItems: "center", justifyContent: "center", padding: "20px",
       fontFamily: "system-ui, sans-serif",
     }}>
       <div style={{
-        background: "#fff", borderRadius: "16px", padding: "40px 36px",
-        width: "100%", maxWidth: "420px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+        background: "var(--color-white)", borderRadius: "16px", padding: "40px 36px",
+        width: "100%", maxWidth: "420px", boxShadow: "0 4px 24px rgb(var(--color-black-rgb) / 0.08)",
       }}>
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
           <div style={{ fontSize: "36px", marginBottom: "4px" }}>🐾</div>
           <h1 style={{ margin: 0, color: GREEN, fontSize: "1.6rem", fontWeight: "700" }}>PetParrk</h1>
-          <p style={{ margin: "6px 0 0", color: "#777", fontSize: "14px" }}>Set your new password</p>
+          <p style={{ margin: "6px 0 0", color: "var(--color-muted)", fontSize: "14px" }}>Set your new password</p>
         </div>
 
         {status === "success" ? (
@@ -100,14 +100,14 @@ function ResetPasswordForm() {
           </div>
         ) : !ready ? (
           <div style={{ textAlign: "center", padding: "20px 0" }}>
-            <p style={{ color: "#888", fontSize: "14px" }}>Verifying your reset link...</p>
+            <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>Verifying your reset link...</p>
           </div>
         ) : (
           <form onSubmit={handleReset}>
             {message && (
               <div style={{
-                background: status === "error" ? "#fde8e8" : "#e8f5e9",
-                color: status === "error" ? "#b91c1c" : GREEN,
+                background: status === "error" ? "var(--color-error-light)" : "var(--color-success-light)",
+                color: status === "error" ? "var(--color-error-text)" : GREEN,
                 borderRadius: "8px", padding: "10px 14px",
                 fontSize: "14px", marginBottom: "16px",
               }}>
@@ -116,7 +116,7 @@ function ResetPasswordForm() {
             )}
 
             <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#444", marginBottom: "6px" }}>
+              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--color-slate)", marginBottom: "6px" }}>
                 New Password
               </label>
               <div style={{ position: "relative" }}>
@@ -130,7 +130,7 @@ function ResetPasswordForm() {
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
                   position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)",
-                  background: "none", border: "none", cursor: "pointer", color: "#888", fontSize: "18px",
+                  background: "none", border: "none", cursor: "pointer", color: "var(--color-muted)", fontSize: "18px",
                 }}>
                   {showPassword ? "🙈" : "👁️"}
                 </button>
@@ -138,7 +138,7 @@ function ResetPasswordForm() {
             </div>
 
             <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#444", marginBottom: "6px" }}>
+              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--color-slate)", marginBottom: "6px" }}>
                 Confirm Password
               </label>
               <input
@@ -153,8 +153,8 @@ function ResetPasswordForm() {
 
             <button type="submit" disabled={status === "loading"} style={{
               width: "100%", padding: "13px",
-              background: status === "loading" ? "#aaa" : GREEN,
-              color: "#fff", border: "none", borderRadius: "8px", fontSize: "15px",
+              background: status === "loading" ? "var(--color-muted)" : GREEN,
+              color: "var(--color-white)", border: "none", borderRadius: "8px", fontSize: "15px",
               fontWeight: "600", cursor: status === "loading" ? "not-allowed" : "pointer",
               fontFamily: "system-ui, sans-serif",
             }}>
@@ -165,7 +165,7 @@ function ResetPasswordForm() {
 
         <p style={{ textAlign: "center", marginTop: "20px", fontSize: "13px" }}>
           <button onClick={() => router.push("/auth")} style={{
-            background: "none", border: "none", color: "#aaa",
+            background: "none", border: "none", color: "var(--color-muted)",
             cursor: "pointer", fontSize: "13px", fontFamily: "system-ui, sans-serif",
           }}>
             ← Back to Sign In
@@ -178,7 +178,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", color: "#888" }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", color: "var(--color-muted)" }}>Loading...</div>}>
       <ResetPasswordForm />
     </Suspense>
   );

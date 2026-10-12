@@ -47,6 +47,7 @@ import {
   getShareTokenEvents,
   buildShareUrl,
 } from "../../../../lib/petCardApi";
+import { HEX, svgHex } from "../../../../lib/tokens";
 
 export default function SharePrivacyPage() {
   const router = useRouter();
@@ -161,19 +162,19 @@ export default function SharePrivacyPage() {
       <SaveIndicator status={saveStatus} />
       <style>{`
         /* ===== Page shell (spp- prefix, unique to this page) ===== */
-        .spp-body { min-height:100vh; background:var(--color-cream,#FBF8F4); padding:0 0 80px; font-family:var(--font-urbanist),'Urbanist',-apple-system,BlinkMacSystemFont,sans-serif; }
+        .spp-body { min-height:100vh; background:var(--color-cream); padding:0 0 80px; font-family:var(--font-urbanist),'Urbanist',-apple-system,BlinkMacSystemFont,sans-serif; }
         .spp-container { max-width:900px; margin:0 auto; padding:0 24px; }
         .spp-topbar { padding:32px 0 28px; }
         .spp-topbar .bc-nav { margin-bottom:0; }
-        .spp-back { display:inline-flex; align-items:center; gap:7px; color:var(--color-terracotta,#CF5C36); text-decoration:none; font-weight:600; font-size:13px; }
-        .spp-back:hover { color:var(--color-navy-dark,#172531); }
+        .spp-back { display:inline-flex; align-items:center; gap:7px; color:var(--color-terracotta-700); text-decoration:none; font-weight:600; font-size:13px; }
+        @media (hover: hover) { .spp-back:hover { color:var(--color-navy-dark); } }
         .spp-head { padding:0px 0 0px; margin-bottom: 22px; }
-        .spp-eyebrow { font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-terracotta,#CF5C36); margin:0 0 8px; }
-        .spp-title { font-size:28px; font-weight:800; color:var(--color-navy-dark,#172531); margin:0 0 8px; line-height:1.2; }
+        .spp-eyebrow { font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-terracotta-700); margin:0 0 8px; }
+        .spp-title { font-size:28px; font-weight:800; color:var(--color-navy-dark); margin:0 0 8px; line-height:1.2; }
         .spp-sub { font-size:15px; font-weight: 500; color:var(--color-slate); margin:0; line-height:1.5; }
         .spp-notfound { text-align:center; padding:80px 0; }
-        .spp-notfound h1 { font-size:24px; font-weight:800; color:var(--color-navy-dark,#172531); }
-        .spp-notfound p { color:var(--color-muted,#717A86); margin:8px 0 20px; }
+        .spp-notfound h1 { font-size:24px; font-weight:800; color:var(--color-navy-dark); }
+        .spp-notfound p { color:var(--color-muted); margin:8px 0 20px; }
         @media (max-width:640px){ .spp-container{ padding:0 16px; } .spp-title{ font-size:24px; } }
 
         /* ===== Full Care-editor CSS — included verbatim so the share cards render
@@ -182,7 +183,7 @@ export default function SharePrivacyPage() {
 
         .ucm-backdrop {
           position: fixed; inset: 0;
-          background: rgba(23,37,49,0.55);
+          background: rgb(var(--color-navy-dark-rgb) / 0.55);
           -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
           z-index: 4000;
@@ -192,10 +193,10 @@ export default function SharePrivacyPage() {
         }
         @keyframes ucm-fade { from { opacity: 0; } to { opacity: 1; } }
         .ucm-card {
-          background: #fff;
+          background: var(--color-white);
           border-radius: 18px;
           max-width: 440px; width: 100%;
-          box-shadow: 0 30px 60px rgba(0,0,0,0.40);
+          box-shadow: 0 30px 60px rgb(var(--color-black-rgb) / 0.4);
           font-family: var(--font-urbanist,'Urbanist',system-ui,sans-serif);
           overflow: hidden;
           animation: ucm-pop 0.2s cubic-bezier(0.33,1,0.68,1);
@@ -209,21 +210,21 @@ export default function SharePrivacyPage() {
           padding: 22px 24px 0;
         }
         .ucm-title {
-          margin: 0; font-size: 19px; font-weight: 800; color: #172531;
+          margin: 0; font-size: 19px; font-weight: 800; color: var(--color-navy-dark);
           letter-spacing: -0.01em;
         }
         .ucm-close {
           width: 32px; height: 32px; flex-shrink: 0;
-          border: none; background: transparent; color: #717A86;
+          border: none; background: transparent; color: var(--color-muted);
           cursor: pointer; border-radius: 8px; font-size: 22px; line-height: 1;
           display: flex; align-items: center; justify-content: center;
           transition: background 0.15s, color 0.15s;
           margin: -4px -6px 0 8px;
         }
-        .ucm-close:hover { background: #F5F0E8; color: #172531; }
+        @media (hover: hover) { .ucm-close:hover { background: var(--color-cream); color: var(--color-navy-dark); } }
         .ucm-body {
           padding: 10px 24px 0;
-          color: #4a5560; font-size: 15px; line-height: 1.5;
+          color: var(--color-slate); font-size: 15px; line-height: 1.5;
         }
         .ucm-actions {
           display: flex; gap: 10px; justify-content: flex-end;
@@ -236,10 +237,10 @@ export default function SharePrivacyPage() {
           border: 1.5px solid transparent; transition: all 0.15s;
           line-height: 1;
         }
-        .ucm-btn-primary { background: #CF5C36; color: #fff; border-color: #CF5C36; }
-        .ucm-btn-primary:hover { background: #A8471D; border-color: #A8471D; }
-        .ucm-btn-secondary { background: #fff; color: #172531; border-color: #EDE8E0; }
-        .ucm-btn-secondary:hover { background: #F5F0E8; border-color: #d9d2c6; }
+        .ucm-btn-primary { background: var(--color-terracotta-600); color: var(--color-white); border-color: var(--color-terracotta-600); }
+        @media (hover: hover) { .ucm-btn-primary:hover { background: var(--color-terracotta-700); border-color: var(--color-terracotta-700); } }
+        .ucm-btn-secondary { background: var(--color-white); color: var(--color-navy-dark); border-color: var(--color-border); }
+        @media (hover: hover) { .ucm-btn-secondary:hover { background: var(--color-cream); border-color: var(--color-border-strong); } }
         @media (max-width: 480px) {
           .ucm-actions { flex-direction: column-reverse; }
           .ucm-btn { width: 100%; }
@@ -247,27 +248,27 @@ export default function SharePrivacyPage() {
       
 
 
-        .pc-nf { background: var(--color-cream, #F5F0E8); min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
+        .pc-nf { background: var(--color-cream); min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
         .pc-nf-card {
-          background: #fff;
+          background: var(--color-white);
           border-radius: 20px;
           padding: 48px 36px;
           max-width: 460px;
           width: 100%;
           text-align: center;
-          border: 1px solid rgba(23,37,49,0.06);
+          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.06);
         }
         .pc-nf-card h2 {
           font-size: 22px;
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0 0 10px;
           letter-spacing: -0.01em;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pc-nf-card p {
           font-size: 15px;
-          color: var(--color-slate, #4B5563);
+          color: var(--color-slate);
           line-height: 1.7;
           margin: 0 0 24px;
         }
@@ -278,9 +279,9 @@ export default function SharePrivacyPage() {
           height: 42px;
           padding: 0 28px;
           line-height: 1;
-          background: var(--color-terracotta, #CF5C36);
-          color: #fff;
-          border: 2px solid var(--color-terracotta, #CF5C36);
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
+          border: 2px solid var(--color-terracotta-600);
           border-radius: 9999px;
           text-decoration: none;
           font-weight: 700;
@@ -288,7 +289,7 @@ export default function SharePrivacyPage() {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: background 0.2s, color 0.2s;
         }
-        .pc-nf-btn:hover { background: #fff; color: var(--color-terracotta, #CF5C36); }
+        @media (hover: hover) { .pc-nf-btn:hover { background: var(--color-white); color: var(--color-terracotta-700); } }
       
 
 
@@ -296,7 +297,7 @@ export default function SharePrivacyPage() {
            locks body scroll) doesn't change the content width and shift the
            page left/right. */
         html { scrollbar-gutter: stable; }
-        .pce-body { background: var(--color-cream, #F5F0E8); min-height: calc(100vh - 64px); padding: 32px 0 96px; }
+        .pce-body { background: var(--color-cream); min-height: calc(100vh - 64px); padding: 32px 0 96px; }
 
         /* Top compact header row (back link + save indicator) */
         .pce-topbar {
@@ -310,18 +311,20 @@ export default function SharePrivacyPage() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           text-decoration: none;
           font-size: 15px;
           font-weight: 700;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: color 0.15s;
         }
-        .pce-back-link:hover { 
-          color: var(--color-navy-dark, #172531);
-          opacity: 1;
-          
+        @media (hover: hover) {
+          .pce-back-link:hover {
+            color: var(--color-navy-dark);
+            opacity: 1;
+            
           }
+        }
 
         /* Persistent save status in top bar */
         .pce-save-status {
@@ -330,11 +333,11 @@ export default function SharePrivacyPage() {
           gap: 6px;
           font-size: 14px;
           font-weight: 600;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
-        .pce-save-status.saved { color: #1A6641; }
-        .pce-save-status.error { color: #C94040; }
+        .pce-save-status.saved { color: var(--color-success-text); }
+        .pce-save-status.error { color: var(--color-error); }
 
         /* Save indicator — bottom-right floating toast */
         .pce-save-toast {
@@ -346,17 +349,17 @@ export default function SharePrivacyPage() {
           align-items: center;
           gap: 8px;
           padding: 10px 16px;
-          background: #fff;
+          background: var(--color-white);
           border-radius: 9999px;
-          box-shadow: 0 8px 24px rgba(23,37,49,0.18), 0 0 0 1px rgba(23,37,49,0.06);
+          box-shadow: 0 8px 24px rgb(var(--color-navy-dark-rgb) / 0.18), 0 0 0 1px rgb(var(--color-navy-dark-rgb) / 0.06);
           font-size: 14px;
           font-weight: 600;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           animation: pce-toast-in 0.18s ease-out;
         }
-        .pce-save-toast.saved { color: #1A6641; }
-        .pce-save-toast.error { color: #C94040; }
+        .pce-save-toast.saved { color: var(--color-success-text); }
+        .pce-save-toast.error { color: var(--color-error); }
         @keyframes pce-toast-in {
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -373,9 +376,9 @@ export default function SharePrivacyPage() {
           gap: 20px;
           align-items: center;
           padding: 20px;
-          background: #fff;
+          background: var(--color-white);
           border-radius: 16px;
-          border: 1px solid rgba(23,37,49,0.06);
+          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.06);
           margin-bottom: 28px;
         }
         .pce-pet-photo-wrap {
@@ -406,16 +409,16 @@ export default function SharePrivacyPage() {
           width: 32px;
           height: 32px;
           border-radius: 9999px;
-          background: var(--color-terracotta, #CF5C36);
-          color: #fff;
-          border: 2px solid #fff;
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
+          border: 2px solid var(--color-white);
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           transition: transform 0.15s;
         }
-        .pce-photo-change-btn:hover { transform: scale(1.05); }
+        @media (hover: hover) { .pce-photo-change-btn:hover { transform: scale(1.05); } }
         .pce-photo-change-btn:disabled { opacity: 0.5; cursor: wait; }
         .pce-photo-input { display: none; }
         .pce-pet-header-info { flex: 1; min-width: 0; }
@@ -424,13 +427,13 @@ export default function SharePrivacyPage() {
           font-weight: 700;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           margin: 0 0 4px;
         }
         .pce-pet-name {
           font-size: clamp(19px, 2.6vw, 22px);
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0 0 4px;
           letter-spacing: -0.01em;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -440,24 +443,24 @@ export default function SharePrivacyPage() {
         .pce-pet-quick-meta {
           font-size: 15px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           margin: 0;
           line-height: 1.4;
         }
         .pce-photo-error {
           font-size: 14px;
-          color: #C94040;
+          color: var(--color-error);
           margin-top: 8px;
           line-height: 1.5;
         }
 
         /* Sections */
         .pce-section {
-          background: #fff;
+          background: var(--color-white);
           border-radius: 16px;
           padding: 28px 24px;
           margin-bottom: 20px;
-          border: 1px solid rgba(23,37,49,0.06);
+          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.06);
         }
         .pce-section-header { margin-bottom: 20px; }
         .pce-section-eyebrow {
@@ -465,14 +468,14 @@ export default function SharePrivacyPage() {
           font-weight: 700;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           margin: 0 0 6px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pce-section-title {
           font-size: clamp(19px, 2.6vw, 22px);
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0 0 4px;
           letter-spacing: -0.01em;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -481,7 +484,7 @@ export default function SharePrivacyPage() {
         .pce-section-sub {
           font-size: 16px;
           font-weight: 500;
-          color: var(--color-slate, #4B5563);
+          color: var(--color-slate);
           margin: 0;
           line-height: 1.55;
         }
@@ -489,9 +492,9 @@ export default function SharePrivacyPage() {
         /* Section coming-soon placeholder */
         .pce-coming-soon {
           padding: 18px 20px;
-          background: var(--color-cream, #F5F0E8);
+          background: var(--color-cream);
           border-radius: 12px;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           font-size: 16px;
           line-height: 1.55;
         }
@@ -534,7 +537,7 @@ export default function SharePrivacyPage() {
         .pce-label {
           font-size: 14px;
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin-bottom: 6px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
@@ -545,9 +548,9 @@ export default function SharePrivacyPage() {
           padding: 0 14px;
           font-size: 15px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
-          color: var(--color-navy-dark, #172531);
-          background: #fff;
-          border: 1px solid rgba(23,37,49,0.10);
+          color: var(--color-navy-dark);
+          background: var(--color-white);
+          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.1);
           border-radius: 12px;
           transition: border-color 0.15s, box-shadow 0.15s;
           box-sizing: border-box;
@@ -560,7 +563,7 @@ export default function SharePrivacyPage() {
           -webkit-appearance: none;
           -moz-appearance: none;
           padding-right: 40px;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23717A86' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='${svgHex("muted")}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
           background-repeat: no-repeat;
           background-position: right 14px center;
           background-size: 12px 8px;
@@ -568,8 +571,8 @@ export default function SharePrivacyPage() {
         .pce-input:focus,
         .pce-select:focus {
           outline: none;
-          border-color: var(--color-terracotta, #CF5C36);
-          box-shadow: 0 0 0 3px rgba(207,92,54,0.12);
+          border-color: var(--color-terracotta);
+          box-shadow: 0 0 0 3px rgb(var(--color-terracotta-rgb) / 0.12);
         }
         /* Pet card URL field — slug input + dedicated Update button.
            Update is intentional (not autosave) because changing URL breaks shared links. */
@@ -585,9 +588,9 @@ export default function SharePrivacyPage() {
           padding: 0 18px;
           font-size: 14px;
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
-          background: #fff;
-          border: 1.5px solid rgba(23,37,49,0.16);
+          color: var(--color-navy-dark);
+          background: var(--color-white);
+          border: 1.5px solid rgb(var(--color-navy-dark-rgb) / 0.16);
           border-radius: 10px;
           cursor: pointer;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -598,21 +601,23 @@ export default function SharePrivacyPage() {
           gap: 6px;
           white-space: nowrap;
         }
-        .pce-slug-save-btn:hover:not(:disabled) {
-          background: var(--color-navy-dark, #172531);
-          color: #fff;
-          border-color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .pce-slug-save-btn:hover:not(:disabled) {
+            background: var(--color-navy-dark);
+            color: var(--color-white);
+            border-color: var(--color-navy-dark);
+          }
         }
         .pce-slug-save-btn:disabled {
           opacity: 0.4;
           cursor: not-allowed;
         }
         .pce-field-saved {
-          color: #1A6641;
+          color: var(--color-success-text);
           font-weight: 600;
         }
         .pce-field-warn-soft {
-          color: #8C6A11;
+          color: var(--color-caution-text);
           font-weight: 500;
         }
         @media (max-width: 640px) {
@@ -625,12 +630,12 @@ export default function SharePrivacyPage() {
         .pce-field-hint {
           font-size: 14px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           margin: 6px 0 0;
           line-height: 1.4;
         }
         .pce-field-hint.pce-field-warn {
-          color: #C94040;
+          color: var(--color-error);
           font-weight: 600;
         }
         .pce-field-hint--with-count {
@@ -643,14 +648,14 @@ export default function SharePrivacyPage() {
           flex-shrink: 0;
           font-size: 14px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
         }
         .pce-char-count.is-max {
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           font-weight: 600;
         }
         .pce-req-mark {
-          color: #C94040;
+          color: var(--color-error);
           font-weight: 700;
           margin-left: 2px;
         }
@@ -662,9 +667,9 @@ export default function SharePrivacyPage() {
           padding: 12px 14px;
           font-size: 15px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
-          color: var(--color-navy-dark, #172531);
-          background: #fff;
-          border: 1.5px solid rgba(23,37,49,0.10);
+          color: var(--color-navy-dark);
+          background: var(--color-white);
+          border: 1.5px solid rgb(var(--color-navy-dark-rgb) / 0.1);
           border-radius: 10px;
           transition: border-color 0.15s, box-shadow 0.15s;
           box-sizing: border-box;
@@ -673,8 +678,8 @@ export default function SharePrivacyPage() {
         }
         .pce-textarea:focus {
           outline: none;
-          border-color: var(--color-terracotta, #CF5C36);
-          box-shadow: 0 0 0 3px rgba(207,92,54,0.12);
+          border-color: var(--color-terracotta);
+          box-shadow: 0 0 0 3px rgb(var(--color-terracotta-rgb) / 0.12);
         }
 
         /* List of structured items (vaccinations, medications) */
@@ -692,23 +697,25 @@ export default function SharePrivacyPage() {
           align-items: flex-start;
           // gap: 4px;
           padding: 20px;
-          background: #fff;
-          border: 1px solid #EDE8E0;
+          background: var(--color-white);
+          border: 1px solid var(--color-border);
           border-radius: 12px;
-          box-shadow: 0 2px 12px rgba(23,37,49,0.07);
+          box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.07);
           transition: box-shadow 0.25s, border-color 0.25s;
         }
-        .pce-list-item:hover {
-          border-color: rgba(239,200,139,0.9);
-          box-shadow: 0 0 0 1.5px rgba(239,200,139,0.9),
-                      0 16px 48px rgba(23,37,49,0.13);
+        @media (hover: hover) {
+          .pce-list-item:hover {
+            border-color: rgb(var(--color-gold-rgb) / 0.9);
+            box-shadow: 0 0 0 1.5px rgb(var(--color-gold-rgb) / 0.9),
+                        0 16px 48px rgb(var(--color-navy-dark-rgb) / 0.13);
+          }
         }
         /* Inline icon — sits next to title text inside the title row. */
         .pce-list-item-icon-inline {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta);
           flex-shrink: 0;
           line-height: 0;
         }
@@ -737,7 +744,7 @@ export default function SharePrivacyPage() {
         .pce-list-item-title {
           font-size: 16px;
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           line-height: 1.3;
@@ -748,7 +755,7 @@ export default function SharePrivacyPage() {
         .pce-list-item-prose {
           font-size: 16px;
           font-weight: 500;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           /* line-height: 1.5; */
@@ -772,7 +779,7 @@ export default function SharePrivacyPage() {
         /* Separator: subtle horizontal line splitting status from meta details. */
         .pce-list-item-sep {
           height: 1px;
-          background: rgba(23,37,49,0.08);
+          background: rgb(var(--color-navy-dark-rgb) / 0.08);
           margin: 12px 0;
         }
         /* Meta section — label:value rows.
@@ -798,7 +805,7 @@ export default function SharePrivacyPage() {
           padding-left: 28px;
           font-size: 16px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           word-break: break-all;
         }
@@ -876,13 +883,13 @@ export default function SharePrivacyPage() {
         .pce-identity-sub-line {
           font-size: 14px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
 
         .pce-list-item-meta-label {
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           flex-shrink: 0;
           min-width: 70px;
         }
@@ -921,14 +928,14 @@ export default function SharePrivacyPage() {
            active data gets the accent color. */
         .pce-weight-change.up,
         .pce-weight-change.down {
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
         }
         .pce-weight-change.up svg,
         .pce-weight-change.down svg {
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta);
         }
         .pce-weight-change.stable {
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
         }
 
         /* Weight change uses neutral dark navy (same as other meta values).
@@ -941,7 +948,7 @@ export default function SharePrivacyPage() {
            combinations and works reliably across all viewports and browsers. */
         .pce-list-item-meta-value {
           font-weight: 600;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           word-break: break-word;
           min-width: 0;
         }
@@ -951,12 +958,12 @@ export default function SharePrivacyPage() {
         .pce-notes {
           margin-top: 12px;
           padding-top: 12px;
-          border-top: 1px solid rgba(23,37,49,0.08);
+          border-top: 1px solid rgb(var(--color-navy-dark-rgb) / 0.08);
         }
         .pce-notes-label {
           font-size: 16px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           margin: 0 0 4px;
           line-height: 1.4;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -970,7 +977,7 @@ export default function SharePrivacyPage() {
         .pce-notes-text {
           font-size: 16px;
           font-weight: 500;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0;
           line-height: 1.5;
           word-break: break-word;
@@ -992,15 +999,17 @@ export default function SharePrivacyPage() {
           margin: 0;
           font-size: 14px;
           font-weight: 700;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           cursor: pointer;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: color 0.15s;
         }
-        .pce-notes-toggle:hover {
-          color: var(--color-navy-dark, #172531);
-          text-decoration: underline;
-          text-underline-offset: 2px;
+        @media (hover: hover) {
+          .pce-notes-toggle:hover {
+            color: var(--color-navy-dark);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+          }
         }
 
         /* Smallest phones (≤375px): stack label above value so values get full width.
@@ -1077,11 +1086,11 @@ export default function SharePrivacyPage() {
             word-break: break-word;
           }
         }
-        .pce-list-item-status.overdue { background: rgba(201,64,64,0.12); color: #C94040; }
-        .pce-list-item-status.soon    { background: rgba(217,162,27,0.14); color: #8C6A11; }
-        .pce-list-item-status.ok      { background: rgba(26,102,65,0.12); color: #1A6641; }
-        .pce-list-item-status.active  { background: rgba(26,102,65,0.12); color: #1A6641; }
-        .pce-list-item-status.ended   { background: rgba(113,122,134,0.14); color: #4B5563; }
+        .pce-list-item-status.overdue { background: rgb(var(--color-error-rgb) / 0.12); color: var(--color-error); }
+        .pce-list-item-status.soon    { background: rgb(var(--color-caution-rgb) / 0.14); color: var(--color-caution-text); }
+        .pce-list-item-status.ok      { background: rgb(var(--color-success-text-rgb) / 0.12); color: var(--color-success-text); }
+        .pce-list-item-status.active  { background: rgb(var(--color-success-text-rgb) / 0.12); color: var(--color-success-text); }
+        .pce-list-item-status.ended   { background: rgb(var(--color-muted-rgb) / 0.14); color: var(--color-slate); }
         .pce-list-item-actions {
           display: flex;
           gap: 4px;
@@ -1092,7 +1101,7 @@ export default function SharePrivacyPage() {
           height: 27px;
           border-radius: 8px;
           background: transparent;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           border: none;
           cursor: pointer;
           display: flex;
@@ -1100,8 +1109,8 @@ export default function SharePrivacyPage() {
           justify-content: center;
           transition: background 0.15s, color 0.15s;
         }
-        .pce-icon-btn:hover { background: rgba(23,37,49,0.06); color: var(--color-navy-dark, #172531); }
-        .pce-icon-btn.danger:hover { background: rgba(201,64,64,0.10); color: #C94040; }
+        @media (hover: hover) { .pce-icon-btn:hover { background: rgb(var(--color-navy-dark-rgb) / 0.06); color: var(--color-navy-dark); } }
+        @media (hover: hover) { .pce-icon-btn.danger:hover { background: rgb(var(--color-error-rgb) / 0.1); color: var(--color-error); } }
 
         /* Empty state inside a list section. The 20px margin-bottom matches
            .pce-list's margin-bottom so the gap between the content area and
@@ -1109,9 +1118,9 @@ export default function SharePrivacyPage() {
            is identical whether the section is empty or has items. */
         .pce-list-empty {
           padding: 18px 20px;
-          background: var(--color-cream, #F5F0E8);
+          background: var(--color-cream);
           border-radius: 12px;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           font-size: 16px;
           line-height: 1.55;
           margin-bottom: 20px;
@@ -1128,26 +1137,26 @@ export default function SharePrivacyPage() {
           gap: 6px;
           padding: 8px 10px;
           min-height: 44px;
-          background: #fff;
-          border: 1px solid rgba(23,37,49,0.16);
+          background: var(--color-white);
+          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.16);
           border-radius: 12px;
           cursor: text;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           align-items: center;
         }
         .pce-tag-input:focus-within {
-          border-color: var(--color-navy-dark, #172531);
-          box-shadow: 0 0 0 3px rgba(23,37,49,0.08);
+          border-color: var(--color-navy-dark);
+          box-shadow: 0 0 0 3px rgb(var(--color-navy-dark-rgb) / 0.08);
         }
         /* Error state: shown briefly when user attempts an invalid action
            (duplicate tag, max tags reached). Tint the border red for stronger
            visual feedback than just the message below. */
         .pce-tag-input--error {
-          border-color: #C94040;
+          border-color: var(--color-error);
         }
         .pce-tag-input--error:focus-within {
-          border-color: #C94040;
-          box-shadow: 0 0 0 3px rgba(201,64,64,0.10);
+          border-color: var(--color-error);
+          box-shadow: 0 0 0 3px rgb(var(--color-error-rgb) / 0.1);
         }
         /* At-limit notice: shown inside the chip box when the user has hit
            maxTags, in place of the input field. Italicized + muted so it
@@ -1155,7 +1164,7 @@ export default function SharePrivacyPage() {
         .pce-tag-input-limit-notice {
           font-size: 14px;
           font-style: italic;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           padding: 4px 0;
           flex: 1 1 100%;
           width: 100%;
@@ -1169,11 +1178,11 @@ export default function SharePrivacyPage() {
           background: transparent;
           font-size: 15px;
           font-family: inherit;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           padding: 4px 0;
         }
         .pce-tag-input-field::placeholder {
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
         }
 
         /* =============================================================
@@ -1188,11 +1197,11 @@ export default function SharePrivacyPage() {
           justify-content: space-between;
           gap: 16px;
           padding: 16px 20px;
-          // background: var(--color-cream, #EDE8E0);
-          border: 1px solid #EDE8E0;
+          // background: var(--color-cream);
+          border: 1px solid var(--color-border);
           border-radius: 12px;
           margin-bottom: 20px;
-          box-shadow: 0 2px 12px rgba(23,37,49,0.07)
+          box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.07)
         }
         /* Show-on-profile toggle sits below the share cards; a bit more top
            space separates it from the card grid. Disabled (dimmed) until the
@@ -1211,14 +1220,14 @@ export default function SharePrivacyPage() {
         .pce-share-master-title {
           font-size: 18px;
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0 0 2px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pce-share-master-sub {
           font-size: 15px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           line-height: 1.5;
           margin: 0;
         }
@@ -1232,13 +1241,13 @@ export default function SharePrivacyPage() {
           height: 26px;
           border-radius: 999px;
           border: none;
-          background: rgba(23,37,49,0.20);
+          background: rgb(var(--color-navy-dark-rgb) / 0.2);
           cursor: pointer;
           padding: 0;
           transition: background 180ms ease;
         }
         .pce-toggle.is-on {
-          background: var(--color-navy-dark, #172531);
+          background: var(--color-navy-dark);
         }
         .pce-toggle-knob {
           position: absolute;
@@ -1247,8 +1256,8 @@ export default function SharePrivacyPage() {
           width: 20px;
           height: 20px;
           border-radius: 999px;
-          background: #fff;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+          background: var(--color-white);
+          box-shadow: 0 1px 3px rgb(var(--color-black-rgb) / 0.18);
           transition: left 180ms ease;
         }
         .pce-toggle.is-on .pce-toggle-knob {
@@ -1274,11 +1283,11 @@ export default function SharePrivacyPage() {
 
         /* One share card: header + URL row + meta + actions. */
         .pce-share-card {
-          background: #fff;
-          border: 1px solid #EDE8E0;
+          background: var(--color-white);
+          border: 1px solid var(--color-border);
           border-radius: 12px;
           padding: 20px;
-          box-shadow: 0 2px 12px rgba(23,37,49,0.07);
+          box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.07);
         }
         .pce-share-card-header {
           display: flex;
@@ -1299,15 +1308,15 @@ export default function SharePrivacyPage() {
           width: 40px;
           height: 40px;
           border-radius: 11px;
-          background: rgba(207,92,54,0.14);
-          border: 1px solid rgba(207,92,54,0.28);
+          background: rgb(var(--color-terracotta-rgb) / 0.14);
+          border: 1px solid rgb(var(--color-terracotta-rgb) / 0.28);
           box-sizing: border-box;
           flex-shrink: 0;
           margin-right: 10px;
         }
         .pce-share-card--hero .pce-share-card-icon {
-          background: rgba(239,200,139,0.30);
-          border-color: rgba(203,150,60,0.38);
+          background: rgb(var(--color-gold-rgb) / 0.3);
+          border-color: rgb(var(--color-caution-rgb) / 0.38);
         }
         .pce-share-card-heading {
           flex: 1;
@@ -1316,7 +1325,7 @@ export default function SharePrivacyPage() {
         .pce-share-card-title {
           font-size: 18px;
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0 0 4px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
@@ -1324,12 +1333,12 @@ export default function SharePrivacyPage() {
           font-size: 16px;
           font-weight: 500;
           line-height: 1.5;
-          color: #717A86;
+          color: var(--color-muted);
           margin: 0;
         }
         .pce-share-card-loading {
           font-size: 14px;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           font-style: italic;
           margin: 0;
         }
@@ -1350,12 +1359,14 @@ export default function SharePrivacyPage() {
           border: none;
           font-size: 16px;
           font-weight: 700;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           cursor: pointer;
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
         }
-        .pce-share-qr-toggle:hover {
-          color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .pce-share-qr-toggle:hover {
+            color: var(--color-navy-dark);
+          }
         }
         .pce-share-qr-chevron {
           transition: transform 0.2s ease;
@@ -1384,16 +1395,16 @@ export default function SharePrivacyPage() {
           align-items: center;
           margin-top: 12px;
           padding: 16px;
-          background: var(--color-cream, #F5F0E8);
-          border: 1px solid #EDE8E0;
+          background: var(--color-cream);
+          border: 1px solid var(--color-border);
           border-radius: 12px;
         }
         .pce-share-qr-svg {
           flex-shrink: 0;
           padding: 10px;
-          background: #fff;
+          background: var(--color-white);
           border-radius: 10px;
-          border: 1px solid #EDE8E0;
+          border: 1px solid var(--color-border);
           line-height: 0;
         }
         .pce-share-qr-svg svg {
@@ -1409,13 +1420,13 @@ export default function SharePrivacyPage() {
           font-weight: 600;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: #717A86;
+          color: var(--color-muted);
           margin: 0 0 4px;
         }
         .pce-share-qr-caption-url {
           font-size: 15px;
           font-weight: 500;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0;
           word-break: break-all;
           line-height: 1.4;
@@ -1464,30 +1475,34 @@ export default function SharePrivacyPage() {
           cursor: not-allowed;
         }
         .pce-share-btn--primary {
-          background: var(--color-terracotta, #CF5C36);
-          color: #fff;
-          border-color: var(--color-terracotta, #CF5C36);
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
+          border-color: var(--color-terracotta-600);
         }
-        .pce-share-btn--primary:hover:not(:disabled) {
-          background: #fff;
-          color: var(--color-terracotta, #CF5C36);
+        @media (hover: hover) {
+          .pce-share-btn--primary:hover:not(:disabled) {
+            background: var(--color-white);
+            color: var(--color-terracotta-700);
+          }
         }
         .pce-share-btn--secondary,
         a.pce-share-btn--secondary,
         a.pce-share-btn--secondary:link,
         a.pce-share-btn--secondary:visited {
-          background: #fff;
-          color: var(--color-navy-dark, #172531);
-          border-color: rgba(23, 37, 49, 0.18);
+          background: var(--color-white);
+          color: var(--color-navy-dark);
+          border-color: rgb(var(--color-navy-dark-rgb) / 0.18);
           font-weight: 600;
         }
         /* :hover scoped to :not(:focus-visible) so hover doesn't stay
            "stuck" after a click leaves the button focused. */
         .pce-share-btn--secondary:hover:not(:disabled):not(:focus-visible),
-        a.pce-share-btn--secondary:hover:not(:focus-visible) {
-          background: var(--color-navy-dark, #172531);
-          color: #fff;
-          border-color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          a.pce-share-btn--secondary:hover:not(:focus-visible) {
+            background: var(--color-navy-dark);
+            color: var(--color-white);
+            border-color: var(--color-navy-dark);
+          }
         }
 
         /* Hints — two paragraphs with breathing room. */
@@ -1500,20 +1515,20 @@ export default function SharePrivacyPage() {
         .pce-share-hint {
           font-size: 14px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           margin: 0;
           line-height: 1.55;
         }
         .pce-share-hint strong {
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
         }
 
         /* B1: Manage-link toggle — destructive actions tucked away. */
         .pce-share-manage {
           margin-top: 16px;
           padding-top: 16px;
-          border-top: 1px solid rgba(23, 37, 49, 0.08);
+          border-top: 1px solid rgb(var(--color-navy-dark-rgb) / 0.08);
         }
         .pce-share-manage-toggle {
           /* 19px as a bare text button. */
@@ -1525,7 +1540,7 @@ export default function SharePrivacyPage() {
           border: none;
           font-size: 16px;
           font-weight: 700;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           cursor: pointer;
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
           /* Smooth color + width animation so the label swap doesn't
@@ -1535,8 +1550,10 @@ export default function SharePrivacyPage() {
         }
         /* :hover scoped to :not(:focus-visible) so the color doesn't
            stay navy after a click that left focus on the button. */
-        .pce-share-manage-toggle:hover:not(:focus-visible) {
-          color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .pce-share-manage-toggle:hover:not(:focus-visible) {
+            color: var(--color-navy-dark);
+          }
         }
         /* Chevron rotates 180° when manage panel is open, signaling
            expand/collapse to the user. */
@@ -1549,8 +1566,8 @@ export default function SharePrivacyPage() {
         .pce-share-manage-panel {
           margin-top: 12px;
           padding: 18px 20px;
-          background: rgba(23, 37, 49, 0.025);
-          border: 1px solid rgba(23, 37, 49, 0.06);
+          background: rgb(var(--color-navy-dark-rgb) / 0.025);
+          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.06);
           border-radius: 10px;
         }
         /* Smooth open/close: animate grid-template-rows 0fr -> 1fr so the panel
@@ -1580,19 +1597,19 @@ export default function SharePrivacyPage() {
         .pce-share-manage-hint {
           font-size: 14px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           margin: 0;
           line-height: 1.55;
         }
         .pce-share-manage-hint strong {
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
         }
         /* Divider inside the panel — separates hints from buttons so
            the buttons read as their own distinct action area. */
         .pce-share-manage-divider {
           height: 1px;
-          background: rgba(23, 37, 49, 0.10);
+          background: rgb(var(--color-navy-dark-rgb) / 0.1);
           margin: 16px 0;
         }
         .pce-share-manage-actions {
@@ -1613,7 +1630,7 @@ export default function SharePrivacyPage() {
         /* Divider between actions and QR-code collapsible. */
         .pce-share-divider {
           height: 1px;
-          background: rgba(23, 37, 49, 0.08);
+          background: rgb(var(--color-navy-dark-rgb) / 0.08);
           margin: 20px 0 16px;
         }
         @media (max-width: 640px) {
@@ -1653,16 +1670,16 @@ export default function SharePrivacyPage() {
           padding: 0 14px;
           font-size: 15px;
           font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-          color: var(--color-navy-dark, #172531);
-          // background: var(--color-cream, #F5F0E8);
-          border: 1px solid #EDE8E0;
+          color: var(--color-navy-dark);
+          // background: var(--color-cream);
+          border: 1px solid var(--color-border);
           border-radius: 12px;
           outline: none;
           box-sizing: border-box;
         }
         .pce-share-url:focus {
-          border-color: var(--color-navy-dark, #172531);
-          box-shadow: 0 0 0 3px rgba(23,37,49,0.08);
+          border-color: var(--color-navy-dark);
+          box-shadow: 0 0 0 3px rgb(var(--color-navy-dark-rgb) / 0.08);
         }
         .pce-share-copy-btn {
           flex-shrink: 0;
@@ -1671,8 +1688,8 @@ export default function SharePrivacyPage() {
           gap: 6px;
           padding: 0 14px;
           height: 42px;
-          background: var(--color-navy-dark, #172531);
-          color: #fff;
+          background: var(--color-navy-dark);
+          color: var(--color-white);
           border: none;
           border-radius: 12px;
           font-size: 14px;
@@ -1683,10 +1700,12 @@ export default function SharePrivacyPage() {
           min-width: 86px;
           justify-content: center;
         }
-        .pce-share-copy-btn:hover {
-          background: #fff;
-          color: var(--color-navy-dark, #172531);
-          border: 2px solid rgba(23, 37, 49, 0.18);
+        @media (hover: hover) {
+          .pce-share-copy-btn:hover {
+            background: var(--color-white);
+            color: var(--color-navy-dark);
+            border: 2px solid rgb(var(--color-navy-dark-rgb) / 0.18);
+          }
         }
 
         .pce-share-copy-btn:disabled {
@@ -1703,7 +1722,7 @@ export default function SharePrivacyPage() {
           gap: 12px;
           font-size: 13px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           margin-bottom: 16px;
         }
         .pce-share-card-meta-item {
@@ -1718,12 +1737,14 @@ export default function SharePrivacyPage() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           font-weight: 600;
           text-decoration: none;
         }
-        .pce-share-card-preview:hover {
-          text-decoration: underline;
+        @media (hover: hover) {
+          .pce-share-card-preview:hover {
+            text-decoration: underline;
+          }
         }
 
         /* Action buttons row: Regenerate + Stop sharing.
@@ -1741,7 +1762,7 @@ export default function SharePrivacyPage() {
            destructive action via the red hover state. */
         .pce-btn-danger-text {
           background: transparent;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           border: none;
           font-size: 14px;
           font-weight: 600;
@@ -1751,9 +1772,11 @@ export default function SharePrivacyPage() {
           border-radius: 8px;
           transition: color 120ms ease, background 120ms ease;
         }
-        .pce-btn-danger-text:hover:not(:disabled) {
-          color: #C94040;
-          background: rgba(201,64,64,0.06);
+        @media (hover: hover) {
+          .pce-btn-danger-text:hover:not(:disabled) {
+            color: var(--color-error);
+            background: rgb(var(--color-error-rgb) / 0.06);
+          }
         }
         .pce-btn-danger-text:disabled {
           opacity: 0.5;
@@ -1817,7 +1840,7 @@ export default function SharePrivacyPage() {
           margin: 0;
           font-size: 15px;
           font-weight: 600;
-          color: #717A86;
+          color: var(--color-muted);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         /* Match the Generate button height (48px from .pce-btn-primary, the
@@ -1835,12 +1858,12 @@ export default function SharePrivacyPage() {
         .pce-share-activity {
           margin-top: 24px;
           padding-top: 20px;
-          border-top: 1px solid #EDE8E0;
+          border-top: 1px solid var(--color-border);
         }
         .pce-share-activity-title {
           font-size: 14px;
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0 0 12px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
@@ -1858,7 +1881,7 @@ export default function SharePrivacyPage() {
           justify-content: space-between;
           gap: 12px;
           font-size: 14px;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           padding: 3px 0;
         }
         .pce-share-activity-action {
@@ -1868,12 +1891,12 @@ export default function SharePrivacyPage() {
           font-weight: 600;
         }
         .pce-share-activity-card {
-          color: #717A86;
+          color: var(--color-muted);
           font-weight: 500;
         }
         .pce-share-activity-time {
           flex-shrink: 0;
-          color: #717A86;
+          color: var(--color-muted);
           font-size: 14px;
           font-weight: 500;
         }
@@ -1881,7 +1904,7 @@ export default function SharePrivacyPage() {
           margin-top: 10px;
           background: transparent;
           border: none;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           font-weight: 600;
           font-size: 14px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -1889,10 +1912,12 @@ export default function SharePrivacyPage() {
           padding: 4px 0;
         }
         .pce-share-activity-toggle.is-open {
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
         }
-        .pce-share-activity-toggle:hover {
-          text-decoration: underline;
+        @media (hover: hover) {
+          .pce-share-activity-toggle:hover {
+            text-decoration: underline;
+          }
         }
         .pce-share-activity-toggle {
           display: inline-flex;
@@ -1945,8 +1970,8 @@ export default function SharePrivacyPage() {
           align-items: center;
           gap: 4px;
           padding: 4px 4px 4px 10px;
-          background: var(--color-cream, #F5F0E8);
-          color: var(--color-navy-dark, #172531);
+          background: var(--color-cream);
+          color: var(--color-navy-dark);
           font-size: 14px;
           font-weight: 600;
           border-radius: 999px;
@@ -1965,15 +1990,17 @@ export default function SharePrivacyPage() {
           width: 18px;
           height: 18px;
           border: none;
-          background: rgba(23,37,49,0.08);
-          color: var(--color-navy-dark, #172531);
+          background: rgb(var(--color-navy-dark-rgb) / 0.08);
+          color: var(--color-navy-dark);
           border-radius: 999px;
           cursor: pointer;
           padding: 0;
           transition: background 120ms ease;
         }
-        .pce-tag-chip-remove:hover {
-          background: rgba(23,37,49,0.16);
+        @media (hover: hover) {
+          .pce-tag-chip-remove:hover {
+            background: rgb(var(--color-navy-dark-rgb) / 0.16);
+          }
         }
 
         /* Chip display row inside view-mode list-item — flex-wraps so long
@@ -2043,31 +2070,35 @@ export default function SharePrivacyPage() {
           justify-content: flex-start;
           gap: 10px;
           padding: 12px 30px 12px 14px;
-          background: #fff;
-          border: 2px solid #EDE8E0;
+          background: var(--color-white);
+          border: 2px solid var(--color-border);
           border-radius: 12px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           font-size: 14px;
           font-weight: 600;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           cursor: pointer;
           transition: background 120ms ease, border-color 120ms ease,
                       transform 120ms ease, box-shadow 120ms ease;
           text-align: left;
           min-height: 64px;
         }
-        .pce-identity-tag-pill:hover {
-          border-color: rgba(207,92,54,0.40);
-          background: rgba(245,240,232,0.50);
+        @media (hover: hover) {
+          .pce-identity-tag-pill:hover {
+            border-color: rgb(var(--color-terracotta-rgb) / 0.4);
+            background: rgb(var(--color-cream-rgb) / 0.5);
+          }
         }
         .pce-identity-tag-pill.is-selected {
-          background: var(--color-navy-mid, #172531);
-          border-color: var(--color-navy-mid, #172531);
-          color: #fff;
+          background: var(--color-navy-mid);
+          border-color: var(--color-navy-mid);
+          color: var(--color-white);
         }
-        .pce-identity-tag-pill.is-selected:hover {
-          background: var(--color-navy-mid, #172531);
-          border-color: var(--color-navy-mid, #172531);
+        @media (hover: hover) {
+          .pce-identity-tag-pill.is-selected:hover {
+            background: var(--color-navy-mid);
+            border-color: var(--color-navy-mid);
+          }
         }
         /* Subtle press-down on click for tactile feel — matches the "trading
            card / picker game" feel users get from Pokemon-style selection. */
@@ -2097,8 +2128,8 @@ export default function SharePrivacyPage() {
           height: 20px;
           border-radius: 999px;
           border: none;
-          background: rgba(23,37,49,0.10);
-          color: var(--color-navy-dark, #172531);
+          background: rgb(var(--color-navy-dark-rgb) / 0.1);
+          color: var(--color-navy-dark);
           /* Urbanist (site default), heavy weight for clarity. The "i"
              reads cleanly as "info" at small sizes when bold. */
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
@@ -2128,15 +2159,19 @@ export default function SharePrivacyPage() {
             left: -12px;
           }
         }
-        .pce-identity-tag-info:hover {
-          background: rgba(23,37,49,0.18);
+        @media (hover: hover) {
+          .pce-identity-tag-info:hover {
+            background: rgb(var(--color-navy-dark-rgb) / 0.18);
+          }
         }
         .pce-identity-tag-pill.is-selected .pce-identity-tag-info {
-          background: rgba(255,255,255,0.18);
-          color: #fff;
+          background: rgb(var(--color-white-rgb) / 0.18);
+          color: var(--color-white);
         }
-        .pce-identity-tag-pill.is-selected .pce-identity-tag-info:hover {
-          background: rgba(255,255,255,0.28);
+        @media (hover: hover) {
+          .pce-identity-tag-pill.is-selected .pce-identity-tag-info:hover {
+            background: rgb(var(--color-white-rgb) / 0.28);
+          }
         }
 
         /* Description popover that appears below a tag pill when its (i)
@@ -2145,12 +2180,12 @@ export default function SharePrivacyPage() {
         .pce-identity-tag-info-popover {
           grid-column: 1 / -1;
           padding: 12px 14px;
-          background: var(--color-cream, #F5F0E8);
-          border: 1px solid #EDE8E0;
+          background: var(--color-cream);
+          border: 1px solid var(--color-border);
           border-radius: 10px;
           font-size: 14px;
           line-height: 1.5;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           margin-top: -4px;
         }
@@ -2163,7 +2198,7 @@ export default function SharePrivacyPage() {
           float: right;
           background: transparent;
           border: none;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           font-size: 18px;
           line-height: 1;
           cursor: pointer;
@@ -2179,8 +2214,8 @@ export default function SharePrivacyPage() {
           align-items: center;
           gap: 6px;
           padding: 6px 12px;
-          background: var(--color-cream, #F5F0E8);
-          color: var(--color-navy-dark, #172531);
+          background: var(--color-cream);
+          color: var(--color-navy-dark);
           font-size: 14px;
           font-weight: 600;
           border-radius: 999px;
@@ -2200,7 +2235,7 @@ export default function SharePrivacyPage() {
         .pce-list-item-prose {
           font-size: 16px;
           line-height: 1.55;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           /* margin removed — let parent container handle spacing */
           white-space: pre-wrap;
           word-break: break-word;
@@ -2214,9 +2249,9 @@ export default function SharePrivacyPage() {
           gap: 6px;
           padding: 0 24px;
           height: 42px;
-          background: var(--color-navy-dark, #172531);
-          color: #fff;
-          border: 2px solid var(--color-navy-dark, #172531);
+          background: var(--color-navy-dark);
+          color: var(--color-white);
+          border: 2px solid var(--color-navy-dark);
           border-radius: 10px;
           font-size: 15px;
           font-weight: 700;
@@ -2235,23 +2270,25 @@ export default function SharePrivacyPage() {
           padding: 7px 4px;
           background: none;
           border: none;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           font-size: 13.5px;
           font-weight: 700;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           cursor: pointer;
           transition: color 0.15s;
         }
-        .pce-showall-btn:hover { color: var(--color-terracotta-dark, #A8471D); }
+        @media (hover: hover) { .pce-showall-btn:hover { color: var(--color-terracotta-700); } }
         .pce-showall-chev {
           transition: transform 0.3s cubic-bezier(0.33,1,0.68,1);
         }
         .pce-showall-chev.is-open { transform: rotate(180deg); }
         .pce-list--more { margin-top: 0; }
-        .pce-add-btn:hover {
-          background: #fff;
-          color: var(--color-navy-dark, #172531);
-          border-color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .pce-add-btn:hover {
+            background: var(--color-white);
+            color: var(--color-navy-dark);
+            border-color: var(--color-navy-dark);
+          }
         }
 
         /* Subsection - used to group e.g. "Vaccinations" inside Medical */
@@ -2260,7 +2297,7 @@ export default function SharePrivacyPage() {
         .pce-sub-title {
           font-size: 17px;
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0 0 4px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           letter-spacing: -0.01em;
@@ -2276,7 +2313,7 @@ export default function SharePrivacyPage() {
         .pce-field-heading {
           font-size: 14px;
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 20px 0 4px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           text-transform: none;
@@ -2285,7 +2322,7 @@ export default function SharePrivacyPage() {
         .pce-sub-sub {
           font-size: 16px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           margin: 0 0 14px;
           line-height: 1.55;
         }
@@ -2305,7 +2342,7 @@ export default function SharePrivacyPage() {
           height: 38px;
           border: none;
           background: transparent;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           cursor: pointer;
           border-radius: 10px;
           display: flex;
@@ -2322,9 +2359,11 @@ export default function SharePrivacyPage() {
         .pce-inline-form > .pce-field-grid {
           padding-right: 44px;
         }
-        .pce-form-close:hover {
-          background: var(--color-cream, #F5F0E8);
-          color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .pce-form-close:hover {
+            background: var(--color-cream);
+            color: var(--color-navy-dark);
+          }
         }
         .pce-collapse {
           display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden;
@@ -2350,7 +2389,7 @@ export default function SharePrivacyPage() {
         @media (max-width: 640px) {
           .pce-inline-form-actions {
             flex-direction: column-reverse;
-            border-top: 1px solid rgba(23,37,49,0.06);
+            border-top: 1px solid rgb(var(--color-navy-dark-rgb) / 0.06);
             margin-top: 16px;
             padding-top: 16px;
           }
@@ -2365,11 +2404,11 @@ export default function SharePrivacyPage() {
            boundaries between records being added at once. */
         .pce-entry-card {
           padding: 20px 20px 20px;
-          background: #fff;
-          border: 1px solid rgba(23,37,49,0.10);
+          background: var(--color-white);
+          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.1);
           border-radius: 12px;
           margin-bottom: 12px;
-          box-shadow: 0 1px 3px rgba(23,37,49,0.04);
+          box-shadow: 0 1px 3px rgb(var(--color-navy-dark-rgb) / 0.04);
           /* Single source of truth for vertical spacing inside entry cards.
              Same reasoning as .pce-modal-body — gap ensures every direct child
              gets a uniform 14px gap regardless of class. */
@@ -2388,7 +2427,7 @@ export default function SharePrivacyPage() {
           font-weight: 700;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
         }
         /* "Linked" badge shown in form headers when a directory vet is picked.
            Communicates that auto-filled data is sourced from the vet directory. */
@@ -2401,8 +2440,8 @@ export default function SharePrivacyPage() {
           font-weight: 700;
           letter-spacing: 0.06em;
           text-transform: uppercase;
-          color: #2E7D5F;
-          background: rgba(46,125,95,0.10);
+          color: var(--color-success-text);
+          background: rgb(var(--color-success-rgb) / 0.1);
           border-radius: 999px;
           line-height: 1.4;
         }
@@ -2424,7 +2463,7 @@ export default function SharePrivacyPage() {
           .pce-inline-form-actions--split {
             flex-direction: column-reverse;
             align-items: stretch;
-            border-top: 1px solid rgba(23,37,49,0.06);
+            border-top: 1px solid rgb(var(--color-navy-dark-rgb) / 0.06);
             margin-top: 16px;
             padding-top: 16px;
           }
@@ -2447,8 +2486,8 @@ export default function SharePrivacyPage() {
           width: 100%;
           padding: 13px;
           background: transparent;
-          color: var(--color-terracotta, #CF5C36);
-          border: 1.5px dashed var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
+          border: 1.5px dashed var(--color-terracotta);
           border-radius: 12px;
           font-size: 14px;
           font-weight: 700;
@@ -2462,7 +2501,7 @@ export default function SharePrivacyPage() {
           gap: 6px;
           transition: background 0.15s;
         }
-        .pce-add-entry:hover { background: rgba(207,92,54,0.06); }
+        @media (hover: hover) { .pce-add-entry:hover { background: rgb(var(--color-terracotta-rgb) / 0.06); } }
 
         /* Show more / less button — appears below long lists.
            Same dashed-outline aesthetic as pce-add-entry but with chevron icon. */
@@ -2470,8 +2509,8 @@ export default function SharePrivacyPage() {
           width: 100%;
           padding: 12px;
           background: transparent;
-          color: var(--color-navy-dark, #172531);
-          border: 1.5px solid rgba(23,37,49,0.16);
+          color: var(--color-navy-dark);
+          border: 1.5px solid rgb(var(--color-navy-dark-rgb) / 0.16);
           border-radius: 12px;
           font-size: 14px;
           font-weight: 700;
@@ -2484,27 +2523,29 @@ export default function SharePrivacyPage() {
           gap: 6px;
           transition: background 0.15s, border-color 0.15s;
         }
-        .pce-show-more-btn:hover {
-          background: rgba(23,37,49,0.03);
-          border-color: rgba(23,37,49,0.26);
+        @media (hover: hover) {
+          .pce-show-more-btn:hover {
+            background: rgb(var(--color-navy-dark-rgb) / 0.03);
+            border-color: rgb(var(--color-navy-dark-rgb) / 0.26);
+          }
         }
 
         /* Vet & Emergency: phone/email links inside meta values */
         .pce-link {
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           text-decoration: none;
           font-weight: 600;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
-        .pce-link:hover { text-decoration: underline; }
+        @media (hover: hover) { .pce-link:hover { text-decoration: underline; } }
 
         /* Pet Poison Helpline footer card — static safety info, not editable */
         .pce-helpline-card {
           display: flex;
           gap: 14px;
           padding: 18px 20px;
-          background: rgba(207,92,54,0.06);
-          border: 1.5px solid rgba(207,92,54,0.20);
+          background: rgb(var(--color-terracotta-rgb) / 0.06);
+          border: 1.5px solid rgb(var(--color-terracotta-rgb) / 0.2);
           border-radius: 12px;
           margin-top: 8px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -2514,8 +2555,8 @@ export default function SharePrivacyPage() {
           width: 40px;
           height: 40px;
           border-radius: 10px;
-          background: rgba(207,92,54,0.14);
-          color: var(--color-terracotta, #CF5C36);
+          background: rgb(var(--color-terracotta-rgb) / 0.14);
+          color: var(--color-terracotta);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2525,24 +2566,24 @@ export default function SharePrivacyPage() {
           margin: 0 0 4px;
           font-size: 16px;
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
         }
         .pce-helpline-sub {
           margin: 0 0 8px;
           font-size: 15px;
           font-weight: 500;
-          color: #717A86;
+          color: var(--color-muted);
           line-height: 1.4;
         }
         .pce-helpline-phone {
           display: inline-block;
           font-size: 17px;
           font-weight: 700;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           text-decoration: none;
           letter-spacing: 0.01em;
         }
-        .pce-helpline-phone:hover { text-decoration: underline; }
+        @media (hover: hover) { .pce-helpline-phone:hover { text-decoration: underline; } }
 
         /* Weight unit toggle — used in Identity section weight field.  */
         .pce-weight-row {
@@ -2556,16 +2597,16 @@ export default function SharePrivacyPage() {
         }
         .pce-weight-unit-toggle {
           display: inline-flex;
-          border: 1.5px solid rgba(23,37,49,0.16);
+          border: 1.5px solid rgb(var(--color-navy-dark-rgb) / 0.16);
           border-radius: 10px;
           overflow: hidden;
           flex-shrink: 0;
         }
         .pce-weight-unit-btn {
           padding: 0 14px;
-          background: #fff;
+          background: var(--color-white);
           border: none;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           font-size: 14px;
           font-weight: 700;
           cursor: pointer;
@@ -2573,12 +2614,14 @@ export default function SharePrivacyPage() {
           transition: background 0.15s, color 0.15s;
         }
         .pce-weight-unit-btn.active {
-          background: var(--color-navy-dark, #172531);
-          color: #fff;
+          background: var(--color-navy-dark);
+          color: var(--color-white);
         }
-        .pce-weight-unit-btn:not(.active):hover {
-          background: rgba(23,37,49,0.04);
-          color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .pce-weight-unit-btn:not(.active):hover {
+            background: rgb(var(--color-navy-dark-rgb) / 0.04);
+            color: var(--color-navy-dark);
+          }
         }
 
         /* Weight history chart container + range filters + trend pill */
@@ -2592,17 +2635,17 @@ export default function SharePrivacyPage() {
         }
         .pce-weight-range-tabs {
           display: inline-flex;
-          border: 1px solid rgba(23,37,49,0.10);
+          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.1);
           border-radius: 10px;
           overflow: hidden;
-          background: #fff;
+          background: var(--color-white);
           height: 40px;
         }
         .pce-weight-range-btn {
           padding: 6px 14px;
           background: transparent;
           border: none;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           font-size: 14px;
           font-weight: 700;
           cursor: pointer;
@@ -2610,17 +2653,19 @@ export default function SharePrivacyPage() {
           transition: background 0.15s, color 0.15s;
         }
         .pce-weight-range-btn.active {
-          background: var(--color-navy-dark, #172531);
-          color: #fff;
+          background: var(--color-navy-dark);
+          color: var(--color-white);
         }
-        .pce-weight-range-btn:not(.active):hover {
-          background: rgba(23,37,49,0.04);
-          color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .pce-weight-range-btn:not(.active):hover {
+            background: rgb(var(--color-navy-dark-rgb) / 0.04);
+            color: var(--color-navy-dark);
+          }
         }
         /* Vertical divider between adjacent tabs — hidden when either side is active.
            Result: dividers only appear between two inactive tabs. */
         .pce-weight-range-btn + .pce-weight-range-btn {
-          border-left: 1px solid rgba(23,37,49,0.10);
+          border-left: 1px solid rgb(var(--color-navy-dark-rgb) / 0.1);
         }
         .pce-weight-range-btn.active + .pce-weight-range-btn,
         .pce-weight-range-btn.active {
@@ -2638,12 +2683,12 @@ export default function SharePrivacyPage() {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pce-weight-trend.up {
-          background: rgba(217,162,27,0.14);
-          color: #8C6A11;
+          background: rgb(var(--color-caution-rgb) / 0.14);
+          color: var(--color-caution-text);
         }
         .pce-weight-trend.down {
-          background: rgba(26,102,65,0.10);
-          color: #1A6641;
+          background: rgb(var(--color-success-text-rgb) / 0.1);
+          color: var(--color-success-text);
         }
         .pce-weight-trend-summary {
           margin: 0 0 12px;
@@ -2655,10 +2700,10 @@ export default function SharePrivacyPage() {
            Pet weight goals vary, so we don't pre-judge gain/loss as good or bad. */
         .pce-weight-trend-summary.up,
         .pce-weight-trend-summary.down,
-        .pce-weight-trend-summary.stable { color: var(--color-navy-dark, #172531); }
+        .pce-weight-trend-summary.stable { color: var(--color-navy-dark); }
         .pce-weight-trend.stable {
-          background: rgba(23,37,49,0.06);
-          color: var(--color-muted, #717A86);
+          background: rgb(var(--color-navy-dark-rgb) / 0.06);
+          color: var(--color-muted);
         }
         .pce-weight-history-right {
           display: flex;
@@ -2674,12 +2719,12 @@ export default function SharePrivacyPage() {
           font-size: 14px;
         }
         .pce-weight-chart {
-          background: #fff;
-          border: 1px solid #EDE8E0;
+          background: var(--color-white);
+          border: 1px solid var(--color-border);
           border-radius: 12px;
           padding: 14px 8px 8px;
           margin-bottom: 14px;
-          box-shadow: 0 2px 12px rgba(23,37,49,0.05);
+          box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.05);
         }
 
         /* WEIGHT_CHART_TOOLTIP — Recharts tooltip styling, scoped to the
@@ -2690,25 +2735,25 @@ export default function SharePrivacyPage() {
            while staying readable at 13px. */
         .pce-weight-tooltip .recharts-tooltip-label {
           font-weight: 600;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
         }
         .pce-weight-tooltip .recharts-tooltip-item-value {
           font-weight: 600;
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
         }
         .pce-weight-tooltip .recharts-tooltip-item-name {
           font-weight: 600;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
         }
 
         /* PAUSED state — feeding/walks that are temporarily inactive.  */
         .pce-list-item.is-paused {
           opacity: 0.65;
-          background: rgba(23,37,49,0.02);
+          background: rgb(var(--color-navy-dark-rgb) / 0.02);
         }
         .pce-list-item-status.paused {
-          background: rgba(23,37,49,0.08);
-          color: var(--color-muted, #717A86);
+          background: rgb(var(--color-navy-dark-rgb) / 0.08);
+          color: var(--color-muted);
         }
 
         /* Day-of-week picker — 7 toggle buttons for custom frequency */
@@ -2724,9 +2769,9 @@ export default function SharePrivacyPage() {
           min-width: 0;
           height: 42px;
           border-radius: 8px;
-          border: 2px solid rgba(23,37,49,0.16);
-          background: #fff;
-          color: var(--color-muted, #717A86);
+          border: 2px solid rgb(var(--color-navy-dark-rgb) / 0.16);
+          background: var(--color-white);
+          color: var(--color-muted);
           font-size: 14px;
           font-weight: 700;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -2734,18 +2779,22 @@ export default function SharePrivacyPage() {
           transition: background 0.15s, color 0.15s, border-color 0.15s;
           padding: 0;
         }
-        .pce-day-btn:hover {
-          background: rgba(23,37,49,0.04);
-          color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .pce-day-btn:hover {
+            background: rgb(var(--color-navy-dark-rgb) / 0.04);
+            color: var(--color-navy-dark);
+          }
         }
         .pce-day-btn.active {
-          background: var(--color-terracotta, #CF5C36);
-          border-color: var(--color-terracotta, #CF5C36);
-          color: #fff;
+          background: var(--color-terracotta-600);
+          border-color: var(--color-terracotta-600);
+          color: var(--color-white);
         }
-        .pce-day-btn.active:hover {
-          background: #B84B26;
-          border-color: #B84B26;
+        @media (hover: hover) {
+          .pce-day-btn.active:hover {
+            background: var(--color-terracotta-700);
+            border-color: var(--color-terracotta-700);
+          }
         }
 
         /* Checkbox row — used in modals for boolean toggles (e.g. paused). */
@@ -2754,20 +2803,20 @@ export default function SharePrivacyPage() {
           align-items: center;
           gap: 12px;
           padding: 14px 16px;
-          background: rgba(23,37,49,0.03);
+          background: rgb(var(--color-navy-dark-rgb) / 0.03);
           border-radius: 10px;
           cursor: pointer;
           font-size: 14px;
           line-height: 1.2;
           font-weight: 600;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin-top: 4px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pce-checkbox-row input[type="checkbox"] {
           width: 18px;
           height: 18px;
-          accent-color: var(--color-terracotta, #CF5C36);
+          accent-color: var(--color-terracotta);
           cursor: pointer;
           flex-shrink: 0;
           /* Match line-height so checkbox aligns with first line of label, not centered on wrapped text. */
@@ -2805,10 +2854,10 @@ export default function SharePrivacyPage() {
           top: calc(100% + 4px);
           left: 0;
           right: 0;
-          background: #fff;
-          border: 1.5px solid rgba(23,37,49,0.10);
+          background: var(--color-white);
+          border: 1.5px solid rgb(var(--color-navy-dark-rgb) / 0.1);
           border-radius: 10px;
-          box-shadow: 0 8px 24px rgba(23,37,49,0.12);
+          box-shadow: 0 8px 24px rgb(var(--color-navy-dark-rgb) / 0.12);
           z-index: 10;
           max-height: 240px;
           overflow-y: auto;
@@ -2821,18 +2870,18 @@ export default function SharePrivacyPage() {
           padding: 10px 14px;
           background: transparent;
           border: none;
-          border-bottom: 1px solid rgba(23,37,49,0.06);
+          border-bottom: 1px solid rgb(var(--color-navy-dark-rgb) / 0.06);
           cursor: pointer;
           text-align: left;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: background 0.12s;
         }
         .pce-vet-option:last-child { border-bottom: none; }
-        .pce-vet-option:hover { background: rgba(23,37,49,0.04); }
+        @media (hover: hover) { .pce-vet-option:hover { background: rgb(var(--color-navy-dark-rgb) / 0.04); } }
         .pce-vet-option-name {
           font-size: 14px;
           font-weight: 700;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           line-height: 1.3;
           display: inline-flex;
           align-items: center;
@@ -2846,22 +2895,22 @@ export default function SharePrivacyPage() {
           font-weight: 700;
           letter-spacing: 0.05em;
           text-transform: uppercase;
-          color: #2E7D5F;
-          background: rgba(46,125,95,0.10);
+          color: var(--color-success-text);
+          background: rgb(var(--color-success-rgb) / 0.1);
           border-radius: 999px;
           line-height: 1.4;
         }
         .pce-vet-option-meta {
           font-size: 14px;
           font-weight: 500;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           margin-top: 2px;
         }
         .pce-vet-dropdown-empty { padding: 12px 14px; }
         .pce-vet-empty-msg {
           margin: 0;
           font-size: 14px;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           line-height: 1.4;
         }
 
@@ -2869,7 +2918,7 @@ export default function SharePrivacyPage() {
           position: fixed;
           inset: 0;
           z-index: 100;
-          background: rgba(23,37,49,0.55);
+          background: rgb(var(--color-navy-dark-rgb) / 0.55);
           -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
           display: flex;
@@ -2883,14 +2932,14 @@ export default function SharePrivacyPage() {
           to   { opacity: 1; }
         }
         .pce-modal {
-          background: #fff;
+          background: var(--color-white);
           border-radius: 18px;
           width: 100%;
           max-width: 560px;
           max-height: 86vh;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
-          box-shadow: 0 30px 60px rgba(0,0,0,0.40);
+          box-shadow: 0 30px 60px rgb(var(--color-black-rgb) / 0.4);
           animation: pce-modal-in 0.22s ease-out;
           box-sizing: border-box;
         }
@@ -2907,7 +2956,7 @@ export default function SharePrivacyPage() {
         .pce-modal-title {
           font-size: clamp(19px, 2.6vw, 22px);
           font-weight: 800;
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           margin: 0;
           letter-spacing: -0.01em;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -2917,7 +2966,7 @@ export default function SharePrivacyPage() {
           height: 36px;
           border-radius: 9px;
           background: transparent;
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           border: none;
           cursor: pointer;
           display: flex;
@@ -2925,7 +2974,7 @@ export default function SharePrivacyPage() {
           justify-content: center;
           transition: background 0.15s, color 0.15s;
         }
-        .pce-modal-close:hover { background: rgba(23,37,49,0.06); color: var(--color-navy-dark, #172531); }
+        @media (hover: hover) { .pce-modal-close:hover { background: rgb(var(--color-navy-dark-rgb) / 0.06); color: var(--color-navy-dark); } }
         .pce-modal-body {
           padding: 0 24px 12px;
           display: flex;
@@ -2945,10 +2994,10 @@ export default function SharePrivacyPage() {
           gap: 10px;
           margin: 0 0 12px;
           padding: 12px 14px;
-          background: rgba(220,38,38,0.06);
-          border: 1.5px solid rgba(220,38,38,0.20);
+          background: rgb(var(--color-error-rgb) / 0.06);
+          border: 1.5px solid rgb(var(--color-error-rgb) / 0.2);
           border-radius: 10px;
-          color: #B91C1C;
+          color: var(--color-error-text);
           font-size: 14px;
           font-weight: 600;
           line-height: 1.4;
@@ -2962,7 +3011,7 @@ export default function SharePrivacyPage() {
         }
         .pce-modal-error svg {
           flex-shrink: 0;
-          color: #DC2626;
+          color: var(--color-error-text);
         }
         .pce-modal-footer {
           display: flex;
@@ -2982,7 +3031,7 @@ export default function SharePrivacyPage() {
           left: 24px;
           right: 24px;
           height: 1px;
-          background: rgba(23,37,49,0.06);
+          background: rgb(var(--color-navy-dark-rgb) / 0.06);
         }
         .pce-modal-footer .pce-btn-danger-text {
           margin-right: auto;
@@ -2996,9 +3045,9 @@ export default function SharePrivacyPage() {
           min-width: 90px;
           padding: 0 24px;
           line-height: 1;
-          background: var(--color-terracotta, #CF5C36);
-          color: #fff;
-          border: 2px solid var(--color-terracotta, #CF5C36);
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
+          border: 2px solid var(--color-terracotta-600);
           border-radius: 12px;
           font-weight: 700;
           font-size: 15px;
@@ -3007,8 +3056,8 @@ export default function SharePrivacyPage() {
           cursor: pointer;
           transition: background 0.15s, color 0.15s, border-color 0.15s;
         }
-        .pce-btn-primary:hover { background: #fff; color: var(--color-terracotta, #CF5C36); border-color: var(--color-terracotta, #CF5C36); }
-        .pce-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; background: var(--color-terracotta, #CF5C36); color: #fff; border-color: var(--color-terracotta, #CF5C36); }
+        @media (hover: hover) { .pce-btn-primary:hover { background: var(--color-white); color: var(--color-terracotta-700); border-color: var(--color-terracotta-700); } }
+        .pce-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; background: var(--color-terracotta-600); color: var(--color-white); border-color: var(--color-terracotta-600); }
         .pce-btn-secondary {
           display: inline-flex;
           align-items: center;
@@ -3018,9 +3067,9 @@ export default function SharePrivacyPage() {
           min-width: 90px;
           padding: 0 24px;
           line-height: 1;
-          background: #fff;
-          color: var(--color-navy-dark, #172531);
-          border: 2px solid rgba(23,37,49,0.10);
+          background: var(--color-white);
+          color: var(--color-navy-dark);
+          border: 2px solid rgb(var(--color-navy-dark-rgb) / 0.1);
           border-radius: 12px;
           font-weight: 600;
           font-size: 15px;
@@ -3029,10 +3078,12 @@ export default function SharePrivacyPage() {
           cursor: pointer;
           transition: background 0.15s, color 0.15s, border-color 0.15s;
         }
-        .pce-btn-secondary:hover {
-          background: var(--color-navy-dark, #172531);
-          color: #fff;
-          border-color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .pce-btn-secondary:hover {
+            background: var(--color-navy-dark);
+            color: var(--color-white);
+            border-color: var(--color-navy-dark);
+          }
         }
         /* Delete button — red outline matching Profile's .btn-danger-sm.
            White bg + red border + red text. Inverts on hover. */
@@ -3044,18 +3095,20 @@ export default function SharePrivacyPage() {
           padding: 0 20px;
           font-size: 15px;
           font-weight: 700;
-          color: #C94040;
-          background: #fff;
-          border: 2px solid #F4C5C5;
+          color: var(--color-error);
+          background: var(--color-white);
+          border: 2px solid rgb(var(--color-error-rgb) / 0.24);
           border-radius: 12px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           cursor: pointer;
           transition: background 0.15s, color 0.15s, border-color 0.15s;
         }
-        .pce-btn-danger-text:hover {
-          background: #C94040;
-          color: #fff;
-          border-color: #C94040;
+        @media (hover: hover) {
+          .pce-btn-danger-text:hover {
+            background: var(--color-error);
+            color: var(--color-white);
+            border-color: var(--color-error);
+          }
         }
         .pce-btn-danger-text:disabled {
           opacity: 0.5;
@@ -3603,8 +3656,9 @@ function ShareQRBlock({ url, cardType, petName }) {
                 value={url}
                 size={140}
                 level="M"
-                bgColor="#FFFFFF"
-                fgColor="#172531"
+                // Real hex: the downloaded SVG has no stylesheet to resolve var().
+                bgColor={HEX.white}
+                fgColor={HEX.navyDark}
               />
             </div>
             {/* URL caption — mirrors PCC's expanded QR card so the editor

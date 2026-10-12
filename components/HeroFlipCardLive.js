@@ -16,13 +16,15 @@ import {
   deriveTheme,
   equalizeHeights,
 } from "./HeroFlipCard";
+import { HEX, rgbaHex } from "../lib/tokens";
+import { HERO_FLIP_CARD_LIVE_COLORS } from "../lib/palettes";
 
 export default function HeroFlipCardLive({ pet }) {
   const frontWrapRef = useRef(null);
   const backWrapRef = useRef(null);
   const [flipped, setFlipped] = useState(false);
   const [height, setHeight] = useState(null);
-  const [accent, setAccent] = useState("#6B3FCB");
+  const [accent, setAccent] = useState(HERO_FLIP_CARD_LIVE_COLORS.purple450);
   const [peeking, setPeeking] = useState(false);
   const peekedRef = useRef(false);
 
@@ -224,20 +226,22 @@ export default function HeroFlipCardLive({ pet }) {
           align-items: center;
           justify-content: center;
           border-radius: 999px;
-          border: 1.5px solid rgba(255,255,255,0.55);
-          background: rgba(0,0,0,0.38);
-          color: #fff;
+          border: 1.5px solid ${rgbaHex("white", 0.55)};
+          background: ${rgbaHex("black", 0.38)};
+          color: ${HEX.white};
           cursor: pointer;
           backdrop-filter: blur(3px);
           -webkit-backdrop-filter: blur(3px);
-          box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+          box-shadow: 0 2px 10px ${rgbaHex("black", 0.35)};
           transition: background 0.18s ease, transform 0.18s ease,
             border-color 0.18s ease;
         }
-        .hfc-flip-badge:hover {
-          background: var(--hfc-accent, #6B3FCB);
-          border-color: var(--hfc-accent, #6B3FCB);
-          transform: rotate(-30deg);
+        @media (hover: hover) {
+          .hfc-flip-badge:hover {
+            background: var(--hfc-accent, ${HERO_FLIP_CARD_LIVE_COLORS.purple450});
+            border-color: var(--hfc-accent, ${HERO_FLIP_CARD_LIVE_COLORS.purple450});
+            transform: rotate(-30deg);
+          }
         }
         .hfc-flip-badge:active { transform: rotate(-180deg) scale(0.92); }
         @media (prefers-reduced-motion: reduce) {

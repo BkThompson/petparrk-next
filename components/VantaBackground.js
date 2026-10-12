@@ -13,6 +13,7 @@
 // =============================================================
 
 import { useEffect, useRef } from "react";
+import { HEX } from "../lib/tokens";
 
 // design key -> the dynamic import of its Vanta effect module
 const EFFECT_LOADERS = {
@@ -28,7 +29,7 @@ const EFFECT_LOADERS = {
 const P5_EFFECTS = new Set(["aero"]);
 
 function hexToInt(hex) {
-  return parseInt((hex || "#000000").replace("#", ""), 16);
+  return parseInt((hex || HEX.black).replace("#", ""), 16);
 }
 
 export default function VantaBackground({ effect, bg, accent, fullHeight }) {

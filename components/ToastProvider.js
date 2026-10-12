@@ -43,14 +43,14 @@ export default function ToastProvider({ children }) {
           <div
             key={toast.id}
             style={{
-              background: toast.type === "error" ? "#c62828" : "#2d6a4f",
-              color: "#fff",
+              background: toast.type === "error" ? "var(--color-error)" : "var(--color-success)",
+              color: "var(--color-white)",
               padding: "12px 20px",
               borderRadius: "10px",
               fontSize: "14px",
               fontWeight: "600",
               fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+              boxShadow: "0 4px 16px rgb(var(--color-black-rgb) / 0.2)",
               whiteSpace: "nowrap",
               animation: "fadeInUp 0.2s ease",
               display: "flex",

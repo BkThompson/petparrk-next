@@ -92,17 +92,8 @@ import {
   ChevronRight,
   PawPrint,
 } from "lucide-react";
+import { C } from "../lib/tokens";
 
-const C = {
-  navyDark: "#172531",
-  terracotta: "#CF5C36",
-  gold: "#EFC88B",
-  cream: "#F5F0E8",
-  border: "#EDE8E0",
-  borderStrong: "#DAD3C5",
-  muted: "#717A86",
-  slate: "#4B5563",
-};
 
 const SESSION_KEY = "petparrk_symptom_session";
 
@@ -293,12 +284,12 @@ export default function HomeDashboard({ session, savedVets = [] }) {
           full grid and isn't a text column. */}
       <div className="pp-container-mixed hd-wrap">
         <style>{`
-        .hd-band { background: #fff; border-bottom: 1px solid ${C.border}; }
+        .hd-band { background: var(--color-white); border-bottom: 1px solid ${C.border}; }
         .hd-wrap { padding-top: 40px; padding-bottom: 48px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
         .hd-greeting { font-size: 26px; font-weight: 800; color: ${C.navyDark}; margin: 0 0 2px; letter-spacing: -0.01em; }
         .hd-sub { font-size: 15px; color: ${C.muted}; margin: 0 0 22px; font-weight: 500; }
         .hd-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; margin-bottom: 16px; }
-        .hd-card { background: #fff; border: 1px solid ${C.border}; border-radius: 18px; padding: 22px; box-shadow: 0 2px 10px rgba(23,37,49,0.05); }
+        .hd-card { background: var(--color-white); border: 1px solid ${C.border}; border-radius: 18px; padding: 22px; box-shadow: 0 2px 10px rgb(var(--color-navy-dark-rgb) / 0.05); }
         .hd-card-list { padding-bottom: 7px; }
         .hd-card-title { font-size: 13px; font-weight: 700; color: ${C.muted}; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 14px; }
         .hd-card-title-pets { margin-bottom: 0; }
@@ -321,8 +312,8 @@ export default function HomeDashboard({ session, savedVets = [] }) {
         /* Declared on the container so it shows up once in devtools and can be
            changed in one place, rather than only existing on each icon. */
         .hd-actions { --tile-border-w: 1px; display: flex; flex-direction: column; gap: 10px; }
-        .hd-action { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 12px; border: 1px solid ${C.border}; background: #fff; color: ${C.navyDark}; text-decoration: none; font-size: 16px; font-weight: 700; transition: border-color 0.15s, background 0.15s, transform 0.1s; }
-        .hd-action:hover { border-color: ${C.terracotta}; background: ${C.cream}; transform: translateY(-1px); }
+        .hd-action { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 12px; border: 1px solid ${C.border}; background: var(--color-white); color: ${C.navyDark}; text-decoration: none; font-size: 16px; font-weight: 700; transition: border-color 0.15s, background 0.15s, transform 0.1s; }
+        @media (hover: hover) { .hd-action:hover { border-color: ${C.terracotta}; background: ${C.cream}; transform: translateY(-1px); } }
         /* A tinted tile rather than a bare icon, matching the spot tiles used
            on Home's pillars and Pet Card. 36px because these sit in a 13px
            padded row — the 68px spot tile would dominate it. --tile-border-w
@@ -335,8 +326,8 @@ export default function HomeDashboard({ session, savedVets = [] }) {
           width: 36px;
           height: 36px;
           border-radius: 10px;
-          background: rgba(207,92,54,0.14);
-          border: var(--tile-border-w) solid rgba(207,92,54,0.28);
+          background: rgb(var(--color-terracotta-rgb) / 0.14);
+          border: var(--tile-border-w) solid rgb(var(--color-terracotta-rgb) / 0.28);
           box-sizing: border-box;
           flex-shrink: 0;
         }
@@ -357,14 +348,14 @@ export default function HomeDashboard({ session, savedVets = [] }) {
         .hd-pet-check { display: flex; flex-direction: column; gap: 2px; margin: 0; }
         .hd-check-label { font-size: 13px; font-weight: 700; color: ${C.muted}; text-transform: uppercase; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin-top: 5px; }
         .hd-check-none { font-size: 16px; color: ${C.muted}; font-weight: 500; }
-        .hd-pet-check-link { font-size: 16px; color: ${C.terracotta}; cursor: pointer; font-weight: 600;  text-underline-offset: 2px; width: fit-content; }
-        .hd-pet-check-link:hover { color: #a8471d; text-decoration: underline; }
-        .hd-pet-cta { flex-shrink: 0; min-height: 44px; font-size: 14px; font-weight: 700; color: ${C.terracotta}; cursor: pointer; background: none; border: none; font-family: inherit; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; transition: color 0.15s, transform 0.15s; }
-        .hd-pet-cta:hover { color: #a8471d; transform: translateX(3px); }
+        .hd-pet-check-link { font-size: 16px; color: ${C.terracotta700}; cursor: pointer; font-weight: 600;  text-underline-offset: 2px; width: fit-content; }
+        @media (hover: hover) { .hd-pet-check-link:hover { color: var(--color-terracotta-700); text-decoration: underline; } }
+        .hd-pet-cta { flex-shrink: 0; min-height: 44px; font-size: 14px; font-weight: 700; color: ${C.terracotta700}; cursor: pointer; background: none; border: none; font-family: inherit; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; transition: color 0.15s, transform 0.15s; }
+        @media (hover: hover) { .hd-pet-cta:hover { color: var(--color-terracotta-700); transform: translateX(3px); } }
         .hd-empty { text-align: center; padding: 24px 20px 32px; color: ${C.slate}; }
         .hd-empty-msg { font-size: 16px; font-weight: 500; line-height: 1.55; color: ${C.slate}; margin: 0; }
-        .hd-empty-cta { display: inline-flex; align-items: center; justify-content: center; height: 42px; margin-top: 12px; padding: 0 24px; background: ${C.navyDark}; color: #fff; border: 2px solid ${C.navyDark}; border-radius: 12px; text-decoration: none; font-size: 15px; font-weight: 700; transition: background 0.15s, color 0.15s; }
-        .hd-empty-cta:hover { background: #fff; color: ${C.navyDark}; border: 2px solid ${C.navyDark}; }
+        .hd-empty-cta { display: inline-flex; align-items: center; justify-content: center; height: 42px; margin-top: 12px; padding: 0 24px; background: ${C.navyDark}; color: var(--color-white); border: 2px solid ${C.navyDark}; border-radius: 12px; text-decoration: none; font-size: 15px; font-weight: 700; transition: background 0.15s, color 0.15s; }
+        @media (hover: hover) { .hd-empty-cta:hover { background: var(--color-white); color: ${C.navyDark}; border: 2px solid ${C.navyDark}; } }
 
         /* Saved vets compact */
         .hd-saved { display: flex; flex-direction: column; }
@@ -372,10 +363,10 @@ export default function HomeDashboard({ session, savedVets = [] }) {
         .hd-saved-item + .hd-saved-item { border-top: 1px solid ${C.border}; }
         .hd-saved-link { font-size: 16px; font-weight: 600; color: ${C.navyDark}; text-decoration: none; transition: color 0.15s; }
         .hd-saved-chev { display: inline-flex; align-items: center; color: ${C.muted}; text-decoration: none; transition: color 0.15s, transform 0.15s; }
-        .hd-saved-link:hover { color: ${C.terracotta}; }
-        .hd-saved-chev:hover { color: ${C.terracotta}; transform: translateX(2px); }
-        .hd-see-all { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; font-weight: 700; color: ${C.terracotta}; text-decoration: none; text-transform: none; letter-spacing: 0; }
-        .hd-see-all:hover { color: ${C.navyDark}; }
+        @media (hover: hover) { .hd-saved-link:hover { color: ${C.terracotta700}; } }
+        @media (hover: hover) { .hd-saved-chev:hover { color: ${C.terracotta}; transform: translateX(2px); } }
+        .hd-see-all { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; font-weight: 700; color: ${C.terracotta700}; text-decoration: none; text-transform: none; letter-spacing: 0; }
+        @media (hover: hover) { .hd-see-all:hover { color: ${C.navyDark}; } }
 
         /* Page tier — matches the site boundary in globals.css so the
            dashboard's gutter flips at the same width as every other
@@ -535,7 +526,7 @@ export default function HomeDashboard({ session, savedVets = [] }) {
                               <SpeciesIcon
                                 size={30}
                                 strokeWidth={1.6}
-                                color="rgba(255,255,255,0.9)"
+                                color="rgb(var(--color-white-rgb) / 0.9)"
                               />
                             </span>
                           );

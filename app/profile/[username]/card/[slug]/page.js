@@ -45,17 +45,17 @@ export default function PublicHeroCardPage() {
             align-items: center; justify-content: center; gap: 18px;
             padding: 40px; text-align: center;
             font-family: var(--font-urbanist,'Urbanist',sans-serif);
-            color: #172531;
+            color: var(--color-navy-dark);
           }
           .hcp-back {
             display: inline-flex; align-items: center;
             height: 42px; padding: 0 20px;
-            border: 2px solid #172531; border-radius: 12px;
-            background: #172531; color: #fff;
+            border: 2px solid var(--color-navy-dark); border-radius: 12px;
+            background: var(--color-navy-dark); color: var(--color-white);
             font-size: 16px; font-weight: 700; text-decoration: none;
             transition: background 0.15s, color 0.15s;
           }
-          .hcp-back:hover { background: #fff; color: #172531; }
+          @media (hover: hover) { .hcp-back:hover { background: var(--color-white); color: var(--color-navy-dark); } }
 
           p{
             font-weight: 500;}

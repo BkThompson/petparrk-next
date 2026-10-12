@@ -15,18 +15,8 @@ import {
   ArrowRight,
   X,
 } from "lucide-react";
+import { C } from "../lib/tokens";
 
-const C = {
-  navyDark: "#172531",
-  navyMid: "#2C4657",
-  terracotta: "#CF5C36",
-  gold: "#EFC88B",
-  cream: "#F5F0E8",
-  white: "#FFFFFF",
-  slate: "#4B5563",
-  muted: "#717A86",
-  border: "#EDE8E0",
-};
 
 // Level ladder — names, icons, and colors are the SAME 7 tiers defined in
 // lib/levelSystem (TIERS), so what a new user learns here always matches their
@@ -380,7 +370,7 @@ export default function WelcomeModal() {
           align-items: center;
           justify-content: center;
           padding: 24px;
-          background: rgba(23, 37, 49, 0.55);
+          background: rgb(var(--color-navy-dark-rgb) / 0.55);
           backdrop-filter: blur(4px);
           -webkit-backdrop-filter: blur(4px);
           animation: wmFadeIn 0.2s ease;
@@ -397,7 +387,7 @@ export default function WelcomeModal() {
           background: ${C.white};
           border-radius: 20px;
           padding: 32px 24px 28px;
-          box-shadow: 0 24px 60px rgba(23, 37, 49, 0.28);
+          box-shadow: 0 24px 60px rgb(var(--color-navy-dark-rgb) / 0.28);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           animation: wmCardIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
           box-sizing: border-box;
@@ -420,7 +410,7 @@ export default function WelcomeModal() {
           cursor: pointer;
           transition: background 0.15s, color 0.15s;
         }
-        .wm-close:hover { background: ${C.border}; color: ${C.navyDark}; }
+        @media (hover: hover) { .wm-close:hover { background: ${C.border}; color: ${C.navyDark}; } }
         .wm-close:disabled { opacity: 0.5; cursor: default; }
 
         .wm-head { margin-bottom: 22px; padding-right: 24px; }
@@ -429,7 +419,7 @@ export default function WelcomeModal() {
           font-weight: 800;
           letter-spacing: 0.16em;
           text-transform: uppercase;
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
           margin: 0 0 10px;
         }
         .wm-title {
@@ -462,7 +452,7 @@ export default function WelcomeModal() {
           height: 9px;
           border-radius: 50%;
           background: ${C.terracotta};
-          box-shadow: 0 0 0 4px rgba(207, 92, 54, 0.15);
+          box-shadow: 0 0 0 4px rgb(var(--color-terracotta-rgb) / 0.15);
         }
         .wm-start-text {
           font-size: 16px;
@@ -493,7 +483,7 @@ export default function WelcomeModal() {
         .wm-rung-next {
           background: ${C.white};
           border-color: ${C.terracotta};
-          box-shadow: 0 4px 14px rgba(207, 92, 54, 0.12);
+          box-shadow: 0 4px 14px rgb(var(--color-terracotta-rgb) / 0.12);
         }
         .wm-rung-icon {
           flex: 0 0 auto;
@@ -516,8 +506,8 @@ export default function WelcomeModal() {
           font-weight: 800;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: ${C.terracotta};
-          background: rgba(207, 92, 54, 0.1);
+          color: ${C.terracotta700};
+          background: rgb(var(--color-terracotta-rgb) / 0.1);
           padding: 2px 8px;
           border-radius: 999px;
         }
@@ -544,24 +534,28 @@ export default function WelcomeModal() {
         }
         .wm-btn:disabled { opacity: 0.6; cursor: default; }
         .wm-btn-primary {
-          border: 2px solid ${C.terracotta};
-          background: ${C.terracotta};
+          border: 2px solid ${C.terracotta600};
+          background: ${C.terracotta600};
           color: ${C.white};
         }
-        .wm-btn-primary:hover:not(:disabled) {
-          background: ${C.white};
-          color: ${C.terracotta};
-          border: 2px solid ${C.terracotta};
+        @media (hover: hover) {
+          .wm-btn-primary:hover:not(:disabled) {
+            background: ${C.white};
+            color: ${C.terracotta700};
+            border: 2px solid ${C.terracotta700};
           }
+        }
         .wm-btn-ghost {
           background: transparent;
           color: ${C.navyDark};
           border: 2px solid ${C.navyDark};
         }
-        .wm-btn-ghost:hover:not(:disabled) { 
-          background: ${C.navyDark};
-          color: ${C.white};
-          border: 2px solid ${C.navyDark};
+        @media (hover: hover) {
+          .wm-btn-ghost:hover:not(:disabled) {
+            background: ${C.navyDark};
+            color: ${C.white};
+            border: 2px solid ${C.navyDark};
+          }
         }
 
         @keyframes wmFadeIn { from { opacity: 0; } to { opacity: 1; } }

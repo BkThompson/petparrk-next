@@ -46,7 +46,7 @@ export function PetTileStyles() {
           display: block;
           color: inherit;
         }
-        .pp-pet-card-outer:hover { background: rgba(239,200,139,0.5); }
+        @media (hover: hover) { .pp-pet-card-outer:hover { background: rgb(var(--color-gold-rgb) / 0.5); } }
         .pp-pet-photo-link {
           position: absolute;
           inset: 0;
@@ -68,7 +68,7 @@ export function PetTileStyles() {
           text-decoration: none;
           transition: color 0.15s;
         }
-        .pp-pet-name-link:hover { color: ${C.terracotta}; }
+        @media (hover: hover) { .pp-pet-name-link:hover { color: ${C.terracotta700}; } }
         .pp-pet-photo-link:focus-visible,
         .pp-pet-name-link:focus-visible {
           outline: 2px solid ${C.terracotta};
@@ -76,17 +76,19 @@ export function PetTileStyles() {
         }
         .pp-pet-card {
           border-radius: 16px;
-          background: #fff;
+          background: var(--color-white);
           transition: box-shadow 0.25s;
-          box-shadow: 0 2px 12px rgba(23,37,49,0.07);
+          box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.07);
           border: 1px solid ${C.border};
           position: relative;
           overflow: hidden;
           display: flex; flex-direction: column;
           height: 100%;
         }
-        .pp-pet-card-outer:hover .pp-pet-card {
-          box-shadow: 0 0 0 1.5px rgba(239,200,139,0.9), 0 16px 48px rgba(23,37,49,0.13);
+        @media (hover: hover) {
+          .pp-pet-card-outer:hover .pp-pet-card {
+            box-shadow: 0 0 0 1.5px rgb(var(--color-gold-rgb) / 0.9), 0 16px 48px rgb(var(--color-navy-dark-rgb) / 0.13);
+          }
         }
         .pp-pet-photo {
           /* height: 220px; */
@@ -109,35 +111,37 @@ export function PetTileStyles() {
           z-index: 2;
           width: 44px; height: 44px;
           border-radius: 50%;
-          background: ${C.terracotta};
-          color: #fff;
-          border: 2px solid #fff;
+          background: ${C.terracotta600};
+          color: var(--color-white);
+          border: 2px solid var(--color-white);
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+          box-shadow: 0 2px 8px rgb(var(--color-black-rgb) / 0.2);
           transition: background 0.15s;
           line-height: 1;
         }
-        .pp-pet-photo-camera:hover { background: ${C.terracottaDark}; }
+        @media (hover: hover) { .pp-pet-photo-camera:hover { background: ${C.terracotta700}; } }
 
         .pp-pet-edit-btn {
           position: absolute; top: 12px; right: 12px;
           z-index: 2;
           width: 44px; height: 44px;
           border-radius: 50%;
-          background: rgba(255,255,255,0.95);
+          background: rgb(var(--color-white-rgb) / 0.95);
           color: ${C.navyDark};
-          border: 2px solid #fff;
+          border: 2px solid var(--color-white);
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+          box-shadow: 0 2px 8px rgb(var(--color-black-rgb) / 0.25);
           transition: background 0.15s, color 0.15s;
           line-height: 1;
           z-index: 2;
         }
-        .pp-pet-edit-btn:hover {
-          background: ${C.navyDark};
-          color: #fff;
+        @media (hover: hover) {
+          .pp-pet-edit-btn:hover {
+            background: ${C.navyDark};
+            color: var(--color-white);
+          }
         }
 
         .pp-pet-body { padding: 14px 16px 14px; flex: 1; display: flex; flex-direction: column; }
@@ -238,15 +242,17 @@ export function PetTileStyles() {
           margin: -10px 0;
           font-size: 14px;
           font-weight: 700;
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
           cursor: pointer;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: color 0.15s;
         }
-        .pp-medline-toggle:hover {
-          color: ${C.navyDark};
-          text-decoration: underline;
-          text-underline-offset: 2px;
+        @media (hover: hover) {
+          .pp-medline-toggle:hover {
+            color: ${C.navyDark};
+            text-decoration: underline;
+            text-underline-offset: 2px;
+          }
         }
 
         .pp-pet-recent {
@@ -254,15 +260,15 @@ export function PetTileStyles() {
           padding: 14px 16px;
           border-top: 1px solid ${C.border};
           border-left: none; border-right: none; border-bottom: none;
-          background: #fff;
+          background: var(--color-white);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           width: 100%;
           cursor: pointer;
           font: inherit;
           transition: background 0.15s;
         }
-        .pp-pet-recent { transition: background 0.18s ease; background: var(--recent-bg, #fff); }
-        .pp-pet-recent:hover { background: var(--recent-bg-hover, ${C.cream}); }
+        .pp-pet-recent { transition: background 0.18s ease; background: var(--recent-bg, var(--color-white)); }
+        @media (hover: hover) { .pp-pet-recent:hover { background: var(--recent-bg-hover, ${C.cream}); } }
         .pp-pet-recent-text {
           font-size: 16px; 
           font-weight: 600;
@@ -284,16 +290,16 @@ export function PetTileStyles() {
           display: inline-flex;
           align-items: center;
         }
-        .pp-pet-recent:hover .pp-pet-recent-arrow { transform: translateX(3px); }
+        @media (hover: hover) { .pp-pet-recent:hover .pp-pet-recent-arrow { transform: translateX(3px); } }
         .pp-pet-recent.empty { cursor: default; }
-        .pp-pet-recent.empty:hover { background: #fff; }
+        @media (hover: hover) { .pp-pet-recent.empty:hover { background: var(--color-white); } }
 
         /* ---- Reminders strip (owner-only, conditional) ----
            Only takes up space once PetInsights reports it has something. */
         .pp-pet-reminders.has-content {
           padding: 12px 16px;
           border-top: 1px solid ${C.border};
-          background: #fff;
+          background: var(--color-white);
         }
 
         /* ---- Actions row: Care Card / Hero Card / Share (owner-only) ---- */
@@ -301,7 +307,7 @@ export function PetTileStyles() {
           display: flex;
           align-items: stretch;
           border-top: 1px solid ${C.border};
-          background: #fff;
+          background: var(--color-white);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pp-pet-action {
@@ -327,9 +333,11 @@ export function PetTileStyles() {
         .pp-pet-action + .pp-pet-action {
           border-left: 1px solid ${C.border};
         }
-        .pp-pet-action:hover {
-          background: ${C.cream};
-          color: ${C.terracotta};
+        @media (hover: hover) {
+          .pp-pet-action:hover {
+            background: ${C.cream};
+            color: ${C.terracotta700};
+          }
         }
         .pp-pet-action:focus-visible {
           outline: 2px solid ${C.terracotta};
@@ -414,7 +422,7 @@ export default function PetTile({
                   <SpeciesIcon
                     size={132}
                     strokeWidth={1.4}
-                    color="rgba(255,255,255,0.85)"
+                    color="rgb(var(--color-white-rgb) / 0.85)"
                   />
                 );
               })()
@@ -509,8 +517,8 @@ export default function PetTile({
             type="button"
             className="pp-pet-recent"
             style={{
-              "--recent-bg": `${triage.dot}26`,
-              "--recent-bg-hover": `${triage.dot}40`,
+              "--recent-bg": `color-mix(in srgb, ${triage.dot} 14.9%, transparent)`,
+              "--recent-bg-hover": `color-mix(in srgb, ${triage.dot} 25.1%, transparent)`,
             }}
             onClick={(e) => {
               e.preventDefault();

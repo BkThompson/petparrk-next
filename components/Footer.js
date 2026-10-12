@@ -4,7 +4,7 @@ export default function Footer() {
   return (
     <footer
       style={{
-        background: "var(--color-navy-dark, #172531)",
+        background: "var(--color-navy-dark)",
         padding: "48px 0 40px",
       }}
     >
@@ -17,12 +17,12 @@ export default function Footer() {
           // min-height: 44px;
           font-size: 14px;
           font-weight: 500;
-          color: rgba(255,255,255,0.6);
+          color: rgb(var(--color-white-rgb) / 0.6);
           text-decoration: none;
           margin-bottom: 4px;
           transition: color 0.15s;
         }
-        .footer-link:hover { color: #fff; }
+        @media (hover: hover) { .footer-link:hover { color: var(--color-white); } }
 
         /* Four named columns rather than auto-fit. auto-fit could only place
            three tracks below 1024px, which orphaned Legal onto its own row
@@ -51,7 +51,7 @@ export default function Footer() {
               style={{
                 fontSize: "18px",
                 fontWeight: "800",
-                color: "#fff",
+                color: "var(--color-white)",
                 marginBottom: "8px",
                 fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
               }}
@@ -62,7 +62,7 @@ export default function Footer() {
               style={{
                 fontSize: "14px",
                 fontWeight: "500",
-                color: "rgba(255,255,255,0.5)",
+                color: "rgb(var(--color-white-rgb) / 0.5)",
                 lineHeight: "1.7",
                 margin: 0,
               }}
@@ -79,7 +79,7 @@ export default function Footer() {
               style={{
                 fontSize: "11px",
                 fontWeight: "700",
-                color: "var(--color-gold,#EFC88B)",
+                color: "var(--color-gold)",
                 letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 marginBottom: "12px",
@@ -104,7 +104,7 @@ export default function Footer() {
               style={{
                 fontSize: "11px",
                 fontWeight: "700",
-                color: "var(--color-gold,#EFC88B)",
+                color: "var(--color-gold)",
                 letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 marginBottom: "12px",
@@ -130,7 +130,7 @@ export default function Footer() {
               style={{
                 fontSize: "11px",
                 fontWeight: "700",
-                color: "var(--color-gold,#EFC88B)",
+                color: "var(--color-gold)",
                 letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 marginBottom: "12px",
@@ -155,7 +155,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.1)",
+            borderTop: "1px solid rgb(var(--color-white-rgb) / 0.1)",
             paddingTop: "24px",
             display: "flex",
             justifyContent: "space-between",
@@ -168,7 +168,7 @@ export default function Footer() {
             style={{
               fontSize: "13px",
               fontWeight: "500",
-              color: "rgba(255,255,255,0.4)",
+              color: "rgb(var(--color-white-rgb) / 0.6)", // 6.5:1 on navy (0.4 was 3.68)
               margin: 0,
             }}
           >
@@ -179,7 +179,7 @@ export default function Footer() {
             style={{
               fontSize: "13px",
               fontWeight: 500,
-              color: "rgba(255,255,255,0.4)",
+              color: "rgb(var(--color-white-rgb) / 0.4)",
               margin: 0,
             }}
           >

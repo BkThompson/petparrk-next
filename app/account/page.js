@@ -6,20 +6,8 @@ import { supabase } from "../../lib/supabase";
 import PageLoader from "../../components/PageLoader";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { C } from "../../lib/tokens";
 
-const C = {
-  navyDark: "#172531",
-  navyMid: "#2C4657",
-  terracotta: "#CF5C36",
-  gold: "#EFC88B",
-  cream: "#F5F0E8",
-  white: "#FFFFFF",
-  slate: "#4B5563",
-  muted: "#717A86",
-  border: "#EDE8E0",
-  error: "#C94040",
-  success: "#2A7D4F",
-};
 
 export default function AccountSettings() {
   const router = useRouter();
@@ -179,16 +167,16 @@ export default function AccountSettings() {
         .acc-input:focus { border-color: ${C.terracotta}; }
         .acc-input[readonly] { background: ${C.cream}; color: ${C.slate}; cursor: default; }
         .acc-field { margin-bottom: 16px; }
-        .acc-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 24px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.2s, color 0.2s; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; }
-        .acc-btn:hover { background: #fff; color: ${C.terracotta}; }
+        .acc-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 24px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.2s, color 0.2s; border: 2px solid ${C.terracotta600}; background: ${C.terracotta600}; color: var(--color-white); }
+        @media (hover: hover) { .acc-btn:hover { background: var(--color-white); color: ${C.terracotta700}; } }
         .acc-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .acc-btn-ghost { background: transparent; color: ${C.navyDark}; border: 2px solid ${C.border}; }
-        .acc-btn-ghost:hover { background: ${C.navyDark}; color: #fff; border-color: ${C.navyDark}; }
+        @media (hover: hover) { .acc-btn-ghost:hover { background: ${C.navyDark}; color: var(--color-white); border-color: ${C.navyDark}; } }
         .acc-btn-danger { background: transparent; color: ${C.error}; border: 2px solid ${C.error}; }
-        .acc-btn-danger:hover { background: ${C.error}; color: #fff; }
+        @media (hover: hover) { .acc-btn-danger:hover { background: ${C.error}; color: var(--color-white); } }
         .acc-msg { padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; font-weight: 500; }
-        .acc-msg-success { background: #EDFAF3; color: ${C.success}; }
-        .acc-msg-error { background: #FCEAEA; color: ${C.error}; }
+        .acc-msg-success { background: var(--color-success-light); color: ${C.success}; }
+        .acc-msg-error { background: var(--color-error-light); color: ${C.errorText}; }
         .acc-divider { height: 1px; background: ${C.border}; margin: 20px 0; }
         .acc-info-row { font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: ${C.slate}; padding: 8px 0; }
         .acc-info-label { font-weight: 700; color: ${C.muted}; font-size: 14px; text-transform: uppercase; }
@@ -197,11 +185,11 @@ export default function AccountSettings() {
         /* Canonical modal treatment — navy 55% + 4px blur, 20px gutter.
            Matches pp-modal-backdrop, pce-modal-overlay, ucm-backdrop,
            rpm-overlay and the VetSlug pricing modal. */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(23,37,49,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-box { background: #fff; border-radius: 18px; padding: 32px; max-width: 440px; width: 100%; max-height: 86vh; overflow-y: auto; box-shadow: 0 30px 60px rgba(0,0,0,0.40); }
+        .modal-overlay { position: fixed; inset: 0; background: rgb(var(--color-navy-dark-rgb) / 0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-box { background: var(--color-white); border-radius: 18px; padding: 32px; max-width: 440px; width: 100%; max-height: 86vh; overflow-y: auto; box-shadow: 0 30px 60px rgb(var(--color-black-rgb) / 0.4); }
         .modal-title { font-size: 20px; font-weight: 800; color: ${C.navyDark}; margin: 0 0 8px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
         .modal-sub { font-size: 16px; color: ${C.slate}; line-height: 1.7; margin: 0 0 24px; }
-        .modal-warning { background: #FCEAEA; border-radius: 8px; padding: 12px 16px; font-size: 14px; color: ${C.error}; margin-bottom: 20px; font-weight: 500; line-height: 1.6; }
+        .modal-warning { background: var(--color-error-light); border-radius: 8px; padding: 12px 16px; font-size: 14px; color: ${C.errorText}; margin-bottom: 20px; font-weight: 500; line-height: 1.6; }
         .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
         @media(max-width: 640px) {
@@ -362,7 +350,7 @@ export default function AccountSettings() {
                 minHeight: "44px",
                 fontSize: "15px",
                 fontWeight: "600",
-                color: C.terracotta,
+                color: C.terracotta700,
                 textDecoration: "none",
               }}
             >
@@ -518,7 +506,7 @@ export default function AccountSettings() {
                 alignItems: "center",
                 minHeight: "44px",
                 fontSize: "15px",
-                color: C.terracotta,
+                color: C.terracotta700,
                 fontWeight: "600",
                 textDecoration: "none",
               }}
@@ -565,7 +553,7 @@ export default function AccountSettings() {
           </div>
           <div
             className="acc-card"
-            style={{ borderColor: "rgba(201,64,64,0.3)" }}
+            style={{ borderColor: "rgb(var(--color-error-rgb) / 0.3)" }}
           >
             <p className="acc-card-title" style={{ color: C.error }}>
               Delete Account

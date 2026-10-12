@@ -43,24 +43,11 @@ import {
   triggerVisitPrep,
 } from "../../../lib/copilotApi";
 import { renderMarkdown } from "../../../lib/renderMarkdown";
+import { C } from "../../../lib/tokens";
 
 const SESSION_KEY = "petparrk_symptom_session";
 const NAVBAR_H = 64;
 
-const C = {
-  navyDark: "#172531",
-  navyMid: "#2C4657",
-  terracotta: "#CF5C36",
-  gold: "#EFC88B",
-  cream: "#F5F0E8",
-  white: "#FFFFFF",
-  ink: "#1A1A1A",
-  slate: "#4B5563",
-  muted: "#717A86",
-  border: "#EDE8E0",
-  success: "#2A7D4F",
-  error: "#C94040",
-};
 
 // ── Species helpers (matches profile page logic) ────────────────────────
 const BANNER_LUCIDE = {
@@ -172,17 +159,17 @@ const SEVERITIES = [
     icon: CircleAlert,
     desc: "Barely noticeable. Eating, drinking, acting mostly normal.",
     color: C.success,
-    bg: "#EDFAF3",
-    border: "#A7F3D0",
+    bg: "var(--color-success-light)",
+    border: "rgb(var(--color-success-text-rgb) / 0.22)",
   },
   {
     id: "moderate",
     label: "Moderate",
     icon: TriangleAlert,
     desc: "Clearly not themselves. Something is off but they're responsive.",
-    color: "#B45309",
-    bg: "#FFFBEB",
-    border: "#FCD34D",
+    color: "var(--color-warning)",
+    bg: "var(--color-caution-light)",
+    border: "rgb(var(--color-caution-rgb) / 0.4)",
   },
   {
     id: "severe",
@@ -190,8 +177,8 @@ const SEVERITIES = [
     icon: OctagonAlert,
     desc: "Visibly distressed, in pain, or not responding normally.",
     color: C.error,
-    bg: "#FCEAEA",
-    border: "#F5C6C6",
+    bg: "var(--color-error-light)",
+    border: "rgb(var(--color-error-rgb) / 0.24)",
   },
 ];
 
@@ -202,7 +189,7 @@ function PetChip({ selectedPet, onStartOver }) {
       style={{
         marginBottom: "14px",
         padding: "10px 14px",
-        background: "#fff",
+        background: "var(--color-white)",
         borderRadius: "12px",
         border: `1px solid ${C.border}`,
         color: C.navyDark,
@@ -1474,15 +1461,15 @@ export default function SymptomCheckerChatPage() {
         <div
           style={{
             maxWidth: "78%",
-            background: isUser ? C.navyMid : "#fff",
-            color: isUser ? "#fff" : C.navyDark,
+            background: isUser ? C.navyMid : "var(--color-white)",
+            color: isUser ? "var(--color-white)" : C.navyDark,
             padding: "12px 16px",
             borderRadius: isUser ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
             fontSize: "16px",
             fontWeight: 500,
             lineHeight: "1.65",
             border: isUser ? "none" : `1px solid ${C.border}`,
-            boxShadow: isUser ? "none" : "0 1px 4px rgba(23,37,49,0.06)",
+            boxShadow: isUser ? "none" : "0 1px 4px rgb(var(--color-navy-dark-rgb) / 0.06)",
           }}
         >
           {msg.content === "" && isStreamingMsg ? (
@@ -1516,7 +1503,7 @@ export default function SymptomCheckerChatPage() {
               flexShrink: 0,
               marginLeft: "8px",
               marginTop: "2px",
-              color: "#fff",
+              color: "var(--color-white)",
             }}
           >
             <PawPrint size={14} strokeWidth={2} />
@@ -1621,32 +1608,35 @@ export default function SymptomCheckerChatPage() {
     if (!triageResult || !triageMounted) return null;
     const cfg = {
       EMERGENCY: {
-        dotColor: "#C94040",
+        dotColor: "var(--color-error)",
         label: "Emergency — Act Now",
-        color: "#C94040",
-        bg: "#FCEAEA",
-        border: "#F5C6C6",
-        pillBg: "rgba(201, 64, 64, 0.12)",
+        color: "var(--color-error)", // fills and icons
+        textColor: "var(--color-error-text)", // text on the pale backgrounds
+        bg: "var(--color-error-light)",
+        border: "rgb(var(--color-error-rgb) / 0.24)",
+        pillBg: "rgb(var(--color-error-rgb) / 0.12)",
         msg: "Take your pet to an emergency vet immediately. Don't wait.",
         vetLabel: "24-Hour Emergency Vets",
       },
       SEE_VET: {
-        dotColor: "#D9A21B",
+        dotColor: "var(--color-caution)",
         label: "See a Vet Soon",
-        color: "#B45309",
-        bg: "#FFFBEB",
-        border: "#FCD34D",
-        pillBg: "rgba(217, 162, 27, 0.14)",
+        color: "var(--color-warning)",
+        textColor: "var(--color-caution-text)",
+        bg: "var(--color-caution-light)",
+        border: "rgb(var(--color-caution-rgb) / 0.4)",
+        pillBg: "rgb(var(--color-caution-rgb) / 0.14)",
         msg: "Schedule an appointment within 24–48 hours.",
         vetLabel: "Nearby Vets",
       },
       MONITOR: {
-        dotColor: "#1A6641",
+        dotColor: "var(--color-success)",
         label: "Monitor at Home",
-        color: "#2A7D4F",
-        bg: "#EDFAF3",
-        border: "#A7F3D0",
-        pillBg: "rgba(26, 102, 65, 0.12)",
+        color: "var(--color-success)",
+        textColor: "var(--color-success-text)",
+        bg: "var(--color-success-light)",
+        border: "rgb(var(--color-success-text-rgb) / 0.22)",
+        pillBg: "rgb(var(--color-success-text-rgb) / 0.12)",
         msg: "Watch carefully for the next 24 hours.",
         vetLabel: null,
       },
@@ -1689,7 +1679,7 @@ export default function SymptomCheckerChatPage() {
                 style={{
                   fontWeight: "800",
                   fontSize: "17px",
-                  color: cfg.color,
+                  color: cfg.textColor,
                   fontFamily: "var(--font-urbanist,system-ui)",
                 }}
               >
@@ -1755,12 +1745,12 @@ export default function SymptomCheckerChatPage() {
                         style={{
                           display: "inline-block",
                           padding: "4px 12px",
-                          background: "#fff",
+                          background: "var(--color-white)",
                           border: `2px solid ${cfg.border}`,
                           borderRadius: "20px",
                           fontSize: "14px",
                           fontWeight: "700",
-                          color: cfg.color,
+                          color: cfg.textColor,
                         }}
                       >
                         {d}
@@ -1862,7 +1852,7 @@ export default function SymptomCheckerChatPage() {
                       <div
                         key={vet.id}
                         style={{
-                          background: "#fff",
+                          background: "var(--color-white)",
                           borderRadius: "12px",
                           padding: "16px 16px",
                           marginBottom: "15px",
@@ -1939,7 +1929,7 @@ export default function SymptomCheckerChatPage() {
                                   marginTop: 0,
                                   marginBottom: "10px",
                                   background: cfg.pillBg,
-                                  color: cfg.color,
+                                  color: cfg.textColor,
                                 }}
                               >
                                 {vet.fit_signal.label}
@@ -2008,7 +1998,7 @@ export default function SymptomCheckerChatPage() {
                                     style={{
                                       fontWeight: 800,
                                       fontSize: "16px",
-                                      color: cfg.color,
+                                      color: cfg.textColor,
                                       fontFamily:
                                         "var(--font-urbanist,system-ui)",
                                     }}
@@ -2146,7 +2136,7 @@ export default function SymptomCheckerChatPage() {
                       style={{
                         ["--btn-color"]: cfg.color,
                         background: cfg.pillBg,
-                        color: cfg.color,
+                        color: cfg.textColor,
                       }}
                     >
                       <Clipboard size={16} strokeWidth={2.2} />
@@ -2234,15 +2224,15 @@ export default function SymptomCheckerChatPage() {
     return (
       <>
         <style>{`
-          .g-card{border:2px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:#fff;display:flex;align-items:center;gap:14px;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
-          .g-dur{border:1.5px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:#fff;display:flex;flex-direction:column;align-items:center;text-align:center;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;color:${C.navyDark};}
+          .g-card{border:2px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:var(--color-white);display:flex;align-items:center;gap:14px;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
+          .g-dur{border:1.5px solid ${C.border};border-radius:14px;padding:18px 18px;cursor:pointer;background:var(--color-white);display:flex;flex-direction:column;align-items:center;text-align:center;transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s;color:${C.navyDark};}
           /* Hover only where hover exists. On touch devices the hover state
              sticks after a tap, so returning to a step showed an option
              looking already selected when nothing was. */
           @media (hover: hover) {
-            .g-dur:hover{border-color:${C.terracotta};background:#fafaf8;}
-            .g-card:hover{border-color:${C.terracotta};background:#fafaf8;}
-            .g-sev:hover{border-color:${C.terracotta};background:#fafaf8;}
+            .g-dur:hover{border-color:${C.terracotta};background:var(--color-white);}
+            .g-card:hover{border-color:${C.terracotta};background:var(--color-white);}
+            .g-sev:hover{border-color:${C.terracotta};background:var(--color-white);}
           }
           /* The tile keeps its border in every state. Clearing it on hover was
              tried and reverted: hover doesn't exist on touch, so the effect was
@@ -2250,14 +2240,14 @@ export default function SymptomCheckerChatPage() {
              is meant to be gaining emphasis. The colour comes from the severity
              via --sev-border, set inline on the tile. */
           .g-sev-tile { border: 1px solid var(--sev-border, transparent); }
-          .g-sev{border:1.5px solid ${C.border};border-radius:14px;padding:18px 20px;cursor:pointer;background:#fff;transition:border-color 0.15s,background 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
+          .g-sev{border:1.5px solid ${C.border};border-radius:14px;padding:18px 20px;cursor:pointer;background:var(--color-white);transition:border-color 0.15s,background 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
           
-        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:15px 0; margin-top:-15px; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
-        .back-btn:hover { color:#172531 !important; outline:none !important; box-shadow:none !important; }
-        .back-btn:active { color:#172531 !important; outline:none !important; box-shadow:none !important; }
-        .back-btn:focus { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
-        .back-btn:focus-visible { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
-        .back-btn:focus:not(:focus-visible) { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; }
+        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta700} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:15px 0; margin-top:-15px; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
+        @media (hover: hover) { .back-btn:hover { color:var(--color-navy-dark) !important; outline:none !important; box-shadow:none !important; } }
+        .back-btn:active { color:var(--color-navy-dark) !important; outline:none !important; box-shadow:none !important; }
+        .back-btn:focus { color:${C.terracotta700} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
+        .back-btn:focus-visible { color:${C.terracotta700} !important; outline:var(--focus-outline) !important; outline-offset:2px !important; box-shadow:none !important; background:none !important; border:none !important; }
+        .back-btn:focus:not(:focus-visible) { color:${C.terracotta700} !important; outline:none !important; box-shadow:none !important; }
         `}</style>
         {/* Full viewport height, no header */}
         <div
@@ -2318,7 +2308,7 @@ export default function SymptomCheckerChatPage() {
                     style={{
                       fontSize: "13px",
                       fontWeight: "700",
-                      color: C.terracotta,
+                      color: C.terracotta700,
                       textTransform: "uppercase",
                       letterSpacing: "0.06em",
                     }}
@@ -2425,8 +2415,8 @@ export default function SymptomCheckerChatPage() {
                               width: "68px",
                               height: "68px",
                               borderRadius: "18px",
-                              background: "rgba(207,92,54,0.14)",
-                              border: "1px solid rgba(207,92,54,0.28)",
+                              background: "rgb(var(--color-terracotta-rgb) / 0.14)",
+                              border: "1px solid rgb(var(--color-terracotta-rgb) / 0.28)",
                               boxSizing: "border-box",
                               display: "inline-flex",
                               alignItems: "center",
@@ -2516,8 +2506,8 @@ export default function SymptomCheckerChatPage() {
                                 width: "68px",
                                 height: "68px",
                                 borderRadius: "18px",
-                                background: "rgba(207,92,54,0.14)",
-                                border: "1px solid rgba(207,92,54,0.28)",
+                                background: "rgb(var(--color-terracotta-rgb) / 0.14)",
+                                border: "1px solid rgb(var(--color-terracotta-rgb) / 0.28)",
                                 boxSizing: "border-box",
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -2606,7 +2596,7 @@ export default function SymptomCheckerChatPage() {
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.borderColor = C.border;
-                            e.currentTarget.style.background = "#fff";
+                            e.currentTarget.style.background = "var(--color-white)";
                           }}
                           onTouchStart={(e) => {
                             e.currentTarget.style.borderColor = s.border;
@@ -2614,7 +2604,7 @@ export default function SymptomCheckerChatPage() {
                           }}
                           onTouchEnd={(e) => {
                             e.currentTarget.style.borderColor = C.border;
-                            e.currentTarget.style.background = "#fff";
+                            e.currentTarget.style.background = "var(--color-white)";
                           }}
                         >
                           <div
@@ -2636,7 +2626,7 @@ export default function SymptomCheckerChatPage() {
                                 // property. The border itself is declared in
                                 // CSS — an inline `border` would beat the hover
                                 // rule and never clear.
-                                "--sev-border": `${s.color}44`,
+                                "--sev-border": `color-mix(in srgb, ${s.color} 26.7%, transparent)`,
                                 boxSizing: "border-box",
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -2733,13 +2723,13 @@ export default function SymptomCheckerChatPage() {
         .sc-signup-btn {
           display: inline-flex; align-items: center; justify-content: center;
           height: 44px; padding: 0 24px; border-radius: 12px;
-          background: ${C.terracotta}; color: #fff;
-          border: 2px solid ${C.terracotta};
+          background: ${C.terracotta600}; color: var(--color-white);
+          border: 2px solid ${C.terracotta600};
           text-decoration: none; font-size: 15px; font-weight: 700;
           font-family: var(--font-urbanist,system-ui);
           transition: background 0.2s, color 0.2s;
         }
-        .sc-signup-btn:hover { background: #fff; color: ${C.terracotta}; }
+        @media (hover: hover) { .sc-signup-btn:hover { background: var(--color-white); color: ${C.terracotta700}; } }
         .chat-textarea { font-weight: 500; }
         .chat-messages {
           flex: 1;
@@ -2759,20 +2749,22 @@ export default function SymptomCheckerChatPage() {
         /* Auto-expanding textarea with icons inside */
         .chat-input-wrap {
           position: relative;
-          background: #fff;
+          background: var(--color-white);
           border: 1.5px solid ${C.border};
           border-radius: 16px;
           transition: border-color 0.15s, box-shadow 0.15s;
           display: flex;
           align-items: flex-end;
         }
-        /* Remove ALL focus styling on the input wrapper — eliminates orange square on all browsers */
+        /* Focus shows on the wrapper, not the bare textarea: a terracotta
+           border (4.01 on white) with a soft halo. Buttons inside keep their
+           own keyboard focus outline. */
         .chat-input-wrap:focus-within {
-          border-color: ${C.border};
+          border-color: ${C.terracotta};
           outline: none !important;
-          box-shadow: none !important;
+          box-shadow: 0 0 0 3px rgb(var(--color-terracotta-rgb) / 0.15) !important;
         }
-        .chat-input-wrap:focus-within * {
+        .chat-input-wrap:focus-within .chat-textarea {
           outline: none !important;
           box-shadow: none !important;
         }
@@ -2832,32 +2824,33 @@ export default function SymptomCheckerChatPage() {
           color: ${C.muted};
           outline: none;
         }
-        .mic-btn:hover { background: ${C.cream}; color: ${C.navyDark}; }
-        .mic-btn:focus { outline: none; }
+        @media (hover: hover) { .mic-btn:hover { background: ${C.cream}; color: ${C.navyDark}; } }
+        .mic-btn:focus:not(:focus-visible) { outline: none; }
+        .mic-btn:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
         .mic-btn.recording-active { color: ${C.terracotta}; }
-        .triage-outline-btn { height:42px; padding:0 24px; background:#fff; border:2px solid ${C.border}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); color:${C.navyDark}; transition:background 0.2s,color 0.2s,border-color 0.2s; }
-        .triage-outline-btn:hover { background:${C.navyDark}; color:#fff; border-color:${C.navyDark}; }
-        .triage-primary-btn { height:42px; padding:0 24px; border:2px solid transparent; border-radius:12px; font-size:15px; font-weight:700; font-family:var(--font-urbanist,system-ui); color:#fff; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s,border-color 0.2s; }
-        .triage-primary-btn:hover { background:#fff !important; color:var(--btn-color) !important; border-color:var(--btn-color) !important; }
-        .triage-phone-btn { display:inline-flex; align-items:center; height:35px; padding:0 18px; border-radius:10px; font-size:14px; font-weight:700; color:#fff; text-decoration:none; border:2px solid transparent; transition:background 0.2s, color 0.2s, border-color 0.2s; }
-        .triage-phone-btn:hover { background:#fff !important; color:var(--btn-color) !important; border-color:var(--btn-color) !important; }
-        .triage-estimate-btn { background:#fff; border:2px solid var(--btn-color); border-radius:999px; padding:8px 16px; font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,system-ui); color:var(--btn-color); transition:background 0.2s, color 0.2s; }
-        .triage-estimate-btn:hover { background:var(--btn-color); color:#fff; }
+        .triage-outline-btn { height:42px; padding:0 24px; background:var(--color-white); border:2px solid ${C.border}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); color:${C.navyDark}; transition:background 0.2s,color 0.2s,border-color 0.2s; }
+        @media (hover: hover) { .triage-outline-btn:hover { background:${C.navyDark}; color:var(--color-white); border-color:${C.navyDark}; } }
+        .triage-primary-btn { height:42px; padding:0 24px; border:2px solid transparent; border-radius:12px; font-size:15px; font-weight:700; font-family:var(--font-urbanist,system-ui); color:var(--color-white); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s,border-color 0.2s; }
+        @media (hover: hover) { .triage-primary-btn:hover { background:var(--color-white) !important; color:var(--btn-color) !important; border-color:var(--btn-color) !important; } }
+        .triage-phone-btn { display:inline-flex; align-items:center; height:35px; padding:0 18px; border-radius:10px; font-size:14px; font-weight:700; color:var(--color-white); text-decoration:none; border:2px solid transparent; transition:background 0.2s, color 0.2s, border-color 0.2s; }
+        @media (hover: hover) { .triage-phone-btn:hover { background:var(--color-white) !important; color:var(--btn-color) !important; border-color:var(--btn-color) !important; } }
+        .triage-estimate-btn { background:var(--color-white); border:2px solid var(--btn-color); border-radius:999px; padding:8px 16px; font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,system-ui); color:var(--btn-color); transition:background 0.2s, color 0.2s; }
+        @media (hover: hover) { .triage-estimate-btn:hover { background:var(--btn-color); color:var(--color-white); } }
         /* Location prompt, not-covered notice and specialists. Uses the shared
            control border so these match every other input on the site. */
-        .triage-loc { margin: 4px 0 16px; padding: 16px; border-radius: 12px; background: #fff; border: 1px solid ${C.border}; }
+        .triage-loc { margin: 4px 0 16px; padding: 16px; border-radius: 12px; background: var(--color-white); border: 1px solid ${C.border}; }
         .triage-loc-title { margin: 0 0 4px; font-size: 16px; font-weight: 700; color: ${C.navyDark}; }
         .triage-loc-sub { margin: 0 0 12px; font-size: 15px; font-weight: 500; color: ${C.muted}; line-height: 1.5; }
         .triage-loc-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-        .triage-loc-btn { height: 42px; padding: 0 16px; border-radius: 12px; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s; }
-        .triage-loc-btn:hover { background: #fff; color: ${C.terracotta}; }
+        .triage-loc-btn { height: 42px; padding: 0 16px; border-radius: 12px; border: 2px solid ${C.terracotta600}; background: ${C.terracotta600}; color: var(--color-white); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s; }
+        @media (hover: hover) { .triage-loc-btn:hover { background: var(--color-white); color: ${C.terracotta700}; } }
         .triage-loc-zip { display: flex; gap: 8px; }
-        .triage-loc-zip input { width: 110px; height: 42px; padding: 0 12px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); font-family: inherit; font-size: 15px; font-weight: 500; color: ${C.navyDark}; background: #fff; box-sizing: border-box; }
+        .triage-loc-zip input { width: 110px; height: 42px; padding: 0 12px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border); font-family: inherit; font-size: 15px; font-weight: 500; color: ${C.navyDark}; background: var(--color-white); box-sizing: border-box; }
         .triage-loc-zip input:focus { outline: none; border-color: ${C.terracotta}; }
-        .triage-loc-zip button { height: 42px; padding: 0 14px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); background: #fff; color: ${C.navyDark}; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color 0.2s; }
-        .triage-loc-zip button:hover { background: ${C.navyDark}; color: #fff; border-color: ${C.navyDark}; }
-        .triage-loc-error { margin: 10px 0 0; font-size: 14px; font-weight: 600; color: #C94040; }
-        .triage-loc-link { margin: 4px 0 0; padding: 0; border: none; background: none; font-family: inherit; font-size: 14px; font-weight: 700; color: ${C.terracotta}; text-decoration: underline; cursor: pointer; }
+        .triage-loc-zip button { height: 42px; padding: 0 14px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border); background: var(--color-white); color: ${C.navyDark}; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color 0.2s; }
+        @media (hover: hover) { .triage-loc-zip button:hover { background: ${C.navyDark}; color: var(--color-white); border-color: ${C.navyDark}; } }
+        .triage-loc-error { margin: 10px 0 0; font-size: 14px; font-weight: 600; color: var(--color-error); }
+        .triage-loc-link { margin: 4px 0 0; padding: 0; border: none; background: none; font-family: inherit; font-size: 14px; font-weight: 700; color: ${C.terracotta700}; text-decoration: underline; cursor: pointer; }
         @media (max-width: 640px) {
           /* One column on a phone: each control full width, stacked, so every
              target is easy to hit with a thumb. */
@@ -2875,33 +2868,33 @@ export default function SymptomCheckerChatPage() {
         /* Save-your-check panel. Same card, button and input treatment as the
            location prompt: 42px terracotta button that inverts on hover, the
            shared control border on the input, stacking full width on phones. */
-        .save-pet { margin: 0 0 24px; padding: 20px 20px; border-radius: 16px; background: #fff; border: 1px solid ${C.border}; box-shadow: 0 2px 12px rgba(23, 37, 49, 0.05); }
+        .save-pet { margin: 0 0 24px; padding: 20px 20px; border-radius: 16px; background: var(--color-white); border: 1px solid ${C.border}; box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.05); }
         /* Doubled class so this beats the global paragraph line-height, which
            otherwise stretched a two-line title far apart. */
         .save-pet .save-pet-title { margin: 0 0 6px; font-size: 24px; line-height: 1.2; font-weight: 800; color: ${C.navyDark}; }
         .save-pet .save-pet-sub { margin: 0 0 14px; font-size: 16px; font-weight: 500; color: ${C.muted}; line-height: 1.55; text-wrap: pretty; }
         .save-pet-row { display: flex; gap: 10px; align-items: center; }
-        .save-pet-input { flex: 1; min-width: 0; height: 42px; padding: 0 14px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); font-family: inherit; font-size: 15px; font-weight: 500; color: ${C.navyDark}; background: #fff; box-sizing: border-box; }
+        .save-pet-input { flex: 1; min-width: 0; height: 42px; padding: 0 14px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border); font-family: inherit; font-size: 15px; font-weight: 500; color: ${C.navyDark}; background: var(--color-white); box-sizing: border-box; }
         .save-pet-input:focus { outline: none; border-color: ${C.terracotta}; }
-        .save-pet-btn { height: 42px; padding: 0 22px; border-radius: 12px; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s; flex-shrink: 0; }
-        .save-pet-btn:hover:not(:disabled) { background: #fff; color: ${C.terracotta}; }
+        .save-pet-btn { height: 42px; padding: 0 22px; border-radius: 12px; border: 2px solid ${C.terracotta600}; background: ${C.terracotta600}; color: var(--color-white); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s; flex-shrink: 0; }
+        @media (hover: hover) { .save-pet-btn:hover:not(:disabled) { background: var(--color-white); color: ${C.terracotta700}; } }
         .save-pet-btn:disabled { opacity: 0.6; cursor: default; }
         /* Pet choices. Each is a full-width row with the shared control
            border; the chosen one takes the terracotta border, the same
            treatment as a focused field. */
         .save-pet-choices { display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
-        .save-pet-choice { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd); background: #fff; cursor: pointer; transition: border-color 0.15s, background 0.15s; box-sizing: border-box; }
+        .save-pet-choice { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border); background: var(--color-white); cursor: pointer; transition: border-color 0.15s, background 0.15s; box-sizing: border-box; }
         .save-pet-choice input { width: 18px; height: 18px; margin: 0; accent-color: ${C.terracotta}; flex-shrink: 0; cursor: pointer; }
         .save-pet-choice-name { font-size: 16px; font-weight: 700; color: ${C.navyDark}; }
         .save-pet-choice-meta { font-size: 15px; font-weight: 500; color: ${C.muted}; }
-        .save-pet-choice.is-active { border-color: ${C.terracotta}; background: #FFF8F4; }
+        .save-pet-choice.is-active { border-color: ${C.terracotta}; background: var(--color-warning-light); }
         @media (hover: hover) {
           .save-pet-choice:not(.is-active):hover { border-color: ${C.navyDark}; }
         }
-        .save-pet-error { margin: 10px 0 0; font-size: 14px; font-weight: 600; color: #C94040; }
+        .save-pet-error { margin: 10px 0 0; font-size: 14px; font-weight: 600; color: var(--color-error); }
         .save-pet-skip { margin: 12px 0 0; padding: 0; border: none; background: none; font-family: inherit; font-size: 15px; font-weight: 700; color: ${C.muted}; text-decoration: underline; cursor: pointer; }
-        .save-pet-skip:hover { color: ${C.navyDark}; }
-        .save-pet-done { display: flex; align-items: center; gap: 8px; margin: 0 0 24px; font-size: 16px; font-weight: 600; color: #1A6641; }
+        @media (hover: hover) { .save-pet-skip:hover { color: ${C.navyDark}; } }
+        .save-pet-done { display: flex; align-items: center; gap: 8px; margin: 0 0 24px; font-size: 16px; font-weight: 600; color: var(--color-success-text); }
         @media (max-width: 640px) {
           .save-pet-row { flex-direction: column; align-items: stretch; }
           /* No flex:1 when stacked. In a column, flex:1 grows along the
@@ -2909,17 +2902,17 @@ export default function SymptomCheckerChatPage() {
           .save-pet-input { flex: none; width: 100%; }
           .save-pet-btn { width: 100%; }
         }
-        .triage-open { color: #1A6641; font-weight: 700; }
+        .triage-open { color: var(--color-success-text); font-weight: 700; }
         .triage-closed { color: ${C.muted}; font-weight: 600; }
-        .triage-specialists { margin: 8px 0 16px; padding: 14px 16px; border-radius: 12px; background: #fff; border: 1px solid ${C.border}; }
+        .triage-specialists { margin: 8px 0 16px; padding: 14px 16px; border-radius: 12px; background: var(--color-white); border: 1px solid ${C.border}; }
         .triage-spec-title { margin: 0 0 2px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: ${C.muted}; }
         .triage-spec-sub { margin: 0 0 10px; font-size: 15px; font-weight: 500; color: ${C.muted}; }
         .triage-spec-row { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; border-top: 1px solid ${C.border}; text-decoration: none; }
         .triage-spec-row:first-of-type { border-top: none; }
         .triage-spec-name { font-size: 16px; font-weight: 700; color: ${C.navyDark}; }
         .triage-spec-meta { font-size: 15px; font-weight: 500; color: ${C.muted}; }
-        .triage-view-profile { font-size:13px; color:${C.terracotta}; text-decoration:underline; white-space:nowrap; flex-shrink:0; margin-top:2px; font-weight:700; transition:color 0.15s; }
-        .triage-view-profile:hover { color:${C.navyDark}; }
+        .triage-view-profile { font-size:13px; color:${C.terracotta700}; text-decoration:underline; white-space:nowrap; flex-shrink:0; margin-top:2px; font-weight:700; transition:color 0.15s; }
+        @media (hover: hover) { .triage-view-profile:hover { color:${C.navyDark}; } }
         /* No transition until someone presses a toggle. A backgrounded tab is
            throttled, and on return the browser recalculates layout — which
            replays a grid-template-rows transition from its starting value.
@@ -2930,11 +2923,11 @@ export default function SymptomCheckerChatPage() {
         .triage-body.open { grid-template-rows:1fr; opacity:1; }
         .triage-body-inner { overflow:hidden; }
         .triage-toggle-btn { background:none; border:none; cursor:pointer; padding:4px 6px; font-weight:700; font-size:13px; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; transition:opacity 0.15s; }
-        .triage-toggle-btn:hover { opacity:0.7; }
+        @media (hover: hover) { .triage-toggle-btn:hover { opacity:0.7; } }
         .triage-chevron { transition:transform 0.45s cubic-bezier(0.4,0,0.2,1); display:inline-flex; }
         .triage-chevron.open { transform:rotate(180deg); }
-        .triage-skeleton { background:#fff; border-radius:12px; padding:14px 16px; margin-bottom:8px; overflow:hidden; position:relative; }
-        .triage-skeleton::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent); animation:triage-shimmer 1.4s infinite; }
+        .triage-skeleton { background:var(--color-white); border-radius:12px; padding:14px 16px; margin-bottom:8px; overflow:hidden; position:relative; }
+        .triage-skeleton::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgb(var(--color-white-rgb) / 0.6), transparent); animation:triage-shimmer 1.4s infinite; }
         @keyframes triage-shimmer { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
         .triage-skeleton-line { height:14px; background:${C.border}; border-radius:6px; margin-bottom:8px; }
         .triage-skeleton-line.short { width:40%; }
@@ -2951,18 +2944,18 @@ export default function SymptomCheckerChatPage() {
         .triage-prep-h { margin:0 0 8px; font-size:14px; font-weight:700; color:${C.muted}; text-transform:uppercase; letter-spacing:0.06em; }
         .triage-prep-list { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; }
         .triage-prep-item { font-size:15px; font-weight:500; line-height:1.6; color:${C.navyDark}; }
-        .triage-prep-error { margin:8px 0 0; font-size:14px; font-weight:600; color:#C94040; }
+        .triage-prep-error { margin:8px 0 0; font-size:14px; font-weight:600; color:var(--color-error); }
         .sc-resume-run { display:flex; justify-content:center; margin:4px 0 8px; }
         .sc-resume-run-btn {
           height:44px; padding:0 22px; border-radius:12px;
-          border:var(--pill-border-w, 2px) solid ${C.terracotta};
-          background:${C.terracotta}; color:#fff;
+          border:var(--pill-border-w, 2px) solid ${C.terracotta600};
+          background:${C.terracotta600}; color:var(--color-white);
           font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
           transition:background 0.2s, color 0.2s;
         }
-        .sc-resume-run-btn:hover { background:#fff; color:${C.terracotta}; }
-        .triage-prep-hint-btn { padding:0; border:none; background:none; font-family:inherit; font-size:14px; font-weight:700; color:${C.terracotta}; text-decoration:underline; cursor:pointer; }
-        .triage-prep-hint-btn:hover { color:${C.navyDark}; }
+        @media (hover: hover) { .sc-resume-run-btn:hover { background:var(--color-white); color:${C.terracotta700}; } }
+        .triage-prep-hint-btn { padding:0; border:none; background:none; font-family:inherit; font-size:14px; font-weight:700; color:${C.terracotta700}; text-decoration:underline; cursor:pointer; }
+        @media (hover: hover) { .triage-prep-hint-btn:hover { color:${C.navyDark}; } }
         .triage-prep-hint { margin:8px 0 0; font-size:16px; font-weight:700; color:${C.navyDark}; line-height:1.55; text-wrap: pretty;}
         .triage-prep-hint-text { margin:0 0 10px; }
         /* Set apart from the triage itself: adding a pet isn't part of the
@@ -2975,21 +2968,21 @@ export default function SymptomCheckerChatPage() {
           height: 42px;
           padding: 0 24px;
           border-radius: 12px;
-          border: var(--pill-border-w, 2px) solid #172531;
-          background: #172531;
-          color: #fff;
+          border: var(--pill-border-w, 2px) solid var(--color-navy-dark);
+          background: var(--color-navy-dark);
+          color: var(--color-white);
           font-family: inherit;
           font-size: 15px;
           font-weight: 700;
           cursor: pointer;
           transition: background 0.2s, color 0.2s;
         }
-        .triage-prep-hint-cta:hover { background:#fff; color:#172531; }
+        @media (hover: hover) { .triage-prep-hint-cta:hover { background:var(--color-white); color:var(--color-navy-dark); } }
         @media (max-width: 640px) {
           .triage-prep-hint-cta { width: 100%; box-sizing: border-box; }
         }
         .triage-prep-toggle:disabled { opacity:0.65; cursor:not-allowed; }
-        .triage-prep-toggle:hover { filter:brightness(0.96); }
+        @media (hover: hover) { .triage-prep-toggle:hover { filter:brightness(0.96); } }
         .triage-prep-body { display:grid; grid-template-rows:0fr; opacity:0; }
         .triage-prep-body.animated { transition:grid-template-rows 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease; }
         .triage-prep-body.open { grid-template-rows:1fr; opacity:1; }
@@ -3001,15 +2994,15 @@ export default function SymptomCheckerChatPage() {
           .triage-action-row .triage-outline-btn,
           .triage-action-row .triage-primary-btn { width: 100%; }
         }
-        .start-over-btn { background:none; border:none; cursor:pointer; font-size:14px; color:${C.terracotta}; font-weight:700; padding:15px 0; margin-top:-15px; font-family:var(--font-urbanist,system-ui); white-space:nowrap; flex-shrink:0; transition:color 0.15s; text-decoration:none; display:inline-flex; align-items:center; line-height:1; }
-        .start-over-btn:hover { color:#172531; }
-        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:15px 0; margin-top:-15px; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
-        .back-btn:link, .back-btn:visited { color:${C.terracotta} !important; }
-        .back-btn:hover { color:#172531 !important; outline:none !important; box-shadow:none !important; }
-        .back-btn:active { color:#172531 !important; outline:none !important; box-shadow:none !important; }
-        .back-btn:focus { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
-        .back-btn:focus-visible { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
-        .back-btn:focus:not(:focus-visible) { color:${C.terracotta} !important; outline:none !important; box-shadow:none !important; }
+        .start-over-btn { background:none; border:none; cursor:pointer; font-size:14px; color:${C.terracotta700}; font-weight:700; padding:15px 0; margin-top:-15px; font-family:var(--font-urbanist,system-ui); white-space:nowrap; flex-shrink:0; transition:color 0.15s; text-decoration:none; display:inline-flex; align-items:center; line-height:1; }
+        @media (hover: hover) { .start-over-btn:hover { color:var(--color-navy-dark); } }
+        .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta700} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:15px 0; margin-top:-15px; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
+        .back-btn:link, .back-btn:visited { color:${C.terracotta700} !important; }
+        @media (hover: hover) { .back-btn:hover { color:var(--color-navy-dark) !important; outline:none !important; box-shadow:none !important; } }
+        .back-btn:active { color:var(--color-navy-dark) !important; outline:none !important; box-shadow:none !important; }
+        .back-btn:focus { color:${C.terracotta700} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
+        .back-btn:focus-visible { color:${C.terracotta700} !important; outline:var(--focus-outline) !important; outline-offset:2px !important; box-shadow:none !important; background:none !important; border:none !important; }
+        .back-btn:focus:not(:focus-visible) { color:${C.terracotta700} !important; outline:none !important; box-shadow:none !important; }
         .pc-name { margin:0; font-weight:700; font-size:20px; color:${C.navyDark}; font-family:var(--font-urbanist,system-ui); }
         .pc-desk-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
         .pc-mob-actions { display:none; }
@@ -3020,23 +3013,24 @@ export default function SymptomCheckerChatPage() {
         }
         /* Send button — always visible. Gray when empty, navyMid when has content */
         .send-icon-btn {
-          background: rgba(155,165,175,0.25);
-          color: rgba(120,130,140,0.7);
+          background: color-mix(in srgb, var(--color-ghost) 60%, transparent);
+          color: rgb(var(--color-muted-rgb) / 0.7);
           opacity: 1;
           pointer-events: none;
           outline: none;
           box-shadow: none;
           transition: background 0.2s, color 0.2s;
-          border: 1px solid #c1c1c1;
+          border: 1px solid var(--color-ghost);
         }
         .send-icon-btn.visible {
-          background: #CF5C36;
-          color: #fff;
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
           pointer-events: auto;
           cursor: pointer;
         }
-        .send-icon-btn.visible:hover { background: #a8471d; }
-        .send-icon-btn:focus { outline: none; box-shadow: none; }
+        @media (hover: hover) { .send-icon-btn.visible:hover { background: var(--color-terracotta-700); } }
+        .send-icon-btn:focus:not(:focus-visible) { outline: none; box-shadow: none; }
+        .send-icon-btn:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 
 
 
@@ -3045,13 +3039,13 @@ export default function SymptomCheckerChatPage() {
         .dot-bounce { width:7px;height:7px;border-radius:50%;background:${C.muted};display:inline-block;animation:dotBounce 1.2s infinite ease-in-out; }
       
         .scc-arrow-btn { background:none; border:none; cursor:pointer; padding:0; display:inline-flex; align-items:center; flex-shrink:0; }
-        .scc-arrow { display:inline-block; font-size:16px; color:${C.terracotta}; font-weight:700; transition:transform 0.2s ease; }
-        .scc-arrow-btn:hover .scc-arrow { transform:translateX(4px); }
+        .scc-arrow { display:inline-block; font-size:16px; color:${C.terracotta700}; font-weight:700; transition:transform 0.2s ease; }
+        @media (hover: hover) { .scc-arrow-btn:hover .scc-arrow { transform:translateX(4px); } }
       
-        .sv-arrow { font-size: 16px; font-weight: 700; color: ${C.terracotta}; background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 3px; transition: gap 0.2s ease; }
-        .sv-arrow:hover { gap: 7px; }
+        .sv-arrow { font-size: 16px; font-weight: 700; color: ${C.terracotta700}; background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 3px; transition: gap 0.2s ease; }
+        @media (hover: hover) { .sv-arrow:hover { gap: 7px; } }
         .sv-arrow .sv-arrow-icon { display: inline-block; transition: transform 0.2s ease; }
-        .sv-arrow:hover .sv-arrow-icon { transform: translateX(3px); }
+        @media (hover: hover) { .sv-arrow:hover .sv-arrow-icon { transform: translateX(3px); } }
       `}</style>
 
       <div className="chat-shell">
@@ -3218,7 +3212,7 @@ export default function SymptomCheckerChatPage() {
                 style={{
                   textAlign: "center",
                   padding: "24px",
-                  background: "#fff",
+                  background: "var(--color-white)",
                   borderRadius: "16px",
                   border: `1px solid ${C.border}`,
                   marginTop: "16px",

@@ -610,7 +610,7 @@ export default function ProfilePage() {
           padding: 0 20px;
           height: 42px;
           background: transparent;
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
           border: 1.5px solid ${C.terracotta};
           border-radius: 12px;
           font-size: 14px;
@@ -619,12 +619,14 @@ export default function ProfilePage() {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: background 0.15s, color 0.15s;
         }
-        .pp-edit-full-link:hover {
-          background: ${C.terracotta};
-          color: #fff;
+        @media (hover: hover) {
+          .pp-edit-full-link:hover {
+            background: ${C.terracotta700};
+            color: var(--color-white);
+          }
         }
         .pp-edit-full-link span { transition: transform 0.15s; }
-        .pp-edit-full-link:hover span { transform: translateX(3px); }
+        @media (hover: hover) { .pp-edit-full-link:hover span { transform: translateX(3px); } }
         @media (max-width: 640px) {
           .pp-edit-full-link { display: flex; width: 100%; }
         }
@@ -646,11 +648,11 @@ export default function ProfilePage() {
         }
         /* Unsaved-check banner. Same card and 42px inverting button as the
            checker; stacks full width on phones. */
-        .pp-pending { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 30px 0 24px; padding: 20px; border-radius: 16px; background: #fff; border: 1px solid ${C.border}; box-shadow: 0 2px 12px rgba(23, 37, 49, 0.05); }
+        .pp-pending { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 30px 0 24px; padding: 20px; border-radius: 16px; background: var(--color-white); border: 1px solid ${C.border}; box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.05); }
         .pp-pending .pp-pending-title { margin: 0 0 4px; font-size: 18px; line-height: 1.3; font-weight: 800; color: ${C.navyDark}; }
         .pp-pending .pp-pending-sub { margin: 0; font-size: 16px; font-weight: 500; line-height: 1.5; color: ${C.muted}; text-wrap: pretty; }
-        .pp-pending-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px; border-radius: 12px; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: background 0.2s, color 0.2s; box-sizing: border-box; }
-        .pp-pending-btn:hover { background: #fff; color: ${C.terracotta}; }
+        .pp-pending-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px; border-radius: 12px; border: 2px solid ${C.terracotta600}; background: ${C.terracotta600}; color: var(--color-white); font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: background 0.2s, color 0.2s; box-sizing: border-box; }
+        @media (hover: hover) { .pp-pending-btn:hover { background: var(--color-white); color: ${C.terracotta700}; } }
         @media (max-width: 640px) {
           .pp-pending { flex-direction: column; align-items: stretch; }
           .pp-pending-btn { width: 100%; }
@@ -1383,7 +1385,7 @@ export default function ProfilePage() {
               left: 0,
               right: 0,
               background: C.navyDark,
-              color: "#fff",
+              color: "var(--color-white)",
               padding: "10px 16px",
               display: "flex",
               justifyContent: "center",
@@ -1393,7 +1395,7 @@ export default function ProfilePage() {
               fontSize: "13px",
               fontWeight: 500,
               fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.20)",
+              boxShadow: "0 4px 14px rgb(var(--color-black-rgb) / 0.2)",
             }}
           >
             <span>Public preview — this is what others would see</span>
@@ -1528,7 +1530,7 @@ export default function ProfilePage() {
                                         background:
                                           st === "done"
                                             ? t.stops[1]
-                                            : "#E2E6EA",
+                                            : "var(--color-badge-navy-bg)",
                                       }}
                                     />
                                   )}
@@ -1582,7 +1584,7 @@ export default function ProfilePage() {
                                                 <Check
                                                   size={12}
                                                   strokeWidth={3}
-                                                  color="#94A0AB"
+                                                  color="var(--color-muted)"
                                                 />
                                                 {r.label}
                                               </span>

@@ -132,19 +132,19 @@ export default function CoPilotRecommendation({
         .cpr {
           margin: 16px 0 8px;
           padding: 16px;
-          background: var(--surface-2, #f6f4ef);
-          border: 1px solid var(--border, #e4dfd3);
+          background: var(--color-cream);
+          border: 1px solid var(--color-border);
           border-radius: 12px;
         }
         .cpr-title {
           font-weight: 600;
           font-size: 14px;
           margin-bottom: 12px;
-          color: var(--ink, #1a1a1a);
+          color: var(--color-ink);
         }
         .cpr-vet {
           padding: 12px 0;
-          border-top: 1px solid var(--border, #e4dfd3);
+          border-top: 1px solid var(--color-border);
         }
         .cpr-vet:first-of-type {
           border-top: 0;
@@ -161,15 +161,17 @@ export default function CoPilotRecommendation({
           font-size: 15px;
         }
         .cpr-vet-name :global(a) {
-          color: var(--ink, #1a1a1a);
+          color: var(--color-ink);
           text-decoration: none;
         }
-        .cpr-vet-name :global(a:hover) {
-          text-decoration: underline;
+        @media (hover: hover) {
+          .cpr-vet-name :global(a:hover) {
+            text-decoration: underline;
+          }
         }
         .cpr-vet-meta {
           font-size: 12px;
-          color: var(--ink-soft, #706b60);
+          color: var(--color-muted);
           margin-top: 2px;
         }
         .cpr-vet-badges {
@@ -185,20 +187,20 @@ export default function CoPilotRecommendation({
           white-space: nowrap;
         }
         .cpr-badge-good {
-          background: #e4f0e6;
-          color: #1c5c30;
+          background: var(--color-success-light);
+          color: var(--color-success-text);
         }
         .cpr-badge-warn {
-          background: #f7e5d8;
-          color: #8b3f18;
+          background: var(--color-warning-light);
+          color: var(--color-warning-text);
         }
         .cpr-badge-info {
-          background: #e6ecf3;
-          color: #1e4a76;
+          background: var(--color-badge-navy-bg);
+          color: var(--color-info-text);
         }
         .cpr-vet-reason {
           font-size: 13px;
-          color: var(--ink-soft, #706b60);
+          color: var(--color-muted);
           margin-top: 6px;
           line-height: 1.45;
         }
@@ -212,23 +214,27 @@ export default function CoPilotRecommendation({
           font-size: 13px;
           padding: 6px 12px;
           border-radius: 8px;
-          border: 1px solid var(--border, #e4dfd3);
+          border: 1px solid var(--color-border);
           background: white;
-          color: var(--ink, #1a1a1a);
+          color: var(--color-ink);
           cursor: pointer;
           text-decoration: none;
           font-weight: 500;
         }
-        .cpr-btn:hover {
-          background: var(--surface-2, #f6f4ef);
+        @media (hover: hover) {
+          .cpr-btn:hover {
+            background: var(--color-cream);
+          }
         }
         .cpr-btn-call {
-          background: #1c5c30;
+          background: var(--color-success);
           color: white;
-          border-color: #1c5c30;
+          border-color: var(--color-success);
         }
-        .cpr-btn-call:hover {
-          background: #164e27;
+        @media (hover: hover) {
+          .cpr-btn-call:hover {
+            background: var(--color-success);
+          }
         }
         .cpr-btn-loading {
           opacity: 0.6;
@@ -239,11 +245,11 @@ export default function CoPilotRecommendation({
           padding: 10px 12px;
           background: white;
           border-radius: 8px;
-          border: 1px solid var(--border, #e4dfd3);
+          border: 1px solid var(--color-border);
         }
         .cpr-est-empty {
           font-size: 13px;
-          color: var(--ink-soft, #706b60);
+          color: var(--color-muted);
         }
         .cpr-est-range {
           font-weight: 600;
@@ -259,20 +265,20 @@ export default function CoPilotRecommendation({
           letter-spacing: 0.3px;
         }
         .cpr-conf-high {
-          background: #e4f0e6;
-          color: #1c5c30;
+          background: var(--color-success-light);
+          color: var(--color-success-text);
         }
         .cpr-conf-medium {
-          background: #f6efd8;
-          color: #7a5b1a;
+          background: var(--color-caution-light);
+          color: var(--color-caution-text);
         }
         .cpr-conf-low {
-          background: #f7e5d8;
-          color: #8b3f18;
+          background: var(--color-warning-light);
+          color: var(--color-warning-text);
         }
         .cpr-est-reason {
           font-size: 13px;
-          color: var(--ink-soft, #706b60);
+          color: var(--color-muted);
           margin-top: 4px;
           line-height: 1.45;
         }

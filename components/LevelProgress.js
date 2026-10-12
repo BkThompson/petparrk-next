@@ -168,47 +168,47 @@ export default function LevelProgress({
           display: flex; justify-content: space-between; align-items: center;
           gap: 8px; margin-bottom: 7px;
         }
-        .lvp-xp { font-size: 14px; font-weight: 800; color: #172531; white-space: nowrap; }
+        .lvp-xp { font-size: 14px; font-weight: 800; color: var(--color-navy-dark); white-space: nowrap; }
         .lvp-target {
-          font-size: 14px; font-weight: 800; color: #CF5C36; white-space: nowrap;
+          font-size: 14px; font-weight: 800; color: var(--color-terracotta-700); white-space: nowrap;
           display: inline-flex; align-items: center; gap: 3px;
         }
         .lvp-track {
-          height: 9px; border-radius: 999px; background: #EDE8E0;
+          height: 9px; border-radius: 999px; background: var(--color-border);
           overflow: hidden; margin-bottom: 5px;
         }
         .lvp-fill {
           height: 100%; border-radius: 999px;
           transition: width 1.15s cubic-bezier(0.22,1,0.36,1);
         }
-        .lvp-left { font-size: 13px; font-weight: 600; color: #94A0AB; margin-bottom: 16px; }
+        .lvp-left { font-size: 13px; font-weight: 600; color: var(--color-muted); margin-bottom: 16px; }
         .lvp-reqs-head {
           display: flex; justify-content: space-between; align-items: center;
           gap: 8px; margin-bottom: 6px;
         }
         .lvp-reqs-title {
           font-size: 13px; font-weight: 800; letter-spacing: 0.05em;
-          text-transform: uppercase; color: #CF5C36;
+          text-transform: uppercase; color: var(--color-terracotta-700);
         }
-        .lvp-reqs-count { font-size: 13px; font-weight: 500; color: #717A86; white-space: nowrap; }
+        .lvp-reqs-count { font-size: 13px; font-weight: 500; color: var(--color-muted); white-space: nowrap; }
         .lvp-req { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
         .lvp-circle {
           width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
           display: inline-flex; align-items: center; justify-content: center;
           box-sizing: border-box;
         }
-        .lvp-circle.met { background: #16A34A; }
-        .lvp-circle.unmet { border: 2px solid #CBD2DA; background: #fff; }
+        .lvp-circle.met { background: var(--color-success); }
+        .lvp-circle.unmet { border: 2px solid var(--color-ghost); background: var(--color-white); }
         .lvp-req-label { font-size: 14px; min-width: 0; }
-        .lvp-req-label.met { color: #172531; font-weight: 600; }
-        .lvp-req-label.unmet { color: #4B5563; font-weight: 500; }
+        .lvp-req-label.met { color: var(--color-navy-dark); font-weight: 600; }
+        .lvp-req-label.unmet { color: var(--color-slate); font-weight: 500; }
         .lvp-req-right {
           margin-left: auto; display: flex; align-items: center; gap: 8px;
           flex-shrink: 0; padding-left: 8px;
         }
         .lvp-req-prog { font-size: 13px; font-weight: 800; white-space: nowrap; }
-        .lvp-req-prog.met { color: #16A34A; }
-        .lvp-req-prog.unmet { color: #717A86; }
+        .lvp-req-prog.met { color: var(--color-success); }
+        .lvp-req-prog.unmet { color: var(--color-muted); }
         /* Already at 800, which is the heaviest weight Urbanist is loaded at —
            globals imports 400 to 800, so 900 would be a browser-synthesised
            fake bold rather than a real weight. The extra presence comes from
@@ -220,26 +220,26 @@ export default function LevelProgress({
           border: var(--pill-border-w, 2px) solid transparent;
         }
         .lvp-req-pts.met {
-          color: #16A34A; background: rgba(22,163,74,0.10);
-          border-color: rgba(22,163,74,0.30);
+          color: var(--color-success); background: rgb(var(--color-success-rgb) / 0.1);
+          border-color: rgb(var(--color-success-rgb) / 0.3);
         }
         .lvp-req-pts.unmet {
-          color: #CF5C36; background: rgba(207,92,54,0.10);
-          border-color: rgba(207,92,54,0.30);
+          color: var(--color-warning-text); background: var(--color-warning-light);
+          border-color: rgb(var(--color-warning-text-rgb) / 0.22);
         }
-        .lvp-maxed { font-size: 14px; font-weight: 700; color: #4B5563; margin: 4px 0 0; }
+        .lvp-maxed { font-size: 14px; font-weight: 700; color: var(--color-slate); margin: 4px 0 0; }
 
         .lvp-celeb {
           position: absolute; inset: -20px 0 auto 0; top: -10px; height: 120px;
           pointer-events: none; z-index: 5; visibility: hidden; opacity: 0;
           display: flex; align-items: center; justify-content: center;
         }
-        .lvp-particle { position: absolute; top: 40px; left: 50%; color: var(--gold, #EFC88B); }
+        .lvp-particle { position: absolute; top: 40px; left: 50%; color: var(--color-gold); }
         .lvp-celeb-badge {
           display: inline-flex; align-items: center; gap: 8px;
-          background: #172531; color: #fff; font-weight: 800; font-size: 14px;
+          background: var(--color-navy-dark); color: var(--color-white); font-weight: 800; font-size: 14px;
           padding: 10px 16px; border-radius: 999px; opacity: 0;
-          box-shadow: 0 10px 30px rgba(23,37,49,0.35);
+          box-shadow: 0 10px 30px rgb(var(--color-navy-dark-rgb) / 0.35);
         }
       `}</style>
 
@@ -249,14 +249,14 @@ export default function LevelProgress({
             <CelebIcon
               size={tierCrossed ? 18 : 14}
               strokeWidth={2.4}
-              color={i % 2 ? "#CF5C36" : "#EFC88B"}
-              fill={i % 3 === 0 ? "#EFC88B" : "none"}
+              color={i % 2 ? "var(--color-terracotta)" : "var(--color-gold)"}
+              fill={i % 3 === 0 ? "var(--color-gold)" : "none"}
             />
           </span>
         ))}
         {celebrate && (
           <div className="lvp-celeb-badge">
-            <CelebIcon size={18} strokeWidth={2.4} color="#EFC88B" />
+            <CelebIcon size={18} strokeWidth={2.4} color="var(--color-gold)" />
             {tierCrossed
               ? `Welcome to ${celebrate.tierName || "a new tier"}!`
               : `Level ${celebrate.level || ""} reached!`}
@@ -311,7 +311,7 @@ export default function LevelProgress({
                 <div className="lvp-req" key={i}>
                   <span className={`lvp-circle ${r.met ? "met" : "unmet"}`}>
                     {r.met ? (
-                      <Check size={12} strokeWidth={3.2} color="#fff" />
+                      <Check size={12} strokeWidth={3.2} color="var(--color-white)" />
                     ) : null}
                   </span>
                   <span className={`lvp-req-label ${r.met ? "met" : "unmet"}`}>

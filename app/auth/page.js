@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { GOOGLE_LOGO } from "../../lib/palettes";
 
 // Known disposable / throwaway email domains. Blocking these at signup stops the
 // low-effort bot & abuse accounts that use temporary inboxes to dodge email
@@ -303,13 +304,13 @@ function AuthPageContent() {
     width: "100%",
     padding: "12px 14px",
     borderRadius: "12px",
-    border: "1.5px solid var(--color-border, #EDE8E0)",
+    border: "1.5px solid var(--color-border)",
     fontSize: "16px",
     fontWeight: "500",
     fontFamily: "var(--font-urbanist, system-ui)",
     outline: "none",
     boxSizing: "border-box",
-    background: "#fff",
+    background: "var(--color-white)",
     transition: "border-color 0.15s",
   };
 
@@ -317,7 +318,7 @@ function AuthPageContent() {
     display: "block",
     fontSize: "14px",
     fontWeight: "600",
-    color: "var(--color-slate, #4B5563)",
+    color: "var(--color-slate)",
     marginBottom: "6px",
   };
 
@@ -325,12 +326,12 @@ function AuthPageContent() {
     width: "100%",
     height: "48px",
     padding: "0 24px",
-    background: "var(--color-terracotta, #CF5C36)",
+    background: "var(--color-terracotta-600)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#fff",
-    border: "2px solid var(--color-terracotta, #CF5C36)",
+    color: "var(--color-white)",
+    border: "2px solid var(--color-terracotta-600)",
     borderRadius: "12px",
     fontSize: "15px",
     fontWeight: "700",
@@ -343,9 +344,9 @@ function AuthPageContent() {
     width: "100%",
     height: "48px",
     padding: "0 24px",
-    background: "#fff",
-    color: "var(--color-navy-dark, #172531)",
-    border: "1.5px solid var(--color-border, #EDE8E0)",
+    background: "var(--color-white)",
+    color: "var(--color-navy-dark)",
+    border: "1.5px solid var(--color-border)",
     borderRadius: "12px",
     fontSize: "15px",
     fontWeight: "500",
@@ -379,7 +380,7 @@ function AuthPageContent() {
         alignItems: "center",
         gap: "12px",
         margin: "20px 0",
-        color: "var(--color-muted, #717A86)",
+        color: "var(--color-muted)",
         fontSize: "14px",
         fontWeight: "500",
       }}
@@ -388,7 +389,7 @@ function AuthPageContent() {
         style={{
           flex: 1,
           height: "1px",
-          background: "var(--color-border, #EDE8E0)",
+          background: "var(--color-border)",
         }}
       />
       or continue with email
@@ -396,7 +397,7 @@ function AuthPageContent() {
         style={{
           flex: 1,
           height: "1px",
-          background: "var(--color-border, #EDE8E0)",
+          background: "var(--color-border)",
         }}
       />
     </div>
@@ -422,7 +423,7 @@ function AuthPageContent() {
         justifyContent: "center",
         width: "44px",
         height: "44px",
-        color: "var(--color-muted, #717A86)",
+        color: "var(--color-muted)",
         fontSize: "18px",
       }}
     >
@@ -439,7 +440,7 @@ function AuthPageContent() {
       <div
         style={{
           minHeight: "calc(100vh - 64px)",
-          background: "var(--color-cream, #F5F0E8)",
+          background: "var(--color-cream)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -451,8 +452,8 @@ function AuthPageContent() {
           style={{
             width: "32px",
             height: "32px",
-            border: "3px solid var(--color-border, #EDE8E0)",
-            borderTopColor: "var(--color-terracotta, #CF5C36)",
+            border: "3px solid var(--color-border)",
+            borderTopColor: "var(--color-terracotta)",
             borderRadius: "50%",
             animation: "authSpin 0.7s linear infinite",
           }}
@@ -482,24 +483,26 @@ function AuthPageContent() {
           with it. */}
       <style jsx global>{`
         .auth-link {
-          color: var(--color-terracotta, #cf5c36);
+          color: var(--color-terracotta-700);
           transition: color 0.18s ease;
         }
         .auth-browse {
-          color: var(--color-muted, #717a86);
+          color: var(--color-muted);
           transition: color 0.18s ease;
         }
         .auth-link:hover,
         .auth-browse:hover,
-        .auth-browse:hover svg {
-          color: var(--color-navy-dark, #172531);
+        @media (hover: hover) {
+          .auth-browse:hover svg {
+            color: var(--color-navy-dark);
+          }
         }
       `}</style>
       <div
         className="auth-page-wrap"
         style={{
           minHeight: "calc(100vh - 64px)",
-          background: "var(--color-cream, #F5F0E8)",
+          background: "var(--color-cream)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -510,13 +513,13 @@ function AuthPageContent() {
       >
         <div
           style={{
-            background: "#fff",
+            background: "var(--color-white)",
             borderRadius: "20px",
             padding: "40px 36px",
             width: "100%",
             maxWidth: "420px",
-            boxShadow: "0 4px 24px rgba(23,37,49,0.08)",
-            border: "1px solid var(--color-border, #EDE8E0)",
+            boxShadow: "0 4px 24px rgb(var(--color-navy-dark-rgb) / 0.08)",
+            border: "1px solid var(--color-border)",
           }}
         >
           {/* Logo */}
@@ -525,7 +528,7 @@ function AuthPageContent() {
             <h1
               style={{
                 margin: 0,
-                color: "var(--color-navy-dark, #172531)",
+                color: "var(--color-navy-dark)",
                 fontSize: "22px",
                 fontWeight: "800",
                 fontFamily: "var(--font-urbanist, system-ui)",
@@ -537,7 +540,7 @@ function AuthPageContent() {
             <p
               style={{
                 margin: "6px 0 0",
-                color: "var(--color-muted, #717A86)",
+                color: "var(--color-muted)",
                 fontSize: "15px",
                 fontWeight: "500",
               }}
@@ -554,7 +557,7 @@ function AuthPageContent() {
               style={{
                 position: "relative",
                 display: "flex",
-                background: "var(--color-cream, #F5F0E8)",
+                background: "var(--color-cream)",
                 borderRadius: "12px",
                 padding: "4px",
                 marginBottom: "24px",
@@ -568,9 +571,9 @@ function AuthPageContent() {
                   bottom: "4px",
                   left: mode === "signin" ? "4px" : "calc(50% + 2px)",
                   width: "calc(50% - 6px)",
-                  background: "#fff",
+                  background: "var(--color-white)",
                   borderRadius: "7px",
-                  boxShadow: "0 1px 4px rgba(23,37,49,0.1)",
+                  boxShadow: "0 1px 4px rgb(var(--color-navy-dark-rgb) / 0.1)",
                   transition: "left 0.22s cubic-bezier(0.4,0,0.2,1)",
                   pointerEvents: "none",
                 }}
@@ -585,8 +588,8 @@ function AuthPageContent() {
                   background: "transparent",
                   color:
                     mode === "signin"
-                      ? "var(--color-navy-dark, #172531)"
-                      : "var(--color-muted, #717A86)",
+                      ? "var(--color-navy-dark)"
+                      : "var(--color-muted)",
                   fontSize: "15px",
                   fontWeight: "600",
                   cursor: "pointer",
@@ -608,8 +611,8 @@ function AuthPageContent() {
                   background: "transparent",
                   color:
                     mode === "signup"
-                      ? "var(--color-navy-dark, #172531)"
-                      : "var(--color-muted, #717A86)",
+                      ? "var(--color-navy-dark)"
+                      : "var(--color-muted)",
                   fontSize: "15px",
                   fontWeight: "600",
                   cursor: "pointer",
@@ -628,8 +631,8 @@ function AuthPageContent() {
           {error && (
             <div
               style={{
-                background: "#FCEAEA",
-                color: "#C94040",
+                background: "var(--color-error-light)",
+                color: "var(--color-error)",
                 borderRadius: "8px",
                 padding: "10px 14px",
                 fontSize: "14px",
@@ -644,8 +647,8 @@ function AuthPageContent() {
           {successMsg && (
             <div
               style={{
-                background: "#EDFAF3",
-                color: "#1A6641",
+                background: "var(--color-success-light)",
+                color: "var(--color-success-text)",
                 borderRadius: "8px",
                 padding: "10px 14px",
                 fontSize: "14px",
@@ -662,8 +665,8 @@ function AuthPageContent() {
           .auth-page-wrap { padding-left: 20px; padding-right: 20px; }
           @media (max-width: 640px) { .auth-page-wrap { padding-left: 16px; padding-right: 16px; } }
           .auth-form-content { animation: fadeIn 0.2s ease; }
-          .auth-primary-btn:hover:not(:disabled) { background: #fff !important; color: var(--color-terracotta, #CF5C36) !important; border: 2px solid var(--color-terracotta, #CF5C36) !important; }
-          .auth-google-btn:hover { border-color: var(--color-navy-dark, #172531) !important; background: var(--color-navy-dark, #172531) !important; color: #fff !important; }
+          @media (hover: hover) { .auth-primary-btn:hover:not(:disabled) { background: var(--color-white) !important; color: var(--color-terracotta-700) !important; border: 2px solid var(--color-terracotta-700) !important; } }
+          @media (hover: hover) { .auth-google-btn:hover { border-color: var(--color-navy-dark) !important; background: var(--color-navy-dark) !important; color: var(--color-white) !important; } }
         `}</style>
 
           {/* SIGN IN */}
@@ -784,7 +787,7 @@ function AuthPageContent() {
                       margin: "6px 2px 0",
                       fontSize: "12.5px",
                       lineHeight: 1.4,
-                      color: "var(--color-muted, #717A86)",
+                      color: "var(--color-muted)",
                     }}
                   >
                     At least 8 characters, with an uppercase and lowercase
@@ -821,7 +824,7 @@ function AuthPageContent() {
                   style={{
                     fontSize: "13px",
                     fontWeight: "500",
-                    color: "var(--color-muted, #717A86)",
+                    color: "var(--color-muted)",
                     textAlign: "center",
                     marginTop: "12px",
                   }}
@@ -839,7 +842,7 @@ function AuthPageContent() {
                 style={{
                   fontSize: "15px",
                   fontWeight: "500",
-                  color: "var(--color-slate, #4B5563)",
+                  color: "var(--color-slate)",
                   marginBottom: "20px",
                   lineHeight: "1.65",
                 }}
@@ -947,19 +950,19 @@ function GoogleIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 48 48">
       <path
-        fill="#FFC107"
+        fill={GOOGLE_LOGO.amber450}
         d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.5 6.8 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z"
       />
       <path
-        fill="#FF3D00"
+        fill={GOOGLE_LOGO.red500}
         d="M6.3 14.7l6.6 4.8C14.7 16 19.1 13 24 13c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.5 6.8 29.5 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"
       />
       <path
-        fill="#4CAF50"
+        fill={GOOGLE_LOGO.green500}
         d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.4C9.8 35.5 16.4 44 24 44z"
       />
       <path
-        fill="#1976D2"
+        fill={GOOGLE_LOGO.blue500}
         d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.2 5.2C37 38.4 44 33 44 24c0-1.3-.1-2.7-.4-3.9z"
       />
     </svg>

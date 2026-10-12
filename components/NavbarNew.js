@@ -16,11 +16,11 @@ function PawMark({ size = 28 }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <ellipse cx="14" cy="17" rx="6.5" ry="5.5" fill="#CF5C36" />
-      <ellipse cx="7.5" cy="10.5" rx="2.8" ry="3.2" fill="#CF5C36" />
-      <ellipse cx="20.5" cy="10.5" rx="2.8" ry="3.2" fill="#CF5C36" />
-      <ellipse cx="10.5" cy="8" rx="2.4" ry="2.8" fill="#CF5C36" />
-      <ellipse cx="17.5" cy="8" rx="2.4" ry="2.8" fill="#CF5C36" />
+      <ellipse cx="14" cy="17" rx="6.5" ry="5.5" fill="var(--color-terracotta)" />
+      <ellipse cx="7.5" cy="10.5" rx="2.8" ry="3.2" fill="var(--color-terracotta)" />
+      <ellipse cx="20.5" cy="10.5" rx="2.8" ry="3.2" fill="var(--color-terracotta)" />
+      <ellipse cx="10.5" cy="8" rx="2.4" ry="2.8" fill="var(--color-terracotta)" />
+      <ellipse cx="17.5" cy="8" rx="2.4" ry="2.8" fill="var(--color-terracotta)" />
     </svg>
   );
 }
@@ -205,12 +205,12 @@ export default function NavbarNew() {
       <style>{`
         .pp-nav {
           position: sticky; top: 0; z-index: 100; width: 100%; height: 64px;
-          background: var(--color-navy-dark, #172531);
-          box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+          background: var(--color-navy-dark);
+          box-shadow: 0 2px 12px rgb(var(--color-black-rgb) / 0.25);
           transition: box-shadow 0.2s ease;
           will-change: transform; transform: translateZ(0); backface-visibility: hidden;
         }
-        .pp-nav.scrolled { box-shadow: 0 4px 24px rgba(23,37,49,0.25); }
+        .pp-nav.scrolled { box-shadow: 0 4px 24px rgb(var(--color-navy-dark-rgb) / 0.25); }
         .pp-nav-inner {
           width: 100%; max-width: 1280px; margin: 0 auto; height: 100%;
           display: flex; align-items: center; justify-content: space-between;
@@ -218,7 +218,7 @@ export default function NavbarNew() {
         }
         @media (min-width: 900px) { .pp-nav-inner { padding: 0 24px; } }
         .pp-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
-        .pp-logo-text { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.025em; font-family: var(--font,'Urbanist',sans-serif); }
+        .pp-logo-text { font-size: 18px; font-weight: 800; color: var(--color-white); letter-spacing: -0.025em; font-family: var(--font,'Urbanist',sans-serif); }
         .pp-nav-links { display: none; align-items: center; gap: 32px; list-style: none; position: relative; }
         @media (min-width: 900px) { .pp-nav-links { display: flex; } }
 
@@ -234,7 +234,7 @@ export default function NavbarNew() {
            the 44px link box and left the line detached from the label. */
         .pp-nav-indicator {
           position: absolute; top: 0; height: 2px;
-          background: var(--color-terracotta, #CF5C36); border-radius: 9999px;
+          background: var(--color-terracotta); border-radius: 9999px;
           transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease;
           pointer-events: none; opacity: 0; left: 0; transform-origin: left center;
         }
@@ -247,11 +247,11 @@ export default function NavbarNew() {
 
 
 
-        .pp-nav-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.6); text-decoration: none; font-family: var(--font,'Urbanist',sans-serif); white-space: nowrap; padding-bottom: 8px; transition: color 0.15s ease; position: relative; }
+        .pp-nav-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 500; color: rgb(var(--color-white-rgb) / 0.6); text-decoration: none; font-family: var(--font,'Urbanist',sans-serif); white-space: nowrap; padding-bottom: 8px; transition: color 0.15s ease; position: relative; }
         .pp-nav-link span { display: block; font-weight: 500; }
         .pp-nav-link span::before { content: attr(data-label); font-weight: 700; visibility: hidden; height: 0; display: block; overflow: hidden; pointer-events: none; user-select: none; }
-        .pp-nav-link:hover { color: #fff; }
-        .pp-nav-link.active { color: var(--color-gold, #EFC88B); }
+        @media (hover: hover) { .pp-nav-link:hover { color: var(--color-white); } }
+        .pp-nav-link.active { color: var(--color-gold); }
         .pp-nav-link.active span { font-weight: 700; }
 
 
@@ -271,14 +271,16 @@ export default function NavbarNew() {
         @media (min-width: 900px) {
           .pp-signin-btn {
             display: inline-flex; align-items: center; justify-content: center;
-            height: 42px; padding: 0 18px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.35);
-            background: transparent; color: #fff; font-size: 14px; font-weight: 700;
+            height: 42px; padding: 0 18px; border-radius: 12px; border: 2px solid rgb(var(--color-white-rgb) / 0.35);
+            background: transparent; color: var(--color-white); font-size: 14px; font-weight: 700;
             font-family: var(--font-urbanist,'Urbanist',sans-serif); text-decoration: none;
             cursor: pointer; transition: border-color 0.2s, background 0.2s; white-space: nowrap;
           }
-          .pp-signin-btn:hover { 
-            background: rgba(255,255,255,0.06); 
-            border-color: rgba(255,255,255,0.7); 
+          @media (hover: hover) {
+            .pp-signin-btn:hover {
+              background: rgb(var(--color-white-rgb) / 0.06); 
+              border-color: rgb(var(--color-white-rgb) / 0.7); 
+            }
           }
         }
         .pp-get-started-btn { display: none; }
@@ -286,16 +288,18 @@ export default function NavbarNew() {
           .pp-get-started-btn {
             display: inline-flex; align-items: center; justify-content: center;
             height: 42px; padding: 0 18px; border-radius: 12px;
-            border: 2px solid var(--color-terracotta, #CF5C36);
-            background: var(--color-terracotta, #CF5C36);
-            color: #fff; font-size: 14px; font-weight: 700;
+            border: 2px solid var(--color-terracotta-600);
+            background: var(--color-terracotta-600);
+            color: var(--color-white); font-size: 14px; font-weight: 700;
             font-family: var(--font-urbanist,'Urbanist',sans-serif);
             text-decoration: none; cursor: pointer; white-space: nowrap;
             transition: background 0.2s, color 0.2s;
           }
-          .pp-get-started-btn:hover {
-            background: #fff;
-            color: var(--color-terracotta, #CF5C36);
+          @media (hover: hover) {
+            .pp-get-started-btn:hover {
+              background: var(--color-white);
+              color: var(--color-terracotta-700);
+            }
           }
         }
 
@@ -307,12 +311,12 @@ export default function NavbarNew() {
 
 
         .pp-avatar-btn {
-          width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
-          background: var(--color-terracotta, #CF5C36); color: #fff; font-size: 14px; font-weight: 700;
+          width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgb(var(--color-white-rgb) / 0.2);
+          background: var(--color-terracotta-600); color: var(--color-white); font-size: 14px; font-weight: 700;
           display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden;
           transition: border-color 0.15s, transform 0.15s; flex-shrink: 0; font-family: var(--font,'Urbanist',sans-serif);
         }
-        .pp-avatar-btn:hover { border-color: rgba(255,255,255,0.5); transform: scale(1.05); }
+        @media (hover: hover) { .pp-avatar-btn:hover { border-color: rgb(var(--color-white-rgb) / 0.5); transform: scale(1.05); } }
 
 
 
@@ -323,8 +327,8 @@ export default function NavbarNew() {
 
         .pp-dropdown {
           position: absolute; top: calc(100% + 8px); right: 0;
-          background: linear-gradient(to bottom, #1E3347 0%, #172531 60%, #121E28 100%);
-          border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;
+          background: linear-gradient(to bottom, color-mix(in srgb, var(--color-navy-mid) 35%, var(--color-navy-dark)) 0%, var(--color-navy-dark) 60%, color-mix(in srgb, var(--color-navy-deeper) 30%, var(--color-navy-dark)) 100%);
+          border: 1px solid rgb(var(--color-white-rgb) / 0.1); border-radius: 4px;
           min-width: 210px; overflow: hidden; z-index: 200;
           animation: ddFadeIn 0.18s cubic-bezier(0.4,0,0.2,1);
         }
@@ -339,11 +343,11 @@ export default function NavbarNew() {
 
 
 
-        .pp-dd-link { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.85); text-decoration: none; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.12s, color 0.12s; }
-        .pp-dd-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
-        .pp-dd-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0; }
-        .pp-dd-signout { display: block; width: 100%; padding: 11px 16px; text-align: left; background: none; border: none; font-size: 14px; font-weight: 500; color: var(--color-terracotta, #CF5C36); cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.12s; }
-        .pp-dd-signout:hover { background: rgba(207,92,54,0.12); }
+        .pp-dd-link { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 14px; font-weight: 500; color: rgb(var(--color-white-rgb) / 0.85); text-decoration: none; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.12s, color 0.12s; }
+        @media (hover: hover) { .pp-dd-link:hover { background: rgb(var(--color-white-rgb) / 0.08); color: var(--color-white); } }
+        .pp-dd-divider { border: none; border-top: 1px solid rgb(var(--color-white-rgb) / 0.08); margin: 4px 0; }
+        .pp-dd-signout { display: block; width: 100%; padding: 11px 16px; text-align: left; background: none; border: none; font-size: 14px; font-weight: 500; color: rgb(var(--color-white-rgb) / 0.85); cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.12s; }
+        @media (hover: hover) { .pp-dd-signout:hover { background: rgb(var(--color-terracotta-rgb) / 0.12); } }
 
 
 
@@ -353,9 +357,9 @@ export default function NavbarNew() {
 
 
         .pp-hamburger { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 36px; height: 36px; background: none; border: none; cursor: pointer; padding: 0; z-index: 310; flex-shrink: 0; border-radius: 6px; }
-        .pp-hamburger:hover { background: rgba(255,255,255,0.08); }
+        @media (hover: hover) { .pp-hamburger:hover { background: rgb(var(--color-white-rgb) / 0.08); } }
         @media (min-width: 900px) { .pp-hamburger { display: none !important; } }
-        .pp-hamburger-line { width: 22px; height: 2px; background: #fff; border-radius: 9999px; transition: transform 0.15s, opacity 0.15s; transform-origin: center; }
+        .pp-hamburger-line { width: 22px; height: 2px; background: var(--color-white); border-radius: 9999px; transition: transform 0.15s, opacity 0.15s; transform-origin: center; }
         .pp-hamburger.open .pp-hamburger-line:nth-child(1) { transform: translateY(7px) rotate(45deg); }
         .pp-hamburger.open .pp-hamburger-line:nth-child(2) { opacity: 0; transform: scaleX(0); }
         .pp-hamburger.open .pp-hamburger-line:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
@@ -367,7 +371,7 @@ export default function NavbarNew() {
 
 
 
-        .pp-mobile-overlay { position: fixed; inset: 0; z-index: 99; background: var(--color-navy-dark,#172531); display: flex; flex-direction: column; padding: 88px 16px 48px; overflow-y: auto; animation: mobileSlideIn 0.3s ease forwards; }
+        .pp-mobile-overlay { position: fixed; inset: 0; z-index: 99; background: var(--color-navy-dark); display: flex; flex-direction: column; padding: 88px 16px 48px; overflow-y: auto; animation: mobileSlideIn 0.3s ease forwards; }
         @media (min-width: 900px) { .pp-mobile-overlay { display: none !important; } }
         .pp-mobile-overlay.closing { animation: mobileSlideOut 0.22s ease forwards; }
         @keyframes mobileSlideIn  { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
@@ -381,9 +385,9 @@ export default function NavbarNew() {
 
 
         .pp-mobile-links { display: flex; flex-direction: column; gap: 4px; flex: 1;}
-        .pp-mobile-link { display: flex; align-items: center; gap: 14px; padding: 7px 0; font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.75); text-decoration: none; font-family: var(--font,'Urbanist',sans-serif); transition: color 0.15s; animation: mobileLinkFadeIn 0.35s ease both; }
-        .pp-mobile-link:hover { color: #fff; }
-        .pp-mobile-link.active { color: var(--color-gold,#EFC88B); }
+        .pp-mobile-link { display: flex; align-items: center; gap: 14px; padding: 7px 0; font-size: 22px; font-weight: 700; color: rgb(var(--color-white-rgb) / 0.75); text-decoration: none; font-family: var(--font,'Urbanist',sans-serif); transition: color 0.15s; animation: mobileLinkFadeIn 0.35s ease both; }
+        @media (hover: hover) { .pp-mobile-link:hover { color: var(--color-white); } }
+        .pp-mobile-link.active { color: var(--color-gold); }
         @keyframes mobileLinkFadeIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:translateX(0); } }
         .pp-mobile-link:nth-child(1) { animation-delay: 0.05s; }
         .pp-mobile-link:nth-child(2) { animation-delay: 0.10s; }
@@ -398,13 +402,13 @@ export default function NavbarNew() {
 
 
 
-        .pp-mobile-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0 16px; }
-        .pp-mobile-signin-btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 52px; padding: 0; text-align: center; background: transparent; border: 2px solid rgba(255,255,255,0.35); border-radius: 12px; font-size: 16px; font-weight: 700; color: #fff; text-decoration: none; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin-bottom: 8px; transition: background 0.2s, border-color 0.2s; }
-        .pp-mobile-signin-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.7); }
-        .pp-mobile-signup-btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 52px; padding: 0; text-align: center; background: var(--color-terracotta,#CF5C36); border: 2px solid var(--color-terracotta,#CF5C36); border-radius: 12px; font-size: 16px; font-weight: 700; color: #fff; text-decoration: none; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.2s, color 0.2s; }
-        .pp-mobile-signup-btn:hover { background: #fff; color: var(--color-terracotta,#CF5C36); }
-        .pp-mobile-signout { display: flex; align-items: center; justify-content: center; width: 100%; height: 52px; padding: 0; text-align: center; background: rgba(207,92,54,0.15); border: 1.5px solid rgba(207,92,54,0.5); border-radius: 12px; font-size: 16px; font-weight: 700; color: var(--color-terracotta, #CF5C36); cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.15s; }
-        .pp-mobile-signout:hover { background: rgba(207,92,54,0.25); }
+        .pp-mobile-divider { width: 100%; height: 1px; background: rgb(var(--color-white-rgb) / 0.1); margin: 20px 0 16px; }
+        .pp-mobile-signin-btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 52px; padding: 0; text-align: center; background: transparent; border: 2px solid rgb(var(--color-white-rgb) / 0.35); border-radius: 12px; font-size: 16px; font-weight: 700; color: var(--color-white); text-decoration: none; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin-bottom: 8px; transition: background 0.2s, border-color 0.2s; }
+        @media (hover: hover) { .pp-mobile-signin-btn:hover { background: rgb(var(--color-white-rgb) / 0.06); border-color: rgb(var(--color-white-rgb) / 0.7); } }
+        .pp-mobile-signup-btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 52px; padding: 0; text-align: center; background: var(--color-terracotta-600); border: 2px solid var(--color-terracotta-600); border-radius: 12px; font-size: 16px; font-weight: 700; color: var(--color-white); text-decoration: none; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.2s, color 0.2s; }
+        @media (hover: hover) { .pp-mobile-signup-btn:hover { background: var(--color-white); color: var(--color-terracotta-700); } }
+        .pp-mobile-signout { display: flex; align-items: center; justify-content: center; width: 100%; height: 52px; padding: 0; text-align: center; background: rgb(var(--color-terracotta-rgb) / 0.15); border: 1.5px solid rgb(var(--color-terracotta-rgb) / 0.5); border-radius: 12px; font-size: 16px; font-weight: 700; color: rgb(var(--color-white-rgb) / 0.85); cursor: pointer; font-family: var(--font-urbanist,'Urbanist',sans-serif); transition: background 0.15s; }
+        @media (hover: hover) { .pp-mobile-signout:hover { background: rgb(var(--color-terracotta-rgb) / 0.25); } }
 
 
 
@@ -413,7 +417,7 @@ export default function NavbarNew() {
 
 
 
-        .pp-mobile-section-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.10em; margin: 0 0 2px; }
+        .pp-mobile-section-label { font-size: 11px; font-weight: 700; color: rgb(var(--color-white-rgb) / 0.3); text-transform: uppercase; letter-spacing: 0.10em; margin: 0 0 2px; }
         /* Legal section — vertical list of muted secondary links. */
         .pp-mobile-legal-row {
           display: flex;
@@ -425,13 +429,13 @@ export default function NavbarNew() {
         .pp-mobile-legal-link {
           font-size: 16px;
           font-weight: 500;
-          color: rgba(255,255,255,0.55);
+          color: rgb(var(--color-white-rgb) / 0.55);
           text-decoration: none;
           font-family: var(--font,'Urbanist',sans-serif);
           padding: 6px 0;
           transition: color 0.15s;
         }
-        .pp-mobile-legal-link:hover { color: #fff; }
+        @media (hover: hover) { .pp-mobile-legal-link:hover { color: var(--color-white); } }
       `}</style>
 
       <nav className={`pp-nav${scrolled ? " scrolled" : ""}`}>

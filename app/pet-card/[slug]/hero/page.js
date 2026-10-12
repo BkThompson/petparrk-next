@@ -143,7 +143,7 @@ export default function HeroCardPage() {
             padding:40px;
             text-align:center;
             font-family:var(--font-urbanist,'Urbanist',sans-serif);
-            color:#172531;
+            color:var(--color-navy-dark);
           }
 
           .hc-notfound-title { 
@@ -154,7 +154,7 @@ export default function HeroCardPage() {
           .hc-notfound-sub {
             font-size: 16px; 
             font-weight: 500; 
-            color: #4B5563;
+            color: var(--color-slate);
             margin: 0 0 10px; 
             max-width: 380px; 
             line-height: 1.5;
@@ -166,17 +166,19 @@ export default function HeroCardPage() {
             padding:0px 24px;
             height: 42px;
             border-radius:12px;
-            background:#CF5C36;
-            color:#fff;
+            background:var(--color-terracotta-600);
+            color:var(--color-white);
             font-size:15px;
             font-weight:700;
             text-decoration:none;
-            border:2px solid #CF5C36;
+            border:2px solid var(--color-terracotta-600);
             transition:background 0.15s, color 0.15s;
           }
-          .hc-notfound-btn:hover {
-           background:#fff;
-            color:#CF5C36;
+          @media (hover: hover) {
+            .hc-notfound-btn:hover {
+             background:var(--color-white);
+              color:var(--color-terracotta-700);
+            }
           }
           `}</style>
       </div>

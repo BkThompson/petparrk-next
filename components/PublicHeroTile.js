@@ -37,6 +37,7 @@
 
 import Link from "next/link";
 import HeroNameplate from "./HeroNameplate";
+import { HEX, rgbaHex } from "../lib/tokens";
 
 // Count-driven columns, matching Profile's grid: a single card is centered, two
 // sit as a centered pair, three or more flow 3-up (so four wraps 3+1). Profile
@@ -52,7 +53,7 @@ export default function PublicHeroTile({ card, username }) {
   // hero_bg_color drives the tile background AND the nameplate's photo blend,
   // so the photo dissolves into the card exactly as it does on the real Hero
   // Card. Falls back to navy when the snapshot predates the color field.
-  const bg = card.hero_bg_color || "#172531";
+  const bg = card.hero_bg_color || HEX.navyDark;
 
   return (
     <Link
@@ -94,7 +95,7 @@ export function PublicHeroTileStyles({ C }) {
         display: block;
         color: inherit;
       }
-      .pht-outer:hover { background: rgba(239,200,139,0.5); }
+      @media (hover: hover) { .pht-outer:hover { background: ${rgbaHex("gold", 0.5)}; } }
       .pht-outer:focus-visible {
         outline: 2px solid ${C.terracotta};
         outline-offset: 2px;
@@ -102,7 +103,7 @@ export function PublicHeroTileStyles({ C }) {
       .pht-card {
         border-radius: 16px;
         transition: box-shadow 0.25s;
-        box-shadow: 0 2px 12px rgba(23,37,49,0.07);
+        box-shadow: 0 2px 12px ${rgbaHex("navyDark", 0.07)};
         border: 1px solid ${C.border};
         position: relative;
         overflow: hidden;
@@ -110,8 +111,10 @@ export function PublicHeroTileStyles({ C }) {
       }
       /* The 0.9 ring is a box-shadow on the INNER edge, so it reads at the same
          intensity over a dark hero background as it does over PetTile's white. */
-      .pht-outer:hover .pht-card {
-        box-shadow: 0 0 0 1.5px rgba(239,200,139,0.9), 0 16px 48px rgba(23,37,49,0.13);
+      @media (hover: hover) {
+        .pht-outer:hover .pht-card {
+          box-shadow: 0 0 0 1.5px ${rgbaHex("gold", 0.9)}, 0 16px 48px ${rgbaHex("navyDark", 0.13)};
+        }
       }
       /* Portrait, to match Profile's pet tile footprint (a 1:1 photo plus a
          name strip ≈ 340×406). The mini nameplate overlays the whole area, so

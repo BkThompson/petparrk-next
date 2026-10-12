@@ -161,7 +161,7 @@ export default function ProfileEditForm({
                 margin: "8px 0 0",
                 padding: "12px 14px",
                 background: C.warningBg,
-                border: `1px solid ${C.warning}33`,
+                border: `1px solid rgb(var(--color-warning-text-rgb) / 0.2)`,
                 borderRadius: "10px",
                 display: "flex",
                 gap: "10px",
@@ -171,7 +171,7 @@ export default function ProfileEditForm({
               <AlertTriangle
                 size={18}
                 strokeWidth={2.2}
-                style={{ color: C.warning, flexShrink: 0, marginTop: "1px" }}
+                style={{ color: C.warningText, flexShrink: 0, marginTop: "1px" }}
               />
               <div style={{ minWidth: 0 }}>
                 <p
@@ -179,7 +179,7 @@ export default function ProfileEditForm({
                     margin: 0,
                     fontSize: "14px",
                     fontWeight: 700,
-                    color: C.warning,
+                    color: C.warningText,
                     textWrap: "pretty",
                   }}
                 >
@@ -190,7 +190,7 @@ export default function ProfileEditForm({
                     margin: "3px 0 0",
                     fontSize: "14px",
                     fontWeight: 500,
-                    color: C.warning,
+                    color: C.warningText,
                     lineHeight: 1.45,
                     textWrap: "pretty",
                   }}
@@ -202,7 +202,7 @@ export default function ProfileEditForm({
                     margin: "6px 0 0",
                     fontSize: "14px",
                     fontWeight: 500,
-                    color: C.warning,
+                    color: C.warningText,
                     lineHeight: 1.45,
                     textWrap: "pretty",
                   }}
@@ -264,7 +264,7 @@ export default function ProfileEditForm({
                 margin: "6px 0 0",
                 fontSize: "14px",
                 fontWeight: 600,
-                color: C.terracotta,
+                color: C.terracotta700,
               }}
             >
               {zipCity}
@@ -378,7 +378,7 @@ export default function ProfileEditForm({
             <Link
               href={savedUsername ? previewHref : "#"}
               style={{
-                color: C.terracotta,
+                color: C.terracotta700,
                 textDecoration: "none",
                 fontWeight: 600,
                 opacity: savedUsername ? 1 : 0.45,
@@ -420,7 +420,7 @@ export default function ProfileEditForm({
                     background: "none",
                     border: "none",
                     padding: 0,
-                    color: copied ? C.success : C.terracotta,
+                    color: copied ? C.successText : C.terracotta700,
                     fontWeight: 600,
                     fontSize: "14px",
                     cursor: savedUsername ? "pointer" : "not-allowed",

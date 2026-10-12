@@ -1,7 +1,8 @@
 "use client";
+import { HEX } from "../lib/tokens";
 
 export function bgShade(hex, t) {
-  const h = (hex || "#000000").replace("#", "");
+  const h = (hex || HEX.black).replace("#", "");
   const r = parseInt(h.slice(0, 2), 16);
   const g = parseInt(h.slice(2, 4), 16);
   const b = parseInt(h.slice(4, 6), 16);
@@ -13,7 +14,7 @@ export function bgShade(hex, t) {
 
 // rgba variant so layers can blend softly instead of stacking as opaque fills.
 function bgShadeA(hex, t, alpha) {
-  const h = (hex || "#000000").replace("#", "");
+  const h = (hex || HEX.black).replace("#", "");
   const r = parseInt(h.slice(0, 2), 16);
   const g = parseInt(h.slice(2, 4), 16);
   const b = parseInt(h.slice(4, 6), 16);
@@ -296,7 +297,7 @@ export function CssDesign({ design, bg, accent, lighting }) {
       const n = c.match(/\d+/g);
       return n ? n.slice(0, 3).map(Number) : [0, 0, 0];
     }
-    const h = (c || "#000000").replace("#", "");
+    const h = (c || HEX.black).replace("#", "");
     return [
       parseInt(h.slice(0, 2), 16),
       parseInt(h.slice(2, 4), 16),
@@ -744,7 +745,7 @@ export function CssDesign({ design, bg, accent, lighting }) {
                   cx={x}
                   cy={y}
                   r={r}
-                  fill={tier === 1 ? bgShadeA(accent, 0.5, 1) : "#fff"}
+                  fill={tier === 1 ? bgShadeA(accent, 0.5, 1) : HEX.white}
                   opacity={o}
                 />
               ))}

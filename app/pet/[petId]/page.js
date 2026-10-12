@@ -283,51 +283,51 @@ export default function Home() {
         .reveal-up.visible,.reveal-left.visible,.reveal-right.visible,.reveal-scale.visible { opacity:1; transform:translateY(0) translateX(0) scale(1); }
         .reveal-delay-1{transition-delay:0.12s} .reveal-delay-2{transition-delay:0.26s} .reveal-delay-3{transition-delay:0.40s}
 
-        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:1.5px solid rgba(255,255,255,0.1); font-size:16px; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgba(255,255,255,0.06); color:#fff; outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
-        .hero-search::placeholder { color:rgba(255,255,255,0.35); }
-        .hero-search:focus { border-color:var(--color-terracotta,#CF5C36); background:rgba(255,255,255,0.09); box-shadow:0 0 0 6px rgba(207,92,54,0.08),0 0 24px rgba(207,92,54,0.12),0 8px 32px rgba(0,0,0,0.2); }
+        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:1.5px solid rgb(var(--color-white-rgb) / 0.1); font-size:16px; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgb(var(--color-white-rgb) / 0.06); color:var(--color-white); outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
+        .hero-search::placeholder { color:rgb(var(--color-white-rgb) / 0.35); }
+        .hero-search:focus { border-color:var(--color-terracotta); background:rgb(var(--color-white-rgb) / 0.09); box-shadow:0 0 0 6px rgb(var(--color-terracotta-rgb) / 0.08),0 0 24px rgb(var(--color-terracotta-rgb) / 0.12),0 8px 32px rgb(var(--color-black-rgb) / 0.2); }
 
-        .pillar-card-outer { position:relative; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgba(239,200,139,0.55) 0%,rgba(207,92,54,0.25) 12%,rgba(255,255,255,0.04) 28%,transparent 42%,transparent 58%,rgba(255,255,255,0.04) 72%,rgba(207,92,54,0.2) 88%,rgba(239,200,139,0.45) 100%); transition:transform 0.3s; }
-        .pillar-card-outer:hover { transform:translateY(-4px); }
-        .pillar-card { background:linear-gradient(160deg,rgba(42,62,78,0.98) 0%,rgba(30,48,62,0.98) 40%,rgba(26,42,55,0.98) 100%); border-radius:20px; padding:36px 28px 32px; text-align:center; position:relative; overflow:hidden; display:flex; flex-direction:column; height:100%; box-sizing:border-box; transition:background 0.3s,box-shadow 0.3s; }
-        .pillar-card-outer:hover .pillar-card { background:linear-gradient(160deg,rgba(50,72,90,0.98) 0%,rgba(38,58,74,0.98) 40%,rgba(32,52,66,0.98) 100%); box-shadow:0 20px 50px rgba(0,0,0,0.35); }
+        .pillar-card-outer { position:relative; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgb(var(--color-gold-rgb) / 0.55) 0%,rgb(var(--color-terracotta-rgb) / 0.25) 12%,rgb(var(--color-white-rgb) / 0.04) 28%,transparent 42%,transparent 58%,rgb(var(--color-white-rgb) / 0.04) 72%,rgb(var(--color-terracotta-rgb) / 0.2) 88%,rgb(var(--color-gold-rgb) / 0.45) 100%); transition:transform 0.3s; }
+        @media (hover: hover) { .pillar-card-outer:hover { transform:translateY(-4px); } }
+        .pillar-card { background:linear-gradient(160deg,color-mix(in srgb, var(--color-navy-mid) 70%, var(--color-navy-dark)) 0%,color-mix(in srgb, var(--color-navy-mid) 30%, var(--color-navy-dark)) 40%,color-mix(in srgb, var(--color-navy-mid) 15%, var(--color-navy-dark)) 100%); border-radius:20px; padding:36px 28px 32px; text-align:center; position:relative; overflow:hidden; display:flex; flex-direction:column; height:100%; box-sizing:border-box; transition:background 0.3s,box-shadow 0.3s; }
+        @media (hover: hover) { .pillar-card-outer:hover .pillar-card { background:linear-gradient(160deg,var(--color-navy-mid) 0%,color-mix(in srgb, var(--color-navy-mid) 65%, var(--color-navy-dark)) 40%,color-mix(in srgb, var(--color-navy-mid) 45%, var(--color-navy-dark)) 100%); box-shadow:0 20px 50px rgb(var(--color-black-rgb) / 0.35); } }
         .pillar-link-wrap { margin-top:auto; padding-top:24px; }
-        .pillar-icon-wrap { width:68px; height:68px; border-radius:18px; margin:0 auto 22px; display:flex; align-items:center; justify-content:center; font-size:30px; position:relative; z-index:1; box-shadow:0 4px 16px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.15); }
-        .pillar-icon-wrap.pillar-icon-0 { background:rgba(207,92,54,0.14)!important; border:1px solid rgba(207,92,54,0.28); }
-        .pillar-icon-wrap.pillar-icon-1 { background:rgba(100,160,210,0.14)!important; border:1px solid rgba(100,160,210,0.25); }
-        .pillar-icon-wrap.pillar-icon-2 { background:rgba(80,140,80,0.14)!important; border:1px solid rgba(80,140,80,0.25); }
+        .pillar-icon-wrap { width:68px; height:68px; border-radius:18px; margin:0 auto 22px; display:flex; align-items:center; justify-content:center; font-size:30px; position:relative; z-index:1; box-shadow:0 4px 16px rgb(var(--color-black-rgb) / 0.3),inset 0 1px 0 rgb(var(--color-white-rgb) / 0.15); }
+        .pillar-icon-wrap.pillar-icon-0 { background:rgb(var(--color-terracotta-rgb) / 0.14)!important; border:1px solid rgb(var(--color-terracotta-rgb) / 0.28); }
+        .pillar-icon-wrap.pillar-icon-1 { background:rgb(var(--color-slate-blue-rgb) / 0.14)!important; border:1px solid rgb(var(--color-slate-blue-rgb) / 0.25); }
+        .pillar-icon-wrap.pillar-icon-2 { background:rgb(var(--color-success-rgb) / 0.14)!important; border:1px solid rgb(var(--color-success-rgb) / 0.25); }
 
         .step-card { padding:32px 0; display:grid; grid-template-columns:72px 1fr; gap:20px; align-items:start; }
-        .step-card+.step-card { border-top:1px solid rgba(255,255,255,0.07); }
-        .step-number { font-size:clamp(44px,6vw,60px); font-weight:800; line-height:1; color:rgba(239,200,139,0.15); font-family:var(--font-urbanist,'Urbanist',sans-serif); user-select:none; }
+        .step-card+.step-card { border-top:1px solid rgb(var(--color-white-rgb) / 0.07); }
+        .step-number { font-size:clamp(44px,6vw,60px); font-weight:800; line-height:1; color:rgb(var(--color-gold-rgb) / 0.15); font-family:var(--font-urbanist,'Urbanist',sans-serif); user-select:none; }
 
-        .vet-card { border:1px solid var(--color-border,#EDE8E0); border-radius:18px; padding:24px; background:#fff; transition:box-shadow 0.3s,transform 0.3s,border-color 0.3s; box-shadow:0 2px 12px rgba(23,37,49,0.05); }
-        .vet-card:hover { box-shadow:0 16px 48px rgba(23,37,49,0.13); transform:translateY(-4px); border-color:var(--color-terracotta,#CF5C36); }
+        .vet-card { border:1px solid var(--color-border); border-radius:18px; padding:24px; background:var(--color-white); transition:box-shadow 0.3s,transform 0.3s,border-color 0.3s; box-shadow:0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.05); }
+        @media (hover: hover) { .vet-card:hover { box-shadow:0 16px 48px rgb(var(--color-navy-dark-rgb) / 0.13); transform:translateY(-4px); border-color:var(--color-terracotta); } }
 
         .heart-btn { transition:transform 0.15s; border:none; background:none; cursor:pointer; padding:0; font-size:20px; line-height:1; }
-        .heart-btn:hover { transform:scale(1.2); }
+        @media (hover: hover) { .heart-btn:hover { transform:scale(1.2); } }
         .heart-animating { animation:heartPop 0.4s ease forwards; }
 
         .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:8px; font-size:11px; font-weight:700; white-space:nowrap; }
-        .badge-navy { background:#EBF0F5; color:#2C4657; }
-        .badge-success { background:#EDFAF3; color:#1A6641; }
-        .badge-error { background:#FCEAEA; color:#C94040; }
+        .badge-navy { background:var(--color-badge-navy-bg); color:var(--color-navy-mid); }
+        .badge-success { background:var(--color-success-light); color:var(--color-success-text); }
+        .badge-error { background:var(--color-error-light); color:var(--color-error); }
 
-        .price-chip { display:inline-flex; align-items:center; gap:5px; background:var(--color-cream,#F5F0E8); border-radius:8px; padding:6px 12px; font-size:13px; }
-        .price-chip-label { color:#9CA3AF; font-weight:500; }
-        .price-chip-value { font-weight:800; color:var(--color-terracotta,#CF5C36); }
+        .price-chip { display:inline-flex; align-items:center; gap:5px; background:var(--color-cream); border-radius:8px; padding:6px 12px; font-size:13px; }
+        .price-chip-label { color:var(--color-muted); font-weight:500; }
+        .price-chip-value { font-weight:800; color:var(--color-terracotta-700); }
 
         .pillars-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
         .vets-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; }
         @media(max-width:900px) { .pillars-grid { grid-template-columns:1fr; } }
 
         /* Terracotta button — invert to white bg + terracotta text on hover */
-        .btn-primary { padding:15px 36px; background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; text-decoration:none; font-family:var(--font-urbanist,'Urbanist',sans-serif); display:inline-block; transition:background 0.25s,color 0.25s; }
-        .btn-primary:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
-        .btn-outline-dark { padding:14px 36px; background:transparent; color:var(--color-navy-dark,#172531); border:2px solid var(--color-navy-dark,#172531); border-radius:12px; font-size:16px; font-weight:700; text-decoration:none; font-family:var(--font-urbanist,'Urbanist',sans-serif); display:inline-block; transition:background 0.25s,color 0.25s; }
-        .btn-outline-dark:hover { background:var(--color-navy-dark,#172531); color:#fff; }
+        .btn-primary { padding:15px 36px; background:var(--color-terracotta-600); color:var(--color-white); border:2px solid var(--color-terracotta-600); border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; text-decoration:none; font-family:var(--font-urbanist,'Urbanist',sans-serif); display:inline-block; transition:background 0.25s,color 0.25s; }
+        @media (hover: hover) { .btn-primary:hover { background:var(--color-white); color:var(--color-terracotta-700); } }
+        .btn-outline-dark { padding:14px 36px; background:transparent; color:var(--color-navy-dark); border:2px solid var(--color-navy-dark); border-radius:12px; font-size:16px; font-weight:700; text-decoration:none; font-family:var(--font-urbanist,'Urbanist',sans-serif); display:inline-block; transition:background 0.25s,color 0.25s; }
+        @media (hover: hover) { .btn-outline-dark:hover { background:var(--color-navy-dark); color:var(--color-white); } }
 
-        .skeleton { background:linear-gradient(90deg,#f0ece4 25%,#e8e0d4 50%,#f0ece4 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:18px; }
+        .skeleton { background:linear-gradient(90deg,var(--color-border) 25%,var(--color-border-strong) 50%,var(--color-border) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:18px; }
 
         @media(max-width:640px) {
           .step-card { grid-template-columns:52px 1fr; gap:14px; }
@@ -341,7 +341,7 @@ export default function Home() {
       {/* HERO */}
       <section
         style={{
-          background: "var(--color-navy-dark,#172531)",
+          background: "var(--color-navy-dark)",
           padding: "108px 0 120px",
           position: "relative",
           overflow: "hidden",
@@ -355,11 +355,11 @@ export default function Home() {
             pointerEvents: "none",
             opacity: 0.6,
             background:
-              "radial-gradient(ellipse at 20% 30%,rgba(44,70,87,0.8) 0%,transparent 50%),radial-gradient(ellipse at 80% 70%,rgba(30,50,65,0.8) 0%,transparent 50%),radial-gradient(ellipse at 50% 0%,rgba(207,92,54,0.10) 0%,transparent 40%)",
+              "radial-gradient(ellipse at 20% 30%,rgb(var(--color-navy-mid-rgb) / 0.8) 0%,transparent 50%),radial-gradient(ellipse at 80% 70%,rgb(var(--color-navy-dark-rgb) / 0.8) 0%,transparent 50%),radial-gradient(ellipse at 50% 0%,rgb(var(--color-terracotta-rgb) / 0.1) 0%,transparent 40%)",
           }}
         />
         {/* Grid texture commented out — orbs carry the background
-        <div style={{ position:"absolute", inset:0, pointerEvents:"none", backgroundImage:"linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px)", backgroundSize:"36px 36px", maskImage:"radial-gradient(ellipse 70% 70% at 50% 50%,black 30%,transparent 100%)", WebkitMaskImage:"radial-gradient(ellipse 70% 70% at 50% 50%,black 30%,transparent 100%)" }} />
+        <div style={{ position:"absolute", inset:0, pointerEvents:"none", backgroundImage:"linear-gradient(rgb(var(--color-white-rgb) / 0.03) 1px,transparent 1px),linear-gradient(90deg,rgb(var(--color-white-rgb) / 0.03) 1px,transparent 1px)", backgroundSize:"36px 36px", maskImage:"radial-gradient(ellipse 70% 70% at 50% 50%,black 30%,transparent 100%)", WebkitMaskImage:"radial-gradient(ellipse 70% 70% at 50% 50%,black 30%,transparent 100%)" }} />
         */}
         {/* Center bloom */}
         <div
@@ -370,7 +370,7 @@ export default function Home() {
             width: "700px",
             height: "480px",
             background:
-              "radial-gradient(ellipse at center,rgba(207,92,54,0.13) 0%,rgba(239,200,139,0.08) 50%,transparent 72%)",
+              "radial-gradient(ellipse at center,rgb(var(--color-terracotta-rgb) / 0.13) 0%,rgb(var(--color-gold-rgb) / 0.08) 50%,transparent 72%)",
             pointerEvents: "none",
             willChange: "transform",
             animation: "float3 7s ease-in-out infinite",
@@ -385,7 +385,7 @@ export default function Home() {
             width: "480px",
             height: "480px",
             background:
-              "radial-gradient(circle,rgba(207,92,54,0.34) 0%,transparent 65%)",
+              "radial-gradient(circle,rgb(var(--color-terracotta-rgb) / 0.34) 0%,transparent 65%)",
             pointerEvents: "none",
             willChange: "transform",
             animation: "float1 6s ease-in-out infinite",
@@ -400,7 +400,7 @@ export default function Home() {
             width: "400px",
             height: "400px",
             background:
-              "radial-gradient(circle,rgba(239,200,139,0.28) 0%,transparent 65%)",
+              "radial-gradient(circle,rgb(var(--color-gold-rgb) / 0.28) 0%,transparent 65%)",
             pointerEvents: "none",
             willChange: "transform",
             animation: "float2 5s ease-in-out infinite",
@@ -415,7 +415,7 @@ export default function Home() {
             width: "220px",
             height: "220px",
             background:
-              "radial-gradient(circle,rgba(100,160,210,0.32) 0%,transparent 60%)",
+              "radial-gradient(circle,rgb(var(--color-slate-blue-rgb) / 0.32) 0%,transparent 60%)",
             pointerEvents: "none",
             willChange: "transform",
             animation: "float2 4s ease-in-out infinite",
@@ -430,7 +430,7 @@ export default function Home() {
             width: "160px",
             height: "160px",
             background:
-              "radial-gradient(circle,rgba(120,180,230,0.26) 0%,transparent 60%)",
+              "radial-gradient(circle,rgb(var(--color-slate-blue-rgb) / 0.26) 0%,transparent 60%)",
             pointerEvents: "none",
             willChange: "transform",
             animation: "float1 5s ease-in-out infinite",
@@ -445,7 +445,7 @@ export default function Home() {
             width: "180px",
             height: "180px",
             background:
-              "radial-gradient(circle,rgba(80,140,200,0.30) 0%,transparent 60%)",
+              "radial-gradient(circle,rgb(var(--color-slate-blue-rgb) / 0.3) 0%,transparent 60%)",
             pointerEvents: "none",
             willChange: "transform",
             animation: "float3 6s ease-in-out infinite",
@@ -460,7 +460,7 @@ export default function Home() {
             width: "240px",
             height: "240px",
             background:
-              "radial-gradient(circle,rgba(207,92,54,0.26) 0%,transparent 65%)",
+              "radial-gradient(circle,rgb(var(--color-terracotta-rgb) / 0.26) 0%,transparent 65%)",
             pointerEvents: "none",
             willChange: "transform",
             animation: "floatBR1 6s ease-in-out infinite",
@@ -475,7 +475,7 @@ export default function Home() {
             width: "140px",
             height: "140px",
             background:
-              "radial-gradient(circle,rgba(239,200,139,0.28) 0%,transparent 65%)",
+              "radial-gradient(circle,rgb(var(--color-gold-rgb) / 0.28) 0%,transparent 65%)",
             pointerEvents: "none",
             willChange: "transform",
             animation: "floatBR2 4.5s ease-in-out infinite",
@@ -490,7 +490,7 @@ export default function Home() {
             right: 0,
             height: "80px",
             background:
-              "linear-gradient(to bottom,transparent,var(--color-navy-dark,#172531))",
+              "linear-gradient(to bottom,transparent,var(--color-navy-dark))",
             pointerEvents: "none",
           }}
         />
@@ -510,7 +510,7 @@ export default function Home() {
             style={{
               fontSize: "clamp(40px,7.5vw,72px)",
               fontWeight: "800",
-              color: "#fff",
+              color: "var(--color-white)",
               lineHeight: "1.03",
               marginBottom: "22px",
               fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -518,7 +518,7 @@ export default function Home() {
             }}
           >
             Know what you'll pay before{" "}
-            <span style={{ color: "var(--color-gold,#EFC88B)" }}>
+            <span style={{ color: "var(--color-gold)" }}>
               your next vet visit.
             </span>
           </h1>
@@ -526,7 +526,7 @@ export default function Home() {
             className="anim-3"
             style={{
               fontSize: "18px",
-              color: "rgba(255,255,255,0.6)",
+              color: "rgb(var(--color-white-rgb) / 0.6)",
               lineHeight: "1.75",
               marginBottom: "48px",
               maxWidth: "600px",
@@ -559,8 +559,8 @@ export default function Home() {
                 right: "8px",
                 top: "50%",
                 transform: "translateY(-50%)",
-                background: "var(--color-terracotta,#CF5C36)",
-                color: "#fff",
+                background: "var(--color-terracotta-600)",
+                color: "var(--color-white)",
                 border: "none",
                 borderRadius: "10px",
                 padding: "12px 22px",
@@ -579,7 +579,7 @@ export default function Home() {
 
       {/* VET TEASERS */}
       <section
-        style={{ background: "var(--color-cream,#F5F0E8)", padding: "96px 0" }}
+        style={{ background: "var(--color-cream)", padding: "96px 0" }}
       >
         <div className="pp-container">
           <div
@@ -593,7 +593,7 @@ export default function Home() {
                 fontWeight: "700",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                color: "var(--color-terracotta,#CF5C36)",
+                color: "var(--color-terracotta-700)",
                 marginBottom: "10px",
               }}
             >
@@ -603,7 +603,7 @@ export default function Home() {
               style={{
                 fontSize: "clamp(26px,3.5vw,40px)",
                 fontWeight: "800",
-                color: "var(--color-navy-dark,#172531)",
+                color: "var(--color-navy-dark)",
                 lineHeight: "1.1",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                 margin: 0,
@@ -650,7 +650,7 @@ export default function Home() {
                           style={{
                             fontSize: "17px",
                             fontWeight: "700",
-                            color: "var(--color-navy-dark,#172531)",
+                            color: "var(--color-navy-dark)",
                             textDecoration: "none",
                             fontFamily:
                               "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -663,7 +663,7 @@ export default function Home() {
                         <p
                           style={{
                             fontSize: "13px",
-                            color: "#9CA3AF",
+                            color: "var(--color-muted)",
                             margin: 0,
                           }}
                         >
@@ -744,7 +744,7 @@ export default function Home() {
                     </div>
                     <div
                       style={{
-                        borderTop: "1px solid var(--color-border,#EDE8E0)",
+                        borderTop: "1px solid var(--color-border)",
                         paddingTop: "14px",
                       }}
                     >
@@ -753,7 +753,7 @@ export default function Home() {
                         style={{
                           fontSize: "13px",
                           fontWeight: "700",
-                          color: "var(--color-terracotta,#CF5C36)",
+                          color: "var(--color-terracotta-700)",
                           textDecoration: "none",
                         }}
                       >
@@ -767,7 +767,7 @@ export default function Home() {
           ) : (
             <p
               style={{
-                color: "#9CA3AF",
+                color: "var(--color-muted)",
                 textAlign: "center",
                 padding: "48px 0",
               }}
@@ -784,7 +784,7 @@ export default function Home() {
               style={{
                 fontSize: "14px",
                 fontWeight: "700",
-                color: "var(--color-terracotta,#CF5C36)",
+                color: "var(--color-terracotta-700)",
                 textDecoration: "none",
               }}
             >
@@ -797,7 +797,7 @@ export default function Home() {
       {/* THREE PILLARS */}
       <section
         style={{
-          background: "var(--color-navy-mid,#2C4657)",
+          background: "var(--color-navy-mid)",
           padding: "96px 0",
           position: "relative",
           overflow: "hidden",
@@ -808,7 +808,7 @@ export default function Home() {
             position: "absolute",
             inset: 0,
             backgroundImage:
-              "radial-gradient(rgba(255,255,255,0.025) 1px,transparent 1px)",
+              "radial-gradient(rgb(var(--color-white-rgb) / 0.025) 1px,transparent 1px)",
             backgroundSize: "36px 36px",
             pointerEvents: "none",
           }}
@@ -828,7 +828,7 @@ export default function Home() {
                 fontWeight: "700",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                color: "var(--color-gold,#EFC88B)",
+                color: "var(--color-gold)",
                 marginBottom: "12px",
               }}
             >
@@ -838,7 +838,7 @@ export default function Home() {
               style={{
                 fontSize: "clamp(28px,4vw,44px)",
                 fontWeight: "800",
-                color: "#fff",
+                color: "var(--color-white)",
                 lineHeight: "1.1",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                 margin: "0 auto",
@@ -868,7 +868,7 @@ export default function Home() {
                       style={{
                         fontSize: "20px",
                         fontWeight: "800",
-                        color: "#fff",
+                        color: "var(--color-white)",
                         marginBottom: "12px",
                         fontFamily:
                           "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -880,7 +880,7 @@ export default function Home() {
                     <p
                       style={{
                         fontSize: "15px",
-                        color: "rgba(255,255,255,0.55)",
+                        color: "rgb(var(--color-white-rgb) / 0.55)",
                         lineHeight: "1.75",
                         marginBottom: "28px",
                       }}
@@ -896,7 +896,7 @@ export default function Home() {
                           gap: "6px",
                           fontSize: "13px",
                           fontWeight: "700",
-                          color: "var(--color-gold,#EFC88B)",
+                          color: "var(--color-gold)",
                           textDecoration: "none",
                         }}
                       >
@@ -914,7 +914,7 @@ export default function Home() {
       {/* HOW IT WORKS */}
       <section
         style={{
-          background: "var(--color-navy-dark,#172531)",
+          background: "var(--color-navy-dark)",
           padding: "96px 0 0",
           position: "relative",
           overflow: "hidden",
@@ -943,7 +943,7 @@ export default function Home() {
                   fontWeight: "700",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  color: "var(--color-gold,#EFC88B)",
+                  color: "var(--color-gold)",
                   marginBottom: "16px",
                 }}
               >
@@ -953,7 +953,7 @@ export default function Home() {
                 style={{
                   fontSize: "clamp(28px,4vw,44px)",
                   fontWeight: "800",
-                  color: "#fff",
+                  color: "var(--color-white)",
                   lineHeight: "1.1",
                   fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                   marginBottom: "20px",
@@ -965,7 +965,7 @@ export default function Home() {
               <p
                 style={{
                   fontSize: "16px",
-                  color: "rgba(255,255,255,0.5)",
+                  color: "rgb(var(--color-white-rgb) / 0.5)",
                   lineHeight: "1.75",
                   marginBottom: "36px",
                 }}
@@ -982,7 +982,7 @@ export default function Home() {
                   gap: "8px",
                   fontSize: "14px",
                   fontWeight: "700",
-                  color: "var(--color-gold,#EFC88B)",
+                  color: "var(--color-gold)",
                   textDecoration: "none",
                 }}
               >
@@ -1001,7 +1001,7 @@ export default function Home() {
                       style={{
                         fontSize: "18px",
                         fontWeight: "800",
-                        color: "#fff",
+                        color: "var(--color-white)",
                         marginBottom: "8px",
                         fontFamily:
                           "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -1012,7 +1012,7 @@ export default function Home() {
                     <p
                       style={{
                         fontSize: "15px",
-                        color: "rgba(255,255,255,0.5)",
+                        color: "rgb(var(--color-white-rgb) / 0.5)",
                         lineHeight: "1.7",
                         margin: 0,
                       }}
@@ -1028,7 +1028,7 @@ export default function Home() {
         {/* Trust strip */}
         <div
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.06)",
+            borderTop: "1px solid rgb(var(--color-white-rgb) / 0.06)",
             paddingTop: "64px",
             paddingBottom: 0,
             paddingLeft: "20px",
@@ -1072,7 +1072,7 @@ export default function Home() {
                   style={{
                     fontSize: "clamp(36px,5vw,52px)",
                     fontWeight: "800",
-                    color: "var(--color-gold,#EFC88B)",
+                    color: "var(--color-gold)",
                     fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                     marginBottom: "8px",
                     letterSpacing: "-0.02em",
@@ -1083,7 +1083,7 @@ export default function Home() {
                 <div
                   style={{
                     fontSize: "14px",
-                    color: "rgba(255,255,255,0.5)",
+                    color: "rgb(var(--color-white-rgb) / 0.5)",
                     lineHeight: "1.6",
                   }}
                 >
@@ -1096,7 +1096,7 @@ export default function Home() {
             style={{
               height: "1px",
               background:
-                "linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,0.2) 20%,rgba(255,255,255,0.2) 80%,rgba(255,255,255,0))",
+                "linear-gradient(to right,rgb(var(--color-white-rgb) / 0),rgb(var(--color-white-rgb) / 0.2) 20%,rgb(var(--color-white-rgb) / 0.2) 80%,rgb(var(--color-white-rgb) / 0))",
               margin: "0 24px",
             }}
           />
@@ -1107,7 +1107,7 @@ export default function Home() {
       {showCTA && (
         <section
           style={{
-            background: "var(--color-cream,#F5F0E8)",
+            background: "var(--color-cream)",
             padding: "104px 0",
           }}
         >
@@ -1125,7 +1125,7 @@ export default function Home() {
                 fontWeight: "700",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                color: "var(--color-terracotta,#CF5C36)",
+                color: "var(--color-terracotta-700)",
                 marginBottom: "16px",
               }}
             >
@@ -1135,7 +1135,7 @@ export default function Home() {
               style={{
                 fontSize: "clamp(28px,4vw,44px)",
                 fontWeight: "800",
-                color: "var(--color-navy-dark,#172531)",
+                color: "var(--color-navy-dark)",
                 marginBottom: "18px",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                 lineHeight: "1.1",
@@ -1147,7 +1147,7 @@ export default function Home() {
             <p
               style={{
                 fontSize: "17px",
-                color: "var(--color-slate,#4B5563)",
+                color: "var(--color-slate)",
                 lineHeight: "1.75",
                 marginBottom: "40px",
               }}

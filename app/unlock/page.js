@@ -163,13 +163,13 @@ export default function Unlock() {
     width: "100%",
     padding: "12px 14px",
     borderRadius: "10px",
-    border: "2px solid var(--color-border, #EDE8E0)",
+    border: "2px solid var(--color-border)",
     fontSize: "16px",
     fontWeight: "500",
     fontFamily: "var(--font-urbanist, system-ui)",
     outline: "none",
     boxSizing: "border-box",
-    background: "#fff",
+    background: "var(--color-white)",
     transition: "border-color 0.15s",
   };
 
@@ -183,7 +183,7 @@ export default function Unlock() {
         minHeight: "100vh",
         gap: "14px",
         fontFamily: "var(--font-urbanist, 'Urbanist', system-ui, sans-serif)",
-        background: "#172531",
+        background: "var(--color-navy-dark)",
         padding: "40px 24px",
         boxSizing: "border-box",
       }}
@@ -194,7 +194,7 @@ export default function Unlock() {
           margin: 0,
           fontSize: "28px",
           fontWeight: 800,
-          color: "#F5F0E8",
+          color: "var(--color-cream)",
           letterSpacing: "-0.01em",
         }}
       >
@@ -206,7 +206,7 @@ export default function Unlock() {
           <CheckCircle
             size={40}
             strokeWidth={2}
-            color="var(--color-success, #2a7d4f)"
+            color="var(--color-success)"
             style={{ marginBottom: "2px" }}
           />
           <p
@@ -214,7 +214,7 @@ export default function Unlock() {
               margin: 0,
               fontSize: "18px",
               fontWeight: 700,
-              color: "#F5F0E8",
+              color: "var(--color-cream)",
               textAlign: "center",
             }}
           >
@@ -227,7 +227,7 @@ export default function Unlock() {
               margin: 0,
               fontSize: "16px",
               fontWeight: 500,
-              color: "#9BA6B2",
+              color: "rgb(var(--color-white-rgb) / 0.7)",
               textAlign: "center",
               maxWidth: "460px",
               lineHeight: 1.55,
@@ -266,7 +266,7 @@ export default function Unlock() {
               margin: "0 0 10px",
               fontSize: "16px",
               fontWeight: 500,
-              color: "#9BA6B2",
+              color: "rgb(var(--color-white-rgb) / 0.7)",
               textAlign: "center",
               maxWidth: "460px",
               lineHeight: 1.55,
@@ -275,7 +275,7 @@ export default function Unlock() {
             Know what you&apos;ll pay before you go — vet pricing transparency
             and a smarter health companion for your dog.
             <br />
-            <span style={{ fontWeight: 700, color: "#F5F0E8" }}>
+            <span style={{ fontWeight: 700, color: "var(--color-cream)" }}>
               Launching soon.
             </span>
           </p>
@@ -307,7 +307,7 @@ export default function Unlock() {
                 style={{
                   margin: 0,
                   fontSize: "13px",
-                  color: "#CF5C36",
+                  color: "var(--color-terracotta-700)",
                   fontWeight: 600,
                 }}
               >
@@ -385,7 +385,7 @@ export default function Unlock() {
                   padding: 0,
                   border: "none",
                   background: "none",
-                  color: "#717A86",
+                  color: "var(--color-muted)",
                   cursor: "pointer",
                 }}
               >
@@ -401,7 +401,7 @@ export default function Unlock() {
                 style={{
                   margin: 0,
                   fontSize: "13px",
-                  color: "#CF5C36",
+                  color: "var(--color-terracotta-700)",
                   fontWeight: 600,
                 }}
               >
@@ -426,9 +426,9 @@ export default function Unlock() {
           height: 48px;
           padding: 0 24px;
           border-radius: 10px;
-          background: #CF5C36;
-          color: #fff;
-          border: 2px solid #CF5C36;
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
+          border: 2px solid var(--color-terracotta-600);
           cursor: pointer;
           font-size: 15px;
           font-weight: 700;
@@ -436,7 +436,7 @@ export default function Unlock() {
           box-sizing: border-box;
           transition: background 0.18s, color 0.18s;
         }
-        .wl-btn:hover { background: #fff; color: #CF5C36; }
+        @media (hover: hover) { .wl-btn:hover { background: var(--color-white); color: var(--color-terracotta-700); } }
         .wl-btn:disabled { opacity: 0.7; cursor: default; }
 
         .unlock-btn {
@@ -447,8 +447,8 @@ export default function Unlock() {
           padding: 0 24px;
           border-radius: 12px;
           background: transparent;
-          color: #F5F0E8;
-          border: 2px solid #2c3d4b;
+          color: var(--color-cream);
+          border: 2px solid var(--color-navy-mid);
           cursor: pointer;
           font-size: 15px;
           font-weight: 600;
@@ -456,12 +456,12 @@ export default function Unlock() {
           box-sizing: border-box;
           transition: border-color 0.18s;
         }
-        .unlock-btn:hover { border-color: #F5F0E8; }
+        @media (hover: hover) { .unlock-btn:hover { border-color: var(--color-cream); } }
 
         .preview-link {
           background: none;
           border: none;
-          color: #9BA6B2;
+          color: rgb(var(--color-white-rgb) / 0.7);
           font-size: 14px;
           font-weight: 500;
           cursor: pointer;
@@ -469,7 +469,7 @@ export default function Unlock() {
           font-family: inherit;
           transition: color 0.15s;
         }
-        .preview-link:hover { color: #F5F0E8; }
+        @media (hover: hover) { .preview-link:hover { color: var(--color-cream); } }
       `}</style>
     </div>
   );

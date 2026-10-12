@@ -18,16 +18,12 @@
 
 import { Award, PawPrint } from "lucide-react";
 import { BANNER_LUCIDE, speciesBucket } from "../lib/petTileHelpers";
+import { HERO_RARITY_TIERS } from "../lib/palettes";
+import { HEX, rgbaHex } from "../lib/tokens";
+import { HERO_NAMEPLATE_COLORS } from "../lib/palettes";
+export { HERO_RARITY_TIERS };
 
-export const HERO_RARITY_TIERS = {
-  common: { label: "Beloved", color: "#8A94A6" },
-  uncommon: { label: "Special", color: "#16A34A" },
-  rare: { label: "Rare", color: "#2563EB" },
-  epic: { label: "Epic", color: "#9333EA" },
-  legendary: { label: "Legendary", color: "#F59E0B" },
-};
-
-const GOLD = "#EFC88B";
+const GOLD = HEX.gold;
 
 function hnMeaningful(v) {
   if (!v) return false;
@@ -45,7 +41,7 @@ export default function HeroNameplate({
   rarity,
   variant = "full",
   showAge = variant === "full",
-  cardColor = "#FFFFFF",
+  cardColor = HEX.white,
 }) {
   const tier = hnMeaningful(rarity) ? HERO_RARITY_TIERS[rarity] : null;
 
@@ -70,7 +66,7 @@ export default function HeroNameplate({
               className="hc-rarity"
               style={{
                 background: tier.color,
-                boxShadow: `0 2px 8px rgba(0,0,0,0.3), 0 0 0 1.5px rgba(255,255,255,0.85)`,
+                boxShadow: `0 2px 8px ${rgbaHex("black", 0.3)}, 0 0 0 1.5px ${rgbaHex("white", 0.85)}`,
               }}
             >
               <Award size={12} strokeWidth={2.5} />
@@ -115,7 +111,7 @@ export default function HeroNameplate({
               className="hn-rarity"
               style={{
                 background: tier.color,
-                boxShadow: `0 2px 8px rgba(0,0,0,0.3), 0 0 0 1.5px rgba(255,255,255,0.85)`,
+                boxShadow: `0 2px 8px ${rgbaHex("black", 0.3)}, 0 0 0 1.5px ${rgbaHex("white", 0.85)}`,
               }}
             >
               <Award size={11} strokeWidth={2.5} color={GOLD} />
@@ -135,12 +131,12 @@ export default function HeroNameplate({
         .hn-root { position: relative; width: 100%; height: 100%; }
         .hn-photo {
           position: relative; width: 100%; height: 100%; overflow: hidden;
-          background: linear-gradient(150deg, #2A3F4D, #172531);
+          background: linear-gradient(150deg, ${HERO_NAMEPLATE_COLORS.navy750}, ${HEX.navyDark});
         }
         .hn-photo img { width: 100%; height: 100%; object-fit: cover; display: block; color: transparent; font-size: 0; }
         .hn-photo-fallback {
           width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-          color: rgba(255,255,255,0.85);
+          color: ${rgbaHex("white", 0.85)};
         }
         .hn-photo-blend {
           position: absolute; left: 0; right: 0; bottom: 0; height: 40px;
@@ -153,25 +149,25 @@ export default function HeroNameplate({
           bottom: 0; 
           z-index: 3;
           padding: 34px 13px 20px; 
-          color: #fff;
+          color: ${HEX.white};
           display: flex; 
           flex-direction: column; 
           align-items: flex-start;
           justify-content: center;
-          background: linear-gradient(to top, rgba(23,37,49,0.94) 30%, transparent);
+          background: linear-gradient(to top, ${rgbaHex("navyDark", 0.94)} 30%, transparent);
           margin-top: 20px;
         }
         .hn-rarity {
           align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
           height: 24px; padding: 0 11px 0 9px; margin-bottom: 10px; line-height: 1;
-          color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+          color: ${HEX.white}; font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
           text-transform: uppercase; border-radius: 999px;
-          text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+          text-shadow: 0 1px 1px ${rgbaHex("black", 0.3)};
         }
         .hn-name { font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
         .hn-nickname { font-size: 16px; font-weight: 600; font-style: italic; color: ${GOLD}; }
-        .hn-breed { font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.85); }
-        .hn-age { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.7); margin-top: 2px; }
+        .hn-breed { font-size: 15px; font-weight: 500; color: ${rgbaHex("white", 0.85)}; }
+        .hn-age { font-size: 12px; font-weight: 500; color: ${rgbaHex("white", 0.7)}; margin-top: 2px; }
       `}</style>
     </div>
   );

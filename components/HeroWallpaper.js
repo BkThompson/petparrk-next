@@ -17,6 +17,7 @@ import {
   Heart,
 } from "lucide-react";
 import { BANNER_LUCIDE } from "../lib/petTileHelpers";
+import { HEX } from "../lib/tokens";
 
 export default function HeroWallpaper({ bannerKey }) {
   // ─── Desktop / tablet positions (≥601px viewport) ──────────────────────
@@ -125,7 +126,7 @@ export default function HeroWallpaper({ bannerKey }) {
               left: p.left,
               transform: `rotate(${p.rot}deg)`,
               opacity: p.opacity,
-              color: "#fff",
+              color: HEX.white,
               pointerEvents: "none",
             }}
           >

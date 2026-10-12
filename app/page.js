@@ -145,7 +145,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "bone",
     w: 390,
     h: 143,
-    fill: "#CF5C36",
+    fill: "var(--color-terracotta)",
     opacity: 0.048,
     rot: 32,
     pos: { top: "-12px", left: "-72px" },
@@ -155,7 +155,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "bone",
     w: 245,
     h: 90,
-    fill: "#EFC88B",
+    fill: "var(--color-gold)",
     opacity: 0.068,
     rot: -22,
     pos: { top: "6%", right: "-22px" },
@@ -165,7 +165,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "bone",
     w: 198,
     h: 73,
-    fill: "#CF5C36",
+    fill: "var(--color-terracotta)",
     opacity: 0.055,
     rot: 58,
     pos: { bottom: "11%", right: "19%" },
@@ -175,7 +175,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "bone",
     w: 150,
     h: 55,
-    fill: "#EFC88B",
+    fill: "var(--color-gold)",
     opacity: 0.062,
     rot: -44,
     pos: { top: "52%", left: "6%" },
@@ -185,7 +185,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "bone",
     w: 208,
     h: 76,
-    fill: "#CF5C36",
+    fill: "var(--color-terracotta)",
     opacity: 0.062,
     rot: 14,
     pos: { top: "16%", left: "39%" },
@@ -195,7 +195,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "bone",
     w: 162,
     h: 59,
-    fill: "#EFC88B",
+    fill: "var(--color-gold)",
     opacity: 0.052,
     rot: -55,
     pos: { bottom: "23%", left: "25%" },
@@ -205,7 +205,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "bone",
     w: 118,
     h: 43,
-    fill: "#CF5C36",
+    fill: "var(--color-terracotta)",
     opacity: 0.06,
     rot: 12,
     pos: { bottom: "4%", left: "46%" },
@@ -215,7 +215,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "paw",
     w: 228,
     h: 228,
-    fill: "#EFC88B",
+    fill: "var(--color-gold)",
     opacity: 0.045,
     rot: -18,
     pos: { bottom: "4%", left: "2%" },
@@ -225,7 +225,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "paw",
     w: 148,
     h: 148,
-    fill: "#CF5C36",
+    fill: "var(--color-terracotta)",
     opacity: 0.06,
     rot: 24,
     pos: { top: "26%", right: "2%" },
@@ -235,7 +235,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "paw",
     w: 94,
     h: 94,
-    fill: "#EFC88B",
+    fill: "var(--color-gold)",
     opacity: 0.055,
     rot: -9,
     pos: { top: "4%", left: "29%" },
@@ -245,7 +245,7 @@ const HERO_ELEMENTS_DESKTOP = [
     type: "paw",
     w: 108,
     h: 108,
-    fill: "#CF5C36",
+    fill: "var(--color-terracotta)",
     opacity: 0.057,
     rot: 36,
     pos: { top: "44%", right: "19%" },
@@ -258,7 +258,7 @@ const HERO_ELEMENTS_MOBILE = [
     type: "bone",
     w: 138,
     h: 51,
-    fill: "#CF5C36",
+    fill: "var(--color-terracotta)",
     opacity: 0.037,
     rot: 22,
     pos: { top: "-4px", left: "-12px" },
@@ -268,7 +268,7 @@ const HERO_ELEMENTS_MOBILE = [
     type: "paw",
     w: 82,
     h: 82,
-    fill: "#EFC88B",
+    fill: "var(--color-gold)",
     opacity: 0.035,
     rot: -18,
     pos: { top: "4%", right: "-6px" },
@@ -278,7 +278,7 @@ const HERO_ELEMENTS_MOBILE = [
     type: "bone",
     w: 92,
     h: 34,
-    fill: "#EFC88B",
+    fill: "var(--color-gold)",
     opacity: 0.041,
     rot: -42,
     pos: { top: "38%", left: "-6px" },
@@ -288,7 +288,7 @@ const HERO_ELEMENTS_MOBILE = [
     type: "paw",
     w: 72,
     h: 72,
-    fill: "#CF5C36",
+    fill: "var(--color-terracotta)",
     opacity: 0.041,
     rot: 16,
     pos: { top: "36%", right: "-4px" },
@@ -298,7 +298,7 @@ const HERO_ELEMENTS_MOBILE = [
     type: "bone",
     w: 110,
     h: 40,
-    fill: "#CF5C36",
+    fill: "var(--color-terracotta)",
     opacity: 0.042,
     rot: 38,
     pos: { bottom: "13%", left: "2%" },
@@ -308,7 +308,7 @@ const HERO_ELEMENTS_MOBILE = [
     type: "bone",
     w: 86,
     h: 32,
-    fill: "#EFC88B",
+    fill: "var(--color-gold)",
     opacity: 0.039,
     rot: -24,
     pos: { bottom: "7%", right: "3%" },
@@ -541,39 +541,39 @@ export default function Home() {
         .reveal-delay-1{transition-delay:0.12s} .reveal-delay-2{transition-delay:0.26s} .reveal-delay-3{transition-delay:0.40s}
 
         .hero-input-wrap { position:relative; }
-        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:2px solid rgba(255,255,255,0.1); font-size:16px; font-weight:500; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgba(255,255,255,0.06); color:#fff; outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
-        .hero-search::placeholder { color:rgba(255,255,255,0.35); }
-        .hero-search:focus { border-color:var(--color-terracotta,#CF5C36); background:rgba(255,255,255,0.09); box-shadow:0 0 0 6px rgba(207,92,54,0.08),0 0 24px rgba(207,92,54,0.12),0 8px 32px rgba(0,0,0,0.2); }
-        .hero-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px; padding:10px 22px; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,'Urbanist',sans-serif); white-space:nowrap; transition:background 0.2s,color 0.2s; }
-        .hero-btn:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
+        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:2px solid rgb(var(--color-white-rgb) / 0.1); font-size:16px; font-weight:500; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgb(var(--color-white-rgb) / 0.06); color:var(--color-white); outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
+        .hero-search::placeholder { color:rgb(var(--color-white-rgb) / 0.35); }
+        .hero-search:focus { border-color:var(--color-terracotta); background:rgb(var(--color-white-rgb) / 0.09); box-shadow:0 0 0 6px rgb(var(--color-terracotta-rgb) / 0.08),0 0 24px rgb(var(--color-terracotta-rgb) / 0.12),0 8px 32px rgb(var(--color-black-rgb) / 0.2); }
+        .hero-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--color-terracotta-600); color:var(--color-white); border:2px solid var(--color-terracotta-600); border-radius:12px; padding:10px 22px; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,'Urbanist',sans-serif); white-space:nowrap; transition:background 0.2s,color 0.2s; }
+        @media (hover: hover) { .hero-btn:hover { background:var(--color-white); color:var(--color-terracotta-700); } }
         @media (max-width:480px) {
           .hero-input-wrap { display:flex; flex-direction:column; gap:10px; }
           .hero-search { padding:18px 22px; border-radius:14px; }
-          .hero-btn { position:static; transform:none; width:100%; padding:16px; border-radius:12px; font-size:15px; border:2px solid var(--color-terracotta,#CF5C36); }
+          .hero-btn { position:static; transform:none; width:100%; padding:16px; border-radius:12px; font-size:15px; border:2px solid var(--color-terracotta-600); }
         }
 
-        .pillar-card-outer { position:relative; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgba(239,200,139,0.55) 0%,rgba(207,92,54,0.25) 12%,rgba(255,255,255,0.04) 28%,transparent 42%,transparent 58%,rgba(255,255,255,0.04) 72%,rgba(207,92,54,0.2) 88%,rgba(239,200,139,0.45) 100%); transition:transform 0.3s; }
-        .pillar-card-outer:hover { transform:translateY(-4px); }
-        .pillar-card { background:linear-gradient(160deg,rgba(42,62,78,0.98) 0%,rgba(30,48,62,0.98) 40%,rgba(26,42,55,0.98) 100%); border-radius:20px; padding:36px 28px 32px; text-align:center; position:relative; overflow:hidden; display:flex; flex-direction:column; height:100%; box-sizing:border-box; transition:background 0.3s,box-shadow 0.3s; }
-        .pillar-card-outer:hover .pillar-card { background:linear-gradient(160deg,rgba(50,72,90,0.98) 0%,rgba(38,58,74,0.98) 40%,rgba(32,52,66,0.98) 100%); box-shadow:0 20px 50px rgba(0,0,0,0.35); }
+        .pillar-card-outer { position:relative; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgb(var(--color-gold-rgb) / 0.55) 0%,rgb(var(--color-terracotta-rgb) / 0.25) 12%,rgb(var(--color-white-rgb) / 0.04) 28%,transparent 42%,transparent 58%,rgb(var(--color-white-rgb) / 0.04) 72%,rgb(var(--color-terracotta-rgb) / 0.2) 88%,rgb(var(--color-gold-rgb) / 0.45) 100%); transition:transform 0.3s; }
+        @media (hover: hover) { .pillar-card-outer:hover { transform:translateY(-4px); } }
+        .pillar-card { background:linear-gradient(160deg,color-mix(in srgb, var(--color-navy-mid) 70%, var(--color-navy-dark)) 0%,color-mix(in srgb, var(--color-navy-mid) 30%, var(--color-navy-dark)) 40%,color-mix(in srgb, var(--color-navy-mid) 15%, var(--color-navy-dark)) 100%); border-radius:20px; padding:36px 28px 32px; text-align:center; position:relative; overflow:hidden; display:flex; flex-direction:column; height:100%; box-sizing:border-box; transition:background 0.3s,box-shadow 0.3s; }
+        @media (hover: hover) { .pillar-card-outer:hover .pillar-card { background:linear-gradient(160deg,var(--color-navy-mid) 0%,color-mix(in srgb, var(--color-navy-mid) 65%, var(--color-navy-dark)) 40%,color-mix(in srgb, var(--color-navy-mid) 45%, var(--color-navy-dark)) 100%); box-shadow:0 20px 50px rgb(var(--color-black-rgb) / 0.35); } }
         .pillar-link-wrap { margin-top:auto; padding-top:14px; }
-        .pillar-icon-wrap { width:68px; height:68px; border-radius:18px; margin:0 auto 22px; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; box-shadow:0 4px 16px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.15); }
-        .pillar-icon-wrap.pillar-icon-0 { background:rgba(207,92,54,0.14)!important; border:1px solid rgba(207,92,54,0.28); }
-        .pillar-icon-wrap.pillar-icon-1 { background:rgba(100,160,210,0.14)!important; border:1px solid rgba(100,160,210,0.25); }
-        .pillar-icon-wrap.pillar-icon-2 { background:rgba(80,140,80,0.14)!important; border:1px solid rgba(80,140,80,0.25); }
+        .pillar-icon-wrap { width:68px; height:68px; border-radius:18px; margin:0 auto 22px; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; box-shadow:0 4px 16px rgb(var(--color-black-rgb) / 0.3),inset 0 1px 0 rgb(var(--color-white-rgb) / 0.15); }
+        .pillar-icon-wrap.pillar-icon-0 { background:rgb(var(--color-terracotta-rgb) / 0.14)!important; border:1px solid rgb(var(--color-terracotta-rgb) / 0.28); }
+        .pillar-icon-wrap.pillar-icon-1 { background:rgb(var(--color-slate-blue-rgb) / 0.14)!important; border:1px solid rgb(var(--color-slate-blue-rgb) / 0.25); }
+        .pillar-icon-wrap.pillar-icon-2 { background:rgb(var(--color-success-rgb) / 0.14)!important; border:1px solid rgb(var(--color-success-rgb) / 0.25); }
 
         .step-card { padding:32px 0; display:grid; grid-template-columns:72px 1fr; gap:20px; align-items:start; }
-        .step-card+.step-card { border-top:1px solid rgba(255,255,255,0.07); }
-        .step-number { font-size:clamp(44px,6vw,60px); font-weight:800; line-height:1; color:rgba(239,200,139,0.15); font-family:var(--font-urbanist,'Urbanist',sans-serif); user-select:none; }
+        .step-card+.step-card { border-top:1px solid rgb(var(--color-white-rgb) / 0.07); }
+        .step-number { font-size:clamp(44px,6vw,60px); font-weight:800; line-height:1; color:rgb(var(--color-gold-rgb) / 0.15); font-family:var(--font-urbanist,'Urbanist',sans-serif); user-select:none; }
 
         /* ── VET CARDS — match Find a Vet page exactly ── */
-        .vet-card-outer { border-radius:18px; padding:1.5px; height:100%; background:#EDE8E0; transition:transform 0.3s,background 0.25s ease; }
-        .vet-card-outer:hover { transform:translateY(-3px); }
-        .vet-card-outer:hover .vet-card-inner { box-shadow:0 0 0 1.5px rgba(239,200,139,0.9),0 16px 48px rgba(23,37,49,0.13); }
-        .vet-card-inner { border-radius:17px; padding:24px; background:#fff; display:flex; flex-direction:column; height:100%; box-sizing:border-box; transition:box-shadow 0.25s; }
+        .vet-card-outer { border-radius:18px; padding:1.5px; height:100%; background:var(--color-border); transition:transform 0.3s,background 0.25s ease; }
+        @media (hover: hover) { .vet-card-outer:hover { transform:translateY(-3px); } }
+        @media (hover: hover) { .vet-card-outer:hover .vet-card-inner { box-shadow:0 0 0 1.5px rgb(var(--color-gold-rgb) / 0.9),0 16px 48px rgb(var(--color-navy-dark-rgb) / 0.13); } }
+        .vet-card-inner { border-radius:17px; padding:24px; background:var(--color-white); display:flex; flex-direction:column; height:100%; box-sizing:border-box; transition:box-shadow 0.25s; }
 
         .heart-btn { transition:transform 0.15s; border:none; background:none; cursor:pointer; padding:0; line-height:1; display:inline-flex; align-items:center; justify-content:center; }
-        .heart-btn:hover { transform:scale(1.2); }
+        @media (hover: hover) { .heart-btn:hover { transform:scale(1.2); } }
         .heart-animating { animation:heartPop 0.4s ease forwards; }
         /* Pill borders.
            --pill-border-w is the single place to change thickness for every
@@ -585,18 +585,18 @@ export default function Home() {
            rule uses a transparent border so the box never changes size between
            variants. */
         .badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px;  font-weight:700; white-space:nowrap; border:var(--pill-border-w) solid transparent; }
-        .badge-navy    { background:#EBF0F5; color:#2C4657; border-color:rgba(44,70,87,0.22); }
-        .badge-success { background:#EDFAF3; color:#1A6641; border-color:rgba(26,102,65,0.22); }
-        .badge-error   { background:#FCEAEA; color:#C94040; border-color:rgba(201,64,64,0.24); }
-        .price-chip { display:inline-flex; align-items:center; gap:5px; background:#F5F0E8; border:var(--pill-border-w) solid #EDE8E0; border-radius:8px; padding:4px 10px; font-size:14px; }
-        .price-chip-label { color:#717A86; font-weight:600; }
-        .price-chip-value { font-weight:700; color:#CF5C36; }
+        .badge-navy    { background:var(--color-badge-navy-bg); color:var(--color-navy-mid); border-color:rgb(var(--color-navy-mid-rgb) / 0.22); }
+        .badge-success { background:var(--color-success-light); color:var(--color-success-text); border-color:rgb(var(--color-success-text-rgb) / 0.22); }
+        .badge-error   { background:var(--color-error-light); color:var(--color-error-text); border-color:rgb(var(--color-error-rgb) / 0.24); }
+        .price-chip { display:inline-flex; align-items:center; gap:5px; background:var(--color-cream); border:var(--pill-border-w) solid var(--color-border); border-radius:8px; padding:4px 10px; font-size:14px; }
+        .price-chip-label { color:var(--color-muted); font-weight:600; }
+        .price-chip-value { font-weight:700; color:var(--color-terracotta-700); }
         .price-gate-wrap{position:relative}
         .price-gate-wrap.gated{padding:10px 0 20px}
         .price-gate-wrap.gated .price-gate-inner{filter:blur(5px);pointer-events:none;user-select:none;-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
         .price-gate-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;padding:0 16px}
-        .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#172531;color:#fff;border:2px solid #172531;border-radius:12px;padding:9px 18px;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 2px 10px rgba(23,37,49,0.2);transition:background 0.15s,color 0.15s}
-        .price-gate-btn:hover{background:#fff;color:#172531;border:2px solid #172531}
+        .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--color-navy-dark);color:var(--color-white);border:2px solid var(--color-navy-dark);border-radius:12px;padding:9px 18px;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 2px 10px rgb(var(--color-navy-dark-rgb) / 0.2);transition:background 0.15s,color 0.15s}
+        @media (hover: hover) { .price-gate-btn:hover {background:var(--color-white);color:var(--color-navy-dark);border:2px solid var(--color-navy-dark)} }
         @media(max-width:768px){
           .price-gate-overlay{padding:0 12px}
           .price-gate-btn{width:100%}
@@ -665,27 +665,27 @@ export default function Home() {
 
       .btn-primary {
           height:50px; padding:0 36px; line-height:1;
-          background:var(--color-terracotta,#CF5C36); color:#fff;
-          border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px;
+          background:var(--color-terracotta-600); color:var(--color-white);
+          border:2px solid var(--color-terracotta-600); border-radius:12px;
           font-size:15px; font-weight:700; cursor:pointer; text-decoration:none;
           font-family:var(--font-urbanist,'Urbanist',sans-serif);
           display:inline-flex; align-items:center; justify-content:center;
           transition:background 0.25s,color 0.25s;
         }
-        .btn-primary:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
+        @media (hover: hover) { .btn-primary:hover { background:var(--color-white); color:var(--color-terracotta-700); } }
         .btn-outline-dark {
           height:50px; padding:0 36px; line-height:1;
-          background:transparent; color:var(--color-navy-dark,#172531);
-          border:2px solid var(--color-navy-dark,#172531); border-radius:12px;
+          background:transparent; color:var(--color-navy-dark);
+          border:2px solid var(--color-navy-dark); border-radius:12px;
           font-size:15px; font-weight:700; text-decoration:none;
           font-family:var(--font-urbanist,'Urbanist',sans-serif);
           display:inline-flex; align-items:center; justify-content:center;
           transition:background 0.25s,color 0.25s;
         }
-        .btn-outline-dark:hover { background:var(--color-navy-dark,#172531); color:#fff; }
+        @media (hover: hover) { .btn-outline-dark:hover { background:var(--color-navy-dark); color:var(--color-white); } }
 
         @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
-        .skeleton { background:linear-gradient(90deg,#F0ECE4 25%,#D9D2C2 50%,#F0ECE4 75%); background-size:200% 100%; animation:shimmer 1.8s infinite; border-radius:18px; }
+        .skeleton { background:linear-gradient(90deg,var(--color-border) 25%,var(--color-border-strong) 50%,var(--color-border) 75%); background-size:200% 100%; animation:shimmer 1.8s infinite; border-radius:18px; }
 
         @media(max-width:640px){
           .step-card { grid-template-columns:52px 1fr; gap:14px; }
@@ -701,7 +701,7 @@ export default function Home() {
   h1, h2, h3 { text-wrap: balance; }
   p, li { text-wrap: pretty; }
         /* Sits on the navy steps panel. globals.css has
-           ".reveal-up a:hover { color:#172531 !important }", which made this
+           ".reveal-up a:hover { color:var(--color-navy-dark) !important }", which made this
            vanish — the fix is at source: that rule now skips .pp-keep-color,
            which this link carries. Gold in every state, matching the gold
            buttons above it. */
@@ -709,14 +709,14 @@ export default function Home() {
         a.pp-steps-learnmore:hover,
         a.pp-steps-learnmore:focus,
         a.pp-steps-learnmore:visited {
-          color: var(--color-gold, #EFC88B);
+          color: var(--color-gold);
         }
       `}</style>
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section
         style={{
-          background: "var(--color-navy-dark,#172531)",
+          background: "var(--color-navy-dark)",
           padding: "108px 0 120px",
           position: "relative",
           overflow: "hidden",
@@ -732,7 +732,7 @@ export default function Home() {
             height: "900px",
             pointerEvents: "none",
             background:
-              "radial-gradient(ellipse at center, rgba(239,200,139,0.06) 0%, rgba(239,200,139,0.04) 28%, rgba(239,200,139,0.018) 52%, transparent 76%)",
+              "radial-gradient(ellipse at center, rgb(var(--color-gold-rgb) / 0.06) 0%, rgb(var(--color-gold-rgb) / 0.04) 28%, rgb(var(--color-gold-rgb) / 0.018) 52%, transparent 76%)",
           }}
         />
 
@@ -751,7 +751,7 @@ export default function Home() {
             height: "80px",
             pointerEvents: "none",
             background:
-              "linear-gradient(to bottom,transparent,var(--color-navy-dark,#172531))",
+              "linear-gradient(to bottom,transparent,var(--color-navy-dark))",
           }}
         />
 
@@ -771,7 +771,7 @@ export default function Home() {
               style={{
                 fontSize: "clamp(40px,7.5vw,72px)",
                 fontWeight: "800",
-                color: "#fff",
+                color: "var(--color-white)",
                 lineHeight: "1.03",
                 marginBottom: "22px",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -779,7 +779,7 @@ export default function Home() {
               }}
             >
               Know what you'll pay before{" "}
-              <span style={{ color: "var(--color-gold,#EFC88B)" }}>
+              <span style={{ color: "var(--color-gold)" }}>
                 your next vet visit.
               </span>
             </h1>
@@ -789,7 +789,7 @@ export default function Home() {
               style={{
                 fontSize: "18px",
                 fontWeight: 500,
-                color: "rgba(255,255,255,0.6)",
+                color: "rgb(var(--color-white-rgb) / 0.6)",
                 lineHeight: "1.75",
                 maxWidth: "600px",
                 margin: "0 auto 48px",
@@ -832,7 +832,7 @@ export default function Home() {
 
       {/* ── VET TEASERS ──────────────────────────────────────────────── */}
       <section
-        style={{ background: "var(--color-cream,#F5F0E8)", padding: "96px 0" }}
+        style={{ background: "var(--color-cream)", padding: "96px 0" }}
       >
         <div className="pp-container">
           <div
@@ -846,7 +846,7 @@ export default function Home() {
                 fontWeight: "700",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                color: "var(--color-terracotta,#CF5C36)",
+                color: "var(--color-terracotta-700)",
                 marginBottom: "10px",
               }}
             >
@@ -856,7 +856,7 @@ export default function Home() {
               style={{
                 fontSize: "clamp(26px,3.5vw,40px)",
                 fontWeight: "800",
-                color: "var(--color-navy-dark,#172531)",
+                color: "var(--color-navy-dark)",
                 lineHeight: "1.1",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                 margin: 0,
@@ -918,7 +918,7 @@ export default function Home() {
                             style={{
                               fontSize: "17px",
                               fontWeight: "700",
-                              color: "var(--color-navy-dark,#172531)",
+                              color: "var(--color-navy-dark)",
                               textDecoration: "none",
                               fontFamily:
                                 "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -932,7 +932,7 @@ export default function Home() {
                             style={{
                               fontSize: "15px",
                               fontWeight: "500",
-                              color: "#717A86",
+                              color: "var(--color-muted)",
                               margin: 0,
                               // letterSpacing: "0.02em",
                             }}
@@ -952,8 +952,8 @@ export default function Home() {
                           <Heart
                             size={22}
                             strokeWidth={2}
-                            color="#CF5C36"
-                            fill={isSaved ? "#CF5C36" : "none"}
+                            color="var(--color-terracotta)"
+                            fill={isSaved ? "var(--color-terracotta)" : "none"}
                           />
                         </button>
                       </div>
@@ -1043,7 +1043,7 @@ export default function Home() {
                       </div>
                       <div
                         style={{
-                          borderTop: "1px solid #EDE8E0",
+                          borderTop: "1px solid var(--color-border)",
                           paddingTop: "14px",
                           marginTop: "auto",
                           display: "flex",
@@ -1055,7 +1055,7 @@ export default function Home() {
                           style={{
                             fontSize: "14px",
                             fontWeight: "500",
-                            color: "#717A86",
+                            color: "var(--color-muted)",
                             // letterSpacing: "0.02em",
                           }}
                         >
@@ -1068,7 +1068,7 @@ export default function Home() {
                           style={{
                             fontSize: "14px",
                             fontWeight: "700",
-                            color: "#CF5C36",
+                            color: "var(--color-terracotta-700)",
                             textDecoration: "none",
                           }}
                         >
@@ -1091,7 +1091,7 @@ export default function Home() {
           ) : (
             <p
               style={{
-                color: "#717A86",
+                color: "var(--color-muted)",
                 textAlign: "center",
                 padding: "48px 0",
               }}
@@ -1108,7 +1108,7 @@ export default function Home() {
               style={{
                 fontSize: "13px",
                 fontWeight: "700",
-                color: "var(--color-terracotta,#CF5C36)",
+                color: "var(--color-terracotta-700)",
                 textDecoration: "none",
               }}
             >
@@ -1126,7 +1126,7 @@ export default function Home() {
       {/* ── THREE PILLARS ────────────────────────────────────────────── */}
       <section
         style={{
-          background: "var(--color-navy-mid,#2C4657)",
+          background: "var(--color-navy-mid)",
           padding: "96px 0",
           position: "relative",
           overflow: "hidden",
@@ -1137,7 +1137,7 @@ export default function Home() {
             position: "absolute",
             inset: 0,
             backgroundImage:
-              "radial-gradient(rgba(255,255,255,0.025) 1px,transparent 1px)",
+              "radial-gradient(rgb(var(--color-white-rgb) / 0.025) 1px,transparent 1px)",
             backgroundSize: "36px 36px",
             pointerEvents: "none",
           }}
@@ -1157,7 +1157,7 @@ export default function Home() {
                 fontWeight: "700",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                color: "var(--color-gold,#EFC88B)",
+                color: "var(--color-gold)",
                 marginBottom: "12px",
               }}
             >
@@ -1167,7 +1167,7 @@ export default function Home() {
               style={{
                 fontSize: "clamp(28px,4vw,44px)",
                 fontWeight: "800",
-                color: "#fff",
+                color: "var(--color-white)",
                 lineHeight: "1.1",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                 margin: "0 auto",
@@ -1196,7 +1196,7 @@ export default function Home() {
                         style={{
                           fontSize: "22px",
                           fontWeight: "800",
-                          color: "#fff",
+                          color: "var(--color-white)",
                           marginBottom: "12px",
                           fontFamily:
                             "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -1210,7 +1210,7 @@ export default function Home() {
                         style={{
                           fontSize: "16px",
                           fontWeight: 500,
-                          color: "rgba(255,255,255,0.55)",
+                          color: "rgb(var(--color-white-rgb) / 0.55)",
                           lineHeight: "1.75",
                           /* marginBottom: "28px", */
                           textWrap: "pretty",
@@ -1227,7 +1227,7 @@ export default function Home() {
                             gap: "6px",
                             fontSize: "14px",
                             fontWeight: "700",
-                            color: "var(--color-gold,#EFC88B)",
+                            color: "var(--color-gold)",
                             textDecoration: "none",
                           }}
                         >
@@ -1254,7 +1254,7 @@ export default function Home() {
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
       <section
         style={{
-          background: "var(--color-navy-dark,#172531)",
+          background: "var(--color-navy-dark)",
           padding: "96px 0 0",
           position: "relative",
           overflow: "hidden",
@@ -1283,7 +1283,7 @@ export default function Home() {
                   fontWeight: "700",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  color: "var(--color-gold,#EFC88B)",
+                  color: "var(--color-gold)",
                   marginBottom: "16px",
                 }}
               >
@@ -1293,7 +1293,7 @@ export default function Home() {
                 style={{
                   fontSize: "clamp(28px,4vw,44px)",
                   fontWeight: "800",
-                  color: "#fff",
+                  color: "var(--color-white)",
                   lineHeight: "1.1",
                   fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                   marginBottom: "20px",
@@ -1306,7 +1306,7 @@ export default function Home() {
                 style={{
                   fontSize: "16px",
                   fontWeight: 500,
-                  color: "rgba(255,255,255,0.5)",
+                  color: "rgb(var(--color-white-rgb) / 0.5)",
                   lineHeight: "1.75",
                   marginBottom: "20px",
                 }}
@@ -1350,7 +1350,7 @@ export default function Home() {
                       style={{
                         fontSize: "18px",
                         fontWeight: "800",
-                        color: "#fff",
+                        color: "var(--color-white)",
                         marginBottom: "8px",
                         fontFamily:
                           "var(--font-urbanist,'Urbanist',sans-serif)",
@@ -1362,7 +1362,7 @@ export default function Home() {
                       style={{
                         fontSize: "15px",
                         fontWeight: 500,
-                        color: "rgba(255,255,255,0.5)",
+                        color: "rgb(var(--color-white-rgb) / 0.5)",
                         lineHeight: "1.7",
                         margin: 0,
                       }}
@@ -1377,7 +1377,7 @@ export default function Home() {
         </div>
         <div
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.06)",
+            borderTop: "1px solid rgb(var(--color-white-rgb) / 0.06)",
             paddingTop: "64px",
           }}
         >
@@ -1415,7 +1415,7 @@ export default function Home() {
                   style={{
                     fontSize: "clamp(36px,5vw,52px)",
                     fontWeight: "800",
-                    color: "var(--color-gold,#EFC88B)",
+                    color: "var(--color-gold)",
                     fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                     marginBottom: "8px",
                     letterSpacing: "-0.02em",
@@ -1427,7 +1427,7 @@ export default function Home() {
                   style={{
                     fontSize: "15px",
                     fontWeight: 500,
-                    color: "rgba(255,255,255,0.5)",
+                    color: "rgb(var(--color-white-rgb) / 0.5)",
                     lineHeight: "1.6",
                   }}
                 >
@@ -1440,7 +1440,7 @@ export default function Home() {
             style={{
               height: "1px",
               background:
-                "linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,0.2) 20%,rgba(255,255,255,0.2) 80%,rgba(255,255,255,0))",
+                "linear-gradient(to right,rgb(var(--color-white-rgb) / 0),rgb(var(--color-white-rgb) / 0.2) 20%,rgb(var(--color-white-rgb) / 0.2) 80%,rgb(var(--color-white-rgb) / 0))",
               margin: "0 24px",
             }}
           />
@@ -1451,7 +1451,7 @@ export default function Home() {
       {showCTA && (
         <section
           style={{
-            background: "var(--color-cream,#F5F0E8)",
+            background: "var(--color-cream)",
             padding: "104px 0",
           }}
         >
@@ -1469,7 +1469,7 @@ export default function Home() {
                   fontWeight: "700",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  color: "var(--color-terracotta,#CF5C36)",
+                  color: "var(--color-terracotta-700)",
                   marginBottom: "16px",
                 }}
               >
@@ -1479,7 +1479,7 @@ export default function Home() {
                 style={{
                   fontSize: "clamp(28px,4vw,44px)",
                   fontWeight: "800",
-                  color: "var(--color-navy-dark,#172531)",
+                  color: "var(--color-navy-dark)",
                   marginBottom: "18px",
                   fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                   lineHeight: "1.1",
@@ -1492,7 +1492,7 @@ export default function Home() {
                 style={{
                   fontSize: "17px",
                   fontWeight: 500,
-                  color: "var(--color-slate,#4B5563)",
+                  color: "var(--color-slate)",
                   lineHeight: "1.75",
                   marginBottom: "20px",
                 }}

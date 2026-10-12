@@ -88,33 +88,35 @@ export default function Breadcrumb({ items }) {
           min-width: 0;
         }
         .bc-link {
-          color: var(--color-terracotta, #CF5C36);
+          color: var(--color-terracotta-700);
           text-decoration: none;
           transition: color 0.15s;
           white-space: nowrap;
         }
-        .bc-link:hover {
-          color: var(--color-navy-dark, #172531);
-          text-decoration: underline;
-          text-underline-offset: 3px;
-          text-decoration-thickness: 1.5px;
+        @media (hover: hover) {
+          .bc-link:hover {
+            color: var(--color-navy-dark);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            text-decoration-thickness: 1.5px;
+          }
         }
         .bc-plain {
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 40vw;
         }
         .bc-current {
-          color: var(--color-navy-dark, #172531);
+          color: var(--color-navy-dark);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
           // max-width: 40vw;
         }
         .bc-sep {
-          color: var(--color-muted, #717A86);
+          color: var(--color-muted);
           flex: 0 0 auto;
           opacity: 0.7;
         }

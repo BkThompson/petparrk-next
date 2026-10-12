@@ -1683,11 +1683,11 @@ function CareCardStyles() {
   return (
     <style>{`
       .pcc-body {
-        background: var(--color-cream, #F5F0E8);
+        background: var(--color-cream);
         min-height: 100vh;
         padding: 32px 0 96px;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
       }
       .pcc-container {
         max-width: 900px;
@@ -1702,11 +1702,11 @@ function CareCardStyles() {
         top: var(--nav-height, 64px);
         z-index: 20;
         margin: 8px 0 24px;
-        background: rgba(245, 240, 232, 0.92);
+        background: rgb(var(--color-cream-rgb) / 0.92);
         backdrop-filter: saturate(180%) blur(8px);
         -webkit-backdrop-filter: saturate(180%) blur(8px);
-        border-top: 1px solid #EDE8E0;
-        border-bottom: 1px solid #EDE8E0;
+        border-top: 1px solid var(--color-border);
+        border-bottom: 1px solid var(--color-border);
       }
       .pcc-jumpnav-track {
         display: flex;
@@ -1739,19 +1739,21 @@ function CareCardStyles() {
         border-radius: 0;
         font-size: 14px;
         font-weight: 600;
-        color: #717A86;
+        color: var(--color-muted);
         text-decoration: none;
         white-space: nowrap;
         transition: background 0.15s, color 0.15s;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
       }
-      .pcc-jumpnav-link:hover {
-        background: #EDE8E0;
-        color: var(--color-navy-dark, #172531);
+      @media (hover: hover) {
+        .pcc-jumpnav-link:hover {
+          background: var(--color-border);
+          color: var(--color-navy-dark);
+        }
       }
       .pcc-jumpnav-link.is-active {
-        background: var(--color-terracotta, #CF5C36);
-        color: #fff;
+        background: var(--color-terracotta-600);
+        color: var(--color-white);
       }
       @media print {
         .pcc-jumpnav { display: none !important; }
@@ -1767,18 +1769,20 @@ function CareCardStyles() {
         height: 44px;
         border-radius: 9999px;
         border: none;
-        background: var(--color-navy-dark, #172531);
-        color: #fff;
+        background: var(--color-navy-dark);
+        color: var(--color-white);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 6px 20px rgba(23, 37, 49, 0.28);
+        box-shadow: 0 6px 20px rgb(var(--color-navy-dark-rgb) / 0.28);
         transition: background 0.15s, transform 0.15s;
       }
-      .pcc-scrolltop:hover {
-        background: #0f1a24;
-        transform: translateY(-2px);
+      @media (hover: hover) {
+        .pcc-scrolltop:hover {
+          background: var(--color-navy-dark);
+          transform: translateY(-2px);
+        }
       }
       @media print {
         .pcc-scrolltop { display: none !important; }
@@ -1792,11 +1796,11 @@ function CareCardStyles() {
         gap: 24px;
         align-items: center;
         padding: 24px;
-        background: #fff;
+        background: var(--color-white);
         border-radius: 16px;
-        border: 1px solid rgba(23, 37, 49, 0.06);
+        border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.06);
         margin-bottom: 28px;
-        box-shadow: 0 2px 12px rgba(23, 37, 49, 0.05);
+        box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.05);
       }
       .pcc-pet-photo-wrap {
         position: relative;
@@ -1805,7 +1809,7 @@ function CareCardStyles() {
         border-radius: 16px;
         overflow: hidden;
         flex-shrink: 0;
-        background: #EDE8E0;
+        background: var(--color-border);
       }
       .pcc-pet-photo {
         width: 100%;
@@ -1819,7 +1823,7 @@ function CareCardStyles() {
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #717A86;
+        color: var(--color-muted);
       }
       .pcc-pet-header-info {
         flex: 1;
@@ -1830,13 +1834,13 @@ function CareCardStyles() {
         font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--color-terracotta, #CF5C36);
+        color: var(--color-terracotta-700);
         margin: 0 0 6px;
       }
       .pcc-pet-name {
         font-size: 28px;
         font-weight: 800;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         margin: 0 0 6px;
         letter-spacing: -0.01em;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
@@ -1846,14 +1850,14 @@ function CareCardStyles() {
       .pcc-pet-breed {
         font-size: 15px;
         font-weight: 600;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         margin: 0 0 4px;
         line-height: 1.3;
       }
       .pcc-pet-quick-meta {
         font-size: 15px;
         font-weight: 500;
-        color: #717A86;
+        color: var(--color-muted);
         margin: 0;
         line-height: 1.4;
       }
@@ -1861,19 +1865,19 @@ function CareCardStyles() {
       /* Section — white card wrapping each topic.
          Matches editor's .pce-section exactly. */
       .pcc-section {
-        background: #fff;
+        background: var(--color-white);
         border-radius: 16px;
         padding: 28px 24px;
         margin-bottom: 20px;
-        border: 1px solid rgba(23, 37, 49, 0.06);
+        border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.06);
       }
       /* Safety section — viewer-facing visual urgency. Subtle red tint so
          a sitter scanning the card sees allergies/conditions first. The
          editor doesn't carry this treatment (owners don't need urgency
          cues on their own data) — Care Card-only divergence. */
       .pcc-section--safety {
-        background: rgba(201, 64, 64, 0.05);
-        border-color: rgba(201, 64, 64, 0.18);
+        background: rgb(var(--color-error-rgb) / 0.05);
+        border-color: rgb(var(--color-error-rgb) / 0.18);
       }
       .pcc-section-header {
         margin-bottom: 20px;
@@ -1883,7 +1887,7 @@ function CareCardStyles() {
         font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--color-terracotta, #CF5C36);
+        color: var(--color-terracotta-700);
         margin: 0 0 6px;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
       }
@@ -1892,12 +1896,12 @@ function CareCardStyles() {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        color: #C94040;
+        color: var(--color-error);
       }
       .pcc-section-title {
         font-size: 22px;
         font-weight: 800;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         margin: 0 0 4px;
         letter-spacing: -0.01em;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
@@ -1908,7 +1912,7 @@ function CareCardStyles() {
         max-width: 68ch;
         font-size: 16px;
         font-weight: 500;
-        color: #4B5563;
+        color: var(--color-slate);
         margin: 0;
         line-height: 1.55;
       }
@@ -1919,7 +1923,7 @@ function CareCardStyles() {
       .pcc-sub-title {
         font-size: 17px;
         font-weight: 800;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         margin: 0 0 6px;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
         letter-spacing: -0.01em;
@@ -1927,7 +1931,7 @@ function CareCardStyles() {
       .pcc-sub-sub {
         font-size: 16px;
         font-weight: 500;
-        color: #717A86;
+        color: var(--color-muted);
         margin: 0 0 12px;
         line-height: 1.55;
       }
@@ -1943,17 +1947,19 @@ function CareCardStyles() {
         align-items: flex-start;
         gap: 4px;
         padding: 20px;
-        background: #fff;
-        border: 1px solid #EDE8E0;
+        background: var(--color-white);
+        border: 1px solid var(--color-border);
         border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(23, 37, 49, 0.07);
+        box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.07);
         transition: box-shadow 0.25s, border-color 0.25s;
       }
-      .pcc-list-item:hover {
-        border-color: rgba(239, 200, 139, 0.9);
-        box-shadow:
-          0 0 0 1.5px rgba(239, 200, 139, 0.9),
-          0 16px 48px rgba(23, 37, 49, 0.13);
+      @media (hover: hover) {
+        .pcc-list-item:hover {
+          border-color: rgb(var(--color-gold-rgb) / 0.9);
+          box-shadow:
+            0 0 0 1.5px rgb(var(--color-gold-rgb) / 0.9),
+            0 16px 48px rgb(var(--color-navy-dark-rgb) / 0.13);
+        }
       }
       .pcc-list-item-body { flex: 1; min-width: 0; }
 
@@ -1962,7 +1968,7 @@ function CareCardStyles() {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: var(--color-terracotta, #CF5C36);
+        color: var(--color-terracotta);
         flex-shrink: 0;
         line-height: 0;
       }
@@ -1983,7 +1989,7 @@ function CareCardStyles() {
       .pcc-list-item-title {
         font-size: 18px;
         font-weight: 700;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         margin: 0;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
         line-height: 1.3;
@@ -1995,7 +2001,7 @@ function CareCardStyles() {
         max-width: 68ch;
         font-size: 16px;
         font-weight: 500;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         margin: 0;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
         line-height: 1.55;
@@ -2029,32 +2035,32 @@ function CareCardStyles() {
         border-color: color-mix(in srgb, currentColor 30%, transparent);
       }
       .pcc-list-item-status.overdue {
-        background: rgba(201, 64, 64, 0.12);
-        color: #C94040;
+        background: rgb(var(--color-error-rgb) / 0.12);
+        color: var(--color-error);
       }
       .pcc-list-item-status.soon {
-        background: rgba(217, 162, 27, 0.14);
-        color: #8C6A11;
+        background: rgb(var(--color-caution-rgb) / 0.14);
+        color: var(--color-caution-text);
       }
       .pcc-list-item-status.ok,
       .pcc-list-item-status.active {
-        background: rgba(26, 102, 65, 0.12);
-        color: #1A6641;
+        background: rgb(var(--color-success-text-rgb) / 0.12);
+        color: var(--color-success-text);
       }
       .pcc-list-item-status.ended {
-        background: rgba(113, 122, 134, 0.14);
-        color: #4B5563;
+        background: rgb(var(--color-muted-rgb) / 0.14);
+        color: var(--color-slate);
       }
 
       /* ── Phase B: Visit prep + recap (owner-only) ───────────────── */
       .pcc-visit-prep { margin-bottom: 20px; }
       .pcc-prep-card {
-        border: 1.5px solid var(--color-terracotta, #cf5c36);
+        border: 1.5px solid var(--color-terracotta);
         border-radius: 16px;
         // padding: 20px;
         padding: 20px 20px 0;
         margin-top: 20px;
-        background: #fff;
+        background: var(--color-white);
       }
       .pcc-prep-head {
         display: flex;
@@ -2067,14 +2073,14 @@ function CareCardStyles() {
         font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--color-terracotta, #cf5c36);
+        color: var(--color-terracotta-700);
         display: block;
         margin-bottom: 4px;
       }
       .pcc-prep-title {
         font-size: 17px;
         font-weight: 800;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         margin: 0;
         line-height: 1.3;
       }
@@ -2093,13 +2099,13 @@ function CareCardStyles() {
         font-family: inherit;
         font-size: 13px;
         font-weight: 700;
-        color: var(--color-terracotta, #cf5c36);
+        color: var(--color-terracotta-700);
         padding: 4px 6px;
         flex-shrink: 0;
         transition: color 0.15s;
       }
       .pcc-prep-toggle:hover,
-      .pcc-recap-toggle:hover { color: var(--color-navy-dark, #172531); }
+      @media (hover: hover) { .pcc-recap-toggle:hover { color: var(--color-navy-dark); } }
       .pcc-recap-chevron {
         transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       }
@@ -2115,13 +2121,13 @@ function CareCardStyles() {
         font-weight: 700;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--color-muted, #717A86);
+        color: var(--color-muted);
         margin: 0 0 8px;
       }
       .pcc-prep-block-text {
         font-size: 15px;
         font-weight: 500;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         line-height: 1.6;
         margin: 0;
       }
@@ -2135,16 +2141,16 @@ function CareCardStyles() {
       .pcc-prep-list li {
         font-size: 15px;
         font-weight: 500;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         line-height: 1.6;
       }
       .pcc-prep-nudge {
         margin-top: 8px;
         // padding-top: 14px;
-        border-top: 1px solid var(--color-border, #ede8e0);
+        border-top: 1px solid var(--color-border);
         font-size: 15px;
         font-weight: 500;
-        color: var(--color-slate, #4b5563);
+        color: var(--color-slate);
       }
       .pcc-prep-nudge-link {
         /* 17px before — the smallest control on the page. */
@@ -2157,18 +2163,18 @@ function CareCardStyles() {
         font-family: inherit;
         font-size: 14px;
         font-weight: 700;
-        color: var(--color-terracotta, #cf5c36);
+        color: var(--color-terracotta-700);
         padding: 0;
         text-decoration: underline;
         transition: color 0.15s;
       }
-      .pcc-prep-nudge-link:hover { color: var(--color-navy-dark, #172531); }
+      @media (hover: hover) { .pcc-prep-nudge-link:hover { color: var(--color-navy-dark); } }
 
       .pcc-visit-treatment {
         margin-top: 12px;
         font-size: 15px;
         font-weight: 500;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         line-height: 1.6;
       }
       .pcc-visit-recap { margin-top: 12px; }
@@ -2176,10 +2182,10 @@ function CareCardStyles() {
         margin: 8px 0 0;
         font-size: 15px;
         font-weight: 500;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         line-height: 1.6;
         padding: 12px 14px;
-        background: var(--color-cream, #f5f0e8);
+        background: var(--color-cream);
         border-radius: 10px;
       }
 
@@ -2194,12 +2200,12 @@ function CareCardStyles() {
         font-family: inherit;
         font-size: 15px;
         font-weight: 600;
-        color: var(--color-slate, #4b5563);
+        color: var(--color-slate);
         padding: 10px 0;
         text-align: left;
         transition: color 0.15s;
       }
-      .pcc-add-visit-prompt:hover { color: var(--color-terracotta, #cf5c36); }
+      @media (hover: hover) { .pcc-add-visit-prompt:hover { color: var(--color-terracotta-700); } }
       .pcc-add-visit-icon {
         display: inline-flex;
         align-items: center;
@@ -2207,21 +2213,23 @@ function CareCardStyles() {
         width: 28px;
         height: 28px;
         border-radius: 50%;
-        background: var(--color-cream, #f5f0e8);
-        color: var(--color-terracotta, #cf5c36);
+        background: var(--color-cream);
+        color: var(--color-terracotta);
         flex-shrink: 0;
         transition: background 0.15s, color 0.15s;
       }
-      .pcc-add-visit-prompt:hover .pcc-add-visit-icon {
-        background: var(--color-terracotta, #cf5c36);
-        color: #fff;
+      @media (hover: hover) {
+        .pcc-add-visit-prompt:hover .pcc-add-visit-icon {
+          background: var(--color-terracotta-700);
+          color: var(--color-white);
+        }
       }
       .pcc-recap-widget {
         position: relative;
-        border: 1.5px solid var(--color-border, #ede8e0);
+        border: 1.5px solid var(--color-border);
         border-radius: 16px;
         padding: 24px;
-        background: #fff;
+        background: var(--color-white);
       }
       .pcc-recap-close {
         position: absolute;
@@ -2231,7 +2239,7 @@ function CareCardStyles() {
         height: 36px;
         border: none;
         background: transparent;
-        color: var(--color-muted, #717A86);
+        color: var(--color-muted);
         cursor: pointer;
         border-radius: 8px;
         display: flex;
@@ -2240,15 +2248,17 @@ function CareCardStyles() {
         transition: background 0.15s, color 0.15s;
         z-index: 2;
       }
-      .pcc-recap-close:hover {
-        background: var(--color-cream, #f5f0e8);
-        color: var(--color-navy-dark, #172531);
+      @media (hover: hover) {
+        .pcc-recap-close:hover {
+          background: var(--color-cream);
+          color: var(--color-navy-dark);
+        }
       }
 
       /* Subtle horizontal rule splitting title row from meta details. */
       .pcc-list-item-sep {
         height: 1px;
-        background: rgba(23, 37, 49, 0.08);
+        background: rgb(var(--color-navy-dark-rgb) / 0.08);
         margin: 12px 0;
       }
 
@@ -2270,7 +2280,7 @@ function CareCardStyles() {
       }
       .pcc-list-item-meta-label {
         font-weight: 500;
-        color: #717A86;
+        color: var(--color-muted);
         flex-shrink: 0;
         min-width: 70px;
         line-height: 1.3;
@@ -2279,7 +2289,7 @@ function CareCardStyles() {
         /* Long free-text values — an allergy note ran to 92ch. */
         max-width: 68ch;
         font-weight: 600;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         word-break: break-word;
         min-width: 0;
       }
@@ -2323,7 +2333,7 @@ function CareCardStyles() {
       .pcc-identity-sub-line {
         font-size: 13px;
         font-weight: 500;
-        color: #717A86;
+        color: var(--color-muted);
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
       }
 
@@ -2414,33 +2424,35 @@ function CareCardStyles() {
 
       /* Vet card variants — emergency vet gets a warning-red treatment. */
       .pcc-list-item--vet-emergency {
-        background: rgba(201, 64, 64, 0.04);
-        border-color: rgba(201, 64, 64, 0.25);
+        background: rgb(var(--color-error-rgb) / 0.04);
+        border-color: rgb(var(--color-error-rgb) / 0.25);
       }
       .pcc-list-item--vet-emergency .pcc-list-item-icon-inline {
-        color: #C94040;
+        color: var(--color-error);
       }
 
       /* Phone link — inline anchor inside meta values. */
       .pcc-phone-link {
-        color: var(--color-terracotta, #CF5C36);
+        color: var(--color-terracotta-700);
         font-weight: 600;
         text-decoration: none;
       }
-      .pcc-phone-link:hover {
-        text-decoration: underline;
+      @media (hover: hover) {
+        .pcc-phone-link:hover {
+          text-decoration: underline;
+        }
       }
 
       /* Notes — appears below meta in vaccinations/meds/visits. */
       .pcc-notes {
         margin-top: 12px;
         padding-top: 12px;
-        border-top: 1px solid rgba(23, 37, 49, 0.08);
+        border-top: 1px solid rgb(var(--color-navy-dark-rgb) / 0.08);
       }
       .pcc-notes-label {
         font-size: 16px;
         font-weight: 500;
-        color: #717A86;
+        color: var(--color-muted);
         margin: 0 0 4px;
         line-height: 1.4;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
@@ -2450,7 +2462,7 @@ function CareCardStyles() {
         max-width: 68ch;
         font-size: 16px;
         font-weight: 500;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         margin: 0;
         line-height: 1.5;
         word-break: break-word;
@@ -2476,15 +2488,17 @@ function CareCardStyles() {
         margin: 0;
         font-size: 14px;
         font-weight: 700;
-        color: var(--color-terracotta, #CF5C36);
+        color: var(--color-terracotta-700);
         cursor: pointer;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
         transition: color 0.15s;
       }
-      .pcc-notes-toggle:hover {
-        color: var(--color-navy-dark, #172531);
-        text-decoration: underline;
-        text-underline-offset: 2px;
+      @media (hover: hover) {
+        .pcc-notes-toggle:hover {
+          color: var(--color-navy-dark);
+          text-decoration: underline;
+          text-underline-offset: 2px;
+        }
       }
 
       /* Pet Poison Helpline card */
@@ -2497,8 +2511,8 @@ function CareCardStyles() {
         display: flex;
         gap: 14px;
         padding: 18px 20px;
-        background: rgba(207, 92, 54, 0.06);
-        border: 1.5px solid rgba(207, 92, 54, 0.2);
+        background: rgb(var(--color-terracotta-rgb) / 0.06);
+        border: 1.5px solid rgb(var(--color-terracotta-rgb) / 0.2);
         border-radius: 14px;
       }
       .pcc-helpline-icon {
@@ -2506,8 +2520,8 @@ function CareCardStyles() {
         width: 40px;
         height: 40px;
         border-radius: 10px;
-        background: rgba(207, 92, 54, 0.14);
-        color: var(--color-terracotta, #CF5C36);
+        background: rgb(var(--color-terracotta-rgb) / 0.14);
+        color: var(--color-terracotta);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2520,12 +2534,12 @@ function CareCardStyles() {
         font-size: 18px;
         font-weight: 700;
         margin: 0 0 2px;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
       }
       .pcc-helpline-sub {
         font-size: 15px;
         font-weight: 500;
-        color: #717A86;
+        color: var(--color-muted);
         line-height: 1.4;
         margin: 0 0 0px;
       }
@@ -2536,12 +2550,14 @@ function CareCardStyles() {
         // min-height: 44px;
         font-size: 17px;
         font-weight: 700;
-        color: var(--color-terracotta, #CF5C36);
+        color: var(--color-terracotta-700);
         text-decoration: none;
         font-variant-numeric: tabular-nums;
       }
-      .pcc-helpline-phone:hover {
-        text-decoration: underline;
+      @media (hover: hover) {
+        .pcc-helpline-phone:hover {
+          text-decoration: underline;
+        }
       }
 
       /* QR / share-back card */
@@ -2550,16 +2566,16 @@ function CareCardStyles() {
         gap: 24px;
         align-items: center;
         padding: 20px;
-        background: var(--color-cream, #F5F0E8);
-        border: 1px solid #EDE8E0;
+        background: var(--color-cream);
+        border: 1px solid var(--color-border);
         border-radius: 12px;
       }
       .pcc-qr-svg {
         flex-shrink: 0;
         padding: 12px;
-        background: #fff;
+        background: var(--color-white);
         border-radius: 10px;
-        border: 1px solid #EDE8E0;
+        border: 1px solid var(--color-border);
         line-height: 0;
       }
       .pcc-qr-svg svg {
@@ -2571,7 +2587,7 @@ function CareCardStyles() {
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #717A86;
+        color: var(--color-muted);
       }
       .pcc-qr-info {
         flex: 1;
@@ -2582,13 +2598,13 @@ function CareCardStyles() {
         font-weight: 600;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #717A86;
+        color: var(--color-muted);
         margin: 0 0 4px;
       }
       .pcc-qr-url {
         font-size: 14px;
         font-weight: 500;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
         margin: 0 0 12px;
         word-break: break-all;
         line-height: 1.4;
@@ -2629,24 +2645,28 @@ function CareCardStyles() {
         cursor: not-allowed;
       }
       .pcc-btn--primary {
-        background: var(--color-terracotta, #CF5C36);
-        color: #fff;
-        border-color: var(--color-terracotta, #CF5C36);
+        background: var(--color-terracotta-600);
+        color: var(--color-white);
+        border-color: var(--color-terracotta-600);
       }
-      .pcc-btn--primary:hover:not(:disabled) {
-        background: #fff;
-        color: var(--color-terracotta, #CF5C36);
+      @media (hover: hover) {
+        .pcc-btn--primary:hover:not(:disabled) {
+          background: var(--color-white);
+          color: var(--color-terracotta-700);
+        }
       }
       .pcc-btn--secondary {
-        background: #fff;
-        color: var(--color-navy-dark, #172531);
-        border-color: rgba(23, 37, 49, 0.18);
+        background: var(--color-white);
+        color: var(--color-navy-dark);
+        border-color: rgb(var(--color-navy-dark-rgb) / 0.18);
         font-weight: 600;
       }
-      .pcc-btn--secondary:hover:not(:disabled) {
-        background: var(--color-navy-dark, #172531);
-        color: #fff;
-        border-color: var(--color-navy-dark, #172531);
+      @media (hover: hover) {
+        .pcc-btn--secondary:hover:not(:disabled) {
+          background: var(--color-navy-dark);
+          color: var(--color-white);
+          border-color: var(--color-navy-dark);
+        }
       }
 
       /* Hints — two paragraphs with breathing room. */
@@ -2658,19 +2678,19 @@ function CareCardStyles() {
       .pcc-share-hint {
         font-size: 13px;
         font-weight: 500;
-        color: #717A86;
+        color: var(--color-muted);
         margin: 0;
         line-height: 1.55;
       }
       .pcc-share-hint strong {
         font-weight: 700;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
       }
 
       /* Divider before the QR collapsible. */
       .pcc-share-divider {
         height: 1px;
-        background: rgba(23, 37, 49, 0.08);
+        background: rgb(var(--color-navy-dark-rgb) / 0.08);
         margin: 20px 0 16px;
       }
 
@@ -2684,12 +2704,14 @@ function CareCardStyles() {
         border: none;
         font-size: 14px;
         font-weight: 600;
-        color: var(--color-terracotta, #CF5C36);
+        color: var(--color-terracotta-700);
         cursor: pointer;
         font-family: var(--font-urbanist, 'Urbanist', sans-serif);
       }
-      .pcc-share-qr-toggle:hover {
-        color: var(--color-navy-dark, #172531);
+      @media (hover: hover) {
+        .pcc-share-qr-toggle:hover {
+          color: var(--color-navy-dark);
+        }
       }
 
       /* Page footer */
@@ -2697,7 +2719,7 @@ function CareCardStyles() {
         margin-top: 32px;
         text-align: center;
         font-size: 13px;
-        color: #717A86;
+        color: var(--color-muted);
       }
       .pcc-page-footer p { margin: 0; }
 
@@ -2707,13 +2729,13 @@ function CareCardStyles() {
         margin: 80px auto;
         padding: 32px 24px;
         text-align: center;
-        color: #717A86;
+        color: var(--color-muted);
       }
       .pcc-unavailable h2 {
         font-size: 22px;
         font-weight: 800;
         margin: 16px 0 8px;
-        color: var(--color-navy-dark, #172531);
+        color: var(--color-navy-dark);
       }
       .pcc-unavailable p {
         font-size: 15px;
@@ -2781,7 +2803,7 @@ function CareCardStyles() {
       /* Print friendliness — vets often print and pin to the chart. */
       @media print {
         .pcc-body {
-          background: #fff;
+          background: var(--color-white);
           padding: 0;
         }
         .pcc-section,
@@ -2790,9 +2812,11 @@ function CareCardStyles() {
           box-shadow: none;
           break-inside: avoid;
         }
-        .pcc-list-item:hover {
-          box-shadow: none;
-          border-color: #EDE8E0;
+        @media (hover: hover) {
+          .pcc-list-item:hover {
+            box-shadow: none;
+            border-color: var(--color-border);
+          }
         }
         .pcc-share-actions,
         .pcc-share-hints,

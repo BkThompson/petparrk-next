@@ -21,6 +21,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, Trophy, ChevronUp } from "lucide-react";
+import { GOLD_CONFETTI as GOLD_PALETTE } from "../lib/palettes";
+import { HEX, rgbaHex } from "../lib/tokens";
+import { BADGE_CELEBRATION_COLORS } from "../lib/palettes";
 
 // Escalation. Each tier introduces something the tier below it does NOT
 // have — escalation reads as new elements appearing, not existing ones
@@ -166,8 +169,6 @@ const CELEB_LEVELUP = {
   sweep: false,
 };
 
-const GOLD_PALETTE = ["#FFE08A", "#EFC88B", "#FFF3D0", "#E8B53A"];
-
 export function BadgeCelebration({ celebrate, tierDef, onDone }) {
   const playedRef = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -201,7 +202,7 @@ export function BadgeCelebration({ celebrate, tierDef, onDone }) {
 
   const Icon = crossed ? Trophy : ChevronUp;
 
-  const stops = tierDef?.stops || ["#FFE08A", "#E8B53A", "#B57E1A", "#6E4A0A"];
+  const stops = tierDef?.stops || [BADGE_CELEBRATION_COLORS.amber200, BADGE_CELEBRATION_COLORS.amber400, BADGE_CELEBRATION_COLORS.brown550, BADGE_CELEBRATION_COLORS.brown750];
   const inkColor = stops[2];
   const iconPillBg = stops[1];
 
@@ -223,14 +224,14 @@ export function BadgeCelebration({ celebrate, tierDef, onDone }) {
       const stroke = cfg.goldOnly
         ? GOLD_PALETTE[i % GOLD_PALETTE.length]
         : i % 3 === 0
-          ? "#CF5C36"
-          : "#EFC88B";
+          ? HEX.terracotta
+          : HEX.gold;
       const fill = cfg.goldOnly
         ? i % 3 === 0
-          ? "#FFE08A"
+          ? BADGE_CELEBRATION_COLORS.amber200
           : "none"
         : i % 4 === 0
-          ? "#EFC88B"
+          ? HEX.gold
           : "none";
       return {
         angle,
@@ -304,7 +305,7 @@ export function BadgeCelebration({ celebrate, tierDef, onDone }) {
                 style={{
                   width: pt.size - 5,
                   height: pt.size - 5,
-                  background: cfg.goldOnly ? "#FFE08A" : pt.stroke,
+                  background: cfg.goldOnly ? BADGE_CELEBRATION_COLORS.amber200 : pt.stroke,
                 }}
               />
             ) : (
@@ -322,7 +323,7 @@ export function BadgeCelebration({ celebrate, tierDef, onDone }) {
       <div className="pp-celeb-banner-outer">
         <div className="pp-celeb-banner" style={{ color: inkColor }}>
           <span className="pp-celeb-icon" style={{ background: iconPillBg }}>
-            <Icon size={13} strokeWidth={3} color="#FFFFFF" />
+            <Icon size={13} strokeWidth={3} color={HEX.white} />
           </span>
           <span className="pp-celeb-text">
             {crossed
@@ -363,7 +364,7 @@ export function BadgeCelebrationStyles() {
         margin: -8px 0 0 -8px;
         opacity: 0;
         --drop: 0px;
-        filter: drop-shadow(0 0 6px rgba(239, 200, 139, 0.75));
+        filter: drop-shadow(0 0 6px ${rgbaHex("gold", 0.75)});
         transform: rotate(var(--ang)) translateX(0) rotate(calc(-1 * var(--ang)));
         animation: ppCelebFly var(--celeb-dur) cubic-bezier(0.16, 0.66, 0.24, 1)
           var(--delay) forwards;
@@ -372,7 +373,7 @@ export function BadgeCelebrationStyles() {
       .pp-celeb-dot {
         display: block;
         border-radius: 50%;
-        box-shadow: 0 0 10px 2px rgba(239, 200, 139, 0.9);
+        box-shadow: 0 0 10px 2px ${rgbaHex("gold", 0.9)};
       }
       @keyframes ppCelebFly {
         0% {
@@ -439,13 +440,13 @@ export function BadgeCelebrationStyles() {
         border-radius: 26px;
         z-index: 1;
         pointer-events: none;
-        box-shadow: 0 0 0 0 rgba(239, 200, 139, 0.85);
+        box-shadow: 0 0 0 0 ${rgbaHex("gold", 0.85)};
         animation: ppCelebPulse 1.5s cubic-bezier(0.2, 0.7, 0.3, 1) 0.1s 2;
       }
       @keyframes ppCelebPulse {
-        0%   { box-shadow: 0 0 0 0 rgba(239, 200, 139, 0.8); }
-        70%  { box-shadow: 0 0 0 22px rgba(239, 200, 139, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(239, 200, 139, 0); }
+        0%   { box-shadow: 0 0 0 0 ${rgbaHex("gold", 0.8)}; }
+        70%  { box-shadow: 0 0 0 22px ${rgbaHex("gold", 0)}; }
+        100% { box-shadow: 0 0 0 0 ${rgbaHex("gold", 0)}; }
       }
 
       /* Lingering afterglow — Pack Leader ONLY. Persists after the
@@ -458,9 +459,9 @@ export function BadgeCelebrationStyles() {
         pointer-events: none;
         background: radial-gradient(
           ellipse at center,
-          rgba(255, 224, 138, 0.55) 0%,
-          rgba(239, 200, 139, 0.28) 42%,
-          rgba(239, 200, 139, 0) 72%
+          ${BADGE_CELEBRATION_COLORS.amber200_a55} 0%,
+          ${rgbaHex("gold", 0.28)} 42%,
+          ${rgbaHex("gold", 0)} 72%
         );
         opacity: 0;
         animation: ppCelebAfterglow 5.4s ease-out 0.2s forwards;
@@ -487,8 +488,8 @@ export function BadgeCelebrationStyles() {
         background: linear-gradient(
           105deg,
           transparent 34%,
-          rgba(255, 255, 255, 0.72) 47%,
-          rgba(255, 240, 200, 0.9) 51%,
+          ${rgbaHex("white", 0.72)} 47%,
+          ${BADGE_CELEBRATION_COLORS.cream100_a90} 51%,
           transparent 64%
         );
         transform: translateX(-115%);
@@ -512,15 +513,15 @@ export function BadgeCelebrationStyles() {
         border-radius: 999px;
         padding: 1.5px;
         background: linear-gradient(135deg,
-          #FFE8B8 0%,
-          #EFC88B 18%,
-          #FFFFFF 32%,
-          #EFC88B 50%,
-          #FFFFFF 68%,
-          #EFC88B 82%,
-          #FFE8B8 100%);
-        filter: drop-shadow(0 0 12px rgba(239, 200, 139, 0.6))
-          drop-shadow(0 6px 18px rgba(0, 0, 0, 0.30));
+          ${BADGE_CELEBRATION_COLORS.cream150} 0%,
+          ${HEX.gold} 18%,
+          ${HEX.white} 32%,
+          ${HEX.gold} 50%,
+          ${HEX.white} 68%,
+          ${HEX.gold} 82%,
+          ${BADGE_CELEBRATION_COLORS.cream150} 100%);
+        filter: drop-shadow(0 0 12px ${rgbaHex("gold", 0.6)})
+          drop-shadow(0 6px 18px ${rgbaHex("black", 0.3)});
         opacity: 0;
         animation: ppCelebBanner 3.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         will-change: transform, opacity;
@@ -538,7 +539,7 @@ export function BadgeCelebrationStyles() {
         letter-spacing: 0.08em;
         text-transform: uppercase;
         font-family: var(--font-urbanist,'Urbanist',sans-serif);
-        background: linear-gradient(170deg, #FFFDF7 0%, #FDF3DF 55%, #F7E6C4 100%);
+        background: linear-gradient(170deg, ${BADGE_CELEBRATION_COLORS.cream50} 0%, ${BADGE_CELEBRATION_COLORS.cream50x} 55%, ${BADGE_CELEBRATION_COLORS.cream100} 100%);
       }
       .pp-celeb-icon {
         display: inline-flex;
@@ -557,9 +558,9 @@ export function BadgeCelebrationStyles() {
         width: 12px;
         height: 12px;
         transform: translateX(-50%) rotate(45deg);
-        background: linear-gradient(135deg, #F7E6C4 0%, #EFC88B 100%);
+        background: linear-gradient(135deg, ${BADGE_CELEBRATION_COLORS.cream100} 0%, ${HEX.gold} 100%);
         border-radius: 2px;
-        box-shadow: 2px 2px 0 0 #EFC88B;
+        box-shadow: 2px 2px 0 0 ${HEX.gold};
       }
       @keyframes ppCelebBanner {
         0%   { opacity: 0; transform: translate(-50%, -58%) scale(0.42); }

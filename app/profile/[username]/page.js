@@ -64,118 +64,14 @@ import {
   ChevronDown,
 } from "lucide-react";
 import PageLoader from "../../../components/PageLoader";
+import { C, svgHex } from "../../../lib/tokens";
+import { BANNER_PALETTE, SPECIES_CARD_GRADIENT } from "../../../lib/palettes";
 
 const SESSION_KEY = "petparrk_symptom_session";
 
 // ─── Brand tokens ────────────────────────────────────────────────────────
-const C = {
-  navyDark: "#172531",
-  navyDeeper: "#060E16",
-  navyMid: "#2C4657",
-  terracotta: "#CF5C36",
-  terracottaDark: "#A8471D",
-  gold: "#EFC88B",
-  goldDark: "#C9A467",
-  cream: "#F5F0E8",
-  white: "#FFFFFF",
-  slate: "#4B5563",
-  muted: "#717A86",
-  border: "#EDE8E0",
-  borderStrong: "#DAD3C5",
-  success: "#1A6641",
-  successBg: "#EDFAF3",
-  warning: "#8B3A1E",
-  warningBg: "#FEF3EB",
-  error: "#C94040",
-};
 
 // ─── Banner palette — chromatic 4-stop gradients ────────────────────────
-const BANNER_PALETTE = {
-  dog: {
-    label: "Caramel",
-    title: "Dog",
-    group: "species",
-    stops: ["#F09A5A", "#D25F1F", "#A8400F", "#752807"],
-    text: "#FFEFD9",
-    accent: "#B95A18",
-  },
-  cat: {
-    label: "Plum",
-    title: "Cat",
-    group: "species",
-    stops: ["#B967A8", "#8E3B7C", "#6A2660", "#471945"],
-    text: "#F4DDF0",
-    accent: "#6A2660",
-  },
-  bird: {
-    label: "Sky",
-    title: "Bird",
-    group: "species",
-    stops: ["#6BB0DC", "#2E7AA8", "#1B5C82", "#0E3D5A"],
-    text: "#DCEAF6",
-    accent: "#1B5C82",
-  },
-  small_furry: {
-    label: "Honey",
-    title: "Small Furry",
-    group: "species",
-    stops: ["#FFD98A", "#F0B23A", "#C98C10", "#8A5D04"],
-    text: "#FFF1D5",
-    accent: "#B57614",
-  },
-  reptile_fish: {
-    label: "Sage",
-    title: "Reptile/Fish",
-    group: "species",
-    stops: ["#7CBB57", "#4A8A2E", "#33641E", "#1B4012"],
-    text: "#DCF1E2",
-    accent: "#1A6638",
-  },
-  mixed: {
-    label: "Royal Violet",
-    title: "Mixed",
-    group: "species",
-    stops: ["#9D7AEB", "#6B3FCB", "#4A2A9E", "#2D1968"],
-    text: "#E5DDF8",
-    accent: "#6B3FCB",
-  },
-  emerald: {
-    label: "Emerald Forest",
-    group: "extra",
-    stops: ["#3FCFA0", "#0E8060", "#0A5A45", "#043A2C"],
-    text: "#D6F4E5",
-    accent: "#0A5A45",
-  },
-  copper: {
-    label: "Copper Bronze",
-    group: "extra",
-    stops: ["#D9A15C", "#A9702E", "#7E4F1C", "#4A2C0D"],
-    text: "#FFE3D2",
-    accent: "#973A0E",
-  },
-  teal: {
-    label: "Midnight Teal",
-    group: "extra",
-    stops: ["#46B5C0", "#0E6973", "#084850", "#042C32"],
-    text: "#D6EFEF",
-    accent: "#084850",
-  },
-  rose: {
-    label: "Rose Gold",
-    group: "extra",
-    stops: ["#F8A8B4", "#D85F70", "#A93D52", "#6E2034"],
-    text: "#F9DBDF",
-    accent: "#A93D52",
-  },
-  mono: {
-    label: "Mono Navy",
-    group: "extra",
-    stops: ["#3B5570", "#1A2D44", "#0F1F2E", "#060F1A"],
-    text: "#D7DFEC",
-    accent: "#1A2D44",
-  },
-};
-
 const BANNER_LUCIDE = {
   dog: Dog,
   cat: Cat,
@@ -311,20 +207,7 @@ function shortenForChip(raw, max = 20) {
 
 function speciesCardGradient(species) {
   const bucket = speciesBucket(species);
-  switch (bucket) {
-    case "dog":
-      return "linear-gradient(135deg, #C97A3D 0%, #7A4520 100%)";
-    case "cat":
-      return "linear-gradient(135deg, #7B4B6E 0%, #4A2C44 100%)";
-    case "bird":
-      return "linear-gradient(135deg, #5C8FA8 0%, #2C5F6B 100%)";
-    case "small_furry":
-      return "linear-gradient(135deg, #D9A05B 0%, #A06A2E 100%)";
-    case "reptile_fish":
-      return "linear-gradient(135deg, #6B8E6F 0%, #3E5C42 100%)";
-    default:
-      return "linear-gradient(135deg, #717A86 0%, #2C4657 100%)";
-  }
+  return SPECIES_CARD_GRADIENT[bucket] || SPECIES_CARD_GRADIENT.default;
 }
 
 // Hero wallpaper — paws + feathers + sparkles + leaves for mixed; species-specific for others
@@ -435,7 +318,7 @@ function HeroWallpaper({ bannerKey }) {
               left: p.left,
               transform: `rotate(${p.rot}deg)`,
               opacity: p.opacity,
-              color: "#fff",
+              color: "var(--color-white)",
               pointerEvents: "none",
             }}
           >
@@ -488,7 +371,7 @@ function ProfileNotFound() {
           padding: 40px;
           text-align: center;
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
-          color: #172531;
+          color: var(--color-navy-dark);
         }
         .pp-notfound-title { 
           font-size: 20px; 
@@ -498,7 +381,7 @@ function ProfileNotFound() {
         .pp-notfound-sub {
           font-size: 16px; 
           font-weight: 500; 
-          color: #4B5563;
+          color: var(--color-slate);
           margin: 0 0 10px; 
           max-width: 380px; 
           line-height: 1.5;
@@ -510,17 +393,19 @@ function ProfileNotFound() {
           padding: 0 24px;
           height: 42px;
           border-radius: 12px;
-          background: #CF5C36;
-          color: #fff;
+          background: var(--color-terracotta-600);
+          color: var(--color-white);
           font-size: 15px;
           font-weight: 700;
           text-decoration: none;
-          border: 2px solid #CF5C36;
+          border: 2px solid var(--color-terracotta-600);
           transition: background 0.15s, color 0.15s;
         }
-        .pp-notfound-btn:hover { 
-          background: #fff; 
-          color: #CF5C36; 
+        @media (hover: hover) {
+          .pp-notfound-btn:hover {
+            background: var(--color-white); 
+            color: var(--color-terracotta-700); 
+          }
         }
       `}</style>
     </div>
@@ -983,12 +868,12 @@ export default function ProfilePage() {
   }
   function triageLabel(result) {
     if (result === "EMERGENCY")
-      return { dot: "#C94040", text: "#A62F2F", short: "Emergency" };
+      return { dot: "var(--color-error)", text: "var(--color-error-text)", short: "Emergency" };
     if (result === "SEE_VET")
-      return { dot: "#EFC88B", text: "#8A6420", short: "See vet soon" };
+      return { dot: "var(--color-caution)", text: "var(--color-caution-text)", short: "See vet soon" };
     if (result === "MONITOR")
-      return { dot: "#1A6641", text: "#155534", short: "Monitor at home" };
-    return { dot: "#888", text: "#4B5563", short: result || "—" };
+      return { dot: "var(--color-success)", text: "var(--color-success-text)", short: "Monitor at home" };
+    return { dot: "var(--color-muted)", text: "var(--color-slate)", short: result || "—" };
   }
   function relativeTimeShort(iso) {
     if (!iso) return "";
@@ -1540,14 +1425,14 @@ export default function ProfilePage() {
           border-radius: 50%;
           padding: 2.5px;
           background: linear-gradient(135deg,
-            rgba(255,234,176,0.95) 0%,
-            rgba(207,92,54,0.50) 22%,
-            rgba(255,255,255,0.20) 50%,
-            rgba(207,92,54,0.45) 78%,
-            rgba(255,234,176,0.95) 100%);
+            color-mix(in srgb, var(--color-caution-light) 95%, transparent) 0%,
+            rgb(var(--color-terracotta-rgb) / 0.5) 22%,
+            rgb(var(--color-white-rgb) / 0.2) 50%,
+            rgb(var(--color-terracotta-rgb) / 0.45) 78%,
+            color-mix(in srgb, var(--color-caution-light) 95%, transparent) 100%);
           box-shadow:
-            0 12px 36px rgba(0,0,0,0.55),
-            inset 0 1px 0 rgba(255,255,255,0.18);
+            0 12px 36px rgb(var(--color-black-rgb) / 0.55),
+            inset 0 1px 0 rgb(var(--color-white-rgb) / 0.18);
           flex-shrink: 0;
           position: relative;
         }
@@ -1572,15 +1457,15 @@ export default function ProfilePage() {
           position: absolute; bottom: 6px; right: 6px;
           width: 44px; height: 44px;
           border-radius: 50%;
-          background: ${C.terracotta}; color: #fff;
-          border: 3px solid #fff;
+          background: ${C.terracotta600}; color: var(--color-white);
+          border: 3px solid var(--color-white);
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.30);
+          box-shadow: 0 4px 12px rgb(var(--color-black-rgb) / 0.3);
           transition: background 0.15s;
           line-height: 1;
         }
-        .pp-avatar-camera:hover { background: ${C.terracottaDark}; }
+        @media (hover: hover) { .pp-avatar-camera:hover { background: ${C.terracotta700}; } }
 
         /* ════════════════════════════════════════════════════════════
            LEVEL BADGE — chromatic gloss with boosted highlights
@@ -1590,21 +1475,23 @@ export default function ProfilePage() {
           border-radius: 24px;
           padding: 1.5px;
           background: linear-gradient(135deg,
-            #FFE8B8 0%,
-            #EFC88B 18%,
-            #FFFFFF 32%,
-            #EFC88B 50%,
-            #FFFFFF 68%,
-            #EFC88B 82%,
-            #FFE8B8 100%);
-          filter: drop-shadow(0 0 8px rgba(239,200,139,0.45)) drop-shadow(0 4px 10px rgba(0,0,0,0.30));
+            var(--color-caution-light) 0%,
+            var(--color-gold) 18%,
+            var(--color-white) 32%,
+            var(--color-gold) 50%,
+            var(--color-white) 68%,
+            var(--color-gold) 82%,
+            var(--color-caution-light) 100%);
+          filter: drop-shadow(0 0 8px rgb(var(--color-gold-rgb) / 0.45)) drop-shadow(0 4px 10px rgb(var(--color-black-rgb) / 0.3));
           transition: filter 0.2s;
           display: inline-block;
           line-height: 1;
           cursor: pointer;
         }
-        .pp-level-outer:hover {
-          filter: drop-shadow(0 0 18px rgba(239,200,139,0.85)) drop-shadow(0 4px 14px rgba(0,0,0,0.35)) brightness(1.10);
+        @media (hover: hover) {
+          .pp-level-outer:hover {
+            filter: drop-shadow(0 0 18px rgb(var(--color-gold-rgb) / 0.85)) drop-shadow(0 4px 14px rgb(var(--color-black-rgb) / 0.35)) brightness(1.10);
+          }
         }
         .pp-level-badge {
           display: inline-flex; align-items: center; gap: 9px;
@@ -1621,18 +1508,19 @@ export default function ProfilePage() {
           line-height: 1;
           cursor: pointer;
           box-shadow:
-            inset 0 1.5px 0 rgba(255,255,255,0.55),
-            inset 0 -2px 4px rgba(0,0,0,0.32),
-            0 6px 16px rgba(0,0,0,0.35);
+            inset 0 1.5px 0 rgb(var(--color-white-rgb) / 0.55),
+            inset 0 -2px 4px rgb(var(--color-black-rgb) / 0.32),
+            0 6px 16px rgb(var(--color-black-rgb) / 0.35);
         }
         .pp-level-badge.l0 {
-          background: linear-gradient(160deg, #2a3e4e 0%, #1e303e 50%, #142433 100%);
+          background: linear-gradient(160deg, color-mix(in srgb, var(--color-navy-mid) 60%, var(--color-navy-dark)) 0%, color-mix(in srgb, var(--color-navy-mid) 30%, var(--color-navy-dark)) 50%, var(--color-navy-dark) 100%);
           color: ${C.gold};
         }
         .pp-level-badge.l0 .lv-progress {
-          color: ${C.terracotta};
+          /* Gold, not terracotta: small terracotta text fails on navy at every step. */
+          color: ${C.gold};
           font-weight: 900;
-          background: rgba(255,255,255,0.10);
+          background: rgb(var(--color-white-rgb) / 0.1);
           padding: 2px 8px;
           border-radius: 10px;
           line-height: 1;
@@ -1670,7 +1558,7 @@ export default function ProfilePage() {
         .pp-name {
           margin: 0;
           font-size: clamp(26px, 4.5vw, 32px); font-weight: 800;
-          color: #fff;
+          color: var(--color-white);
           letter-spacing: -0.025em;
           line-height: 1.05;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -1681,16 +1569,16 @@ export default function ProfilePage() {
           font-weight: 700;
           line-height: 1.2;
         }
-        .pp-handle.empty { color: rgba(255,255,255,0.45); font-style: italic; font-weight: 500; }
+        .pp-handle.empty { color: rgb(var(--color-white-rgb) / 0.45); font-style: italic; font-weight: 500; }
         .pp-location {
           margin: 0; font-size: 15px;
-          color: rgba(255,255,255,0.95);
+          color: rgb(var(--color-white-rgb) / 0.95);
           font-weight: 600;
           line-height: 1.3;
         }
         .pp-joined {
           margin: 0; font-size: 15px;
-          color: rgba(255,255,255,0.92);
+          color: rgb(var(--color-white-rgb) / 0.92);
           font-weight: 600;
           white-space: nowrap;
           line-height: 1.3;
@@ -1706,17 +1594,19 @@ export default function ProfilePage() {
           white-space: nowrap;
           text-decoration: none;
         }
-        .pp-edit-link:hover {
-          color: #fff;
-          text-decoration: underline;
-          text-underline-offset: 3px;
+        @media (hover: hover) {
+          .pp-edit-link:hover {
+            color: var(--color-white);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+          }
         }
 
         .pp-bio {
           margin: 14px 0 0;
           font-size: 16px;
           font-weight: 500;
-          color: rgba(255,255,255,0.92);
+          color: rgb(var(--color-white-rgb) / 0.92);
           line-height: 1.6;
           /* Capped at 630px so the full-width bio never reaches up alongside
              the Joined/Edit column at mid widths. */
@@ -1745,25 +1635,27 @@ export default function ProfilePage() {
           padding: 1.5px;
           border-radius: 14px;
           background: linear-gradient(15deg,
-            rgba(239,200,139,0.75) 0%,
-            rgba(207,92,54,0.45) 25%,
-            rgba(255,255,255,0.32) 50%,
-            rgba(207,92,54,0.45) 75%,
-            rgba(239,200,139,0.75) 100%);
+            rgb(var(--color-gold-rgb) / 0.75) 0%,
+            rgb(var(--color-terracotta-rgb) / 0.45) 25%,
+            rgb(var(--color-white-rgb) / 0.32) 50%,
+            rgb(var(--color-terracotta-rgb) / 0.45) 75%,
+            rgb(var(--color-gold-rgb) / 0.75) 100%);
           transition: transform 0.18s ease, box-shadow 0.18s ease;
         }
-        .pp-stat-link:hover .pp-stat-outer {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 28px rgba(23,37,49,0.18);
+        @media (hover: hover) {
+          .pp-stat-link:hover .pp-stat-outer {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgb(var(--color-navy-dark-rgb) / 0.18);
+          }
         }
         .pp-stat {
-          background: #fff;
+          background: var(--color-white);
           border-radius: 12px;
           padding: 22px 14px 18px;
           text-align: center;
           position: relative; overflow: hidden;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
-          box-shadow: 0 6px 18px rgba(23,37,49,0.12);
+          box-shadow: 0 6px 18px rgb(var(--color-navy-dark-rgb) / 0.12);
         }
         .pp-stat::before {
           content: ""; position: absolute;
@@ -1821,10 +1713,10 @@ export default function ProfilePage() {
           justify-content: center;
           gap: 10px;
           padding: 14px 16px;
-          background: #fff;
+          background: var(--color-white);
           border: 2px solid ${C.terracotta};
           border-radius: 12px;
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
           font-size: 14px;
           font-weight: 700;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -1832,9 +1724,11 @@ export default function ProfilePage() {
           transition: background 0.15s, color 0.15s;
           cursor: pointer;
         }
-        .pp-quick-action:hover {
-          background: ${C.terracotta};
-          color: #fff;
+        @media (hover: hover) {
+          .pp-quick-action:hover {
+            background: ${C.terracotta700};
+            color: var(--color-white);
+          }
         }
         .pp-qa-icon {
           display: inline-flex; align-items: center; justify-content: center;
@@ -1847,7 +1741,7 @@ export default function ProfilePage() {
           margin: 24px auto;
           padding: 14px 18px;
           background: ${C.warningBg};
-          border: 1px solid ${C.warning};
+          border: 1px solid ${C.warningText};
           border-radius: 12px;
           text-align: center;
         }
@@ -1855,7 +1749,7 @@ export default function ProfilePage() {
           margin: 0;
           font-size: 15px;
           font-weight: 500;
-          color: ${C.warning};
+          color: ${C.warningText};
           line-height: 1.6;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
@@ -1887,7 +1781,7 @@ export default function ProfilePage() {
           font-size: 15px;
           font-weight: 700;
           color: ${C.navyDark};
-          background: #fff;
+          background: var(--color-white);
           border: 1.5px solid ${C.muted};
           border-radius: 12px;
           text-decoration: none;
@@ -1900,23 +1794,27 @@ export default function ProfilePage() {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           white-space: nowrap;
         }
-        .pp-utility-link:hover {
-          background: ${C.navyDark};
-          color: #fff;
-          border-color: ${C.navyDark};
-          text-decoration: none;
+        @media (hover: hover) {
+          .pp-utility-link:hover {
+            background: ${C.navyDark};
+            color: var(--color-white);
+            border-color: ${C.navyDark};
+            text-decoration: none;
+          }
         }
         /* Primary CTA: matches site .btn-primary (terracotta, 2px border, w700). */
         .pp-utility-link-btn {
-          color: #fff;
-          background: ${C.terracotta};
-          border: 2px solid ${C.terracotta};
+          color: var(--color-white);
+          background: ${C.terracotta600};
+          border: 2px solid ${C.terracotta600};
           font-weight: 700;
         }
-        .pp-utility-link-btn:hover {
-          background: #fff;
-          color: ${C.terracotta};
-          border-color: ${C.terracotta};
+        @media (hover: hover) {
+          .pp-utility-link-btn:hover {
+            background: var(--color-white);
+            color: ${C.terracotta700};
+            border-color: ${C.terracotta700};
+          }
         }
         .pp-utility-sep {
           display: none;
@@ -1944,7 +1842,7 @@ export default function ProfilePage() {
           padding: 12px 18px;
           border: 1px solid ${C.border};
           border-radius: 12px;
-          background: rgba(255,255,255,0.6);
+          background: rgb(var(--color-white-rgb) / 0.6);
           font-size: 16px;
           font-weight: 500;
           color: ${C.slate};
@@ -1956,12 +1854,12 @@ export default function ProfilePage() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
           font-weight: 600;
           text-decoration: none;
           white-space: nowrap;
         }
-        .pp-owner-note-link:hover { color: ${C.navyDark}; text-decoration: underline; }
+        @media (hover: hover) { .pp-owner-note-link:hover { color: ${C.navyDark}; text-decoration: underline; } }
         .pp-public-hero-section { padding: 32px 0 0; }
         .pp-public-hero-divider {
           margin-top: 32px;
@@ -1972,7 +1870,7 @@ export default function ProfilePage() {
           font-weight: 700;
           letter-spacing: 0.10em;
           text-transform: uppercase;
-          color: #B57614;
+          color: ${bannerPalette.accentText};
           margin: 0 0 14px;
         }
         .pp-public-hero-grid { display: grid; gap: 16px; }
@@ -1985,15 +1883,19 @@ export default function ProfilePage() {
           border-radius: 18px;
           padding: 1.5px;
           background: ${C.border};
-          box-shadow: 0 2px 12px rgba(23,37,49,0.07);
+          box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.07);
           transition: transform 0.3s, background 0.25s ease, box-shadow 0.25s;
         }
-        .pp-public-hero-tile:hover {
-          transform: translateY(-3px);
-          background: rgba(239,200,139,0.5);
+        @media (hover: hover) {
+          .pp-public-hero-tile:hover {
+            transform: translateY(-3px);
+            background: rgb(var(--color-gold-rgb) / 0.5);
+          }
         }
-        .pp-public-hero-tile:hover > .pp-public-hero-inner {
-          box-shadow: 0 0 0 1.5px rgba(239,200,139,0.9), 0 16px 48px rgba(23,37,49,0.13);
+        @media (hover: hover) {
+          .pp-public-hero-tile:hover > .pp-public-hero-inner {
+            box-shadow: 0 0 0 1.5px rgb(var(--color-gold-rgb) / 0.9), 0 16px 48px rgb(var(--color-navy-dark-rgb) / 0.13);
+          }
         }
         .pp-public-hero-tile > .pp-public-hero-inner {
           border-radius: 16.5px;
@@ -2026,7 +1928,7 @@ export default function ProfilePage() {
           margin: 0 0 24px;
           font-size: 11px;
           font-weight: 700;
-          color: ${bannerPalette.accent};
+          color: ${bannerPalette.accentText};
           text-transform: uppercase;
           letter-spacing: 0.16em;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -2038,14 +1940,14 @@ export default function ProfilePage() {
           padding: 1.5px;
           border-radius: 24px;
           background: linear-gradient(135deg,
-            #FFE8B8 0%,
-            #EFC88B 18%,
-            #FFFFFF 32%,
-            #EFC88B 50%,
-            #FFFFFF 68%,
-            #EFC88B 82%,
-            #FFE8B8 100%);
-          filter: drop-shadow(0 0 14px rgba(239,200,139,0.45)) drop-shadow(0 12px 32px rgba(0,0,0,0.30));
+            var(--color-caution-light) 0%,
+            var(--color-gold) 18%,
+            var(--color-white) 32%,
+            var(--color-gold) 50%,
+            var(--color-white) 68%,
+            var(--color-gold) 82%,
+            var(--color-caution-light) 100%);
+          filter: drop-shadow(0 0 14px rgb(var(--color-gold-rgb) / 0.45)) drop-shadow(0 12px 32px rgb(var(--color-black-rgb) / 0.3));
           max-width: 480px;
           margin: 0 auto 28px;
         }
@@ -2054,8 +1956,8 @@ export default function ProfilePage() {
           border-radius: 22.5px;
           padding: 48px 32px 32px;
           box-shadow:
-            inset 0 1.5px 0 rgba(255,255,255,0.40),
-            inset 0 -2px 6px rgba(0,0,0,0.32);
+            inset 0 1.5px 0 rgb(var(--color-white-rgb) / 0.4),
+            inset 0 -2px 6px rgb(var(--color-black-rgb) / 0.32);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           overflow: hidden;
         }
@@ -2067,8 +1969,8 @@ export default function ProfilePage() {
           background: ${C.gold};
           display: flex; align-items: center; justify-content: center;
           box-shadow:
-            0 2px 8px rgba(0,0,0,0.30),
-            inset 0 1px 0 rgba(255,255,255,0.45);
+            0 2px 8px rgb(var(--color-black-rgb) / 0.3),
+            inset 0 1px 0 rgb(var(--color-white-rgb) / 0.45);
           z-index: 2;
         }
         .pp-cc-number {
@@ -2082,7 +1984,7 @@ export default function ProfilePage() {
           font-size: 13px;
           font-weight: 800;
           letter-spacing: 0.18em;
-          color: rgba(255,255,255,0.95);
+          color: rgb(var(--color-white-rgb) / 0.95);
           margin: 0 0 24px;
         }
         .pp-cc-verified-line {
@@ -2091,10 +1993,10 @@ export default function ProfilePage() {
           gap: 8px;
           padding: 8px 14px;
           border-radius: 999px;
-          background: rgba(0,0,0,0.20);
+          background: rgb(var(--color-black-rgb) / 0.2);
           font-size: 13px;
           font-weight: 600;
-          color: rgba(255,255,255,0.90);
+          color: rgb(var(--color-white-rgb) / 0.9);
           letter-spacing: 0.10em;
         }
         .pp-cc-blurb {
@@ -2112,12 +2014,12 @@ export default function ProfilePage() {
           max-width: 460px;
           margin: 0 auto;
           padding: 32px 28px;
-          background: #fff;
+          background: var(--color-white);
           border: 1.5px solid ${C.border};
           border-radius: 16px;
           text-align: center;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
-          box-shadow: 0 2px 12px rgba(23,37,49,0.05);
+          box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.05);
         }
         .pp-cc-empty-icon {
           width: 56px;
@@ -2156,7 +2058,7 @@ export default function ProfilePage() {
         }
         .pp-pack-eyebrow {
           margin: 0 0 4px; font-size: 11px; font-weight: 700;
-          color: ${bannerPalette.accent};
+          color: ${bannerPalette.accentText};
           text-transform: uppercase; letter-spacing: 0.10em;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
@@ -2167,7 +2069,7 @@ export default function ProfilePage() {
         }
         .pp-add-pet-btn {
           padding: 0 24px; height: 42px;
-          background: ${C.navyDark}; color: #fff;
+          background: ${C.navyDark}; color: var(--color-white);
           border: 2px solid ${C.navyDark}; border-radius: 12px;
           font-size: 15px; font-weight: 700;
           cursor: pointer; white-space: nowrap;
@@ -2175,10 +2077,12 @@ export default function ProfilePage() {
           display: inline-flex; align-items: center; justify-content: center; gap: 6px;
           transition: background 0.15s, border-color 0.15s;
         }
-        .pp-add-pet-btn:hover {
-          background: #fff;
-          color: ${C.navyDark};
-          border-color: ${C.navyDark};
+        @media (hover: hover) {
+          .pp-add-pet-btn:hover {
+            background: var(--color-white);
+            color: ${C.navyDark};
+            border-color: ${C.navyDark};
+          }
         }
 
         .pp-pet-grid { display: grid; gap: 16px; }
@@ -2198,7 +2102,7 @@ export default function ProfilePage() {
           display: block;
           color: inherit;
         }
-        .pp-pet-card-outer:hover { background: rgba(239,200,139,0.5); }
+        @media (hover: hover) { .pp-pet-card-outer:hover { background: rgb(var(--color-gold-rgb) / 0.5); } }
         .pp-pet-photo-link {
           position: absolute;
           inset: 0;
@@ -2220,7 +2124,7 @@ export default function ProfilePage() {
           text-decoration: none;
           transition: color 0.15s;
         }
-        .pp-pet-name-link:hover { color: ${C.terracotta}; }
+        @media (hover: hover) { .pp-pet-name-link:hover { color: ${C.terracotta700}; } }
         .pp-pet-photo-link:focus-visible,
         .pp-pet-name-link:focus-visible {
           outline: 2px solid ${C.terracotta};
@@ -2228,17 +2132,19 @@ export default function ProfilePage() {
         }
         .pp-pet-card {
           border-radius: 16px;
-          background: #fff;
+          background: var(--color-white);
           transition: box-shadow 0.25s;
-          box-shadow: 0 2px 12px rgba(23,37,49,0.07);
+          box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.07);
           border: 1px solid ${C.border};
           position: relative;
           overflow: hidden;
           display: flex; flex-direction: column;
           height: 100%;
         }
-        .pp-pet-card-outer:hover .pp-pet-card {
-          box-shadow: 0 0 0 1.5px rgba(239,200,139,0.9), 0 16px 48px rgba(23,37,49,0.13);
+        @media (hover: hover) {
+          .pp-pet-card-outer:hover .pp-pet-card {
+            box-shadow: 0 0 0 1.5px rgb(var(--color-gold-rgb) / 0.9), 0 16px 48px rgb(var(--color-navy-dark-rgb) / 0.13);
+          }
         }
         .pp-pet-photo {
           /* height: 220px; */
@@ -2261,35 +2167,37 @@ export default function ProfilePage() {
           z-index: 2;
           width: 44px; height: 44px;
           border-radius: 50%;
-          background: ${C.terracotta};
-          color: #fff;
-          border: 2px solid #fff;
+          background: ${C.terracotta600};
+          color: var(--color-white);
+          border: 2px solid var(--color-white);
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+          box-shadow: 0 2px 8px rgb(var(--color-black-rgb) / 0.2);
           transition: background 0.15s;
           line-height: 1;
         }
-        .pp-pet-photo-camera:hover { background: ${C.terracottaDark}; }
+        @media (hover: hover) { .pp-pet-photo-camera:hover { background: ${C.terracotta700}; } }
 
         .pp-pet-edit-btn {
           position: absolute; top: 12px; right: 12px;
           z-index: 2;
           width: 44px; height: 44px;
           border-radius: 50%;
-          background: rgba(255,255,255,0.95);
+          background: rgb(var(--color-white-rgb) / 0.95);
           color: ${C.navyDark};
-          border: 2px solid #fff;
+          border: 2px solid var(--color-white);
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+          box-shadow: 0 2px 8px rgb(var(--color-black-rgb) / 0.25);
           transition: background 0.15s, color 0.15s;
           line-height: 1;
           z-index: 2;
         }
-        .pp-pet-edit-btn:hover {
-          background: ${C.navyDark};
-          color: #fff;
+        @media (hover: hover) {
+          .pp-pet-edit-btn:hover {
+            background: ${C.navyDark};
+            color: var(--color-white);
+          }
         }
 
         .pp-pet-body { padding: 14px 16px 14px; flex: 1; display: flex; flex-direction: column; }
@@ -2391,15 +2299,17 @@ export default function ProfilePage() {
           margin: 0;
           font-size: 14px;
           font-weight: 700;
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
           cursor: pointer;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: color 0.15s;
         }
-        .pp-medline-toggle:hover {
-          color: ${C.navyDark};
-          text-decoration: underline;
-          text-underline-offset: 2px;
+        @media (hover: hover) {
+          .pp-medline-toggle:hover {
+            color: ${C.navyDark};
+            text-decoration: underline;
+            text-underline-offset: 2px;
+          }
         }
 
         .pp-pet-recent {
@@ -2407,15 +2317,15 @@ export default function ProfilePage() {
           padding: 14px 16px;
           border-top: 1px solid ${C.border};
           border-left: none; border-right: none; border-bottom: none;
-          background: #fff;
+          background: var(--color-white);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           width: 100%;
           cursor: pointer;
           font: inherit;
           transition: background 0.15s;
         }
-        .pp-pet-recent { background: var(--recent-bg, #fff); }
-        .pp-pet-recent:hover { background: var(--recent-bg-hover, ${C.cream}); }
+        .pp-pet-recent { background: var(--recent-bg, var(--color-white)); }
+        @media (hover: hover) { .pp-pet-recent:hover { background: var(--recent-bg-hover, ${C.cream}); } }
         .pp-pet-recent-text {
           font-size: 15px;
           font-weight: 600;
@@ -2437,17 +2347,17 @@ export default function ProfilePage() {
           display: inline-flex;
           align-items: center;
         }
-        .pp-pet-recent:hover .pp-pet-recent-arrow { transform: translateX(3px); }
+        @media (hover: hover) { .pp-pet-recent:hover .pp-pet-recent-arrow { transform: translateX(3px); } }
         .pp-pet-recent.empty { cursor: default; }
-        .pp-pet-recent.empty:hover { background: #fff; }
+        @media (hover: hover) { .pp-pet-recent.empty:hover { background: var(--color-white); } }
 
         /* ════════════════════════════════════════════════════════════
            FORM CARD
            ════════════════════════════════════════════════════════════ */
         .pp-form-card {
-          background: #fff; border: 1px solid ${C.border};
+          background: var(--color-white); border: 1px solid ${C.border};
           border-radius: 16px; padding: 28px; margin-top: 20px;
-          box-shadow: 0 2px 12px rgba(23,37,49,0.05);
+          box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.05);
         }
         .pp-form-head {
           margin-bottom: 18px; padding-bottom: 14px;
@@ -2465,7 +2375,7 @@ export default function ProfilePage() {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pp-form-eyebrow {
-          font-size: 11px; font-weight: 700; color: ${C.terracotta};
+          font-size: 11px; font-weight: 700; color: ${C.terracotta700};
           text-transform: uppercase; letter-spacing: 0.10em;
           margin: 0 0 12px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -2489,17 +2399,17 @@ export default function ProfilePage() {
 
         .input {
           width: 100%; padding: 0 14px; border-radius: 12px;
-          border: 2px solid #DAD3C5; font-size: 15px;
+          border: 2px solid var(--color-border-strong); font-size: 15px;
           box-sizing: border-box;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
-          outline: none; background: #fff; height: 44px;
+          outline: none; background: var(--color-white); height: 44px;
           color: ${C.navyDark}; -webkit-appearance: none; appearance: none;
           transition: border-color 0.15s;
         }
         textarea.input { padding: 12px 14px; height: auto; }
         .input:focus { border-color: ${C.terracotta}; }
         select.input {
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23717A86' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='${svgHex("muted")}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
           background-repeat: no-repeat; background-position: right 12px center;
           padding-right: 38px; cursor: pointer;
         }
@@ -2523,7 +2433,7 @@ export default function ProfilePage() {
         }
         .pp-weight-unit-btn {
           padding: 0 14px;
-          background: #fff;
+          background: var(--color-white);
           border: none;
           color: ${C.muted};
           font-size: 14px;
@@ -2534,11 +2444,13 @@ export default function ProfilePage() {
         }
         .pp-weight-unit-btn.active {
           background: ${C.navyDark};
-          color: #fff;
+          color: var(--color-white);
         }
-        .pp-weight-unit-btn:not(.active):hover {
-          background: rgba(23,37,49,0.04);
-          color: ${C.navyDark};
+        @media (hover: hover) {
+          .pp-weight-unit-btn:not(.active):hover {
+            background: rgb(var(--color-navy-dark-rgb) / 0.04);
+            color: ${C.navyDark};
+          }
         }
         @media (max-width: 640px) {
           .pp-weight-row { flex-direction: column; }
@@ -2558,42 +2470,46 @@ export default function ProfilePage() {
 
         .btn-primary {
           padding: 0 24px; height: 48px; min-width: 90px;
-          background: ${C.terracotta}; color: #fff;
-          border: 2px solid ${C.terracotta}; border-radius: 12px;
+          background: ${C.terracotta600}; color: var(--color-white);
+          border: 2px solid ${C.terracotta600}; border-radius: 12px;
           font-size: 15px; cursor: pointer; font-weight: 700;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           display: inline-flex; align-items: center; justify-content: center;
           white-space: nowrap; transition: background 0.15s, border-color 0.15s;
         }
-        .btn-primary:hover {
-          background: #fff;
-          color: ${C.terracotta};
-          border-color: ${C.terracotta};
+        @media (hover: hover) {
+          .btn-primary:hover {
+            background: var(--color-white);
+            color: ${C.terracotta700};
+            border-color: ${C.terracotta700};
+          }
         }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-secondary {
           padding: 0 24px; height: 48px; min-width: 90px;
-          background: #fff; color: ${C.navyDark};
+          background: var(--color-white); color: ${C.navyDark};
           border: 1.5px solid ${C.border}; border-radius: 12px;
           font-size: 15px; cursor: pointer; font-weight: 600;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           display: inline-flex; align-items: center; justify-content: center;
           white-space: nowrap; transition: background 0.15s, border-color 0.15s;
         }
-        .btn-secondary:hover {
-          background: ${C.navyDark};
-          color: #fff;
-          border-color: ${C.navyDark};
+        @media (hover: hover) {
+          .btn-secondary:hover {
+            background: ${C.navyDark};
+            color: var(--color-white);
+            border-color: ${C.navyDark};
+          }
         }
         .btn-danger-sm {
           height: 48px; padding: 0 24px;
           font-size: 15px; border-radius: 12px;
-          color: ${C.error}; background: #fff;
-          border: 1px solid #F4C5C5; cursor: pointer;
+          color: ${C.error}; background: var(--color-white);
+          border: 1px solid rgb(var(--color-error-rgb) / 0.24); cursor: pointer;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           font-weight: 700; transition: background 0.15s;
         }
-        .btn-danger-sm:hover { background: ${C.error}; color: ${C.white}; border: 1px solid ${C.error}; font-weight: 700; line-height: 1; transition: background 0.15s; }
+        @media (hover: hover) { .btn-danger-sm:hover { background: ${C.error}; color: ${C.white}; border: 1px solid ${C.error}; font-weight: 700; line-height: 1; transition: background 0.15s; } }
         .btn-row {
           display: flex; gap: 10px; align-items: center;
           flex-wrap: wrap; margin-top: 6px;
@@ -2607,7 +2523,7 @@ export default function ProfilePage() {
           margin-top: 8px;
         }
         .pp-banner-swatch {
-          background: #fff;
+          background: var(--color-white);
           border: 2px solid ${C.border};
           border-radius: 12px;
           padding: 10px;
@@ -2616,27 +2532,29 @@ export default function ProfilePage() {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: transform 0.1s, border-color 0.15s, box-shadow 0.15s;
         }
-        .pp-banner-swatch:hover {
-          border-color: ${C.borderStrong};
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(23,37,49,0.06);
+        @media (hover: hover) {
+          .pp-banner-swatch:hover {
+            border-color: ${C.borderStrong};
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgb(var(--color-navy-dark-rgb) / 0.06);
+          }
         }
         .pp-banner-swatch.selected {
           border-color: ${C.terracotta};
-          box-shadow: 0 0 0 3px rgba(207,92,54,0.15);
+          box-shadow: 0 0 0 3px rgb(var(--color-terracotta-rgb) / 0.15);
         }
         .pp-banner-swatch-color {
           height: 60px; border-radius: 8px;
           position: relative; overflow: hidden;
           margin-bottom: 8px;
           display: flex; align-items: center; justify-content: center;
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -2px 4px rgba(0,0,0,0.25);
+          box-shadow: inset 0 1px 0 rgb(var(--color-white-rgb) / 0.3), inset 0 -2px 4px rgb(var(--color-black-rgb) / 0.25);
         }
         /* Kept in step with the same rule in profileStyles.js — this page
            carries its own copy, and a change to one without the other is how
            "the fix didn't take" happens. See that file for why 28/1.4. */
         .pp-banner-swatch-color svg {
-          color: rgba(255,255,255,0.55);
+          color: rgb(var(--color-white-rgb) / 0.55);
           width: 32px;
           height: 32px;
           stroke-width: 1.2;
@@ -2649,7 +2567,7 @@ export default function ProfilePage() {
 
         /* Empty state */
         .pp-empty {
-          background: #fff;
+          background: var(--color-white);
           border: 2px dashed ${C.borderStrong};
           border-radius: 16px;
           padding: 56px 24px;
@@ -2659,7 +2577,7 @@ export default function ProfilePage() {
         /* Modal */
         .pp-modal-backdrop {
           position: fixed; inset: 0;
-          background: rgba(23,37,49,0.55);
+          background: rgb(var(--color-navy-dark-rgb) / 0.55);
           z-index: 100;
           display: flex; align-items: center; justify-content: center;
           padding: 20px;
@@ -2668,12 +2586,12 @@ export default function ProfilePage() {
           overflow-y: auto;
         }
         .pp-modal {
-          background: #fff;
+          background: var(--color-white);
           border-radius: 18px;
           max-width: 560px; width: 100%;
           max-height: 86vh;
           overflow-y: auto;
-          box-shadow: 0 30px 60px rgba(0,0,0,0.40);
+          box-shadow: 0 30px 60px rgb(var(--color-black-rgb) / 0.4);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pp-modal-head {
@@ -2694,7 +2612,7 @@ export default function ProfilePage() {
           transition: background 0.15s, color 0.15s;
           line-height: 1;
         }
-        .pp-modal-close:hover { background: ${C.cream}; color: ${C.navyDark}; }
+        @media (hover: hover) { .pp-modal-close:hover { background: ${C.cream}; color: ${C.navyDark}; } }
         .pp-modal-body { padding: 0; }
 
         .pp-level-row {
@@ -2707,7 +2625,7 @@ export default function ProfilePage() {
         }
         .pp-level-row:last-child { border-bottom: none; }
         .pp-level-row.current {
-          background: linear-gradient(90deg, rgba(207,92,54,0.07), rgba(207,92,54,0.02));
+          background: linear-gradient(90deg, rgb(var(--color-terracotta-rgb) / 0.07), rgb(var(--color-terracotta-rgb) / 0.02));
           border-bottom: 1px solid ${C.border};
         }
         .pp-level-row.current::before {
@@ -2720,15 +2638,15 @@ export default function ProfilePage() {
         .pp-level-row-medal {
           padding: 1.5px;
           border-radius: 14px;
-          background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(0,0,0,0.18) 100%);
+          background: linear-gradient(135deg, rgb(var(--color-white-rgb) / 0.7) 0%, rgb(var(--color-black-rgb) / 0.18) 100%);
         }
         .pp-level-row-medal-inner {
           width: 100%; height: 64px;
           border-radius: 13px;
           display: flex; align-items: center; justify-content: center;
           box-shadow:
-            inset 0 1.5px 0 rgba(255,255,255,0.55),
-            inset 0 -2px 4px rgba(0,0,0,0.30);
+            inset 0 1.5px 0 rgb(var(--color-white-rgb) / 0.55),
+            inset 0 -2px 4px rgb(var(--color-black-rgb) / 0.3);
         }
         .pp-level-row-body { min-width: 0; }
         .pp-level-row-head {
@@ -2756,7 +2674,7 @@ export default function ProfilePage() {
           letter-spacing: 0.10em; text-transform: uppercase;
           line-height: 1;
         }
-        .pp-level-row-tag.current { background: ${C.terracotta}; color: #fff; }
+        .pp-level-row-tag.current { background: ${C.terracotta600}; color: var(--color-white); }
         .pp-level-row-summary {
           font-size: 16px;
           font-weight: 500;
@@ -2774,7 +2692,7 @@ export default function ProfilePage() {
           width: 100%; text-align: left; border: none; background: none;
           padding: 20px; cursor: pointer; font-family: inherit;
         }
-        .pp-tier-head.current { background: #FAFAF8; padding: 20px; }
+        .pp-tier-head.current { background: var(--color-white); padding: 20px; }
         .pp-tier-head.static { cursor: default; }
         .pp-tier-head:disabled { cursor: default; }
         .pp-tier-icon {
@@ -2792,13 +2710,13 @@ export default function ProfilePage() {
           font-size: 20px; font-weight: 800; color: ${C.navyDark};
           line-height: 1.15;
         }
-        .pp-tier-name.future { color: #9AA4AE; }
+        .pp-tier-name.future { color: var(--color-muted); }
         .pp-tier-desc {
           font-size: 14px; font-weight: 500; color: ${C.muted};
           margin-top: 2px; line-height: 1.35;
         }
         .pp-tier-caret {
-          color: #B8C0C9; flex-shrink: 0; align-self: flex-start; margin-top: 2px;
+          color: var(--color-muted); flex-shrink: 0; align-self: flex-start; margin-top: 2px;
           transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .pp-tier-caret.open { transform: rotate(180deg); }
@@ -2813,50 +2731,50 @@ export default function ProfilePage() {
         .pp-lvl-node {
           position: absolute; left: 0; top: 4px;
           width: 15px; height: 15px; border-radius: 50%;
-          background: #fff; border: 2px solid #D6DBE0; box-sizing: border-box;
+          background: var(--color-white); border: 2px solid var(--color-ghost); box-sizing: border-box;
         }
         .pp-lvl-node.current {
           width: 17px; height: 17px; left: -1px; top: 3px; border: 3px solid ${C.terracotta};
-          box-shadow: 0 0 0 3px rgba(207,92,54,0.2);
+          box-shadow: 0 0 0 3px rgb(var(--color-terracotta-rgb) / 0.2);
         }
         .pp-lvl-headline {
           display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
           min-height: 22px;
         }
         .pp-lvl-name { font-size: 17px; font-weight: 800; color: ${C.navyDark}; }
-        .pp-lvl-row.future .pp-lvl-name { color: #9AA4AE; font-weight: 600; }
+        .pp-lvl-row.future .pp-lvl-name { color: var(--color-muted); font-weight: 600; }
         .pp-lvl-done {
-          font-size: 12px; color: #16A34A; font-weight: 800;
+          font-size: 12px; color: var(--color-success); font-weight: 800;
           display: inline-flex; align-items: center; gap: 3px;
         }
         .pp-lvl-done svg { flex-shrink: 0; }
         .pp-lvl-here {
-          background: ${C.terracotta}; color: #fff; font-size: 10px; font-weight: 800;
+          background: ${C.terracotta600}; color: var(--color-white); font-size: 10px; font-weight: 800;
           padding: 3px 7px; border-radius: 4px; letter-spacing: 0.05em;
           text-transform: uppercase;
         }
         .pp-lvl-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
         /* Weight up from 500 and an outline added. At 500 on a pale grey fill
            these sat so far back they read as disabled rather than completed —
-           the colour is also lifted from #94A0AB so the text carries against
+           the colour is also lifted from var(--color-muted) so the text carries against
            the fill. */
         .pp-lvl-pill {
-          font-size: 12px; font-weight: 700; color: #6B7682; background: #F2EFE9;
+          font-size: 12px; font-weight: 700; color: var(--color-muted); background: var(--color-cream);
           padding: 3px 10px; border-radius: 999px;
-          border: var(--pill-border-w, 2px) solid #E2DCD2;
+          border: var(--pill-border-w, 2px) solid var(--color-border);
           display: inline-flex; align-items: center; gap: 4px;
         }
         .pp-lvl-pill svg { flex-shrink: 0; }
         .pp-lvl-expand { margin-top: 12px; }
         .pp-ladder-story {
           margin: 0; padding: 20px;
-          border-bottom: 1px solid ${C.terracotta}22;
-          background: linear-gradient(160deg, ${C.terracotta}12, ${C.terracotta}06);
+          border-bottom: 1px solid rgb(var(--color-terracotta-rgb) / 0.13);
+          background: linear-gradient(160deg, rgb(var(--color-terracotta-rgb) / 0.07), rgb(var(--color-terracotta-rgb) / 0.02));
         }
         .pp-story-eyebrow {
           margin: 0 0 12px; font-size: 12px; font-weight: 800;
           letter-spacing: 0.10em; text-transform: uppercase;
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
         }
         .pp-story-p {
           margin: 0 0 15px; font-size: 15px; font-weight: 500;
@@ -2900,7 +2818,7 @@ export default function ProfilePage() {
           flex-shrink: 0;
           margin-top: 2px;
         }
-        .pp-level-row-reqs .req-icon-met { color: ${C.success}; }
+        .pp-level-row-reqs .req-icon-met { color: ${C.successText}; }
         .pp-level-row-reqs .req-icon-todo { color: ${C.borderStrong}; }
         /* Completed items recede slightly; remaining work stays full-weight
            dark so the eye is drawn to what's left to do. */
@@ -2917,14 +2835,14 @@ export default function ProfilePage() {
         .pp-progress-block {
           margin: 0;
           padding: 18px 24px;
-          background: linear-gradient(160deg, rgba(207,92,54,0.05) 0%, rgba(239,200,139,0.05) 100%);
+          background: linear-gradient(160deg, rgb(var(--color-terracotta-rgb) / 0.05) 0%, rgb(var(--color-gold-rgb) / 0.05) 100%);
           border-bottom: 1px solid ${C.border};
         }
         .pp-progress-block-eyebrow {
           margin: 0 0 4px;
           font-size: 11px; 
           font-weight: 700;
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
           text-transform: uppercase; letter-spacing: 0.10em;
         }
         .pp-progress-block-title {
@@ -2944,7 +2862,7 @@ export default function ProfilePage() {
         .pp-progress-check {
           width: 22px; height: 22px;
           border-radius: 50%;
-          background: #fff;
+          background: var(--color-white);
           border: 1.5px solid ${C.borderStrong};
           flex-shrink: 0;
           display: flex; align-items: center; justify-content: center;
@@ -2952,9 +2870,9 @@ export default function ProfilePage() {
           line-height: 1;
         }
         .pp-progress-item.done .pp-progress-check {
-          background: ${C.success};
-          border-color: ${C.success};
-          color: #fff;
+          background: ${C.successText};
+          border-color: ${C.successText};
+          color: var(--color-white);
         }
         .pp-progress-item.done {
           color: ${C.muted};
@@ -3544,7 +3462,7 @@ export default function ProfilePage() {
                                       <SpeciesIcon
                                         size={132}
                                         strokeWidth={1.4}
-                                        color="rgba(255,255,255,0.85)"
+                                        color="rgb(var(--color-white-rgb) / 0.85)"
                                       />
                                     );
                                   })()
@@ -3690,8 +3608,8 @@ export default function ProfilePage() {
                                 type="button"
                                 className="pp-pet-recent"
                                 style={{
-                                  "--recent-bg": `${triage.dot}26`,
-                                  "--recent-bg-hover": `${triage.dot}40`,
+                                  "--recent-bg": `color-mix(in srgb, ${triage.dot} 14.9%, transparent)`,
+                                  "--recent-bg-hover": `color-mix(in srgb, ${triage.dot} 25.1%, transparent)`,
                                 }}
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -3861,7 +3779,7 @@ export default function ProfilePage() {
                   >
                     <div
                       className="pp-public-hero-inner"
-                      style={{ background: card.hero_bg_color || "#2A3B47" }}
+                      style={{ background: card.hero_bg_color || "var(--color-navy-mid)" }}
                     >
                       <div className="pp-public-hero-photo">
                         <HeroNameplate
@@ -3872,7 +3790,7 @@ export default function ProfilePage() {
                           photoUrl={card.photo_url}
                           species={card.species}
                           rarity={card.hero_rarity}
-                          cardColor={card.hero_bg_color || "#2A3B47"}
+                          cardColor={card.hero_bg_color || "var(--color-navy-mid)"}
                         />
                       </div>
                     </div>
@@ -3918,8 +3836,8 @@ export default function ProfilePage() {
                 top: 64,
                 left: 0,
                 right: 0,
-                background: "#172531",
-                color: "#fff",
+                background: "var(--color-navy-dark)",
+                color: "var(--color-white)",
                 padding: "7px 16px",
                 display: "flex",
                 flexWrap: "wrap",
@@ -3930,8 +3848,8 @@ export default function ProfilePage() {
                 fontSize: "13px",
                 fontWeight: 500,
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.20)",
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                boxShadow: "0 4px 14px rgb(var(--color-black-rgb) / 0.2)",
+                borderBottom: "1px solid rgb(var(--color-white-rgb) / 0.08)",
                 opacity: 0.85,
               }}
             >
@@ -4129,7 +4047,7 @@ export default function ProfilePage() {
                                         background:
                                           st === "done"
                                             ? t.stops[1]
-                                            : "#E2E6EA",
+                                            : "var(--color-badge-navy-bg)",
                                       }}
                                     />
                                   )}
@@ -4183,7 +4101,7 @@ export default function ProfilePage() {
                                                 <Check
                                                   size={12}
                                                   strokeWidth={3}
-                                                  color="#94A0AB"
+                                                  color="var(--color-muted)"
                                                 />
                                                 {r.label}
                                               </span>
@@ -4455,7 +4373,7 @@ function ProfileEditForm({
                 margin: "8px 0 0",
                 padding: "12px 14px",
                 background: C.warningBg,
-                border: `1px solid ${C.warning}33`,
+                border: `1px solid rgb(var(--color-warning-text-rgb) / 0.2)`,
                 borderRadius: "10px",
                 display: "flex",
                 gap: "10px",
@@ -4465,7 +4383,7 @@ function ProfileEditForm({
               <AlertTriangle
                 size={18}
                 strokeWidth={2.2}
-                style={{ color: C.warning, flexShrink: 0, marginTop: "1px" }}
+                style={{ color: C.warningText, flexShrink: 0, marginTop: "1px" }}
               />
               <div style={{ minWidth: 0 }}>
                 <p
@@ -4473,7 +4391,7 @@ function ProfileEditForm({
                     margin: 0,
                     fontSize: "14px",
                     fontWeight: 700,
-                    color: C.warning,
+                    color: C.warningText,
                     textWrap: "pretty",
                   }}
                 >
@@ -4484,7 +4402,7 @@ function ProfileEditForm({
                     margin: "3px 0 0",
                     fontSize: "14px",
                     fontWeight: 500,
-                    color: C.warning,
+                    color: C.warningText,
                     lineHeight: 1.45,
                     textWrap: "pretty",
                   }}
@@ -4496,7 +4414,7 @@ function ProfileEditForm({
                     margin: "6px 0 0",
                     fontSize: "14px",
                     fontWeight: 500,
-                    color: C.warning,
+                    color: C.warningText,
                     lineHeight: 1.45,
                     textWrap: "pretty",
                   }}
@@ -4558,7 +4476,7 @@ function ProfileEditForm({
                 margin: "6px 0 0",
                 fontSize: "13px",
                 fontWeight: 600,
-                color: C.terracotta,
+                color: C.terracotta700,
               }}
             >
               {zipCity}
@@ -4668,7 +4586,7 @@ function ProfileEditForm({
             <Link
               href="?preview=public"
               style={{
-                color: C.terracotta,
+                color: C.terracotta700,
                 textDecoration: "none",
                 fontWeight: 600,
               }}
@@ -4894,8 +4812,8 @@ function PetFormCard({
               height: "64px",
               margin: "0 auto 16px",
               borderRadius: "50%",
-              background: "rgba(26,102,65,0.10)",
-              color: "#1A6641",
+              background: "rgb(var(--color-success-text-rgb) / 0.1)",
+              color: "var(--color-success-text)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -4919,7 +4837,7 @@ function PetFormCard({
             style={{
               fontSize: "15px",
               fontWeight: 500,
-              color: C.slate || "#4B5563",
+              color: C.slate || "var(--color-slate)",
               margin: "0 0 28px",
               lineHeight: 1.55,
             }}
@@ -5033,14 +4951,14 @@ function PetFormCard({
                 width: "32px",
                 height: "32px",
                 borderRadius: "50%",
-                background: C.terracotta,
-                color: "#fff",
-                border: `3px solid #fff`,
+                background: C.terracotta600,
+                color: "var(--color-white)",
+                border: `3px solid var(--color-white)`,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.20)",
+                boxShadow: "0 2px 6px rgb(var(--color-black-rgb) / 0.2)",
                 lineHeight: 1,
               }}
               title="Add photo"
@@ -5408,7 +5326,7 @@ function PetFormCard({
                   background: C.white,
                   border: `1.5px solid ${C.border}`,
                   borderRadius: "12px",
-                  boxShadow: "0 12px 32px rgba(23,37,49,0.16)",
+                  boxShadow: "0 12px 32px rgb(var(--color-navy-dark-rgb) / 0.16)",
                   overflow: "hidden",
                   maxHeight: "264px",
                   overflowY: "auto",
@@ -5690,7 +5608,7 @@ function CommunityContributions({
                 className="pp-cc-number"
                 style={{
                   color: numberColor,
-                  textShadow: `0 4px 24px ${numberShadow}88`,
+                  textShadow: `0 4px 24px color-mix(in srgb, ${numberShadow} 53.3%, transparent)`,
                 }}
               >
                 {verifiedCount}

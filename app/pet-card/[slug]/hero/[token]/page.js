@@ -24,6 +24,8 @@ import {
   exportHeroFlipImage,
 } from "../../../../../components/HeroFlipCard";
 import { CssDesign } from "../../../../../components/HeroBackgrounds";
+import { HERO_DEFAULTS } from "../../../../../lib/palettes";
+import { HERO_SHARE_COLORS } from "../../../../../lib/palettes";
 
 const VantaBackground = dynamic(
   () => import("../../../../../components/VantaBackground"),
@@ -246,11 +248,11 @@ export default function PublicHeroCardPage() {
         }
         .pht-eyebrow {
           font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
-          text-transform: uppercase; color: var(--pht-label, #a68ce0);
+          text-transform: uppercase; color: var(--pht-label, ${HERO_SHARE_COLORS.purple250});
           margin: 0 0 8px;
         }
         .pht-name {
-          font-size: 32px; font-weight: 800; color: var(--pht-intro-name, #fff);
+          font-size: 32px; font-weight: 800; color: var(--pht-intro-name, var(--color-white));
           margin: 0; text-align: center; letter-spacing: -0.03em;
           line-height: 1.04;
         }
@@ -267,28 +269,30 @@ export default function PublicHeroCardPage() {
           width: 100%;
           display: inline-flex; align-items: center; justify-content: center;
           gap: 9px;
-          background: var(--pht-accent-on-bg, #a68ce0);
-          border: 2px solid var(--pht-accent-on-bg, #a68ce0);
-          color: var(--pht-text-on-accent, #172531);
+          background: var(--pht-accent-on-bg, ${HERO_SHARE_COLORS.purple250});
+          border: 2px solid var(--pht-accent-on-bg, ${HERO_SHARE_COLORS.purple250});
+          color: var(--pht-text-on-accent, var(--color-navy-dark));
           font-family: inherit; font-size: 16px; font-weight: 700;
           padding: 14px 20px; border-radius: 14px; cursor: pointer;
           transition: background 0.18s ease, color 0.18s ease, transform 0.05s ease;
         }
-        .pht-download:hover {
-          background: var(--pht-bg, #1A2D44);
-          color: var(--pht-accent-on-bg, #a68ce0);
-          border-color: var(--pht-accent-on-bg, #a68ce0);
+        @media (hover: hover) {
+          .pht-download:hover {
+            background: var(--pht-bg, var(--color-navy-dark));
+            color: var(--pht-accent-on-bg, ${HERO_SHARE_COLORS.purple250});
+            border-color: var(--pht-accent-on-bg, ${HERO_SHARE_COLORS.purple250});
+          }
         }
         .pht-download:active { transform: translateY(1px); }
         .pht-download:disabled { opacity: 0.65; cursor: default; }
         .pht-brand {
           font-size: 13px; font-weight: 600;
-          color: var(--pht-bg-muted, rgba(255,255,255,0.8));
+          color: var(--pht-bg-muted, rgb(var(--color-white-rgb) / 0.8));
           text-decoration: none;
         }
-        .pht-brand b { color: var(--pht-footer, var(--pht-bg-text, #fff)); }
-        .pht-brand-paw { color: var(--pht-footer, var(--pht-bg-text, #fff)); vertical-align: middle; display: inline-block; }
-        .pht-brand:hover { color: var(--pht-footer, var(--pht-bg-text, #fff)); }
+        .pht-brand b { color: var(--pht-footer, var(--pht-bg-text, var(--color-white))); }
+        .pht-brand-paw { color: var(--pht-footer, var(--pht-bg-text, var(--color-white))); vertical-align: middle; display: inline-block; }
+        @media (hover: hover) { .pht-brand:hover { color: var(--pht-footer, var(--pht-bg-text, var(--color-white))); } }
       `}</style>
     </div>
   );
@@ -302,7 +306,7 @@ function HeroUnavailable({ message }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#F8EFE2",
+        background: HERO_DEFAULTS.bg,
         fontFamily: "'Urbanist',-apple-system,sans-serif",
         padding: "24px",
       }}
@@ -313,7 +317,7 @@ function HeroUnavailable({ message }) {
           style={{
             fontSize: "22px",
             fontWeight: 800,
-            color: "#172531",
+            color: "var(--color-navy-dark)",
             margin: "0 0 8px",
           }}
         >
@@ -322,7 +326,7 @@ function HeroUnavailable({ message }) {
         <p
           style={{
             fontSize: "15px",
-            color: "#717A86",
+            color: "var(--color-muted)",
             margin: 0,
             lineHeight: 1.5,
           }}

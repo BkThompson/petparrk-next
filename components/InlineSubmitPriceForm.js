@@ -31,6 +31,7 @@ import {
 import { extractReceiptPrices } from "../lib/copilotApi";
 import { supabase } from "../lib/supabase";
 import AutoGrowTextarea from "./AutoGrowTextarea";
+import { svgHex } from "../lib/tokens";
 
 const SUBMIT_EMPTY_ENTRY = {
   service_name: "",
@@ -687,11 +688,11 @@ export default function InlineSubmitPriceForm({
     <>
       <style>{`
         .isp-card {
-          background: #fff;
+          background: var(--color-white);
           border: 1.5px solid ${C.terracotta};
           border-radius: 16px;
           padding: 28px;
-          box-shadow: 0 4px 20px rgba(207,92,54,0.08);
+          box-shadow: 0 4px 20px rgb(var(--color-terracotta-rgb) / 0.08);
           margin-top: 20px;
           margin-bottom: 12px;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -707,7 +708,7 @@ export default function InlineSubmitPriceForm({
           margin: 30px 0 12px;
           font-size: 11px;
           font-weight: 700;
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
           text-transform: uppercase; letter-spacing: 0.10em;
         }
         .isp-head h3 {
@@ -737,7 +738,7 @@ export default function InlineSubmitPriceForm({
           transition: background 0.15s, color 0.15s;
           z-index: 10;
         }
-        .isp-close:hover { background: ${C.cream}; color: ${C.navyDark}; }
+        @media (hover: hover) { .isp-close:hover { background: ${C.cream}; color: ${C.navyDark}; } }
 
         .isp-section { margin-bottom: 20px; }
         .isp-section-num {
@@ -760,7 +761,7 @@ export default function InlineSubmitPriceForm({
           font-size: 15px;
           font-weight: 500;
           color: ${C.navyDark};
-          background: #fff;
+          background: var(--color-white);
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           outline: none;
           box-sizing: border-box;
@@ -779,15 +780,15 @@ export default function InlineSubmitPriceForm({
           cursor: pointer;
           transition: background 0.15s, color 0.15s;
         }
-        .isp-vet-clear:hover { background: ${C.terracotta}; color: #fff; }
+        @media (hover: hover) { .isp-vet-clear:hover { background: ${C.terracotta700}; color: var(--color-white); } }
         .isp-vet-dropdown {
           position: absolute;
           top: calc(100% + 6px);
           left: 0; right: 0;
-          background: #fff;
+          background: var(--color-white);
           border: 1px solid ${C.border};
           border-radius: 12px;
-          box-shadow: 0 12px 32px rgba(23,37,49,0.15);
+          box-shadow: 0 12px 32px rgb(var(--color-navy-dark-rgb) / 0.15);
           max-height: 280px;
           overflow-y: auto;
           z-index: 30;
@@ -799,7 +800,7 @@ export default function InlineSubmitPriceForm({
           transition: background 0.15s;
         }
         .isp-vet-result:last-child { border-bottom: none; }
-        .isp-vet-result:hover { background: ${C.cream}; }
+        @media (hover: hover) { .isp-vet-result:hover { background: ${C.cream}; } }
         .isp-vet-result-name {
           margin: 0 0 2px;
           font-size: 15px; font-weight: 700;
@@ -818,11 +819,11 @@ export default function InlineSubmitPriceForm({
         }
         .isp-selected-vet {
           background: ${C.successBg};
-          border: 1.5px solid ${C.success};
+          border: 1.5px solid ${C.successText};
           border-radius: 12px;
           padding: 10px 14px;
           font-size: 15px; font-weight: 600;
-          color: ${C.success};
+          color: ${C.successText};
           display: flex; justify-content: space-between; align-items: center;
           margin-top: 10px;
           gap: 10px;
@@ -833,25 +834,25 @@ export default function InlineSubmitPriceForm({
            rendered on a vet's page (vetId/vetName supplied). */
         .isp-locked-vet {
           /* Fallbacks: not every caller's C token object defines successBg. */
-          background: ${C.successBg || "#EDFAF3"};
-          border: 2px solid ${C.success || "#1A6641"};
+          background: ${C.successBg || "var(--color-success-light)"};
+          border: 2px solid ${C.successText || "var(--color-success-text)"};
           border-radius: 12px;
           padding: 10px 14px;
           font-size: 14px;
           font-weight: 600;
-          color: ${C.success || "#1A6641"};
+          color: ${C.successText || "var(--color-success-text)"};
           display: flex;
           align-items: center;
           gap: 8px;
           margin-bottom: 6px;
         }
         .isp-entry {
-          background: #fff;
+          background: var(--color-white);
           border-radius: 12px;
           padding: 20px;
           border: 1px solid ${C.border};
           margin-bottom: 20px;
-          box-shadow: 0 1px 3px rgba(23,37,49,0.04);
+          box-shadow: 0 1px 3px rgb(var(--color-navy-dark-rgb) / 0.04);
         }
         .isp-entry-head {
           display: flex; 
@@ -895,18 +896,18 @@ export default function InlineSubmitPriceForm({
           text-transform: uppercase;
           letter-spacing: 0.02em;
         }
-        .isp-required { color: ${C.terracotta}; }
+        .isp-required { color: ${C.terracotta700}; }
 
         /* Inputs / selects — unified site-wide vocab */
         .isp-input, .isp-select {
           width: 100%;
           height: 44px;
           padding: 0 14px;
-          border: 2px solid #DAD3C5;
+          border: 2px solid var(--color-border-strong);
           border-radius: 12px;
           font-size: 15px;
           font-weight: 500;
-          background: #fff;
+          background: var(--color-white);
           color: ${C.navyDark};
           outline: none;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -918,7 +919,7 @@ export default function InlineSubmitPriceForm({
         .isp-input:focus, .isp-select:focus { border-color: ${C.terracotta}; }
         textarea.isp-input { padding: 12px 14px; height: auto; min-height: 80px; resize: none; }
         .isp-select {
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23717A86' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='${svgHex("muted")}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
           background-repeat: no-repeat; background-position: right 12px center;
           padding-right: 38px;
           cursor: pointer;
@@ -943,7 +944,7 @@ export default function InlineSubmitPriceForm({
           padding: 10px 6px;
           border: 2px solid ${C.border};
           border-radius: 12px;
-          background: #fff;
+          background: var(--color-white);
           color: ${C.slate};
           font-weight: 700;
           font-size: 15px;
@@ -953,9 +954,9 @@ export default function InlineSubmitPriceForm({
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .isp-seg-btn.active {
-          background: ${C.terracotta};
-          color: #fff;
-          border-color: ${C.terracotta};
+          background: ${C.terracotta600};
+          color: var(--color-white);
+          border-color: ${C.terracotta600};
         }
 
         /* Includes pill toggles */
@@ -966,7 +967,7 @@ export default function InlineSubmitPriceForm({
           font-size: 13px; 
           font-weight: 700;
           border: 2px solid ${C.border};
-          background: #fff;
+          background: var(--color-white);
           cursor: pointer;
           transition: all 0.15s;
           color: ${C.slate};
@@ -974,7 +975,7 @@ export default function InlineSubmitPriceForm({
         }
         .isp-pill.active {
           background: ${C.navyDark};
-          color: #fff;
+          color: var(--color-white);
           border-color: ${C.navyDark};
         }
 
@@ -983,7 +984,7 @@ export default function InlineSubmitPriceForm({
           width: 100%;
           padding: 13px;
           background: transparent;
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
           border: 1.5px dashed ${C.terracotta};
           border-radius: 12px;
           font-size: 14px; 
@@ -993,7 +994,7 @@ export default function InlineSubmitPriceForm({
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: background 0.15s;
         }
-        .isp-add-entry:hover { background: rgba(207,92,54,0.06); }
+        @media (hover: hover) { .isp-add-entry:hover { background: rgb(var(--color-terracotta-rgb) / 0.06); } }
 
         /* Mode toggle */
         .isp-mode-toggle {
@@ -1001,15 +1002,15 @@ export default function InlineSubmitPriceForm({
         }
         .isp-mode-btn {
           flex: 1; height: 48px; padding: 0 16px;
-          background: #fff; color: ${C.navyDark};
+          background: var(--color-white); color: ${C.navyDark};
           border: 2px solid ${C.border}; border-radius: 12px;
           font-size: 15px; font-weight: 700; cursor: pointer;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: background 0.2s, color 0.2s, border-color 0.2s;
         }
-        .isp-mode-btn:hover { border-color: ${C.terracotta}; }
+        @media (hover: hover) { .isp-mode-btn:hover { border-color: ${C.terracotta}; } }
         .isp-mode-btn.is-active {
-          background: ${C.terracotta}; color: #fff; border-color: ${C.terracotta};
+          background: ${C.terracotta600}; color: var(--color-white); border-color: ${C.terracotta600};
         }
         .isp-mode-hint {
           margin: 12px 0 0; 
@@ -1024,7 +1025,7 @@ export default function InlineSubmitPriceForm({
           padding: 28px 24px; text-align: center; color: ${C.muted};
           cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s;
         }
-        .isp-receipt-drop.drag { border-color: ${C.terracotta}; background: ${C.cream}; color: ${C.terracotta}; }
+        .isp-receipt-drop.drag { border-color: ${C.terracotta}; background: ${C.cream}; color: ${C.terracotta700}; }
         .isp-receipt-drop.full { opacity: 0.6; cursor: default; }
         .isp-receipt-drop-title { margin: 10px 0 4px; font-size: 15px; font-weight: 700; color: ${C.navyDark}; }
         .isp-receipt-drop-sub { margin: 0; font-size: 13px; font-weight: 500; color: ${C.muted}; }
@@ -1032,7 +1033,7 @@ export default function InlineSubmitPriceForm({
         .isp-receipt-row {
           display: flex; align-items: center; gap: 10px;
           padding: 10px 12px; border: 1px solid ${C.border}; border-radius: 12px;
-          background: #fff; color: ${C.muted};
+          background: var(--color-white); color: ${C.muted};
         }
         @media (max-width: 640px) {
           /* Stack on a phone. Inline, the filename was being cut to a few
@@ -1096,33 +1097,33 @@ export default function InlineSubmitPriceForm({
           border: var(--pill-border-w, 2px) solid transparent;
         }
         .isp-receipt-state--ok {
-          color: #1a6641;
-          background: rgba(26, 102, 65, 0.1);
-          border-color: rgba(26, 102, 65, 0.28);
+          color: var(--color-success-text);
+          background: rgb(var(--color-success-text-rgb) / 0.1);
+          border-color: rgb(var(--color-success-text-rgb) / 0.28);
         }
         .isp-receipt-state--warn {
-          color: #8c6a11;
-          background: rgba(217, 162, 27, 0.14);
-          border-color: rgba(217, 162, 27, 0.34);
+          color: var(--color-caution-text);
+          background: rgb(var(--color-caution-rgb) / 0.14);
+          border-color: rgb(var(--color-caution-rgb) / 0.34);
         }
         .isp-receipt-status {
           display: inline-flex; align-items: center; gap: 5px;
-          font-size: 12px; font-weight: 700; color: ${C.terracotta}; white-space: nowrap;
+          font-size: 12px; font-weight: 700; color: ${C.terracotta700}; white-space: nowrap;
         }
         .isp-receipt-remove {
           background: none; border: none; cursor: pointer; color: ${C.muted};
           padding: 2px; display: flex; transition: color 0.15s;
         }
-        .isp-receipt-remove:hover { color: ${C.navyDark}; }
+        @media (hover: hover) { .isp-receipt-remove:hover { color: ${C.navyDark}; } }
         .isp-extract-btn {
           margin-top: 14px; width: 100%; height: 44px;
-          background: ${C.terracotta}; color: #fff;
-          border: 2px solid ${C.terracotta}; border-radius: 12px;
+          background: ${C.terracotta600}; color: var(--color-white);
+          border: 2px solid ${C.terracotta600}; border-radius: 12px;
           font-size: 15px; font-weight: 700; cursor: pointer;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           transition: background 0.2s, color 0.2s;
         }
-        .isp-extract-btn:hover:not(:disabled) { background: #fff; color: ${C.terracotta}; }
+        @media (hover: hover) { .isp-extract-btn:hover:not(:disabled) { background: var(--color-white); color: ${C.terracotta700}; } }
         .isp-extract-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         /* Switch-clinic offer. 42px terracotta button that inverts on hover,
            matching every other primary action on the site; stacks full width
@@ -1138,9 +1139,9 @@ export default function InlineSubmitPriceForm({
           height: 42px;
           padding: 0 18px;
           border-radius: 12px;
-          border: 2px solid ${C.terracotta};
-          background: ${C.terracotta};
-          color: #fff;
+          border: 2px solid ${C.terracotta600};
+          background: ${C.terracotta600};
+          color: var(--color-white);
           font-family: inherit;
           font-size: 15px;
           font-weight: 700;
@@ -1148,9 +1149,11 @@ export default function InlineSubmitPriceForm({
           transition: background 0.2s, color 0.2s;
           box-sizing: border-box;
         }
-        .isp-switch-btn:hover:not(:disabled) {
-          background: #fff;
-          color: ${C.terracotta};
+        @media (hover: hover) {
+          .isp-switch-btn:hover:not(:disabled) {
+            background: var(--color-white);
+            color: ${C.terracotta700};
+          }
         }
         .isp-switch-btn:disabled { opacity: 0.6; cursor: default; }
         .isp-switch-hint {
@@ -1164,11 +1167,11 @@ export default function InlineSubmitPriceForm({
         }
         .isp-extract-notice {
           display: flex; align-items: flex-start; gap: 8px; margin: 0 0 10px;
-          padding: 12px 14px; background: #FEF6E9; border: 1px solid #F5E0BC;
+          padding: 12px 14px; background: var(--color-caution-light); border: 1px solid rgb(var(--color-caution-rgb) / 0.4);
           border-radius: 12px; font-size: 16px; font-weight: 500;
           color: ${C.navyDark}; line-height: 1.5;
         }
-        .isp-extract-notice svg { color: #8C6A11; flex-shrink: 0; margin-top: 2px; }
+        .isp-extract-notice svg { color: var(--color-caution-text); flex-shrink: 0; margin-top: 2px; }
         :global(.isp-spin) { animation: isp-spin 1s linear infinite; }
         @keyframes isp-spin { to { transform: rotate(360deg); } }
 
@@ -1180,15 +1183,21 @@ export default function InlineSubmitPriceForm({
           text-align: center;
           cursor: pointer;
           transition: border-color 0.2s, background 0.2s;
-          background: #fff;
+          background: var(--color-white);
         }
-        .isp-upload-zone:hover, .isp-upload-zone.drag {
+        .isp-upload-zone.drag {
           border-color: ${C.terracotta};
-          background: #fffaf8;
+          background: var(--color-white);
+        }
+        @media (hover: hover) {
+          .isp-upload-zone:hover {
+            border-color: ${C.terracotta};
+            background: var(--color-white);
+          }
         }
         .isp-upload-zone.has-file {
-          border-color: ${C.success};
-          background: #f0faf4;
+          border-color: ${C.successText};
+          background: var(--color-success-light);
         }
         .isp-upload-icon { color: ${C.terracotta}; margin-bottom: 8px; }
         .isp-upload-name {
@@ -1226,7 +1235,7 @@ export default function InlineSubmitPriceForm({
 
         /* Submit button row */
         .isp-error-banner {
-          background: #FCEAEA;
+          background: var(--color-error-light);
           color: ${C.error};
           border-radius: 8px;
           padding: 10px 14px;
@@ -1237,9 +1246,9 @@ export default function InlineSubmitPriceForm({
         .isp-submit-btn {
           padding: 0 24px;
           height: 42px;
-          background: ${C.terracotta};
-          color: #fff;
-          border: 2px solid ${C.terracotta};
+          background: ${C.terracotta600};
+          color: var(--color-white);
+          border: 2px solid ${C.terracotta600};
           border-radius: 12px;
           font-size: 15px;
           font-weight: 700;
@@ -1252,7 +1261,7 @@ export default function InlineSubmitPriceForm({
           line-height: 1;
           white-space: nowrap;
         }
-        .isp-submit-btn:hover { background: #fff; color: ${C.terracotta}; }
+        @media (hover: hover) { .isp-submit-btn:hover { background: var(--color-white); color: ${C.terracotta700}; } }
         .isp-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .isp-final-row {
           display: flex;
@@ -1263,7 +1272,7 @@ export default function InlineSubmitPriceForm({
         .isp-cancel-btn {
           padding: 0 24px;
           height: 42px;
-          background: #fff;
+          background: var(--color-white);
           color: ${C.navyDark};
           border: 2px solid ${C.border};
           border-radius: 12px;
@@ -1278,10 +1287,12 @@ export default function InlineSubmitPriceForm({
           justify-content: center;
           white-space: nowrap;
         }
-        .isp-cancel-btn:hover {
-          background: ${C.navyDark};
-          color: #fff;
-          border-color: ${C.navyDark};
+        @media (hover: hover) {
+          .isp-cancel-btn:hover {
+            background: ${C.navyDark};
+            color: var(--color-white);
+            border-color: ${C.navyDark};
+          }
         }
         .isp-reviewed-note {
           font-size: 14px;
@@ -1321,9 +1332,9 @@ export default function InlineSubmitPriceForm({
         .isp-btn-primary-inline {
           padding: 0 24px; 
           height: 42px;
-          background: ${C.terracotta}; 
-          color: #fff;
-          border: 2px solid ${C.terracotta}; 
+          background: ${C.terracotta600}; 
+          color: var(--color-white);
+          border: 2px solid ${C.terracotta600}; 
           border-radius: 12px;
           font-size: 15px; 
           font-weight: 700;
@@ -1333,11 +1344,11 @@ export default function InlineSubmitPriceForm({
           display: inline-flex; align-items: center; justify-content: center;
           transition: background 0.15s, color 0.15s;
         }
-        .isp-btn-primary-inline:hover { background: #fff; color: ${C.terracotta}; }
+        @media (hover: hover) { .isp-btn-primary-inline:hover { background: var(--color-white); color: ${C.terracotta700}; } }
         .isp-btn-secondary-inline {
           padding: 0 24px; 
           height: 42px;
-          background: #fff; 
+          background: var(--color-white); 
           color: ${C.navyDark};
           border: 2px solid ${C.border}; 
           border-radius: 12px;
@@ -1351,8 +1362,10 @@ export default function InlineSubmitPriceForm({
           justify-content: center;
           transition: background 0.15s, color 0.15s, border-color 0.15s;
         }
-        .isp-btn-secondary-inline:hover {
-          background: ${C.navyDark}; color: #fff; border-color: ${C.navyDark};
+        @media (hover: hover) {
+          .isp-btn-secondary-inline:hover {
+            background: ${C.navyDark}; color: var(--color-white); border-color: ${C.navyDark};
+          }
         }
 
         @media (max-width: 768px) {
@@ -1585,8 +1598,8 @@ export default function InlineSubmitPriceForm({
                             marginBottom: "12px",
                             padding: "10px 12px",
                             borderRadius: "10px",
-                            background: "rgba(207,92,54,0.08)",
-                            border: `1px solid rgba(207,92,54,0.35)`,
+                            background: "rgb(var(--color-terracotta-rgb) / 0.08)",
+                            border: `1px solid rgb(var(--color-terracotta-rgb) / 0.35)`,
                             fontSize: "13px",
                             color: C.navyDark,
                           }}
@@ -1612,7 +1625,7 @@ export default function InlineSubmitPriceForm({
                               background: "none",
                               border: "none",
                               padding: 0,
-                              color: C.terracotta,
+                              color: C.terracotta700,
                               fontWeight: 700,
                               cursor: "pointer",
                               textDecoration: "underline",
@@ -2216,7 +2229,7 @@ export default function InlineSubmitPriceForm({
 
               <div className="isp-field">
                 <label className="isp-label">
-                  Date of Visit <span style={{ color: C.terracotta }}>*</span>
+                  Date of Visit <span style={{ color: C.terracotta700 }}>*</span>
                 </label>
                 <input
                   type="date"

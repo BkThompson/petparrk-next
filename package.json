@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "lint:colors": "node scripts/check-colors.mjs --summary"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

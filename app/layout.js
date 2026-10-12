@@ -6,6 +6,7 @@ import FooterWrapper from "../components/FooterWrapper";
 import ScrollToTop from "../components/ScrollToTop";
 import WelcomeModal from "../components/WelcomeModal";
 import { Suspense } from "react";
+import { HEX } from "../lib/tokens";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -57,7 +58,7 @@ export default function RootLayout({ children }) {
           content="7s6yV00GY-q643NY-Vlq7Hh3zC6GCxh91Wiwlz8JebA"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#172531" />
+        <meta name="theme-color" content={HEX.navyDark} />
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body

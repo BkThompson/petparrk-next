@@ -20,6 +20,8 @@ import {
   ArrowUp,
   Lock,
 } from "lucide-react";
+import { svgHex } from "../../lib/tokens";
+import { VETS_HERO_ART } from "../../lib/palettes";
 
 function formatPrice(low, high, type) {
   if (!low) return null;
@@ -91,7 +93,7 @@ function StarField() {
           cx={`${d.x}%`}
           cy={`${d.y}%`}
           r={d.r}
-          fill="rgba(160,210,240,1)"
+          fill={VETS_HERO_ART.blue200_a100}
           opacity={d.o}
         />
       ))}
@@ -129,46 +131,46 @@ if (
 // should take an existing slot rather than being appended, or the sequence
 // gets longer.
 const CA_PINS = [
-  { lng: -122.416, lat: 37.774, color: "#CF5C36", delay: 400 },
-  { lng: -122.255, lat: 37.878, color: "#EFC88B", delay: 703 },
-  { lng: -122.434, lat: 37.591, color: "#CF5C36", delay: 1005 },
-  { lng: -122.065, lat: 37.905, color: "#EFC88B", delay: 1308 },
-  { lng: -121.988, lat: 37.51, color: "#CF5C36", delay: 1611 },
-  { lng: -121.494, lat: 38.581, color: "#EFC88B", delay: 1914 },
-  { lng: -121.352, lat: 38.756, color: "#CF5C36", delay: 2216 },
-  { lng: -122.499, lat: 38.441, color: "#EFC88B", delay: 2519 },
-  { lng: -122.267, lat: 38.298, color: "#CF5C36", delay: 2822 },
-  { lng: -119.787, lat: 36.737, color: "#CF5C36", delay: 3124 },
-  { lng: -118.762, lat: 35.841, color: "#EFC88B", delay: 3427 },
-  { lng: -120.997, lat: 37.638, color: "#CF5C36", delay: 3730 },
-  { lng: -121.334, lat: 36.988, color: "#EFC88B", delay: 4032 },
-  { lng: -119.082, lat: 36.412, color: "#CF5C36", delay: 4335 },
-  { lng: -120.423, lat: 37.302, color: "#EFC88B", delay: 4638 },
-  { lng: -118.201, lat: 35.214, color: "#CF5C36", delay: 4941 },
-  { lng: -121.837, lat: 39.728, color: "#CF5C36", delay: 5243 },
-  { lng: -122.391, lat: 40.586, color: "#EFC88B", delay: 5546 },
-  { lng: -118.243, lat: 34.052, color: "#CF5C36", delay: 5849 },
-  { lng: -118.445, lat: 34.064, color: "#EFC88B", delay: 6151 },
-  { lng: -118.127, lat: 34.095, color: "#CF5C36", delay: 6454 },
-  { lng: -117.826, lat: 33.675, color: "#EFC88B", delay: 6757 },
-  { lng: -117.924, lat: 33.812, color: "#CF5C36", delay: 7059 },
-  { lng: -117.161, lat: 32.716, color: "#EFC88B", delay: 7362 },
-  { lng: -117.074, lat: 32.602, color: "#CF5C36", delay: 7665 },
-  { lng: -116.971, lat: 33.498, color: "#CF5C36", delay: 7968 },
-  { lng: -117.375, lat: 33.953, color: "#EFC88B", delay: 8270 },
-  { lng: -116.999, lat: 34.055, color: "#CF5C36", delay: 8573 },
-  { lng: -117.588, lat: 34.106, color: "#EFC88B", delay: 8876 },
-  { lng: -119.698, lat: 34.42, color: "#EFC88B", delay: 9178 },
-  { lng: -119.177, lat: 34.274, color: "#CF5C36", delay: 9481 },
-  { lng: -122.025, lat: 37.354, color: "#CF5C36", delay: 9784 },
-  { lng: -122.057, lat: 37.175, color: "#EFC88B", delay: 10086 },
-  { lng: -121.29, lat: 37.958, color: "#CF5C36", delay: 10389 },
-  { lng: -120.997, lat: 37.639, color: "#EFC88B", delay: 10692 },
-  { lng: -119.292, lat: 36.33, color: "#CF5C36", delay: 10995 },
+  { lng: -122.416, lat: 37.774, color: "var(--color-terracotta)", delay: 400 },
+  { lng: -122.255, lat: 37.878, color: "var(--color-gold)", delay: 703 },
+  { lng: -122.434, lat: 37.591, color: "var(--color-terracotta)", delay: 1005 },
+  { lng: -122.065, lat: 37.905, color: "var(--color-gold)", delay: 1308 },
+  { lng: -121.988, lat: 37.51, color: "var(--color-terracotta)", delay: 1611 },
+  { lng: -121.494, lat: 38.581, color: "var(--color-gold)", delay: 1914 },
+  { lng: -121.352, lat: 38.756, color: "var(--color-terracotta)", delay: 2216 },
+  { lng: -122.499, lat: 38.441, color: "var(--color-gold)", delay: 2519 },
+  { lng: -122.267, lat: 38.298, color: "var(--color-terracotta)", delay: 2822 },
+  { lng: -119.787, lat: 36.737, color: "var(--color-terracotta)", delay: 3124 },
+  { lng: -118.762, lat: 35.841, color: "var(--color-gold)", delay: 3427 },
+  { lng: -120.997, lat: 37.638, color: "var(--color-terracotta)", delay: 3730 },
+  { lng: -121.334, lat: 36.988, color: "var(--color-gold)", delay: 4032 },
+  { lng: -119.082, lat: 36.412, color: "var(--color-terracotta)", delay: 4335 },
+  { lng: -120.423, lat: 37.302, color: "var(--color-gold)", delay: 4638 },
+  { lng: -118.201, lat: 35.214, color: "var(--color-terracotta)", delay: 4941 },
+  { lng: -121.837, lat: 39.728, color: "var(--color-terracotta)", delay: 5243 },
+  { lng: -122.391, lat: 40.586, color: "var(--color-gold)", delay: 5546 },
+  { lng: -118.243, lat: 34.052, color: "var(--color-terracotta)", delay: 5849 },
+  { lng: -118.445, lat: 34.064, color: "var(--color-gold)", delay: 6151 },
+  { lng: -118.127, lat: 34.095, color: "var(--color-terracotta)", delay: 6454 },
+  { lng: -117.826, lat: 33.675, color: "var(--color-gold)", delay: 6757 },
+  { lng: -117.924, lat: 33.812, color: "var(--color-terracotta)", delay: 7059 },
+  { lng: -117.161, lat: 32.716, color: "var(--color-gold)", delay: 7362 },
+  { lng: -117.074, lat: 32.602, color: "var(--color-terracotta)", delay: 7665 },
+  { lng: -116.971, lat: 33.498, color: "var(--color-terracotta)", delay: 7968 },
+  { lng: -117.375, lat: 33.953, color: "var(--color-gold)", delay: 8270 },
+  { lng: -116.999, lat: 34.055, color: "var(--color-terracotta)", delay: 8573 },
+  { lng: -117.588, lat: 34.106, color: "var(--color-gold)", delay: 8876 },
+  { lng: -119.698, lat: 34.42, color: "var(--color-gold)", delay: 9178 },
+  { lng: -119.177, lat: 34.274, color: "var(--color-terracotta)", delay: 9481 },
+  { lng: -122.025, lat: 37.354, color: "var(--color-terracotta)", delay: 9784 },
+  { lng: -122.057, lat: 37.175, color: "var(--color-gold)", delay: 10086 },
+  { lng: -121.29, lat: 37.958, color: "var(--color-terracotta)", delay: 10389 },
+  { lng: -120.997, lat: 37.639, color: "var(--color-gold)", delay: 10692 },
+  { lng: -119.292, lat: 36.33, color: "var(--color-terracotta)", delay: 10995 },
   // Central Coast — San Luis Obispo
-  { lng: -120.659, lat: 35.283, color: "#EFC88B", delay: 11297 },
+  { lng: -120.659, lat: 35.283, color: "var(--color-gold)", delay: 11297 },
   // Central Coast — Los Osos
-  { lng: -120.854, lat: 35.37, color: "#CF5C36", delay: 11600 },
+  { lng: -120.854, lat: 35.37, color: "var(--color-terracotta)", delay: 11600 },
 ];
 
 function MapHeader({ isMobile, onReady }) {
@@ -286,9 +288,9 @@ function MapHeader({ isMobile, onReady }) {
                   width:11px; height:11px;
                   border-radius:50%;
                   background:${pin.color};
-                  box-shadow:0 0 0 2px rgba(255,255,255,0.80),
+                  box-shadow:0 0 0 2px rgb(var(--color-white-rgb) / 0.8),
                              0 0 10px ${pin.color},
-                             0 0 22px ${pin.color}99;
+                             0 0 22px color-mix(in srgb, ${pin.color} 60%, transparent);
                   animation:mapPinDrop 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards;
                   opacity:0;
                   pointer-events:none;
@@ -346,7 +348,7 @@ function MapHeader({ isMobile, onReady }) {
           style={{
             position: "absolute",
             inset: 0,
-            background: "rgba(52,130,185,0.20)",
+            background: "rgb(var(--color-slate-blue-rgb) / 0.2)",
           }}
         />
         <div
@@ -354,7 +356,7 @@ function MapHeader({ isMobile, onReady }) {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(to right, rgba(6,14,22,0.97) 0%, rgba(6,14,22,0.85) 25%, rgba(6,14,22,0.50) 65%, transparent 100%)",
+              "linear-gradient(to right, rgb(var(--color-navy-deeper-rgb) / 0.97) 0%, rgb(var(--color-navy-deeper-rgb) / 0.85) 25%, rgb(var(--color-navy-deeper-rgb) / 0.5) 65%, transparent 100%)",
           }}
         />
       </div>
@@ -371,7 +373,7 @@ function MapHeader({ isMobile, onReady }) {
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(52,130,185,0.18)",
+          background: "rgb(var(--color-slate-blue-rgb) / 0.18)",
           zIndex: 1,
           pointerEvents: "none",
           display: isMobile ? "none" : "block",
@@ -512,14 +514,14 @@ function VetsScrollTopButton() {
         .vets-scrolltop {
           position: fixed; right: 20px; bottom: 20px; z-index: 90;
           width: 44px; height: 44px; border-radius: 9999px; border: none;
-          background: #172531; color: #fff;
+          background: var(--color-navy-dark); color: var(--color-white);
           display: inline-flex; align-items: center; justify-content: center;
           cursor: pointer;
-          box-shadow: 0 6px 20px rgba(23,37,49,0.28);
+          box-shadow: 0 6px 20px rgb(var(--color-navy-dark-rgb) / 0.28);
           transition: background 0.15s, transform 0.15s;
-          box-shadow: 0 6px 20px rgba(23,37,49,0.28), 0 0 0 2px rgba(255,255,255,0.9);
+          box-shadow: 0 6px 20px rgb(var(--color-navy-dark-rgb) / 0.28), 0 0 0 2px rgb(var(--color-white-rgb) / 0.9);
         }
-        .vets-scrolltop:hover { background: #0f1a24; transform: translateY(-2px); }
+        @media (hover: hover) { .vets-scrolltop:hover { background: var(--color-navy-dark); transform: translateY(-2px); } }
         @media (max-width: 768px) {
           .vets-scrolltop { bottom: 20px; right: 16px; }
         }
@@ -761,21 +763,21 @@ function VetsContent() {
         @keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.5)}70%{transform:scale(0.85)}100%{transform:scale(1)}}
         @keyframes mapPinDrop{0%{transform:translateY(-50px) scale(0.3);opacity:0}60%{transform:translateY(5px) scale(1.15);opacity:1}80%{transform:translateY(-3px) scale(0.95)}100%{transform:translateY(0) scale(1);opacity:1}}
         .heart-btn{transition:transform 0.1s;border:none;background:none;cursor:pointer;padding:0;line-height:1;display:inline-flex;align-items:center;justify-content:center}
-        .heart-btn:hover{transform:scale(1.15)}
+        @media (hover: hover) { .heart-btn:hover {transform:scale(1.15)} }
         .heart-animating{animation:heartPop 0.4s ease forwards}
-        .vet-card{border-radius:16px;padding:20px;background:#fff;transition:box-shadow 0.25s,transform 0.25s;box-shadow:0 2px 12px rgba(23,37,49,0.07);border:1px solid #EDE8E0;position:relative}
-        .vet-card-outer{border-radius:18px;padding:1.5px;height:100%;background:#EDE8E0;transition:transform 0.3s,background 0.25s ease}
-        .vet-card-outer:hover{background:#EDE8E0;transform:translateY(-3px)}
-        .vet-card-outer:hover .vet-card{box-shadow:0 0 0 1.5px rgba(239,200,139,0.9),0 16px 48px rgba(23,37,49,0.13)}
+        .vet-card{border-radius:16px;padding:20px;background:var(--color-white);transition:box-shadow 0.25s,transform 0.25s;box-shadow:0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.07);border:1px solid var(--color-border);position:relative}
+        .vet-card-outer{border-radius:18px;padding:1.5px;height:100%;background:var(--color-border);transition:transform 0.3s,background 0.25s ease}
+        @media (hover: hover) { .vet-card-outer:hover {background:var(--color-border);transform:translateY(-3px)} }
+        @media (hover: hover) { .vet-card-outer:hover .vet-card {box-shadow:0 0 0 1.5px rgb(var(--color-gold-rgb) / 0.9),0 16px 48px rgb(var(--color-navy-dark-rgb) / 0.13)} }
         .vet-card{border-radius:17px!important;display:flex!important;flex-direction:column!important;height:100%!important;box-sizing:border-box!important}
-        .filter-pill{display:inline-flex;align-items:center;justify-content:center;height:44px;flex-shrink:0;padding:0 18px;border-radius:9999px;border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);background:#fff;color:#1A1A1A;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font,'Urbanist',sans-serif);transition:all 0.15s;white-space:nowrap;box-sizing:border-box}
-        .filter-pill:hover{border-color:#172531}
-        .filter-pill.active{background:#172531;color:#fff;border-color:#172531}
+        .filter-pill{display:inline-flex;align-items:center;justify-content:center;height:44px;flex-shrink:0;padding:0 18px;border-radius:9999px;border: var(--pill-border-w, 2px) solid var(--control-border);background:var(--color-white);color:var(--color-ink);cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font,'Urbanist',sans-serif);transition:all 0.15s;white-space:nowrap;box-sizing:border-box}
+        @media (hover: hover) { .filter-pill:hover {border-color:var(--color-navy-dark)} }
+        .filter-pill.active{background:var(--color-navy-dark);color:var(--color-white);border-color:var(--color-navy-dark)}
         .sort-pill{font-size:15px}
-        .pp-select{padding:0 36px 0 14px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);font-size:15px;font-weight:500;font-family:var(--font,'Urbanist',sans-serif);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;color:#1A1A1A;outline:none;cursor:pointer;height:44px;flex-shrink:0;appearance:none;-webkit-appearance:none}
-        .pp-select:focus{border-color:#CF5C36}
-        .dir-search{width:100%;height:44px;flex-shrink:0;padding:0 14px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);font-size:15px;font-weight:500;outline:none;box-sizing:border-box;font-family:var(--font,'Urbanist',sans-serif);background:#fff;transition:border-color 0.15s}
-        .dir-search:focus{border-color:#CF5C36}
+        .pp-select{padding:0 36px 0 14px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border);font-size:15px;font-weight:500;font-family:var(--font,'Urbanist',sans-serif);background:var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='${svgHex("muted")}' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;color:var(--color-ink);outline:none;cursor:pointer;height:44px;flex-shrink:0;appearance:none;-webkit-appearance:none}
+        .pp-select:focus{border-color:var(--color-terracotta)}
+        .dir-search{width:100%;height:44px;flex-shrink:0;padding:0 14px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border);font-size:15px;font-weight:500;outline:none;box-sizing:border-box;font-family:var(--font,'Urbanist',sans-serif);background:var(--color-white);transition:border-color 0.15s}
+        .dir-search:focus{border-color:var(--color-terracotta)}
         /* The wrapper carries the flex sizing the input used to; the input
            fills it. Right padding leaves room for the clear button. */
         .dir-search-wrap{position:relative;display:flex;align-items:center;width:100%}
@@ -784,26 +786,26 @@ function VetsContent() {
           position:absolute;right:6px;top:50%;transform:translateY(-50%);
           width:32px;height:32px;display:inline-flex;align-items:center;
           justify-content:center;border:none;background:transparent;
-          border-radius:8px;cursor:pointer;color:#717A86;
+          border-radius:8px;cursor:pointer;color:var(--color-muted);
           transition:background 0.15s,color 0.15s;
         }
-        .dir-search-clear:hover{background:#F5F0E8;color:#172531}
-        .badge-navy{background:#EBF0F5;color:#2C4657;border-color:rgba(44,70,87,0.22)}
-        .badge-success{background:#EDFAF3;color:#1A6641;border-color:rgba(26,102,65,0.22)}
-        .badge-error{background:#FCEAEA;color:#C94040;border-color:rgba(201,64,64,0.24)}
-        .badge-terra{background:#FEF3EB;color:#8B3A1E;border-color:rgba(139,58,30,0.22)}
+        @media (hover: hover) { .dir-search-clear:hover {background:var(--color-cream);color:var(--color-navy-dark)} }
+        .badge-navy{background:var(--color-badge-navy-bg);color:var(--color-navy-mid);border-color:rgb(var(--color-navy-mid-rgb) / 0.22)}
+        .badge-success{background:var(--color-success-light);color:var(--color-success-text);border-color:rgb(var(--color-success-text-rgb) / 0.22)}
+        .badge-error{background:var(--color-error-light);color:var(--color-error-text);border-color:rgb(var(--color-error-rgb) / 0.24)}
+        .badge-terra{background:var(--color-warning-light);color:var(--color-warning-text);border-color:rgb(var(--color-warning-text-rgb) / 0.22)}
         /* Border thickness and radius come from the same tokens the badges
            use, so a vet-type badge and a price chip sit at the same weight. */
-        .price-chip{display:inline-flex;align-items:center;gap:5px;background:#F5F0E8;border:var(--pill-border-w,2px) solid #EDE8E0;border-radius:var(--radius-md,8px);padding:4px 10px;font-size:14px}
-        .price-chip-label{color:#717A86;font-weight:600}
-        .price-chip-value{color:#CF5C36;font-weight:700}
+        .price-chip{display:inline-flex;align-items:center;gap:5px;background:var(--color-cream);border:var(--pill-border-w,2px) solid var(--color-border);border-radius:var(--radius-md,8px);padding:4px 10px;font-size:14px}
+        .price-chip-label{color:var(--color-muted);font-weight:600}
+        .price-chip-value{color:var(--color-terracotta-700);font-weight:700}
         /* Pricing gate for logged-out users: blur the chips + overlay a signup CTA */
         .price-gate-wrap{position:relative}
         .price-gate-wrap.gated{padding:10px 0 20px}
         .price-gate-wrap.gated .price-gate-inner{filter:blur(5px);pointer-events:none;user-select:none}
         .price-gate-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;padding:0 16px}
-        .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#172531;color:#fff;border:2px solid #172531;border-radius:12px;padding:9px 18px;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 2px 10px rgba(23,37,49,0.2);transition:background 0.15s,color 0.15s}
-        .price-gate-btn:hover{background:#fff;color:#172531;border:2px solid #172531}
+        .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--color-navy-dark);color:var(--color-white);border:2px solid var(--color-navy-dark);border-radius:12px;padding:9px 18px;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 2px 10px rgb(var(--color-navy-dark-rgb) / 0.2);transition:background 0.15s,color 0.15s}
+        @media (hover: hover) { .price-gate-btn:hover {background:var(--color-white);color:var(--color-navy-dark);border:2px solid var(--color-navy-dark)} }
         @media(max-width:768px){
           .price-gate-overlay{padding:0 12px}
           .price-gate-btn{width:100%}
@@ -823,34 +825,34 @@ function VetsContent() {
         /* fbar-item and fbar-search now sit on .dir-search-wrap, so this
            targets the wrapper rather than the input it used to. */
         .dir-search-wrap.fbar-item{max-width:none}
-        .filters-btn{height:44px;padding:0 16px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);background:#fff;color:#172531;cursor:pointer;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;transition:all 0.15s}
-        .filters-btn:hover{border-color:#172531}
-        .filters-btn.open{background:#172531;color:#fff;border-color:#172531}
-        .filters-badge{background:#CF5C36;color:#fff;font-size:12px;font-weight:700;border-radius:9999px;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
+        .filters-btn{height:44px;padding:0 16px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border);background:var(--color-white);color:var(--color-navy-dark);cursor:pointer;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;transition:all 0.15s}
+        @media (hover: hover) { .filters-btn:hover {border-color:var(--color-navy-dark)} }
+        .filters-btn.open{background:var(--color-navy-dark);color:var(--color-white);border-color:var(--color-navy-dark)}
+        .filters-badge{background:var(--color-terracotta-600);color:var(--color-white);font-size:12px;font-weight:700;border-radius:9999px;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
         /* Active dropdown = dark/filled. A select is "active" when its value is
            set (handled inline via class), matching the mockup. */
-        .pp-select.fbar-active{background-color:#172531;color:#fff;border-color:#172531;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23ffffff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
+        .pp-select.fbar-active{background-color:var(--color-navy-dark);color:var(--color-white);border-color:var(--color-navy-dark);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='${svgHex("white")}' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
         /* Custom filter dropdown (Option C: muted prefix + bold value) */
         .fdd-wrap{position:relative;display:flex}
-        .fdd-btn{width:100%;height:44px;padding:0 14px;border: var(--pill-border-w, 2px) solid var(--control-border, #d1c9bd);border-radius:12px;background:#fff;color:#172531;cursor:pointer;font-family:var(--font,'Urbanist',sans-serif);font-size:15px;display:inline-flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;transition:border-color 0.15s,background 0.15s;min-width:0}
-        .fdd-btn:hover{border-color:#172531}
+        .fdd-btn{width:100%;height:44px;padding:0 14px;border: var(--pill-border-w, 2px) solid var(--control-border);border-radius:12px;background:var(--color-white);color:var(--color-navy-dark);cursor:pointer;font-family:var(--font,'Urbanist',sans-serif);font-size:15px;display:inline-flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;transition:border-color 0.15s,background 0.15s;min-width:0}
+        @media (hover: hover) { .fdd-btn:hover {border-color:var(--color-navy-dark)} }
         .fdd-text{display:inline-flex;align-items:baseline;gap:5px;overflow:hidden;white-space:nowrap;min-width:0}
-        .fdd-prefix{color:#717A86;font-weight:600;flex-shrink:0}
-        .fdd-value{color:#172531;font-weight:700;overflow:hidden;text-overflow:ellipsis}
-        .fdd-chev{color:#717A86;display:inline-flex;align-items:center;flex-shrink:0}
-        .fdd-btn.fdd-active{background:#172531;border-color:#172531}
-        .fdd-btn.fdd-active .fdd-prefix{color:rgba(255,255,255,0.6)}
-        .fdd-btn.fdd-active .fdd-value{color:#fff}
-        .fdd-btn.fdd-active .fdd-chev{color:rgba(255,255,255,0.7)}
-        .fdd-pop{position:absolute;top:50px;left:0;right:0;background:#fff;border:1px solid #EDE8E0;border-radius:12px;padding:6px;box-shadow:0 12px 32px rgba(23,37,49,0.14);z-index:50;max-height:320px;overflow-y:auto}
-        .fdd-opt{padding:10px 12px;border-radius:8px;font-size:15px;font-weight:500;color:#172531;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .fdd-opt:hover{background:#F5F0E8}
-        .fdd-opt.sel{background:#F5F0E8;color:#CF5C36;font-weight:700}
-        .fdd-group-label{font-size:11px;font-weight:700;color:#9aa2ab;text-transform:uppercase;letter-spacing:0.06em;padding:8px 12px 4px}
+        .fdd-prefix{color:var(--color-muted);font-weight:600;flex-shrink:0}
+        .fdd-value{color:var(--color-navy-dark);font-weight:700;overflow:hidden;text-overflow:ellipsis}
+        .fdd-chev{color:var(--color-muted);display:inline-flex;align-items:center;flex-shrink:0}
+        .fdd-btn.fdd-active{background:var(--color-navy-dark);border-color:var(--color-navy-dark)}
+        .fdd-btn.fdd-active .fdd-prefix{color:rgb(var(--color-white-rgb) / 0.6)}
+        .fdd-btn.fdd-active .fdd-value{color:var(--color-white)}
+        .fdd-btn.fdd-active .fdd-chev{color:rgb(var(--color-white-rgb) / 0.7)}
+        .fdd-pop{position:absolute;top:50px;left:0;right:0;background:var(--color-white);border:1px solid var(--color-border);border-radius:12px;padding:6px;box-shadow:0 12px 32px rgb(var(--color-navy-dark-rgb) / 0.14);z-index:50;max-height:320px;overflow-y:auto}
+        .fdd-opt{padding:10px 12px;border-radius:8px;font-size:15px;font-weight:500;color:var(--color-navy-dark);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        @media (hover: hover) { .fdd-opt:hover {background:var(--color-cream)} }
+        .fdd-opt.sel{background:var(--color-cream);color:var(--color-terracotta-700);font-weight:700}
+        .fdd-group-label{font-size:11px;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:0.06em;padding:8px 12px 4px}
         .fdd-group + .fdd-group{position:relative;margin-top:8px;padding-top:8px}
-        .fdd-group + .fdd-group::before{content:"";position:absolute;top:0;left:10px;right:10px;height:1px;background:#EDE8E0}
-        .clear-all-filters{background:none;border:none;color:#CF5C36;font-size:13px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);cursor:pointer;padding:8px 4px;transition:color 0.15s}
-        .clear-all-filters:hover{color:#172531}
+        .fdd-group + .fdd-group::before{content:"";position:absolute;top:0;left:10px;right:10px;height:1px;background:var(--color-border)}
+        .clear-all-filters{background:none;border:none;color:var(--color-terracotta-700);font-size:13px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);cursor:pointer;padding:8px 4px;transition:color 0.15s}
+        @media (hover: hover) { .clear-all-filters:hover {color:var(--color-navy-dark)} }
         @media(max-width:768px){
           .vets-header{min-height:368px!important;height:368px!important;padding:80px 0 88px!important}
           /* Mobile: stack every control full-width. Use width:100% + flex:none,
@@ -861,19 +863,19 @@ function VetsContent() {
           .fbar-item[aria-hidden="true"]{display:none!important}
         }
         @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
-        .skeleton{background:linear-gradient(90deg,#F0ECE4 25%,#D9D2C2 50%,#F0ECE4 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:18px}
+        .skeleton{background:linear-gradient(90deg,var(--color-border) 25%,var(--color-border-strong) 50%,var(--color-border) 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:18px}
       `}</style>
 
-      <div style={{ background: "#F5F0E8", minHeight: "calc(100vh - 64px)" }}>
+      <div style={{ background: "var(--color-cream)", minHeight: "calc(100vh - 64px)" }}>
         <div
           className="vets-header"
           style={{
-            background: "#172531",
+            background: "var(--color-navy-dark)",
             padding: "80px 0 88px",
             minHeight: "393px",
             position: "relative",
             overflow: "hidden",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            borderBottom: "1px solid rgb(var(--color-white-rgb) / 0.07)",
             boxSizing: "border-box",
           }}
         >
@@ -886,7 +888,7 @@ function VetsContent() {
               pointerEvents: "none",
               zIndex: 2,
               background:
-                "linear-gradient(to right, rgba(6,14,22,0.97) 0%, rgba(6,14,22,0.90) 18%, rgba(6,14,22,0.55) 34%, rgba(6,14,22,0.10) 48%, transparent 58%)",
+                "linear-gradient(to right, rgb(var(--color-navy-deeper-rgb) / 0.97) 0%, rgb(var(--color-navy-deeper-rgb) / 0.9) 18%, rgb(var(--color-navy-deeper-rgb) / 0.55) 34%, rgb(var(--color-navy-deeper-rgb) / 0.1) 48%, transparent 58%)",
             }}
           />
           <div
@@ -896,7 +898,7 @@ function VetsContent() {
               pointerEvents: "none",
               zIndex: 2,
               background:
-                "linear-gradient(to bottom, rgba(6,14,22,0.35) 0%, transparent 22%, transparent 78%, rgba(6,14,22,0.35) 100%)",
+                "linear-gradient(to bottom, rgb(var(--color-navy-deeper-rgb) / 0.35) 0%, transparent 22%, transparent 78%, rgb(var(--color-navy-deeper-rgb) / 0.35) 100%)",
             }}
           />
 
@@ -913,7 +915,7 @@ function VetsContent() {
                 fontWeight: "700",
                 letterSpacing: "0.10em",
                 textTransform: "uppercase",
-                color: "#EFC88B",
+                color: "var(--color-gold)",
                 marginBottom: "12px",
               }}
             >
@@ -923,7 +925,7 @@ function VetsContent() {
               style={{
                 fontSize: "clamp(30px,5.5vw,56px)",
                 fontWeight: "800",
-                color: "#fff",
+                color: "var(--color-white)",
                 fontFamily: "var(--font,'Urbanist',sans-serif)",
                 marginBottom: "16px",
                 letterSpacing: "-0.025em",
@@ -936,7 +938,7 @@ function VetsContent() {
               style={{
                 fontSize: "17px",
                 fontWeight: 500,
-                color: "rgba(255,255,255,0.65)",
+                color: "rgb(var(--color-white-rgb) / 0.65)",
                 margin: 0,
                 lineHeight: "1.75",
                 maxWidth: "380px",
@@ -958,12 +960,12 @@ function VetsContent() {
         >
           <div
             style={{
-              background: "#fff",
+              background: "var(--color-white)",
               borderRadius: "16px",
               padding: "20px",
               marginBottom: "20px",
-              border: "1px solid #EDE8E0",
-              boxShadow: "0 2px 8px rgba(23,37,49,0.05)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "0 2px 8px rgb(var(--color-navy-dark-rgb) / 0.05)",
             }}
           >
             <div
@@ -1075,7 +1077,7 @@ function VetsContent() {
                 style={{
                   paddingTop: "16px",
                   marginTop: "16px",
-                  borderTop: "1px solid #EDE8E0",
+                  borderTop: "1px solid var(--color-border)",
                 }}
               >
                 <div className="filters-row filters-row-2">
@@ -1167,7 +1169,7 @@ function VetsContent() {
 
           <p
             style={{
-              color: "#717A86",
+              color: "var(--color-muted)",
               fontSize: "15px",
               fontWeight: 500,
               marginBottom: "16px",
@@ -1235,7 +1237,7 @@ function VetsContent() {
                               style={{
                                 fontSize: "17px",
                                 fontWeight: "700",
-                                color: "#172531",
+                                color: "var(--color-navy-dark)",
                                 textDecoration: "none",
                                 fontFamily: "var(--font,'Urbanist',sans-serif)",
                                 display: "-webkit-box",
@@ -1250,7 +1252,7 @@ function VetsContent() {
                               style={{
                                 fontSize: "15px",
                                 fontWeight: "500",
-                                color: "#717A86",
+                                color: "var(--color-muted)",
                                 margin: "2px 0 0",
                                 // letterSpacing: "0.02em",
                               }}
@@ -1267,8 +1269,8 @@ function VetsContent() {
                             <Heart
                               size={22}
                               strokeWidth={2}
-                              color="#CF5C36"
-                              fill={isSaved ? "#CF5C36" : "none"}
+                              color="var(--color-terracotta)"
+                              fill={isSaved ? "var(--color-terracotta)" : "none"}
                             />
                           </button>
                         </div>
@@ -1321,7 +1323,7 @@ function VetsContent() {
                           <p
                             style={{
                               fontSize: "15px",
-                              color: "#172531",
+                              color: "var(--color-navy-dark)",
                               marginBottom: "4px",
                               fontWeight: "500",
                             }}
@@ -1342,7 +1344,7 @@ function VetsContent() {
                             style={{
                               fontSize: "14px",
                               fontWeight: 500,
-                              color: "#717A86",
+                              color: "var(--color-muted)",
                               fontStyle: "italic",
                               margin: "10px 0 0",
                             }}
@@ -1434,14 +1436,14 @@ function VetsContent() {
                             alignItems: "center",
                             marginTop: "auto",
                             paddingTop: "14px",
-                            borderTop: "1px solid #EDE8E0",
+                            borderTop: "1px solid var(--color-border)",
                           }}
                         >
                           <span
                             style={{
                               fontSize: "14px",
                               fontWeight: "500",
-                              color: "#717A86",
+                              color: "var(--color-muted)",
                               // letterSpacing: "0.02em",
                             }}
                           >
@@ -1454,7 +1456,7 @@ function VetsContent() {
                             style={{
                               fontSize: "14px",
                               fontWeight: "700",
-                              color: "#CF5C36",
+                              color: "var(--color-terracotta-700)",
                               textDecoration: "none",
                             }}
                           >
@@ -1481,7 +1483,7 @@ function VetsContent() {
               style={{
                 textAlign: "center",
                 padding: "32px",
-                color: "#717A86",
+                color: "var(--color-muted)",
                 fontSize: "14px",
                 fontWeight: 500,
               }}
@@ -1496,7 +1498,7 @@ function VetsContent() {
                 style={{
                   textAlign: "center",
                   padding: "24px",
-                  color: "#717A86",
+                  color: "var(--color-muted)",
                   fontSize: "15px",
                   fontWeight: 500,
                 }}
@@ -1513,7 +1515,7 @@ function VetsContent() {
                 style={{
                   fontSize: "24px",
                   fontWeight: "700",
-                  color: "#172531",
+                  color: "var(--color-navy-dark)",
                   margin: "0 0 8px",
                 }}
               >
@@ -1523,7 +1525,7 @@ function VetsContent() {
                 style={{
                   fontSize: "16px",
                   fontWeight: 500,
-                  color: "#717A86",
+                  color: "var(--color-muted)",
                   margin: 0,
                 }}
               >
@@ -1562,7 +1564,7 @@ export function VetsSkeleton() {
       </div>
       <style>{`
         @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-        .skeleton{background:linear-gradient(90deg,#F0ECE4 25%,#D9D2C2 50%,#F0ECE4 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:18px}
+        .skeleton{background:linear-gradient(90deg,var(--color-border) 25%,var(--color-border-strong) 50%,var(--color-border) 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:18px}
       `}</style>
     </div>
   );

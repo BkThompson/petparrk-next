@@ -27,7 +27,7 @@ export default function StudioPage() {
   }
   // Covers the whole screen so the site's menu and footer don't show around the editor.
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "#fff" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "var(--color-white)" }}>
       <NextStudio config={config} />
     </div>
   );

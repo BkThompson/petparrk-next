@@ -8,15 +8,11 @@
 // ============================================================================
 
 import { toPng } from "html-to-image";
+import { HERO_RARITY_TIERS as RARITY_TIERS } from "../lib/palettes";
+import { HEX, rgbaHex } from "../lib/tokens";
+import { HERO_FLIP_CARD_COLORS } from "../lib/palettes";
 
 // ── shared constants (match the real card) ─────────────────────────────────
-const RARITY_TIERS = {
-  common: { label: "Beloved", color: "#8A94A6" },
-  uncommon: { label: "Special", color: "#16A34A" },
-  rare: { label: "Rare", color: "#2563EB" },
-  epic: { label: "Epic", color: "#9333EA" },
-  legendary: { label: "Legendary", color: "#F59E0B" },
-};
 const TAG_META = {
   champion: { label: "Champion", emoji: "🏆" },
   service_therapy: { label: "Service / Therapy", emoji: "⛑️" },
@@ -33,10 +29,10 @@ const TAG_META = {
   foodie: { label: "Foodie", emoji: "🍖" },
   bff_pair: { label: "BFF Pair", emoji: "💞" },
 };
-const GOLD = "#EFC88B";
-const DEFAULT_BG = "#1A2D44";
-const DEFAULT_CARD = "#172531";
-const DEFAULT_ACCENT = "#6B3FCB";
+const GOLD = HEX.gold;
+const DEFAULT_BG = HERO_FLIP_CARD_COLORS.navy750;
+const DEFAULT_CARD = HEX.navyDark;
+const DEFAULT_ACCENT = HERO_FLIP_CARD_COLORS.purple450;
 const CARD_W = 380;
 
 // ── color helpers (capture-safe hex/rgb, no color-mix) ──────────────────────
@@ -212,7 +208,7 @@ function buildBgLayer(data, theme, forImage) {
     switch (design) {
       case "dots":
         layer.style.background = bg;
-        layer.style.backgroundImage = `radial-gradient(${rgba("#FFFFFF", 0.07)} 1.5px, transparent 1.5px)`;
+        layer.style.backgroundImage = `radial-gradient(${rgba("${HEX.white}", 0.07)} 1.5px, transparent 1.5px)`;
         layer.style.backgroundSize = "20px 20px";
         break;
       case "mesh-grad":
@@ -220,7 +216,7 @@ function buildBgLayer(data, theme, forImage) {
         break;
       case "stripes":
         layer.style.background = bg;
-        layer.style.backgroundImage = `repeating-linear-gradient(45deg, ${rgba("#FFFFFF", 0.05)} 0 12px, transparent 12px 28px)`;
+        layer.style.backgroundImage = `repeating-linear-gradient(45deg, ${rgba("${HEX.white}", 0.05)} 0 12px, transparent 12px 28px)`;
         break;
       default:
         cssGradient();
@@ -247,7 +243,7 @@ function buildFront(pet, data, theme) {
     flex: "0 0 auto",
     display: "flex",
     flexDirection: "column",
-    boxShadow: "0 18px 44px rgba(0,0,0,0.35)",
+    boxShadow: `0 18px 44px ${rgbaHex("black", 0.35)}`,
     border: `2px solid ${rgba(accent, 0.55)}`,
     zIndex: "1",
   });
@@ -297,11 +293,11 @@ function buildFront(pet, data, theme) {
     bottom: "0",
     zIndex: "3",
     padding: "54px 20px 20px",
-    color: "#fff",
+    color: HEX.white,
     display: "flex",
     flexDirection: "column",
     alignItems: "flex-start",
-    background: "linear-gradient(to top, rgba(23,37,49,0.94) 25%, transparent)",
+    background: `linear-gradient(to top, ${rgbaHex("navyDark", 0.94)} 25%, transparent)`,
   });
   const rarity = data.hero_rarity ? RARITY_TIERS[data.hero_rarity] : null;
   if (rarity) {
@@ -314,7 +310,7 @@ function buildFront(pet, data, theme) {
       padding: "0 11px 0 9px",
       marginBottom: "10px",
       lineHeight: "1",
-      color: "#fff",
+      color: HEX.white,
       fontSize: "11px",
       fontWeight: "800",
       letterSpacing: "0.08em",
@@ -322,10 +318,10 @@ function buildFront(pet, data, theme) {
       borderRadius: "999px",
       background: rarity.color,
       backgroundImage:
-        "linear-gradient(160deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0) 42%), linear-gradient(340deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0) 50%)",
-      textShadow: "0 1px 1px rgba(0,0,0,0.3)",
+        `linear-gradient(160deg, ${rgbaHex("white", 0.42)} 0%, ${rgbaHex("white", 0)} 42%), linear-gradient(340deg, ${rgbaHex("black", 0.22)} 0%, ${rgbaHex("black", 0)} 50%)`,
+      textShadow: `0 1px 1px ${rgbaHex("black", 0.3)}`,
       boxShadow:
-        "0 2px 8px rgba(0,0,0,0.3), 0 0 0 1.5px rgba(255,255,255,0.85)",
+        `0 2px 8px ${rgbaHex("black", 0.3)}, 0 0 0 1.5px ${rgbaHex("white", 0.85)}`,
     });
     badge.appendChild(awardSvg());
     badge.appendChild(document.createTextNode(rarity.label));
@@ -364,7 +360,7 @@ function buildFront(pet, data, theme) {
         {
           fontSize: "15px",
           fontWeight: "500",
-          color: "rgba(255,255,255,0.85)",
+          color: rgbaHex("white", 0.85),
         },
         pet.breed,
       ),
@@ -381,7 +377,7 @@ function buildFront(pet, data, theme) {
         {
           fontSize: "15px",
           fontWeight: "500",
-          color: "rgba(255,255,255,0.7)",
+          color: rgbaHex("white", 0.7),
           marginTop: "2px",
         },
         age,
@@ -434,7 +430,7 @@ function buildFront(pet, data, theme) {
       const bar = el("div", {
         flex: "1",
         height: "11px",
-        background: rgba("#FFFFFF", 0.12),
+        background: rgba(HEX.white, 0.12),
         borderRadius: "999px",
         overflow: "hidden",
       });
@@ -641,7 +637,7 @@ function buildBack(pet, data, theme) {
     flex: "0 0 auto",
     display: "flex",
     flexDirection: "column",
-    boxShadow: "0 18px 44px rgba(0,0,0,0.35)",
+    boxShadow: `0 18px 44px ${rgbaHex("black", 0.35)}`,
     border: `2px solid ${rgba(accent, 0.55)}`,
     zIndex: "1",
   });
@@ -891,7 +887,7 @@ function buildBack(pet, data, theme) {
 // ── color math copied EXACTLY from the hero card (HeroCardView) so the flip
 //    card's theme values are byte-identical. Do not "simplify" these.
 function tcToRgb(hex) {
-  const h = (hex || "#000000").replace("#", "");
+  const h = (hex || HEX.black).replace("#", "");
   return [
     parseInt(h.slice(0, 2), 16),
     parseInt(h.slice(2, 4), 16),
@@ -929,7 +925,7 @@ function tcMix(hex, target, t) {
 }
 function tcEnsureContrast(color, bg, ratio = 4.5) {
   if (tcContrast(color, bg) >= ratio) return color;
-  const target = tcLum(bg) > 0.4 ? "#000000" : "#FFFFFF";
+  const target = tcLum(bg) > 0.4 ? HEX.black : HEX.white;
   let best = color;
   for (let t = 0.1; t <= 1; t += 0.1) {
     const candidate = tcMix(color, target, t);
@@ -948,12 +944,12 @@ function deriveTheme(data) {
   const bgIsDark = tcLum(bg) < 0.4;
 
   // EXACT mirrors of HeroCardView's theme vars:
-  const cardText = cardIsDark ? "#FFFFFF" : "#172531"; // --t-card-text
+  const cardText = cardIsDark ? HEX.white : HEX.navyDark; // --t-card-text
   const cardMuted = cardIsDark
-    ? "rgba(255,255,255,0.66)"
-    : "rgba(23,37,49,0.60)"; // --t-card-muted
-  const bgText = bgIsDark ? "#FFFFFF" : "#172531"; // --t-bg-text
-  const bgMuted = bgIsDark ? "rgba(255,255,255,0.72)" : "rgba(23,37,49,0.62)"; // --t-bg-muted
+    ? rgbaHex("white", 0.66)
+    : rgbaHex("navyDark", 0.6); // --t-card-muted
+  const bgText = bgIsDark ? HEX.white : HEX.navyDark; // --t-bg-text
+  const bgMuted = bgIsDark ? rgbaHex("white", 0.72) : rgbaHex("navyDark", 0.62); // --t-bg-muted
   // Intro / framing color override — mirrors HeroCardView. Colors "Meet X", the
   // subtitle, and the "Made on PetParrk" brand. Empty/unset = AUTO.
   const introOverride =
@@ -987,21 +983,21 @@ function deriveTheme(data) {
   const labelColor = data.hero_label_color || data.hero_accent_color || accent; // --t-label
   // Pick whichever of white/navy contrasts a surface better (for button text).
   const pickReadable = (surface) =>
-    tcContrast("#FFFFFF", surface) >= tcContrast("#172531", surface)
-      ? "#FFFFFF"
-      : "#172531";
+    tcContrast(HEX.white, surface) >= tcContrast(HEX.navyDark, surface)
+      ? HEX.white
+      : HEX.navyDark;
   const textOnAccentOnBg = pickReadable(accentOnBg); // text on the filled button
   const btnOutlineOnBg = pickReadable(bg); // outline/text on the page bg
-  const bannerText = tcLum(accent) > 0.5 ? "#172531" : "#FFFFFF"; // --t-banner-text
-  const accentLite = tcMix(accent, "#FFFFFF", 0.34); // stat-fill lighten
-  const chipBg = cardIsDark ? "rgba(255,255,255,0.10)" : "rgba(23,37,49,0.05)"; // --t-chip-bg
+  const bannerText = tcLum(accent) > 0.5 ? HEX.navyDark : HEX.white; // --t-banner-text
+  const accentLite = tcMix(accent, HEX.white, 0.34); // stat-fill lighten
+  const chipBg = cardIsDark ? rgbaHex("white", 0.1) : rgbaHex("navyDark", 0.05); // --t-chip-bg
   const cardBorder = cardIsDark
-    ? "rgba(255,255,255,0.14)"
-    : "rgba(23,37,49,0.10)"; // --t-card-border
-  const divider = "rgba(156,163,175,0.30)"; // --t-divider (#9CA3AF) softened
-  const lovesColor = tcEnsureContrast("#16A34A", card, 4.5);
-  const dislikesColor = tcEnsureContrast("#EF4444", card, 4.5);
-  const foodsColor = tcEnsureContrast("#0891B2", card, 4.5);
+    ? rgbaHex("white", 0.14)
+    : rgbaHex("navyDark", 0.1); // --t-card-border
+  const divider = HERO_FLIP_CARD_COLORS.grey350_a30; // --t-divider, softened
+  const lovesColor = tcEnsureContrast(HERO_FLIP_CARD_COLORS.green600, card, 4.5);
+  const dislikesColor = tcEnsureContrast(HERO_FLIP_CARD_COLORS.red400, card, 4.5);
+  const foodsColor = tcEnsureContrast(HERO_FLIP_CARD_COLORS.teal600, card, 4.5);
   const frame = `rgba(${tcToRgb(accent).join(",")},0.55)`; // --t-frame
 
   // ── Intro scrim — EXACT mirror of HeroCardView's scrim so the flip/share page
@@ -1054,8 +1050,8 @@ function deriveTheme(data) {
     Math.min(1, baseAlpha * scrimLighting),
   ).toFixed(3);
   const scrimBase = bgIsDark
-    ? tcMix(card, "#0B131A", 0.95)
-    : tcMix(card, "#FFFFFF", 0.55);
+    ? tcMix(card, HERO_FLIP_CARD_COLORS.navy900, 0.95)
+    : tcMix(card, HEX.white, 0.55);
   const sb = tcToRgb(scrimBase);
   const scrimColor = needsScrim
     ? `rgba(${sb[0]},${sb[1]},${sb[2]},${scrimAlpha})`
@@ -1081,8 +1077,8 @@ function deriveTheme(data) {
     // background: a DARK shadow when the bg is light (so light text/edges read),
     // a LIGHT shadow when the bg is dark. Gives separation without a scrim/pill.
     brandShadow: bgIsDark
-      ? "0 1px 8px rgba(255,255,255,0.45)"
-      : "0 1px 6px rgba(0,0,0,0.55)",
+      ? `0 1px 8px ${rgbaHex("white", 0.45)}`
+      : `0 1px 6px ${rgbaHex("black", 0.55)}`,
     ink: cardText, // white (#FFFFFF) on dark cards — matches --t-card-text
     muted: cardMuted, // --t-card-muted
     chipBg,
@@ -1118,11 +1114,11 @@ export async function exportHeroFlipImage(pet) {
     position: "fixed",
     inset: "0",
     zIndex: "2147483646",
-    background: "rgba(20,20,25,0.86)",
+    background: HERO_FLIP_CARD_COLORS.grey850_a86,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#fff",
+    color: HEX.white,
     fontFamily: "'Urbanist',-apple-system,sans-serif",
     fontSize: "16px",
     fontWeight: "700",

@@ -23,7 +23,7 @@ export default function Loading() {
       </div>
       <style>{`
         @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-        .vets-sk{background:linear-gradient(90deg,#F0ECE4 25%,#D9D2C2 50%,#F0ECE4 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:18px}
+        .vets-sk{background:linear-gradient(90deg,var(--color-border) 25%,var(--color-border-strong) 50%,var(--color-border) 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:18px}
       `}</style>
     </div>
   );

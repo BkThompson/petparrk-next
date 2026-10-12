@@ -1,3 +1,4 @@
+import { BRAND_ART } from "../lib/palettes";
 // =============================================================
 // components/BrandArt.js — PetParrk brand illustrations.
 //
@@ -19,10 +20,10 @@
 // carries meaning the surrounding copy doesn't already state.
 // =============================================================
 
-const NAVY = "#172531";
-const TERRA = "#CF5C36";
-const CREAM = "#F5F0E8";
-const GOLD = "#EFC88B";
+const NAVY = "var(--color-navy-dark)";
+const TERRA = "var(--color-terracotta)";
+const CREAM = "var(--color-cream)";
+const GOLD = "var(--color-gold)";
 
 function frame(title) {
   return title
@@ -833,8 +834,8 @@ export function ArtProblemNight({ width = 420, title }) {
     >
       <defs>
         <linearGradient id="ppNight" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#2C4657" />
-          <stop offset="1" stopColor="#172531" />
+          <stop offset="0" stopColor="var(--color-navy-mid)" />
+          <stop offset="1" stopColor="var(--color-navy-dark)" />
         </linearGradient>
       </defs>
       <rect width="400" height="300" fill="url(#ppNight)" />
@@ -1350,12 +1351,12 @@ export function ArtContact({ width = 340, title }) {
     >
       <defs>
         <linearGradient id="ppRoom" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#EFE6D8" />
-          <stop offset="1" stopColor="#E3D6C3" />
+          <stop offset="0" stopColor={BRAND_ART.cream100} />
+          <stop offset="1" stopColor={BRAND_ART.orange150} />
         </linearGradient>
         <linearGradient id="ppSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#EFC88B" />
-          <stop offset="1" stopColor="#F7E3C4" />
+          <stop offset="0" stopColor="var(--color-gold)" />
+          <stop offset="1" stopColor={BRAND_ART.cream100x} />
         </linearGradient>
       </defs>
       <rect width="300" height="300" fill="url(#ppRoom)" />
@@ -1504,7 +1505,7 @@ export function ArtContact({ width = 340, title }) {
           the convention for that. Muted and slightly desaturated so it sits
           with cream, navy and gold rather than reading as a generic success
           tick. Terracotta stays the "selected" colour elsewhere. */}
-      <circle cx="224" cy="174" r="22" fill="#2E8B57" />
+      <circle cx="224" cy="174" r="22" fill={BRAND_ART.green600} />
       <path
         d="M214,174 l6,7 l13,-15"
         fill="none"
@@ -1794,7 +1795,7 @@ export function ArtPickArea({ size = 44, title }) {
       xmlns="http://www.w3.org/2000/svg"
       {...frame(title)}
     >
-      <rect x="2" y="5" width="40" height="10" rx="5" fill="#FFFFFF" />
+      <rect x="2" y="5" width="40" height="10" rx="5" fill="var(--color-white)" />
       <circle cx="9" cy="10" r="3" fill={GOLD} />
       <rect
         x="16"
@@ -1826,7 +1827,7 @@ export function ArtPickArea({ size = 44, title }) {
         strokeLinejoin="round"
       />
 
-      <rect x="2" y="29" width="40" height="10" rx="5" fill="#FFFFFF" />
+      <rect x="2" y="29" width="40" height="10" rx="5" fill="var(--color-white)" />
       <circle cx="9" cy="34" r="3" fill={GOLD} />
       <rect
         x="16"
@@ -1851,7 +1852,7 @@ export function ArtHowLong({ size = 44, title }) {
       xmlns="http://www.w3.org/2000/svg"
       {...frame(title)}
     >
-      <circle cx="22" cy="23" r="17" fill="#FFFFFF" />
+      <circle cx="22" cy="23" r="17" fill="var(--color-white)" />
       <path d="M22 23V9a14 14 0 0 1 12.1 7Z" fill={GOLD} />
       <circle
         cx="22"

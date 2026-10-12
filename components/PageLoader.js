@@ -1,10 +1,7 @@
 "use client";
 
 import { PawPrint } from "lucide-react";
-
-// Brand colors — edit here to update loader appearance site-wide
-const TERRACOTTA = "#CF5C36";
-const MUTED = "#717A86";
+import { C } from "../lib/tokens";
 
 // ── Centralized loader messages ──────────────────────────────────────────
 // All loader wording lives HERE so it stays consistent site-wide. Pages pass
@@ -103,7 +100,7 @@ export default function PageLoader({
           fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
           fontSize: "16px",
           fontWeight: 500,
-          color: MUTED,
+          color: C.muted,
           margin: 0,
         }}
       >
@@ -122,7 +119,7 @@ export default function PageLoader({
           }
         }
         .page-loader-trail svg {
-          color: ${TERRACOTTA};
+          color: ${C.terracotta};
           opacity: 0.2;
           animation: paw-walk 1.2s ease-in-out infinite;
         }

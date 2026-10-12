@@ -20,6 +20,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import PageLoader from "../../components/PageLoader";
+import { C } from "../../lib/tokens";
+import { SC_HERO_ART } from "../../lib/palettes";
 
 // ── Species + age helpers (matches profile page logic) ──────────────────
 const BANNER_LUCIDE = {
@@ -78,20 +80,6 @@ function formatAge(birthday) {
 }
 
 const SESSION_KEY = "petparrk_symptom_session";
-const C = {
-  navyDark: "#172531",
-  navyMid: "#2C4657",
-  terracotta: "#CF5C36",
-  gold: "#EFC88B",
-  cream: "#F5F0E8",
-  white: "#FFFFFF",
-  ink: "#1A1A1A",
-  slate: "#4B5563",
-  muted: "#717A86",
-  border: "#EDE8E0",
-  success: "#2A7D4F",
-  error: "#C94040",
-};
 
 export default function SymptomCheckerHomePage() {
   const router = useRouter();
@@ -248,18 +236,20 @@ export default function SymptomCheckerHomePage() {
         .sc-step-outer {
           position: relative; border-radius: 16px; padding: 0; height: 100%;
           border: 1px solid ${C.border};
-          background: #fff;
+          background: var(--color-white);
           transition: transform 0.3s ease, border-color 0.2s, box-shadow 0.2s;
         }
         
         .sc-step-inner {
           border-radius: 15px; padding: 36px 28px; text-align: center;
-          background: #ffffff;
+          background: var(--color-white);
           height: 100%; box-sizing: border-box; position: relative; overflow: hidden;
           transition: box-shadow 0.3s;
         }
-        .sc-step-outer:hover .sc-step-inner {
-          box-shadow: none;
+        @media (hover: hover) {
+          .sc-step-outer:hover .sc-step-inner {
+            box-shadow: none;
+          }
         }
 
 
@@ -294,7 +284,7 @@ export default function SymptomCheckerHomePage() {
         /* Navy surface with a white species icon, matching the photo
            placeholders on Profile and Pet Card — same state, same pet,
            so it should read the same wherever it appears. */
-        .sc-avatar { border-radius:50%; background:linear-gradient(135deg,#2C4657 0%,#172531 100%); align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; border:2px solid ${C.border}; color:rgba(255,255,255,0.9); }
+        .sc-avatar { border-radius:50%; background:linear-gradient(135deg,var(--color-navy-mid) 0%,var(--color-navy-dark) 100%); align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; border:2px solid ${C.border}; color:rgb(var(--color-white-rgb) / 0.9); }
         .sc-avatar img { width:100%; height:100%; object-fit:cover; }
         .sc-avatar-desktop { display:flex; width:78px; height:78px; }
         .sc-avatar-mobile { display:none; }
@@ -371,8 +361,8 @@ export default function SymptomCheckerHomePage() {
 
         /* Chevron — start new check */
         .sc-chevron { background:none; border:none; cursor:pointer; min-height:44px; min-width:44px; justify-content:center; padding:0 0 0 12px; color:${C.terracotta}; display:flex; align-items:center; flex-shrink:0; line-height:1; transition:color 0.2s, transform 0.2s; }
-        .sc-chevron:hover { color:#a8471d; transform:translateX(4px); }
-        .sc-lastcheck:hover { color:#a8471d !important; }
+        @media (hover: hover) { .sc-chevron:hover { color:var(--color-terracotta-700); transform:translateX(4px); } }
+        @media (hover: hover) { .sc-lastcheck:hover { color:var(--color-terracotta-700) !important; } }
 
 
 
@@ -420,13 +410,13 @@ export default function SymptomCheckerHomePage() {
         .sc-mob-stats .sc-stat-label { font-size:16px; font-weight:500; text-transform:capitalize; color:${C.muted}; white-space:nowrap; }
         .sc-mob-stats .sc-stat-value { font-size:16px; font-weight:600; color:${C.navyDark}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         }
-        .sc-input { width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid ${C.border}; font-size:16px; font-weight:500; font-family:var(--font-urbanist,system-ui); background:#fff; outline:none; box-sizing:border-box; transition:border-color 0.15s; color:${C.navyDark}; -webkit-appearance:none; }
+        .sc-input { width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid ${C.border}; font-size:16px; font-weight:500; font-family:var(--font-urbanist,system-ui); background:var(--color-white); outline:none; box-sizing:border-box; transition:border-color 0.15s; color:${C.navyDark}; -webkit-appearance:none; }
         .sc-input:focus { border-color:${C.terracotta}; }
         .sc-input::placeholder { color:${C.muted}; }
-        .sc-resume-btn { padding:0px 24px; height:42px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; white-space:nowrap; font-family:var(--font-urbanist,system-ui); transition:background 0.2s,color 0.2s; display:inline-flex; align-items:center; }
-        .sc-resume-btn:hover { background:#fff; color:${C.terracotta}; }
-        .sc-btn-primary { height:44px; padding:0 28px; background:${C.terracotta}; color:#fff; border:2px solid ${C.terracotta}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
-        .sc-btn-primary:hover { background:${C.white}; color:${C.terracotta}; border:2px solid ${C.terracotta}; }
+        .sc-resume-btn { padding:0px 24px; height:42px; background:${C.terracotta600}; color:var(--color-white); border:2px solid ${C.terracotta600}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; white-space:nowrap; font-family:var(--font-urbanist,system-ui); transition:background 0.2s,color 0.2s; display:inline-flex; align-items:center; }
+        @media (hover: hover) { .sc-resume-btn:hover { background:var(--color-white); color:${C.terracotta700}; } }
+        .sc-btn-primary { height:44px; padding:0 28px; background:${C.terracotta600}; color:var(--color-white); border:2px solid ${C.terracotta600}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
+        @media (hover: hover) { .sc-btn-primary:hover { background:${C.white}; color:${C.terracotta700}; border:2px solid ${C.terracotta700}; } }
         .sc-btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
         .sc-guest-lede {
           margin: 0 0 24px;
@@ -436,11 +426,11 @@ export default function SymptomCheckerHomePage() {
         }
         /* Unsaved-check banner. Same card and 42px inverting button as the
            rest of the checker; stacks full width on phones. */
-        .sc-pending { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 32px; padding: 20px; border-radius: 16px; background: #fff; border: 1px solid ${C.border}; box-shadow: 0 2px 12px rgba(23, 37, 49, 0.05); }
+        .sc-pending { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 32px; padding: 20px; border-radius: 16px; background: var(--color-white); border: 1px solid ${C.border}; box-shadow: 0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.05); }
         .sc-pending .sc-pending-title { margin: 0 0 4px; font-size: 18px; line-height: 1.3; font-weight: 800; color: ${C.navyDark}; }
         .sc-pending .sc-pending-sub { margin: 0; font-size: 16px; font-weight: 500; line-height: 1.5; color: ${C.muted}; text-wrap: pretty; }
-        .sc-pending-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px; border-radius: 12px; border: 2px solid ${C.terracotta}; background: ${C.terracotta}; color: #fff; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: background 0.2s, color 0.2s; box-sizing: border-box; }
-        .sc-pending-btn:hover { background: #fff; color: ${C.terracotta}; }
+        .sc-pending-btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px; border-radius: 12px; border: 2px solid ${C.terracotta600}; background: ${C.terracotta600}; color: var(--color-white); font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: background 0.2s, color 0.2s; box-sizing: border-box; }
+        @media (hover: hover) { .sc-pending-btn:hover { background: var(--color-white); color: ${C.terracotta700}; } }
         @media (max-width: 640px) {
           .sc-pending { flex-direction: column; align-items: stretch; }
           .sc-pending-btn { width: 100%; }
@@ -449,8 +439,8 @@ export default function SymptomCheckerHomePage() {
           margin-bottom: 16px;
           padding: 14px 16px;
           border-radius: 12px;
-          background: #FFFBEB;
-          border: 1px solid #FCD34D;
+          background: var(--color-caution-light);
+          border: 1px solid rgb(var(--color-caution-rgb) / 0.4);
           font-size: 16px;
           font-weight: 500;
           color: ${C.navyDark};
@@ -464,7 +454,7 @@ export default function SymptomCheckerHomePage() {
           border-color: ${C.border};
         }
         .sc-btn-outline { height:44px; padding:0 28px; background:transparent; color:${C.navyDark}; border:2px solid ${C.navyDark}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; font-family:var(--font-urbanist,system-ui); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
-        .sc-btn-outline:hover { background:${C.navyDark}; color:#fff; }
+        @media (hover: hover) { .sc-btn-outline:hover { background:${C.navyDark}; color:var(--color-white); } }
 
 
 
@@ -510,9 +500,9 @@ export default function SymptomCheckerHomePage() {
 
 
         .sch-arrow-link { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; text-decoration: none; transition: gap 0.2s ease; }
-        .sch-arrow-link:hover { gap: 8px; }
+        @media (hover: hover) { .sch-arrow-link:hover { gap: 8px; } }
         .sch-arrow-link .arr-icon { display: inline-block; transition: transform 0.2s ease; }
-        .sch-arrow-link:hover .arr-icon { transform: translateX(3px); }
+        @media (hover: hover) { .sch-arrow-link:hover .arr-icon { transform: translateX(3px); } }
 
 
 
@@ -542,7 +532,7 @@ export default function SymptomCheckerHomePage() {
           padding: "80px 0 88px",
           position: "relative",
           overflow: "hidden",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          borderBottom: "1px solid rgb(var(--color-white-rgb) / 0.07)",
           boxSizing: "border-box",
         }}
       >
@@ -573,7 +563,7 @@ export default function SymptomCheckerHomePage() {
                 y1="0"
                 x2="0"
                 y2="28"
-                stroke="rgba(180,210,255,0.09)"
+                stroke={SC_HERO_ART.blue150_a09}
                 strokeWidth="1"
               />
             </pattern>
@@ -591,7 +581,7 @@ export default function SymptomCheckerHomePage() {
                 y1="0"
                 x2="0"
                 y2="28"
-                stroke="rgba(180,210,255,0.07)"
+                stroke={SC_HERO_ART.blue150_a07}
                 strokeWidth="1"
               />
             </pattern>
@@ -608,7 +598,7 @@ export default function SymptomCheckerHomePage() {
             zIndex: 1,
             pointerEvents: "none",
             background:
-              "radial-gradient(ellipse 75% 85% at 50% 50%, rgba(44,70,87,0.5) 0%, rgba(23,37,49,0) 45%, rgba(10,18,26,0.6) 80%, rgba(6,12,18,0.85) 100%)",
+              "radial-gradient(ellipse 75% 85% at 50% 50%, rgb(var(--color-navy-mid-rgb) / 0.5) 0%, rgb(var(--color-navy-dark-rgb) / 0) 45%, rgb(var(--color-navy-deeper-rgb) / 0.6) 80%, rgb(var(--color-navy-deeper-rgb) / 0.85) 100%)",
           }}
         />
 
@@ -620,7 +610,7 @@ export default function SymptomCheckerHomePage() {
             zIndex: 2,
             pointerEvents: "none",
             background:
-              "radial-gradient(ellipse 72% 80% at 50% 50%, rgba(28,48,65,0.15) 0%, rgba(8,16,24,0.75) 100%)",
+              "radial-gradient(ellipse 72% 80% at 50% 50%, rgb(var(--color-navy-dark-rgb) / 0.15) 0%, rgb(var(--color-navy-deeper-rgb) / 0.75) 100%)",
           }}
         />
         <div
@@ -630,7 +620,7 @@ export default function SymptomCheckerHomePage() {
             zIndex: 2,
             pointerEvents: "none",
             background:
-              "linear-gradient(to right, rgba(6,12,20,0.65) 0%, transparent 28%, transparent 72%, rgba(6,12,20,0.65) 100%)",
+              "linear-gradient(to right, rgb(var(--color-navy-deeper-rgb) / 0.65) 0%, transparent 28%, transparent 72%, rgb(var(--color-navy-deeper-rgb) / 0.65) 100%)",
           }}
         />
         <div
@@ -640,7 +630,7 @@ export default function SymptomCheckerHomePage() {
             zIndex: 2,
             pointerEvents: "none",
             background:
-              "linear-gradient(to bottom, rgba(6,12,20,0.5) 0%, transparent 32%)",
+              "linear-gradient(to bottom, rgb(var(--color-navy-deeper-rgb) / 0.5) 0%, transparent 32%)",
           }}
         />
 
@@ -665,7 +655,7 @@ export default function SymptomCheckerHomePage() {
             style={{
               fontSize: "clamp(30px,5.5vw,56px)",
               fontWeight: "800",
-              color: "#fff",
+              color: "var(--color-white)",
               fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
               letterSpacing: "-0.025em",
               lineHeight: "1.05",
@@ -678,7 +668,7 @@ export default function SymptomCheckerHomePage() {
             style={{
               fontSize: "17px",
               fontWeight: 500,
-              color: "rgba(255,255,255,0.65)",
+              color: "rgb(var(--color-white-rgb) / 0.65)",
               margin: 0,
               lineHeight: "1.75",
               maxWidth: "440px",
@@ -774,7 +764,7 @@ export default function SymptomCheckerHomePage() {
                             right: "16px",
                             fontSize: "64px",
                             fontWeight: "800",
-                            color: "rgba(207,92,54,0.10)",
+                            color: "rgb(var(--color-terracotta-rgb) / 0.1)",
                             lineHeight: 1,
                             userSelect: "none",
                             pointerEvents: "none",
@@ -791,8 +781,8 @@ export default function SymptomCheckerHomePage() {
                             // and Pet Card. It was cream, and the art uses
                             // cream for its surfaces — the unselected rows and
                             // the clock face disappeared into the tile.
-                            background: "rgba(207,92,54,0.14)",
-                            border: "1px solid rgba(207,92,54,0.28)",
+                            background: "rgb(var(--color-terracotta-rgb) / 0.14)",
+                            border: "1px solid rgb(var(--color-terracotta-rgb) / 0.28)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -847,8 +837,8 @@ export default function SymptomCheckerHomePage() {
                   <div
                     className="sc-resume-card"
                     style={{
-                      background: "#EDFAF3",
-                      border: "1px solid #A7F3D0",
+                      background: "var(--color-success-light)",
+                      border: "1px solid rgb(var(--color-success-text-rgb) / 0.22)",
                       borderRadius: "14px",
                       padding: "16px 20px",
                       marginBottom: "24px",
@@ -896,10 +886,10 @@ export default function SymptomCheckerHomePage() {
                                 borderRadius: "50%",
                                 background:
                                   resumeData.triageResult === "EMERGENCY"
-                                    ? "#C94040"
+                                    ? "var(--color-error)"
                                     : resumeData.triageResult === "SEE_VET"
-                                      ? "#D9A21B"
-                                      : "#1A6641",
+                                      ? "var(--color-caution)"
+                                      : "var(--color-success-text)",
                                 flexShrink: 0,
                               }}
                             />
@@ -1028,10 +1018,10 @@ export default function SymptomCheckerHomePage() {
                                   (() => {
                                     const dotColor =
                                       lastCheck.triage_result === "EMERGENCY"
-                                        ? "#C94040"
+                                        ? "var(--color-error)"
                                         : lastCheck.triage_result === "SEE_VET"
-                                          ? "#D9A21B"
-                                          : "#1A6641";
+                                          ? "var(--color-caution)"
+                                          : "var(--color-success-text)";
                                     const l =
                                       lastCheck.triage_result === "EMERGENCY"
                                         ? "Emergency"
@@ -1073,7 +1063,7 @@ export default function SymptomCheckerHomePage() {
                                           margin: "4px 0 0",
                                           fontSize: "16px",
                                           fontWeight: "600",
-                                          color: C.terracotta,
+                                          color: C.terracotta700,
                                           textUnderlineOffset: "2px",
                                           cursor: "pointer",
                                           alignItems: "center",
@@ -1103,10 +1093,10 @@ export default function SymptomCheckerHomePage() {
                               (() => {
                                 const dotColor =
                                   lastCheck.triage_result === "EMERGENCY"
-                                    ? "#C94040"
+                                    ? "var(--color-error)"
                                     : lastCheck.triage_result === "SEE_VET"
-                                      ? "#D9A21B"
-                                      : "#1A6641";
+                                      ? "var(--color-caution)"
+                                      : "var(--color-success-text)";
                                 const l =
                                   lastCheck.triage_result === "EMERGENCY"
                                     ? "Emergency"
@@ -1148,7 +1138,7 @@ export default function SymptomCheckerHomePage() {
                                       margin: 0,
                                       fontSize: "16px",
                                       fontWeight: "600",
-                                      color: C.terracotta,
+                                      color: C.terracotta700,
                                       cursor: "pointer",
                                       alignItems: "center",
                                       gap: "6px",
@@ -1248,7 +1238,7 @@ export default function SymptomCheckerHomePage() {
                     style={{
                       textAlign: "center",
                       padding: "56px 24px",
-                      background: "#fff",
+                      background: "var(--color-white)",
                       borderRadius: "20px",
                       border: `1px solid ${C.border}`,
                     }}
@@ -1308,11 +1298,11 @@ export default function SymptomCheckerHomePage() {
                 </p>
                 <div
                   style={{
-                    background: "#fff",
+                    background: "var(--color-white)",
                     border: `1px solid ${C.border}`,
                     borderRadius: "20px",
                     padding: "28px 28px 24px",
-                    boxShadow: "0 2px 12px rgba(23,37,49,0.06)",
+                    boxShadow: "0 2px 12px rgb(var(--color-navy-dark-rgb) / 0.06)",
                   }}
                 >
                   <div

@@ -21,6 +21,7 @@ import PageLoader from "../../../components/PageLoader";
 import { C } from "../../../lib/petTileHelpers";
 import InlineSubmitPriceForm from "../../../components/InlineSubmitPriceForm";
 import ReportPriceModal from "../../../components/ReportPriceModal";
+import { VET_HERO_ART } from "../../../lib/palettes";
 
 const ACCORDION_COPY = {
   4: {
@@ -47,15 +48,15 @@ const ACCORDION_COPY = {
 
 const MAZE_SVG = encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80">` +
-    `<line x1="0" y1="0" x2="30" y2="0" stroke="rgba(180,210,255,0.09)" stroke-width="1"/>` +
-    `<line x1="50" y1="40" x2="80" y2="40" stroke="rgba(180,210,255,0.09)" stroke-width="1"/>` +
-    `<line x1="0" y1="80" x2="20" y2="80" stroke="rgba(180,210,255,0.09)" stroke-width="1"/>` +
-    `<line x1="60" y1="80" x2="80" y2="80" stroke="rgba(180,210,255,0.09)" stroke-width="1"/>` +
-    `<line x1="0" y1="0" x2="0" y2="30" stroke="rgba(180,210,255,0.09)" stroke-width="1"/>` +
-    `<line x1="30" y1="0" x2="30" y2="40" stroke="rgba(180,210,255,0.09)" stroke-width="1"/>` +
-    `<line x1="80" y1="40" x2="80" y2="80" stroke="rgba(180,210,255,0.09)" stroke-width="1"/>` +
-    `<line x1="20" y1="60" x2="20" y2="80" stroke="rgba(180,210,255,0.09)" stroke-width="1"/>` +
-    `<line x1="60" y1="20" x2="60" y2="80" stroke="rgba(180,210,255,0.09)" stroke-width="1"/>` +
+    `<line x1="0" y1="0" x2="30" y2="0" stroke="${VET_HERO_ART.blue150_a09}" stroke-width="1"/>` +
+    `<line x1="50" y1="40" x2="80" y2="40" stroke="${VET_HERO_ART.blue150_a09}" stroke-width="1"/>` +
+    `<line x1="0" y1="80" x2="20" y2="80" stroke="${VET_HERO_ART.blue150_a09}" stroke-width="1"/>` +
+    `<line x1="60" y1="80" x2="80" y2="80" stroke="${VET_HERO_ART.blue150_a09}" stroke-width="1"/>` +
+    `<line x1="0" y1="0" x2="0" y2="30" stroke="${VET_HERO_ART.blue150_a09}" stroke-width="1"/>` +
+    `<line x1="30" y1="0" x2="30" y2="40" stroke="${VET_HERO_ART.blue150_a09}" stroke-width="1"/>` +
+    `<line x1="80" y1="40" x2="80" y2="80" stroke="${VET_HERO_ART.blue150_a09}" stroke-width="1"/>` +
+    `<line x1="20" y1="60" x2="20" y2="80" stroke="${VET_HERO_ART.blue150_a09}" stroke-width="1"/>` +
+    `<line x1="60" y1="20" x2="60" y2="80" stroke="${VET_HERO_ART.blue150_a09}" stroke-width="1"/>` +
     `</svg>`,
 );
 const MAZE_BG = `url("data:image/svg+xml,${MAZE_SVG}")`;
@@ -857,7 +858,7 @@ export default function VetPage() {
           <Link
             href="/vets"
             className="nav-link-dark"
-            style={{ color: C.terracotta, fontSize: "14px", fontWeight: "700" }}
+            style={{ color: C.terracotta700, fontSize: "14px", fontWeight: "700" }}
           >
             <ArrowLeft
               size={14}
@@ -883,19 +884,20 @@ export default function VetPage() {
         .price-gate-wrap.gated{padding:10px 0 20px}
         .price-gate-wrap.gated .price-gate-inner{filter:blur(6px);pointer-events:none;user-select:none}
         .price-gate-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;padding:0 16px}
-        .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#172531;color:#fff;border:2px solid #172531;border-radius:12px;padding:11px 22px;font-size:15px;font-weight:700;font-family:var(--font-urbanist,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(23,37,49,0.22);transition:background 0.15s,color 0.15s}
-        .price-gate-btn:hover{background:#fff;color:#172531;border:2px solid #172531}
+        .price-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--color-navy-dark);color:var(--color-white);border:2px solid var(--color-navy-dark);border-radius:12px;padding:11px 22px;font-size:15px;font-weight:700;font-family:var(--font-urbanist,'Urbanist',sans-serif);cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgb(var(--color-navy-dark-rgb) / 0.22);transition:background 0.15s,color 0.15s}
+        @media (hover: hover) { .price-gate-btn:hover {background:var(--color-white);color:var(--color-navy-dark);border:2px solid var(--color-navy-dark)} }
         @media(max-width:768px){.price-gate-btn{width:100%}}
         .save-btn{background:none;border:none;cursor:pointer;padding:0;line-height:1;transition:transform 0.1s;display:inline-flex;align-items:center;position:relative;}
         .save-btn::after{content:"";position:absolute;inset:-12px;}
-        .save-btn:hover{transform:scale(1.15);}
+        @media (hover: hover) { .save-btn:hover {transform:scale(1.15);} }
         .save-animating{animation:heartPop 0.4s ease forwards;}
         .acc-wrap{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 0.38s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease;}
         .acc-wrap.open{grid-template-rows:1fr;opacity:1;}
         .acc-inner{overflow:hidden; margin-top: 15px;}
         .expand-btn{position:relative;width:28px;height:28px;border-radius:50%;border:2px solid ${C.terracotta};background:transparent;color:${C.terracotta};cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s,color 0.2s;outline:none;}
-        .expand-btn:hover,.expand-btn.is-open{background:${C.terracotta};color:#fff;}
-        .expand-btn.is-open:hover{background:#a8471d;border-color:#a8471d;}
+        .expand-btn.is-open {background:${C.terracotta700};color:var(--color-white);}
+        @media (hover: hover) { .expand-btn:hover {background:${C.terracotta700};color:var(--color-white);} }
+        @media (hover: hover) { .expand-btn.is-open:hover {background:var(--color-terracotta-700);border-color:var(--color-terracotta-700);} }
         .expand-btn::after{content:"";position:absolute;inset:-8px;}
         .expand-icon{width:10px;height:10px;display:block;flex-shrink:0;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);user-select:none;}
         .expand-icon.open{transform:rotate(45deg);}
@@ -904,22 +906,22 @@ export default function VetPage() {
            stay inline, since they depend on the vet's data. */
         .vs-detail-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:14px;font-weight:700;border:var(--pill-border-w,2px) solid transparent;width:fit-content;}
         .report-price-btn{background:none;border:none;color:${C.muted};font-size:13px;font-weight:600;cursor:pointer;padding:14px 0px 14px 10px;text-decoration:underline;font-family:inherit;transition:color 0.15s;}
-        .report-price-btn:hover{color:${C.terracotta};}
+        @media (hover: hover) { .report-price-btn:hover {color:${C.terracotta700};} }
         .price-row{padding:16px 0 0;}
         /* Canonical modal backdrop: navy 55% + 4px blur. Same treatment as
            pp-modal-backdrop (Profile), pce-modal-overlay (Care) and
            ucm-backdrop (UnsavedChanges). This one was still on plain black. */
-        .modal-overlay{position:fixed;inset:0;background:rgba(23,37,49,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
-        .modal-box{background:#fff;border-radius:18px;padding:30px 20px;max-width:440px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 30px 60px rgba(0,0,0,0.40);position:relative;}
+        .modal-overlay{position:fixed;inset:0;background:rgb(var(--color-navy-dark-rgb) / 0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+        .modal-box{background:var(--color-white);border-radius:18px;padding:30px 20px;max-width:440px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 30px 60px rgb(var(--color-black-rgb) / 0.4);position:relative;}
         .modal-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border:none;background:transparent;color:${C.muted};cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;z-index:10;}
-        .modal-close:hover{background:${C.cream};color:${C.navyDark};}
+        @media (hover: hover) { .modal-close:hover {background:${C.cream};color:${C.navyDark};} }
         .share-btn{background:none;border:none;cursor:pointer;color:${C.muted};font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;padding:0;transition:color 0.15s;position:relative;}
         /* Hit areas extended with pseudo-elements so the 44px target is
            met without changing any spacing. */
         .share-btn::after{content:"";position:absolute;inset:-14px -10px;}
-        .share-btn:hover{color:${C.slate};}
-        .submit-cta-btn{padding:0 20px;height:42px;background:${C.terracotta};color:#fff;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.2s,color 0.2s;border:2px solid ${C.terracotta};font-family:var(--font-urbanist,'Urbanist',sans-serif);display:inline-flex;align-items:center;justify-content:center;}
-        .submit-cta-btn:hover{background:#fff;color:${C.terracotta};}
+        @media (hover: hover) { .share-btn:hover {color:${C.slate};} }
+        .submit-cta-btn{padding:0 20px;height:42px;background:${C.terracotta600};color:var(--color-white);border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.2s,color 0.2s;border:2px solid ${C.terracotta600};font-family:var(--font-urbanist,'Urbanist',sans-serif);display:inline-flex;align-items:center;justify-content:center;}
+        @media (hover: hover) { .submit-cta-btn:hover {background:var(--color-white);color:${C.terracotta700};} }
         /* No prices yet, and the near-empty case. Tiled icon on the page's
            own cream, copy that says why rather than just what. */
         .vs-noprice{text-align:center;padding:28px 20px 32px;max-width:460px;margin:0 auto;}
@@ -957,7 +959,7 @@ export default function VetPage() {
            and label treatment — so it belongs to the page rather than sitting
            on it. Separated by a rule and more space above, because it's about
            the whole list rather than the price it happens to follow. */
-        .vs-clinicnote{margin:0 0 18px;padding:20px;background:#f9f9f7;border-radius:10px;}
+        .vs-clinicnote{margin:0 0 18px;padding:20px;background:var(--color-white);border-radius:10px;}
         .vs-clinicnote-h{margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:${C.muted};}
         .vs-clinicnote-body{margin:0;font-size:15px;font-weight:500;color:${C.navyDark};line-height:1.6;max-width:70ch;}
         /* The note is rich text from Admin, so its paragraphs are real <p>
@@ -965,16 +967,16 @@ export default function VetPage() {
         .vs-clinicnote-body p{margin:0 0 8px;font-size:15px;line-height:1.6;}
         .vs-clinicnote-body p:last-child{margin:0;}
         .vs-fewprice{margin:16px 0 0;padding:12px 14px;background:${C.cream};border-radius:10px;font-size:14px;font-weight:500;color:${C.muted};line-height:1.6;}
-        .vs-check-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;height:42px;border-radius:12px;border:2px solid ${C.terracotta};background:#fff;color:${C.terracotta};font-size:15px;font-weight:700;text-decoration:none;font-family:var(--font-urbanist,'Urbanist',sans-serif);transition:background 0.2s,color 0.2s;}
-        .vs-check-link:hover{background:${C.terracotta};color:#fff;}
-        .toaster-create-btn{display:block;padding:14px;background:${C.terracotta};color:#fff;border:2px solid ${C.terracotta};border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;transition:background 0.18s,color 0.18s;}
-        .toaster-create-btn:hover{background:#fff;color:${C.terracotta};}
+        .vs-check-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;height:42px;border-radius:12px;border:2px solid ${C.terracotta};background:var(--color-white);color:${C.terracotta700};font-size:15px;font-weight:700;text-decoration:none;font-family:var(--font-urbanist,'Urbanist',sans-serif);transition:background 0.2s,color 0.2s;}
+        @media (hover: hover) { .vs-check-link:hover {background:${C.terracotta700};color:var(--color-white);} }
+        .toaster-create-btn{display:block;padding:14px;background:${C.terracotta600};color:var(--color-white);border:2px solid ${C.terracotta600};border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;transition:background 0.18s,color 0.18s;}
+        @media (hover: hover) { .toaster-create-btn:hover {background:var(--color-white);color:${C.terracotta700};} }
         .toaster-signin-btn{display:block;padding:14px;background:transparent;color:${C.navyDark};border:2px solid ${C.navyDark};border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;transition:background 0.18s,color 0.18s;}
-        .toaster-signin-btn:hover{background:${C.navyDark};color:#fff;}
+        @media (hover: hover) { .toaster-signin-btn:hover {background:${C.navyDark};color:var(--color-white);} }
         .chart-row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;}
 
         /* Header */
-        .vet-header{background:${C.navyDark};min-height:393px;padding:80px 0 88px;position:relative;overflow:hidden;box-sizing:border-box;border-bottom:1px solid rgba(255,255,255,0.07);}
+        .vet-header{background:${C.navyDark};min-height:393px;padding:80px 0 88px;position:relative;overflow:hidden;box-sizing:border-box;border-bottom:1px solid rgb(var(--color-white-rgb) / 0.07);}
 
         /* Info strip */
         /* Two things here.
@@ -1056,11 +1058,11 @@ export default function VetPage() {
            hover. These are buttons, not anchors, so the global link rules
            don't reach them — the colour has to be stated here. */
         .vs-price-link {
-          color: ${C.terracotta};
+          color: ${C.terracotta700};
           text-decoration: underline;
           transition: color 0.15s;
         }
-        .vs-price-link:hover { color: ${C.navyDark}; text-decoration: underline; }
+        @media (hover: hover) { .vs-price-link:hover { color: ${C.navyDark}; text-decoration: underline; } }
       `}</style>
 
       {/* Pricing modal */}
@@ -1139,7 +1141,7 @@ export default function VetPage() {
             pointerEvents: "none",
             zIndex: 1,
             background:
-              "radial-gradient(ellipse 72% 80% at 50% 50%, rgba(28,48,65,0.2) 0%, rgba(8,16,24,0.78) 100%)",
+              "radial-gradient(ellipse 72% 80% at 50% 50%, rgb(var(--color-navy-dark-rgb) / 0.2) 0%, rgb(var(--color-navy-deeper-rgb) / 0.78) 100%)",
           }}
         />
         <div
@@ -1149,7 +1151,7 @@ export default function VetPage() {
             pointerEvents: "none",
             zIndex: 1,
             background:
-              "linear-gradient(to right, rgba(6,12,20,0.68) 0%, transparent 28%, transparent 72%, rgba(6,12,20,0.68) 100%)",
+              "linear-gradient(to right, rgb(var(--color-navy-deeper-rgb) / 0.68) 0%, transparent 28%, transparent 72%, rgb(var(--color-navy-deeper-rgb) / 0.68) 100%)",
           }}
         />
         <div
@@ -1159,7 +1161,7 @@ export default function VetPage() {
             pointerEvents: "none",
             zIndex: 1,
             background:
-              "linear-gradient(to bottom, rgba(6,12,20,0.55) 0%, transparent 30%)",
+              "linear-gradient(to bottom, rgb(var(--color-navy-deeper-rgb) / 0.55) 0%, transparent 30%)",
           }}
         />
         {/* HIW/Contact style dark vignette — no gold */}
@@ -1170,7 +1172,7 @@ export default function VetPage() {
             pointerEvents: "none",
             zIndex: 2,
             background:
-              "radial-gradient(ellipse 75% 85% at 50% 50%, rgba(44,70,87,0.5) 0%, rgba(23,37,49,0) 45%, rgba(10,18,26,0.6) 80%, rgba(6,12,18,0.85) 100%)",
+              "radial-gradient(ellipse 75% 85% at 50% 50%, rgb(var(--color-navy-mid-rgb) / 0.5) 0%, rgb(var(--color-navy-dark-rgb) / 0) 45%, rgb(var(--color-navy-deeper-rgb) / 0.6) 80%, rgb(var(--color-navy-deeper-rgb) / 0.85) 100%)",
           }}
         />
 
@@ -1189,7 +1191,7 @@ export default function VetPage() {
                 margin: "0 0 10px",
                 fontSize: "clamp(30px,5.5vw,56px)",
                 fontWeight: "800",
-                color: "#fff",
+                color: "var(--color-white)",
                 fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
                 letterSpacing: "-0.025em",
                 lineHeight: "1.05",
@@ -1205,7 +1207,7 @@ export default function VetPage() {
                   margin: "0 0 16px",
                   fontSize: "17px",
                   fontWeight: 500,
-                  color: "rgba(255,255,255,0.6)",
+                  color: "rgb(var(--color-white-rgb) / 0.6)",
                   overflowWrap: "break-word",
                 }}
               >
@@ -1240,11 +1242,11 @@ export default function VetPage() {
                     style={{
                       fontSize: "13px",
                       fontWeight: "700",
-                      background: "rgba(239,200,139,0.16)",
+                      background: "rgb(var(--color-gold-rgb) / 0.16)",
                       color: C.gold,
                       padding: "4px 11px",
                       borderRadius: "20px",
-                      border: "2px solid rgba(239,200,139,0.28)",
+                      border: "2px solid rgb(var(--color-gold-rgb) / 0.28)",
                     }}
                   >
                     {t}
@@ -1255,11 +1257,11 @@ export default function VetPage() {
                   style={{
                     fontSize: "13px",
                     fontWeight: "700",
-                    background: "rgba(255,255,255,0.07)",
-                    color: "rgba(255,255,255,0.5)",
+                    background: "rgb(var(--color-white-rgb) / 0.07)",
+                    color: "rgb(var(--color-white-rgb) / 0.5)",
                     padding: "4px 11px",
                     borderRadius: "20px",
-                    border: "1px solid rgba(255,255,255,0.12)",
+                    border: "1px solid rgb(var(--color-white-rgb) / 0.12)",
                   }}
                 >
                   {vet.ownership?.startsWith("Other:")
@@ -1347,8 +1349,8 @@ export default function VetPage() {
                   <Heart
                     size={22}
                     strokeWidth={2}
-                    fill={isSaved ? "#CF5C36" : "none"}
-                    color={isSaved ? "#CF5C36" : C.muted}
+                    fill={isSaved ? "var(--color-terracotta)" : "none"}
+                    color={isSaved ? "var(--color-terracotta)" : C.muted}
                   />
                 </button>
               </div>
@@ -1366,7 +1368,7 @@ export default function VetPage() {
                       rel="noopener noreferrer"
                       style={{
                         fontSize: "15px",
-                        color: C.terracotta,
+                        color: C.terracotta700,
                         textDecoration: "none",
                         fontWeight: "600",
                         display: "block",
@@ -1388,7 +1390,7 @@ export default function VetPage() {
                       style={{
                         fontSize: "15px",
                         fontWeight: "600",
-                        color: C.terracotta,
+                        color: C.terracotta700,
                         textDecoration: "none",
                         display: "block",
                         overflowWrap: "break-word",
@@ -1462,13 +1464,13 @@ export default function VetPage() {
                     <span
                       className="vs-detail-pill"
                       style={{
-                        background: vet.carecredit ? "#EDFAF3" : "#FCEAEA",
-                        color: vet.carecredit ? C.success : C.error,
+                        background: vet.carecredit ? "var(--color-success-light)" : "var(--color-error-light)",
+                        color: vet.carecredit ? C.successText : C.errorText,
                         // Border in the pill's own colour, so yes and no stay
                         // visually distinct rather than sharing a grey outline.
                         borderColor: vet.carecredit
-                          ? "rgba(26,102,65,0.22)"
-                          : "rgba(201,64,64,0.24)",
+                          ? "rgb(var(--color-success-text-rgb) / 0.22)"
+                          : "rgb(var(--color-error-rgb) / 0.24)",
                       }}
                     >
                       {vet.carecredit ? (
@@ -1483,14 +1485,14 @@ export default function VetPage() {
                         className="vs-detail-pill"
                         style={{
                           background: vet.accepting_new_patients
-                            ? "#EDFAF3"
-                            : "#FCEAEA",
+                            ? "var(--color-success-light)"
+                            : "var(--color-error-light)",
                           color: vet.accepting_new_patients
-                            ? C.success
-                            : C.error,
+                            ? C.successText
+                            : C.errorText,
                           borderColor: vet.accepting_new_patients
-                            ? "rgba(26,102,65,0.22)"
-                            : "rgba(201,64,64,0.24)",
+                            ? "rgb(var(--color-success-text-rgb) / 0.22)"
+                            : "rgb(var(--color-error-rgb) / 0.24)",
                         }}
                       >
                         {vet.accepting_new_patients ? (
@@ -1587,22 +1589,22 @@ export default function VetPage() {
                           visibleChartPrices[visibleChartPrices.length - 1]
                             ?.id === price.id;
                         const badgeBg = isEqual
-                          ? "#F5F0E8"
+                          ? "var(--color-cream)"
                           : isCheaper
-                            ? "#EDFAF3"
-                            : "#FCEAEA";
+                            ? "var(--color-success-light)"
+                            : "var(--color-error-light)";
                         const badgeColor = isEqual
                           ? C.slate
                           : isCheaper
-                            ? C.success
-                            : C.error;
+                            ? C.successText
+                            : C.errorText;
                         // Border derived from the same three states, so below,
                         // at, and above average each keep their own outline.
                         const badgeBorder = isEqual
-                          ? "#EDE8E0"
+                          ? "var(--color-border)"
                           : isCheaper
-                            ? "rgba(26,102,65,0.22)"
-                            : "rgba(201,64,64,0.24)";
+                            ? "rgb(var(--color-success-text-rgb) / 0.22)"
+                            : "rgb(var(--color-error-rgb) / 0.24)";
                         const badgeLabel = isEqual ? (
                           "≈ At average"
                         ) : isCheaper ? (
@@ -1618,7 +1620,7 @@ export default function VetPage() {
                         const barColor = isEqual
                           ? C.muted
                           : isCheaper
-                            ? C.success
+                            ? C.successText
                             : C.error;
                         return (
                           <div key={price.id}>
@@ -1691,7 +1693,7 @@ export default function VetPage() {
                                     <div
                                       style={{
                                         flex: 1,
-                                        background: "#f0ede8",
+                                        background: "var(--color-cream)",
                                         borderRadius: "5px",
                                         height: "30px",
                                         overflow: "visible",
@@ -1721,7 +1723,7 @@ export default function VetPage() {
                                           <span
                                             style={{
                                               fontSize: "13px",
-                                              color: "#fff",
+                                              color: "var(--color-white)",
                                               fontWeight: "700",
                                               whiteSpace: "nowrap",
                                             }}
@@ -1837,8 +1839,8 @@ export default function VetPage() {
                       style={{
                         display: "inline-block",
                         padding: "12px 20px",
-                        background: C.terracotta,
-                        color: "#fff",
+                        background: C.terracotta600,
+                        color: "var(--color-white)",
                         borderRadius: "12px",
                         fontSize: "15px",
                         textDecoration: "none",
@@ -1911,7 +1913,7 @@ export default function VetPage() {
                             alignItems: "flex-start",
                             padding: "12px 14px",
                             marginBottom: "20px",
-                            background: "#F5F0E8",
+                            background: "var(--color-cream)",
                             border: `1px solid ${C.border}`,
                             borderRadius: "12px",
                           }}
@@ -2090,7 +2092,7 @@ export default function VetPage() {
                                       <div className="acc-inner">
                                         <div
                                           style={{
-                                            background: "#f9f9f7",
+                                            background: "var(--color-white)",
                                             borderRadius: "10px",
                                             padding: "20px",
                                             // marginBottom: "8px",
@@ -2321,7 +2323,7 @@ export default function VetPage() {
                       width: "68px",
                       height: "68px",
                       borderRadius: "18px",
-                      background: "rgba(207,92,54,0.10)",
+                      background: "rgb(var(--color-terracotta-rgb) / 0.1)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",

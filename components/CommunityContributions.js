@@ -125,7 +125,7 @@ export default function CommunityContributions({
                 className="pp-cc-number"
                 style={{
                   color: numberColor,
-                  textShadow: `0 4px 24px ${numberShadow}88`,
+                  textShadow: `0 4px 24px color-mix(in srgb, ${numberShadow} 53.3%, transparent)`,
                 }}
               >
                 {verifiedCount}

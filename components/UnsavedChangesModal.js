@@ -135,7 +135,7 @@ export function UnsavedChangesModal({ open, onChoice }) {
       <style>{`
         .ucm-backdrop {
           position: fixed; inset: 0;
-          background: rgba(23,37,49,0.55);
+          background: rgb(var(--color-navy-dark-rgb) / 0.55);
           -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
           z-index: 4000;
@@ -145,10 +145,10 @@ export function UnsavedChangesModal({ open, onChoice }) {
         }
         @keyframes ucm-fade { from { opacity: 0; } to { opacity: 1; } }
         .ucm-card {
-          background: #fff;
+          background: var(--color-white);
           border-radius: 18px;
           max-width: 440px; width: 100%;
-          box-shadow: 0 30px 60px rgba(0,0,0,0.40);
+          box-shadow: 0 30px 60px rgb(var(--color-black-rgb) / 0.4);
           font-family: var(--font-urbanist,'Urbanist',system-ui,sans-serif);
           overflow: hidden;
           animation: ucm-pop 0.2s cubic-bezier(0.33,1,0.68,1);
@@ -162,21 +162,21 @@ export function UnsavedChangesModal({ open, onChoice }) {
           padding: 22px 24px 0;
         }
         .ucm-title {
-          margin: 0; font-size: 19px; font-weight: 800; color: #172531;
+          margin: 0; font-size: 19px; font-weight: 800; color: var(--color-navy-dark);
           letter-spacing: -0.01em;
         }
         .ucm-close {
           width: 32px; height: 32px; flex-shrink: 0;
-          border: none; background: transparent; color: #717A86;
+          border: none; background: transparent; color: var(--color-muted);
           cursor: pointer; border-radius: 8px; font-size: 22px; line-height: 1;
           display: flex; align-items: center; justify-content: center;
           transition: background 0.15s, color 0.15s;
           margin: -4px -6px 0 8px;
         }
-        .ucm-close:hover { background: #F5F0E8; color: #172531; }
+        @media (hover: hover) { .ucm-close:hover { background: var(--color-cream); color: var(--color-navy-dark); } }
         .ucm-body {
           padding: 10px 24px 0;
-          color: #4b5563; font-size: 15px; font-weight: 500; line-height: 1.5;
+          color: var(--color-slate); font-size: 15px; font-weight: 500; line-height: 1.5;
         }
         .ucm-actions {
           display: flex; gap: 10px; justify-content: flex-end;
@@ -191,10 +191,10 @@ export function UnsavedChangesModal({ open, onChoice }) {
           transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
           line-height: 1;
         }
-        .ucm-btn-primary { background: #fff; color: #172531; border-color: #DAD3C5; }
-        .ucm-btn-primary:hover { background: #172531; color: #fff; border-color: #172531; }
-        .ucm-btn-secondary { background: #fff; color: #c94040; border-color: #c94040; }
-        .ucm-btn-secondary:hover { background: #c94040; color: #fff; border-color: #c94040; }
+        .ucm-btn-primary { background: var(--color-white); color: var(--color-navy-dark); border-color: var(--color-border-strong); }
+        @media (hover: hover) { .ucm-btn-primary:hover { background: var(--color-navy-dark); color: var(--color-white); border-color: var(--color-navy-dark); } }
+        .ucm-btn-secondary { background: var(--color-white); color: var(--color-error); border-color: var(--color-error); }
+        @media (hover: hover) { .ucm-btn-secondary:hover { background: var(--color-error); color: var(--color-white); border-color: var(--color-error); } }
         @media (max-width: 480px) {
           .ucm-actions { flex-direction: column-reverse; }
           .ucm-btn { width: 100%; }

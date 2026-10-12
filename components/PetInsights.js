@@ -37,18 +37,18 @@ const CATEGORY_ICON = {
 const SEVERITY_STYLE = {
   overdue: {
     label: "Overdue",
-    bg: "rgba(201, 64, 64, 0.12)",
-    color: "#C94040",
+    bg: "rgb(var(--color-error-rgb) / 0.12)",
+    color: "var(--color-error)",
   },
   soon: {
     label: "Soon",
-    bg: "rgba(217, 162, 27, 0.14)",
-    color: "#8C6A11",
+    bg: "rgb(var(--color-caution-rgb) / 0.14)",
+    color: "var(--color-caution-text)",
   },
   info: {
     label: null,
-    bg: "rgba(113, 122, 134, 0.12)",
-    color: "#4B5563",
+    bg: "rgb(var(--color-muted-rgb) / 0.12)",
+    color: "var(--color-slate)",
   },
 };
 
@@ -203,9 +203,9 @@ const skeletonCss = `
     border-radius: 16px;
     background: linear-gradient(
       90deg,
-      rgba(237, 232, 224, 0.5) 25%,
-      rgba(237, 232, 224, 0.9) 37%,
-      rgba(237, 232, 224, 0.5) 63%
+      rgb(var(--color-border-rgb) / 0.5) 25%,
+      rgb(var(--color-border-rgb) / 0.9) 37%,
+      rgb(var(--color-border-rgb) / 0.5) 63%
     );
     background-size: 400% 100%;
     animation: pin-shimmer 1.4s ease infinite;
@@ -223,13 +223,13 @@ const panelCss = `
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--color-terracotta, #cf5c36);
+    color: var(--color-terracotta-700);
     margin: 0 0 6px;
   }
   .pin-title {
     font-size: 22px;
     font-weight: 800;
-    color: var(--color-navy-dark, #172531);
+    color: var(--color-navy-dark);
     margin: 0 0 6px;
     line-height: 1.2;
     letter-spacing: -0.01em;
@@ -237,7 +237,7 @@ const panelCss = `
   .pin-sub {
     font-size: 16px;
     font-weight: 500;
-    color: var(--color-slate, #4b5563);
+    color: var(--color-slate);
     margin: 0;
     line-height: 1.55;
   }
@@ -251,9 +251,9 @@ const panelCss = `
     gap: 12px;
     align-items: flex-start;
     padding: 16px;
-    border: 1px solid var(--color-border, #ede8e0);
+    border: 1px solid var(--color-border);
     border-radius: 14px;
-    background: #fff;
+    background: var(--color-white);
   }
   .pin-item-icon {
     display: inline-flex;
@@ -274,7 +274,7 @@ const panelCss = `
   .pin-item-title {
     font-size: 16px;
     font-weight: 700;
-    color: var(--color-navy-dark, #172531);
+    color: var(--color-navy-dark);
     margin: 0;
     line-height: 1.3;
   }
@@ -293,7 +293,7 @@ const panelCss = `
     margin: 6px 0 0;
     font-size: 15px;
     font-weight: 500;
-    color: var(--color-slate, #4b5563);
+    color: var(--color-slate);
     line-height: 1.6;
   }
 `;
@@ -321,7 +321,7 @@ const profileCss = `
   .pin-profile-text {
     font-size: 14px;
     font-weight: 600;
-    color: var(--color-navy-dark, #172531);
+    color: var(--color-navy-dark);
     line-height: 1.5;
   }
 `;

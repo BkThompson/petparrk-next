@@ -38,69 +38,18 @@ import {
   buildShareUrl,
 } from "../lib/petCardApi";
 import { exportHeroFlipImage } from "./HeroFlipCard";
-
-const HERO_PALETTE = {
-  caramel: {
-    stops: ["#F4A85F", "#D8762A", "#B95A18", "#8B3F0E"],
-    accent: "#B95A18",
-  },
-  plum: {
-    stops: ["#B967A8", "#8E3B7C", "#6A2660", "#471945"],
-    accent: "#6A2660",
-  },
-  sky: {
-    stops: ["#6BB0DC", "#2E7AA8", "#1B5C82", "#0E3D5A"],
-    accent: "#1B5C82",
-  },
-  honey: {
-    stops: ["#FCC773", "#E59B2B", "#B57614", "#7F4D08"],
-    accent: "#B57614",
-  },
-  sage: {
-    stops: ["#5BBE7D", "#2E8A4F", "#1A6638", "#0E4324"],
-    accent: "#1A6638",
-  },
-  violet: {
-    stops: ["#9D7AEB", "#6B3FCB", "#4A2A9E", "#2D1968"],
-    accent: "#6B3FCB",
-  },
-  emerald: {
-    stops: ["#3FCFA0", "#0E8060", "#0A5A45", "#043A2C"],
-    accent: "#0A5A45",
-  },
-  copper: {
-    stops: ["#EE9264", "#C7531D", "#973A0E", "#5E2207"],
-    accent: "#973A0E",
-  },
-  teal: {
-    stops: ["#46B5C0", "#0E6973", "#084850", "#042C32"],
-    accent: "#084850",
-  },
-  rose: {
-    stops: ["#F8A8B4", "#D85F70", "#A93D52", "#6E2034"],
-    accent: "#A93D52",
-  },
-  mono: {
-    stops: ["#3B5570", "#1A2D44", "#0F1F2E", "#060F1A"],
-    accent: "#1A2D44",
-  },
-};
+import { HERO_PALETTE, HERO_RARITY_TIERS as RARITY_TIERS } from "../lib/palettes";
+import { HEX, rgbaHex } from "../lib/tokens";
+import { HERO_CARD_VIEW_COLORS } from "../lib/palettes";
 
 // Rarity tiers — distinct collectible colors (must match Hero Editor RARITY_TIERS).
 // The editor saves the tier KEY (e.g. "legendary"); the card looks up label + color.
-const RARITY_TIERS = {
-  common: { label: "Beloved", color: "#8A94A6" },
-  uncommon: { label: "Special", color: "#16A34A" },
-  rare: { label: "Rare", color: "#2563EB" },
-  epic: { label: "Epic", color: "#9333EA" },
-  legendary: { label: "Legendary", color: "#F59E0B" },
-};
 const DEFAULT_THEME = "caramel";
 
 // Independent customization defaults (mirror the editor)
-const DEFAULT_BG = "#F8EFE2";
-const DEFAULT_CARD = "#FFFFFF";
-const DEFAULT_ACCENT = "#B95A18";
+const DEFAULT_BG = HERO_CARD_VIEW_COLORS.cream50;
+const DEFAULT_CARD = HEX.white;
+const DEFAULT_ACCENT = HERO_CARD_VIEW_COLORS.brown550;
 const DEFAULT_DESIGN = "gradient";
 const DEFAULT_CATEGORY = "css";
 
@@ -569,7 +518,7 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
 
   // ---- color math (WCAG-aware) ----------------------------------------
   const toRgb = (hex) => {
-    const h = (hex || "#000000").replace("#", "");
+    const h = (hex || HEX.black).replace("#", "");
     return [
       parseInt(h.slice(0, 2), 16),
       parseInt(h.slice(2, 4), 16),
@@ -613,7 +562,7 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
   // lighter or darker (depending on bg) until it passes or we run out of room.
   const ensureContrast = (color, bg, ratio = 4.5) => {
     if (contrast(color, bg) >= ratio) return color;
-    const target = lum(bg) > 0.4 ? "#000000" : "#FFFFFF";
+    const target = lum(bg) > 0.4 ? HEX.black : HEX.white;
     let best = color;
     for (let t = 0.1; t <= 1; t += 0.1) {
       const candidate = mix(color, target, t);
@@ -627,8 +576,8 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
 
   // ---- stat fill tiers: subtle escalation so high stats read as a brag ----
   // 1-7: flat accent. 8-9: accent->lighter sheen. 10: bright gradient + glow.
-  const accentLite = mix(accentColor, "#FFFFFF", 0.34);
-  const accentBright = mix(accentColor, "#FFFFFF", 0.5);
+  const accentLite = mix(accentColor, HEX.white, 0.34);
+  const accentBright = mix(accentColor, HEX.white, 0.5);
   const statFillFor = (v) => {
     if (v >= 10)
       return `linear-gradient(90deg, ${accentColor} 0%, ${accentBright} 100%)`;
@@ -640,18 +589,18 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
     v >= 10 ? `0 0 8px ${hexToRgba(accentColor, 0.55)}` : "none";
 
   // Base text + muted on the card surface (always AA).
-  const cardText = cardIsDark ? "#FFFFFF" : "#172531";
+  const cardText = cardIsDark ? HEX.white : HEX.navyDark;
   const cardMuted = cardIsDark
-    ? "rgba(255,255,255,0.66)"
-    : "rgba(23,37,49,0.60)";
+    ? rgbaHex("white", 0.66)
+    : rgbaHex("navyDark", 0.6);
   // Accent, contrast-corrected so accent-colored text/labels stay readable on
   // the card surface (e.g. section labels, the quote, "Made on PetParrk").
   const accentOnCard = ensureContrast(accentColor, cardColor, 4.5);
   // ---- text colors for content sitting on the PAGE BACKGROUND ----
   // (the right-hand "Meet X" panel sits on --t-bg, not on the card)
   const bgIsDark = lum(bgColor) < 0.4;
-  const bgText = bgIsDark ? "#FFFFFF" : "#172531";
-  const bgMuted = bgIsDark ? "rgba(255,255,255,0.72)" : "rgba(23,37,49,0.62)";
+  const bgText = bgIsDark ? HEX.white : HEX.navyDark;
+  const bgMuted = bgIsDark ? rgbaHex("white", 0.72) : rgbaHex("navyDark", 0.62);
   // Intro / framing color override. When the owner sets hero_intro_color, it
   // colors the intro name, the subtitle (a softened version), and the
   // "Made on PetParrk" footer + paw — one coordinated accent. Empty/unset =
@@ -682,9 +631,9 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
   // Pick whichever of white/navy has the higher contrast against a given
   // surface — more reliable than a luminance threshold for edge colors.
   const pickReadable = (surface) =>
-    contrast("#FFFFFF", surface) >= contrast("#172531", surface)
-      ? "#FFFFFF"
-      : "#172531";
+    contrast(HEX.white, surface) >= contrast(HEX.navyDark, surface)
+      ? HEX.white
+      : HEX.navyDark;
   // The Share button is FILLED with accentOnBg, so its text must contrast THAT
   // fill. The Download/Copy buttons' outline+text must contrast the page bg.
   // Both chosen by real contrast so they work for ANY accent/background.
@@ -701,7 +650,7 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
   const labelColor =
     data.hero_label_color || data.hero_accent_color || accentColor;
   // Banner sits on the accent color — pick readable text on it.
-  const bannerText = lum(accentColor) > 0.5 ? "#172531" : "#FFFFFF";
+  const bannerText = lum(accentColor) > 0.5 ? HEX.navyDark : HEX.white;
   // Scrim trigger: busy/patterned backgrounds (Vanta or flagged designs) always
   // get a subtle scrim behind text; calm ones only if text contrast < AA.
   const bgBusy =
@@ -763,23 +712,23 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
   //   being opaque enough to cover the pattern (see floor below), not from
   //   making it darker — dark scrim + dark text would be unreadable.
   const scrimBase = bgIsDark
-    ? mix(cardColor, "#0B131A", 0.95) // deep, card-tinted dark
-    : mix(cardColor, "#FFFFFF", 0.55); // light, card-tinted panel (was 0.82)
+    ? mix(cardColor, HERO_CARD_VIEW_COLORS.navy900, 0.95) // deep, card-tinted dark
+    : mix(cardColor, HEX.white, 0.55); // light, card-tinted panel (was 0.82)
   const sb = toRgb(scrimBase);
   const scrimColor = `rgba(${sb[0]},${sb[1]},${sb[2]},${scrimAlpha})`;
   // Chip surface: a soft tint that sits on the card and still reads.
-  const chipBg = cardIsDark ? "rgba(255,255,255,0.10)" : "rgba(23,37,49,0.05)";
+  const chipBg = cardIsDark ? rgbaHex("white", 0.1) : rgbaHex("navyDark", 0.05);
   const chipText = cardText;
   // Loves = friendly green, Dislikes = warm red — both contrast-corrected.
-  const lovesColor = ensureContrast("#16A34A", cardColor, 4.5);
-  const dislikesColor = ensureContrast("#EF4444", cardColor, 4.5);
+  const lovesColor = ensureContrast(HERO_CARD_VIEW_COLORS.green600, cardColor, 4.5);
+  const dislikesColor = ensureContrast(HERO_CARD_VIEW_COLORS.red400, cardColor, 4.5);
   // Distinct dynamic colors for the two Food sub-labels so they don't read as
   // one block. Amber for favorite foods, teal for quirks — both contrast-fitted
   // to the card like loves/dislikes.
   // Favorite foods and Food quirks share one dynamic color (teal), contrast-
   // fitted to the card so it adapts when the theme/accent changes — same
   // pattern as loves/dislikes.
-  const foodsColor = ensureContrast("#0891B2", cardColor, 4.5);
+  const foodsColor = ensureContrast(HERO_CARD_VIEW_COLORS.teal600, cardColor, 4.5);
 
   const themeVars = {
     "--t-bg": bgColor,
@@ -790,11 +739,11 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
     "--t-card-text": cardText,
     "--t-card-muted": cardMuted,
     "--t-card-border": cardIsDark
-      ? "rgba(255,255,255,0.14)"
-      : "rgba(23,37,49,0.10)",
+      ? rgbaHex("white", 0.14)
+      : rgbaHex("navyDark", 0.1),
     // Single neutral divider color for ALL section/footer/column dividers.
     // Mid-gray (Muted #9CA3AF) reads on both light and dark cards, one value.
-    "--t-divider": "#9CA3AF",
+    "--t-divider": HERO_CARD_VIEW_COLORS.grey350,
     "--t-accent-on-card": accentOnCard,
     "--t-chip-bg": chipBg,
     "--t-chip-text": chipText,
@@ -1392,22 +1341,22 @@ function ClampText({ text, org, accent, lines = 3 }) {
 const heroCardCss = `
   .hc-preview-bar {
     position:fixed; top:64px; left:0; right:0; z-index:60;
-    background:var(--navy); color:#fff; padding:10px 16px;
+    background:var(--navy); color:${HEX.white}; padding:10px 16px;
     display:flex; justify-content:center; align-items:center; gap:10px 16px; flex-wrap:wrap;
-    font-size:13px; font-weight:500; box-shadow:0 4px 14px rgba(0,0,0,0.20); text-align:center;
+    font-size:13px; font-weight:500; box-shadow:0 4px 14px ${rgbaHex("black", 0.2)}; text-align:center;
   }
   .hc-preview-text { display:inline; }
   .hc-preview-exit { color:var(--gold); font-weight:700; text-decoration:none; white-space:nowrap; }
   .hc-preview-exit svg { vertical-align:-2px; margin-left:3px; }
-  .hc-preview-exit:hover { text-decoration:underline; }
+  @media (hover: hover) { .hc-preview-exit:hover { text-decoration:underline; } }
   /* Owner nav bar — mirrors .hc-preview-bar exactly (same fixed slot below the
      64px navbar, same navy fill, same gold accent), laid out as back-left /
      edit-right. Reads on any card theme because it brings its own navy bg. */
   .hc-owner-bar {
     position:fixed; top:64px; left:0; right:0; z-index:60;
-    background:var(--navy); color:#fff; padding:10px 16px;
+    background:var(--navy); color:${HEX.white}; padding:10px 16px;
     display:flex; justify-content:space-between; align-items:center; gap:10px 16px;
-    font-size:13px; font-weight:500; box-shadow:0 4px 14px rgba(0,0,0,0.20);
+    font-size:13px; font-weight:500; box-shadow:0 4px 14px ${rgbaHex("black", 0.2)};
   }
   /* 22.1px as bare text links. Padding grows the target, the negative
      margin keeps them where they sit in the header row. */
@@ -1416,16 +1365,16 @@ const heroCardCss = `
     padding:11px 0; margin:-11px 0;
     font-weight:700; text-decoration:none; white-space:nowrap;
   }
-  .hc-owner-back { color:#fff; }
+  .hc-owner-back { color:${HEX.white}; }
   .hc-owner-back svg { vertical-align:-2px; }
-  .hc-owner-back:hover { text-decoration:underline; }
+  @media (hover: hover) { .hc-owner-back:hover { text-decoration:underline; } }
   .hc-owner-edit { color:var(--gold); }
   .hc-owner-edit svg { vertical-align:-2px; }
-  .hc-owner-edit:hover { text-decoration:underline; }
+  @media (hover: hover) { .hc-owner-edit:hover { text-decoration:underline; } }
   .hc-stage {
-    --navy:#172531; --terracotta:#CF5C36; --terracotta-dark:#A8471D;
-    --cream:#F5F0E8; --border:#EDE8E0; --muted:#717A86; --slate:#4B5563;
-    --gold:#EFC88B; --success:#1A6641;
+    --navy:var(--color-navy-dark); --terracotta:var(--color-terracotta); --terracotta-dark:var(--color-terracotta-700);
+    --cream:var(--color-cream); --border:var(--color-border); --muted:var(--color-muted); --slate:var(--color-slate);
+    --gold:var(--color-gold); --success:var(--color-success-text);
     font-family: var(--font-urbanist,'Urbanist',sans-serif);
     color: var(--navy);
     background: var(--t-bg);
@@ -1469,35 +1418,35 @@ const heroCardCss = `
     width: 100%; max-width: 400px; background: var(--t-card);
     color: var(--t-card-text);
     border-radius: 28px; overflow: hidden; position: relative;
-    box-shadow: 0 30px 70px rgba(23,37,49,0.26), 0 8px 20px rgba(23,37,49,0.1);
+    box-shadow: 0 30px 70px ${rgbaHex("navyDark", 0.26)}, 0 8px 20px ${rgbaHex("navyDark", 0.1)};
     border: 2px solid var(--t-frame);
   }
   @keyframes hcFadeIn { from { opacity:0; transform:translateY(-6px);} to { opacity:1; transform:none;} }
 
-  .hc-photo { position:relative; aspect-ratio:4/3.4; background:linear-gradient(150deg,#2A3F4D,#172531); overflow:hidden; }
+  .hc-photo { position:relative; aspect-ratio:4/3.4; background:linear-gradient(150deg,${HERO_CARD_VIEW_COLORS.navy750},${HEX.navyDark}); overflow:hidden; }
   .hc-photo img { width:100%; height:100%; object-fit:cover; display:block; color:transparent; font-size:0; }
   /* soft vignette wrapping the whole photo so badges (top) + name (bottom) stay readable on any image */
   .hc-photo::after {
     content:""; position:absolute; inset:0; pointer-events:none; z-index:1;
-    background: linear-gradient(to bottom, rgba(23,37,49,0.42) 0%, rgba(23,37,49,0) 24%, rgba(23,37,49,0) 54%, rgba(23,37,49,0.55) 100%);
+    background: linear-gradient(to bottom, ${rgbaHex("navyDark", 0.42)} 0%, ${rgbaHex("navyDark", 0)} 24%, ${rgbaHex("navyDark", 0)} 54%, ${rgbaHex("navyDark", 0.55)} 100%);
   }
-  .hc-photo-fallback { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.85); }
+  .hc-photo-fallback { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:${rgbaHex("white", 0.85)}; }
 
   /* rarity — sits as the top line of the nameplate identity stack (left-aligned),
      so it never overlaps the photo subject and groups with name/aka/breed */
   .hc-rarity {
     align-self:flex-start; display:inline-flex; align-items:center; gap:5px;
-    height:24px; padding:0 11px 0 9px; margin-bottom:10px; line-height:1; color:#fff; font-size:11px;
+    height:24px; padding:0 11px 0 9px; margin-bottom:10px; line-height:1; color:${HEX.white}; font-size:11px;
     font-weight:800; letter-spacing:0.08em; text-transform:uppercase; border-radius:999px;
-    background-image: linear-gradient(160deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0) 42%), linear-gradient(340deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0) 50%);
-    text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+    background-image: linear-gradient(160deg, ${rgbaHex("white", 0.42)} 0%, ${rgbaHex("white", 0)} 42%), linear-gradient(340deg, ${rgbaHex("black", 0.22)} 0%, ${rgbaHex("black", 0)} 50%);
+    text-shadow: 0 1px 1px ${rgbaHex("black", 0.3)};
   }
   .hc-rarity svg { color: var(--gold); }
 
   .hc-nameplate {
-    position:absolute; left:0; right:0; bottom:0; z-index:3; padding:54px 20px 20px; color:#fff;
+    position:absolute; left:0; right:0; bottom:0; z-index:3; padding:54px 20px 20px; color:${HEX.white};
     display:flex; flex-direction:column; align-items:flex-start;
-    background: linear-gradient(to top, rgba(23,37,49,0.94) 25%, transparent);
+    background: linear-gradient(to top, ${rgbaHex("navyDark", 0.94)} 25%, transparent);
   }
   .hc-name { 
     font-size:34px; 
@@ -1513,8 +1462,8 @@ const heroCardCss = `
     color:var(--gold); 
     /* margin-bottom:9px; */
   }
-  .hc-breed { font-size:15px; font-weight:500; color:rgba(255,255,255,0.85); }
-  .hc-age { font-size:15px; font-weight:500; color:rgba(255,255,255,0.7); margin-top:2px; }
+  .hc-breed { font-size:15px; font-weight:500; color:${rgbaHex("white", 0.85)}; }
+  .hc-age { font-size:15px; font-weight:500; color:${rgbaHex("white", 0.7)}; margin-top:2px; }
 
   .hc-title-banner { color:var(--t-banner-text); text-align:center; padding:13px 20px; font-size:18px; font-weight:800; letter-spacing:-0.01em; }
 
@@ -1523,7 +1472,7 @@ const heroCardCss = `
   .hc-empty-title { font-size:18px; font-weight:800; color:var(--navy); margin:0 0 8px; letter-spacing:-0.01em; }
   .hc-empty-sub { font-size:15px; font-weight:500; color:var(--slate); line-height:1.5; margin:0 0 18px; max-width:340px; margin-left:auto; margin-right:auto; }
   .hc-empty-link { display:inline-flex; align-items:center; font-size:15px; font-weight:700; color:var(--terracotta); text-decoration:none; }
-  .hc-empty-link:hover { text-decoration:underline; }
+  @media (hover: hover) { .hc-empty-link:hover { text-decoration:underline; } }
   .hc-section { margin-bottom:22px; }
   .hc-section:last-child { margin-bottom:0; }
   .hc-section-label { font-size:17px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--t-accent-on-card); margin-bottom:12px; }
@@ -1543,7 +1492,7 @@ const heroCardCss = `
      other pill — and, through the stretch above, made them all taller too.
      Matching the row wins. */
   .hc-tag-toggle { background:transparent; color:var(--t-accent-on-card); cursor:pointer; font-family:inherit; font-weight:700; }
-  .hc-tag-toggle:hover { background:var(--t-chip-bg); }
+  @media (hover: hover) { .hc-tag-toggle:hover { background:var(--t-chip-bg); } }
   .hc-fade { animation: hcFadeIn 0.4s cubic-bezier(0.33, 1, 0.68, 1) both; }
 
   .hc-stats { display:flex; flex-direction:column; gap:17px; }
@@ -1599,7 +1548,7 @@ const heroCardCss = `
     font-family:inherit; font-size:14px; font-weight:700; color:var(--t-accent-on-card);
     cursor:pointer; white-space:nowrap;
   }
-  .hc-like-toggle:hover { background:var(--t-chip-bg); }
+  @media (hover: hover) { .hc-like-toggle:hover { background:var(--t-chip-bg); } }
   .hc-food-quirks { color:var(--t-card-text); font-size:16px; font-weight:500; line-height:1.5; margin:0; }
   .hc-like-col.hc-quirks h4 { color:var(--t-foods); }
 
@@ -1649,20 +1598,24 @@ const heroCardCss = `
     color: var(--t-text-on-accent-on-bg);
     border: 2px solid var(--t-accent-on-bg);
   }
-  .hc-btn-primary:hover {
-    background: var(--t-bg);
-    color: var(--t-accent-on-bg);
-    border: 2px solid var(--t-accent-on-bg);
+  @media (hover: hover) {
+    .hc-btn-primary:hover {
+      background: var(--t-bg);
+      color: var(--t-accent-on-bg);
+      border: 2px solid var(--t-accent-on-bg);
+    }
   }
   .hc-btn-ghost {
     background: var(--t-bg);
     color: var(--t-btn-outline-on-bg);
     border: 2px solid var(--t-btn-outline-on-bg);
   }
-  .hc-btn-ghost:hover {
-    background: var(--t-btn-outline-on-bg);
-    color: var(--t-bg);
-    border: 2px solid var(--t-btn-outline-on-bg);
+  @media (hover: hover) {
+    .hc-btn-ghost:hover {
+      background: var(--t-btn-outline-on-bg);
+      color: var(--t-bg);
+      border: 2px solid var(--t-btn-outline-on-bg);
+    }
   }
   .hc-panel-foot { margin-top:26px; font-size:13px; font-weight:500; color:var(--t-bg-muted); }
   .hc-panel-foot a { color:var(--t-accent-on-bg); font-weight:700; text-decoration:none; }
