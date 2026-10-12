@@ -779,6 +779,50 @@ function sanitizeRichText(html) {
 
 // Lightweight rich-text editor using the browser's contentEditable. No external
 // dependency. Toolbar: Bold, Italic, Bullet list. Produces sanitized HTML.
+// A collapsible list in the sync result. Replaces a native <details>: that
+// element puts its marker on the left, can't be restyled to a chevron without
+// fighting two vendor pseudo-elements, and has no way to animate its height.
+// Same button + grid-template-rows pattern as the sheet-format guide, so the
+// two disclosures in this tab behave identically.
+function SyncDetail({ label, tone, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(!!defaultOpen);
+  return (
+    <div className={`adm-sync-detail${tone ? ` ${tone}` : ""}`}>
+      <button
+        type="button"
+        className="adm-sync-detail-toggle"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        {/* The label and the chevron are one inline run, not two flex items.
+            Twice now a flex layout here has pushed the arrow to the far edge
+            of the panel — once from justify-content, once from something
+            stretching the button. As inline content the arrow sits after the
+            last word because that is where the text ends; no width rule
+            anywhere can separate them. */}
+        {label}{" "}
+        <svg
+          className={`adm-sync-chev${open ? " open" : ""}`}
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <div className={`adm-sync-detail-wrap${open ? " open" : ""}`}>
+        <div className="adm-sync-detail-inner">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 const RichTextEditor = memo(function RichTextEditor({
   value,
   onChange,
@@ -786,10 +830,30 @@ const RichTextEditor = memo(function RichTextEditor({
 }) {
   const ref = useRef(null);
   const [focused, setFocused] = useState(false);
+  // The latest value, for the mount-time write below. A ref rather than
+  // reading the prop directly, so the attach callback can't close over a
+  // stale render.
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  // Content written the moment the node exists. A ref callback runs in the
+  // commit phase, before the browser paints — the effect below used to be the
+  // only writer, and effects run AFTER paint, so the field was visibly blank
+  // for a frame and then filled. That flash is what read as the editor being
+  // slow to populate.
+  const attach = useCallback((node) => {
+    ref.current = node;
+    if (node && node.innerHTML !== (valueRef.current || "")) {
+      node.innerHTML = valueRef.current || "";
+    }
+  }, []);
 
   // Only push external value into the DOM when the editor is NOT focused
   // (i.e. loading a different vet). During active typing we never rewrite
   // innerHTML — that would reset the cursor to the top.
+  //
+  // Still needed alongside the callback above: that one fires once, on mount,
+  // while this handles a value that arrives or changes later.
   useEffect(() => {
     if (ref.current && !focused && ref.current.innerHTML !== (value || "")) {
       ref.current.innerHTML = value || "";
@@ -899,7 +963,7 @@ const RichTextEditor = memo(function RichTextEditor({
           <span className="adm-rte-placeholder">{placeholder}</span>
         )}
         <div
-          ref={ref}
+          ref={attach}
           className="adm-rte-editor"
           contentEditable
           suppressContentEditableWarning
@@ -2961,6 +3025,7 @@ export default function AdminPage() {
     setEditingPrice(null);
     setEditingNote(null);
     setNoteDraft("");
+    setHandBackConfirm(null);
     setShowAddVet(false);
     setShowAddPrice(false);
     setCallReviewEditing(null);
@@ -2992,6 +3057,7 @@ export default function AdminPage() {
       setEditingPrice(null);
       setEditingNote(null);
       setNoteDraft("");
+      setHandBackConfirm(null);
       setShowAddPrice(false);
       setCallReviewEditing(null);
       setShowInviteForm(false);
@@ -3088,6 +3154,11 @@ export default function AdminPage() {
   const [editingNote, setEditingNote] = useState(null);
   const [noteDraft, setNoteDraft] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
+  // Handing an overridden price back to the call sheet. Confirmed rather than
+  // immediate: it discards a deliberate correction, and the sheet's value
+  // doesn't return until the next sync, so it isn't trivially undoable.
+  const [handBackConfirm, setHandBackConfirm] = useState(null);
+  const [handBackSaving, setHandBackSaving] = useState(null);
   const [showAddPrice, setShowAddPrice] = useState(false);
   const [addPriceForm, setAddPriceForm] = useState({
     service_id: "",
@@ -3110,11 +3181,16 @@ export default function AdminPage() {
   const [usersLoading, setUsersLoading] = useState(true);
   const [userSearch, setUserSearch] = useState("");
   const [userStatusFilter, setUserStatusFilter] = useState("all");
+  // How many user cards to draw. The list is filtered in full and then cut
+  // here — without the cut, every keystroke in the search rebuilt a card for
+  // every matching profile, which is what made typing lag by seconds.
+  const [userLimit, setUserLimit] = useState(50);
 
   // Pets
   const [pets, setPets] = useState([]);
   const [petsLoading, setPetsLoading] = useState(false);
   const [petSearch, setPetSearch] = useState("");
+  const [petLimit, setPetLimit] = useState(50);
 
   // Waitlist
   const [waitlist, setWaitlist] = useState([]);
@@ -3348,6 +3424,7 @@ export default function AdminPage() {
     setEditingPrice(null);
     setEditingNote(null);
     setNoteDraft("");
+    setHandBackConfirm(null);
     setShowAddPrice(false);
     setEditingPendingVet(null);
   }, [tab]);
@@ -5072,6 +5149,39 @@ export default function AdminPage() {
       vaccines_included: f.vaccines_included || null,
       is_verified: true,
     };
+
+    // ── Taking a call-sheet price over ──
+    // The sheet is where prices are entered in bulk; this is where they're
+    // finalised. Editing one here hands ownership to Admin by changing its
+    // source, which is the whole mechanism: the sync skips any vet+service
+    // holding an 'admin' row, so it will neither delete this value nor put
+    // the sheet's back. Before the sync learned that rule, an edit here was
+    // reverted on the next run, which is why the Edit button was removed.
+    //
+    // sheet_value records what the sheet held at the moment of the override,
+    // so the Prices tab can show both numbers. The sync keeps it current from
+    // then on — if Susan later corrects the cell, this line follows it.
+    //
+    // in_conflict is cleared deliberately. A conflict means two sources
+    // disagree and nobody has decided; an override IS the decision, so the
+    // price should go back to being visible on the vet page rather than
+    // staying hidden behind "being updated shortly".
+    const current = vetPrices.find((p) => p.id === editingPrice);
+    if (current && current.source === "sheet") {
+      payload.source = "admin";
+      payload.sheet_value = current.call_for_quote
+        ? "Call for quote"
+        : current.price_low
+          ? formatPrice(
+              current.price_low,
+              current.price_high,
+              current.price_type,
+            )
+          : null;
+      payload.in_conflict = false;
+      payload.conflict_key = null;
+    }
+
     const { data, error } = await supabase
       .from("vet_prices")
       .update(payload)
@@ -5095,6 +5205,42 @@ export default function AdminPage() {
       if (callReviewVetId === selectedVetId) fetchReviewPrices(callReviewVetId);
     }
     setPriceSaving(false);
+  }
+
+  // Gives an overridden price back to the call sheet.
+  //
+  // Sets source back to 'sheet' rather than deleting the row. The sync then
+  // reconciles it the ordinary way: it sees a sheet row holding a value the
+  // sheet doesn't contain, removes it, and inserts the sheet's — and because
+  // that is a one-for-one replacement, the note-carrying rule brings any note
+  // along with it. Deleting here would drop the note and leave the service
+  // with no price until the next run.
+  //
+  // So the value doesn't change on screen straight away. The next sync is
+  // what restores the sheet's number, and the UI says so rather than implying
+  // an instant revert.
+  async function handBackToSheet(id) {
+    setHandBackSaving(id);
+    const { data, error } = await supabase
+      .from("vet_prices")
+      .update({ source: "sheet", sheet_value: null })
+      .eq("id", id)
+      .select();
+    if (error) {
+      alert("Hand back failed: " + error.message + "\n\nCode: " + error.code);
+    } else if (!data || data.length === 0) {
+      alert(
+        "Save ran but 0 rows were updated.\n\nCheck Supabase RLS policies on vet_prices.",
+      );
+    } else {
+      setVetPrices((prev) =>
+        prev.map((p) =>
+          p.id === id ? { ...p, source: "sheet", sheet_value: null } : p,
+        ),
+      );
+      setHandBackConfirm(null);
+    }
+    setHandBackSaving(null);
   }
 
   // Saves the public note and nothing else. Used for call-sheet prices, where
@@ -5125,6 +5271,7 @@ export default function AdminPage() {
       );
       setEditingNote(null);
       setNoteDraft("");
+      setHandBackConfirm(null);
     }
     setNoteSaving(false);
   }
@@ -5913,7 +6060,6 @@ export default function AdminPage() {
         .adm-price-search-wrap input { padding-right: 38px; }
         .adm-price-search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 15px; color: #a29d92; padding: 0; z-index: 2; }
         .adm-price-search-clear:hover { color: #172531; }
-        padding: 0; }
         .adm-price-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #DAD3C5; border-radius: 12px; box-shadow: 0 6px 20px rgba(23,37,49,0.10); max-height: 300px; overflow-y: auto; z-index: 100; }
         .adm-price-dropdown-empty { padding: 12px 14px; font-size: 14px; color: #717A86; }
         .adm-price-dropdown-item { padding: 11px 14px; font-size: 15px; font-weight: 600; color: #172531; cursor: pointer; border-bottom: 1px solid #f3f0ea; }
@@ -5935,7 +6081,7 @@ export default function AdminPage() {
         .adm-price-details + .adm-price-actions { margin-top: 0; }
         .adm-price-tags { display: flex; flex-wrap: wrap; gap: 6px; }
         .adm-price-tag { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 9999px; background: #EDFAF3; color: #1A6641;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
-        .adm-price-note { font-size: 14px; font-weight: 500; color: #4b5563; line-height: 1.6; }
+        .adm-price-note { font-size: 15px; font-weight: 500; color: #4b5563; line-height: 1.6; }
         .adm-price-note p { margin: 0 0 6px; }
         .adm-price-note p:last-child { margin-bottom: 0; }
         .adm-price-note ul { margin: 0 0 6px; padding-left: 20px; }
@@ -6159,12 +6305,36 @@ export default function AdminPage() {
         .adm-sync-stat { display: flex; flex-direction: column; gap: 3px; align-items: center; text-align: center; padding: 16px 12px; background: #faf9f7; border: 1px solid #EDE8E0; border-radius: 10px; }
         .adm-sync-stat-n { font-size: 22px; font-weight: 800; color: #172531; }
         .adm-sync-stat-l { font-size: 14px; font-weight: 600; color: #4b5563; }
+        /* Was a native <details>, which puts its triangle on the left and
+           can't animate its height. Same button + grid-template-rows pattern
+           as the sheet-format guide above, so every disclosure in this tab
+           opens the same way. */
         .adm-sync-detail { margin-top: 12px; font-size: 14px; }
-        .adm-sync-detail summary { cursor: pointer; font-weight: 700; color: #4b5563; padding: 6px 0; }
-        .adm-sync-detail.warn summary { color: #8B3A1E; }
-        .adm-sync-detail.error summary { color: #C94040; }
+        /* No flex. The chevron is inline content after the label, so it lands
+           where the sentence ends — the two previous attempts used a flex row
+           and both put the arrow at the far edge of the panel, once from
+           justify-content and once from the button being stretched. Inline
+           flow can't be pulled apart by a width rule, which is the point.
+           display:block + width:fit-content keeps the click target to the
+           text plus the arrow rather than the full width of the card. */
+        .adm-sync-detail-toggle {
+          display: block; width: fit-content; max-width: 100%;
+          padding: 6px 0; border: none; background: none; cursor: pointer;
+          font-family: 'Urbanist', sans-serif; font-size: 14px; font-weight: 700;
+          line-height: 1.5; color: #4b5563; text-align: left;
+        }
+        /* -3px rather than middle: at 14px text, baseline-middle sits the
+           arrow slightly high against the cap height. */
+        .adm-sync-detail-toggle .adm-sync-chev {
+          display: inline-block; vertical-align: -3px; margin-left: 2px;
+        }
+        .adm-sync-detail.warn .adm-sync-detail-toggle { color: #8B3A1E; }
+        .adm-sync-detail.error .adm-sync-detail-toggle { color: #C94040; }
+        .adm-sync-detail-wrap { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s ease-in-out; }
+        .adm-sync-detail-wrap.open { grid-template-rows: 1fr; }
+        .adm-sync-detail-wrap > .adm-sync-detail-inner { overflow: hidden; min-height: 0; }
         .adm-sync-detail ul { margin: 6px 0 0; padding-left: 20px; }
-        .adm-sync-detail li { font-size: 13px; color: #717A86; margin-bottom: 2px; line-height: 1.5; }
+        .adm-sync-detail li { font-size: 14px; font-weight: 500; color: #717A86; margin-bottom: 2px; line-height: 1.5; }
         .adm-pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
         .adm-pf-full { grid-column: 1 / -1; }
         .adm-priceform .adm-pf-grid .adm-field { margin: 0; }
@@ -6351,7 +6521,7 @@ export default function AdminPage() {
         .adm-user-name { font-size: 18px; font-weight: 700; color: #172531; }
         .adm-user-email { font-size: 15px; color: #717A86; font-weight: 500; word-break: break-word; }
         .adm-user-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-        .adm-ustatus { font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
+        .adm-ustatus { font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 9999px;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         .adm-ustatus-active { background: #EDFAF3; color: #1A6641; }
         .adm-ustatus-suspended { background: #FEF3EB; color: #8B3A1E; }
         .adm-ustatus-banned { background: #FCEAEA; color: #C94040; }
@@ -6440,6 +6610,51 @@ export default function AdminPage() {
           border: var(--pill-border-w, 2px) solid rgba(113, 122, 134, 0.26);
           white-space: nowrap; box-sizing: border-box;
         }
+        /* Same pill, terracotta. "From call sheet" is where a number came from
+           and is neutral; "Edited here" is a decision someone made, which is
+           worth more weight than a neutral grey gives it — and it needs to be
+           told apart from its sibling at a glance when a list holds both. */
+        .adm-price-overridden {
+          background: #faf1ec; color: #a8471d;
+          border-color: rgba(207, 92, 54, 0.30);
+        }
+        /* What the call sheet holds while Admin's value is the one in force.
+           Its own line under the price rather than trailing it: it's a second
+           number, and two numbers on one line invite being read as a range. */
+        .adm-sheet-says {
+          display: block; margin-top: 2px;
+          font-size: 14px; font-weight: 500; color: #717A86;
+        }
+        /* Said above the price form, before the save. Warning colour, not an
+           error colour — nothing is wrong, something is about to change hands. */
+        .adm-takeover-note {
+          margin: 10px 0 0; padding: 12px 14px;
+          background: #FEF3EB; border: 1px solid rgba(139, 58, 30, 0.22);
+          border-radius: 10px;
+          font-size: 15px; font-weight: 500; line-height: 1.55; color: #8B3A1E;
+          text-wrap: pretty;
+        }
+        .adm-takeover-note strong { font-weight: 800; }
+        /* Hand-back confirm. Its own block under the action row rather than a
+           member of it: the question needs a full sentence, and a sentence
+           inside a flex row of 42px buttons stretched the row and pushed the
+           question away from the button it answered. */
+        .adm-handback {
+          margin-top: 12px; padding: 14px 16px;
+          background: #faf9f7; border: 1px solid #ede8e0; border-radius: 12px;
+        }
+        .adm-handback-q { margin: 0; font-size: 15px; font-weight: 800; color: #172531; }
+        .adm-handback-body {
+          margin: 4px 0 0; font-size: 15px; font-weight: 500;
+          line-height: 1.55; color: #4b5563; text-wrap: pretty;
+        }
+        .adm-handback-actions {
+          display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;
+        }
+        @media (max-width: 640px) {
+          .adm-handback-actions { flex-direction: column-reverse; }
+          .adm-handback-actions .adm-b { width: 100%; }
+        }
         /* Note-only editor, for a price whose number the call sheet owns.
            Same surface, border and radius as .adm-pv-editform so it reads as
            the same kind of panel, just the one field tall. */
@@ -6466,9 +6681,9 @@ export default function AdminPage() {
         .adm-price-sheet-note {
           margin: 0 0 14px; padding: 12px 14px;
           background: #f5f0e8; border-radius: 10px;
-          font-size: 15px; font-weight: 500; line-height: 1.50;
+          font-size: 15px; font-weight: 500; line-height: 1.55;
           color: #4b5563;
-          display: flex; flex-direction: column; gap: 8px; text-wrap: pretty;
+          display: flex; flex-direction: column; gap: 8px;
         }
         .adm-receipt {
           margin-top: 8px;
@@ -6625,6 +6840,62 @@ export default function AdminPage() {
           .adm-filter-row { flex-direction: column; }
           .adm-filter-pill { width: 100%; }
         }
+
+        /* ── "Show 50 more" (Users and Pets) ────────────────────────────────
+           Those two lists were the only searchable ones drawing every match
+           at once; the others already page. The cap is what keeps typing in
+           the search box responsive, and this is how you get past it. */
+        .adm-showmore { display: flex; align-items: center; gap: 14px; margin-top: 20px; flex-wrap: wrap; }
+        .adm-showmore-count { font-size: 14px; font-weight: 500; color: #717A86; line-height: initial; }
+        @media (max-width: 520px) {
+          .adm-showmore { flex-direction: column; align-items: stretch; }
+          .adm-showmore .adm-b { width: 100%; }
+          .adm-showmore-count { text-align: center; }
+        }
+
+        /* ── Pills, badges, chips and tags ──────────────────────────────────
+           The document line-height is 1.7, which every one of these inherits.
+           On a pill with a fixed height and align-items:center that's hidden;
+           on the ones sized by their own content it inflated the capsule well
+           past the text it holds. "initial" resolves to "normal", sizing the
+           line to the font instead of the page.
+
+           One grouped rule at the end of the stylesheet rather than a
+           declaration edited into 29 separate blocks: the whole set is
+           visible in one place, a new pill joins it by adding one selector,
+           and being last it wins over the per-class rules at equal
+           specificity without needing !important.
+
+           Deliberately NOT included: .adm-toggle and .adm-toggle-slider (a
+           switch, whose geometry is set by width/height, not text),
+           .scroll-arrow-btn (a round icon button) and .adm-perm (a permission
+           row with a checkbox, not a pill). Changing the line box on those
+           would alter the control, which is not what was asked for. */
+        .tab-badge,
+        .badge,
+        .adm-badge,
+        .adm-nav-count,
+        .adm-pv-source,
+        .adm-vet-declined,
+        .adm-vet-unverified,
+        .adm-price-species,
+        .adm-price-tag,
+        .adm-priced-badge,
+        .adm-cq-hasnotes,
+        .adm-pill,
+        .adm-reports-filter,
+        .adm-conflict-src,
+        .adm-team-you,
+        .adm-chip,
+        .adm-chip-x,
+        .adm-log-badge,
+        .adm-userfilter,
+        .adm-ustatus,
+        .adm-uflag,
+        .adm-filter-pill,
+        .adm-sheet-owned,
+        .adm-status-pill,
+        .adm-tag { line-height: initial; }
       `}</style>
 
       <div
@@ -8164,6 +8435,7 @@ export default function AdminPage() {
                             setEditingPrice(null);
                             setEditingNote(null);
                             setNoteDraft("");
+                            setHandBackConfirm(null);
                             setShowAddPrice(false);
                           }}
                         >
@@ -8219,16 +8491,25 @@ export default function AdminPage() {
                     {!pricesLoading &&
                       vetPrices.some((p) => p.source === "sheet") && (
                         <p className="adm-price-sheet-note">
+                          {/* Three sentences, one per button, each saying what
+                              the button does to the price. The previous version
+                              explained the reasoning in one long sentence, and
+                              the reasoning is not what someone standing at this
+                              screen needs. */}
                           <span>
-                            The <strong>number</strong> on a call-sheet price is
-                            edited in the sheet, not here — change it here and
-                            the next sync puts the sheet&rsquo;s version back.
+                            <strong>Edit</strong> &mdash; changes the price and
+                            keeps it. The pill becomes{" "}
+                            <strong>Set in Admin</strong>, and the call sheet
+                            stops updating that service for this clinic.
                           </span>
                           <span>
-                            The <strong>note</strong> under it belongs here: the
-                            sheet no longer carries price notes, so Add note is
-                            the only place one is written, and it survives a
-                            price change.
+                            <strong>Add note</strong> &mdash; saves the note
+                            only. The call sheet keeps updating the price.
+                          </span>
+                          <span>
+                            <strong>Hand back to call sheet</strong> &mdash;
+                            undoes an Edit. The sheet&rsquo;s price comes back
+                            on the next sync.
                           </span>
                         </p>
                       )}
@@ -8346,7 +8627,29 @@ export default function AdminPage() {
                                       From call sheet
                                     </span>
                                   )}
+                                  {/* An overridden price says so in the same
+                                      slot, in terracotta rather than the
+                                      neutral grey — it's the one state on this
+                                      card where the number came from a person
+                                      deciding rather than from an import. */}
+                                  {p.source === "admin" && (
+                                    <span className="adm-sheet-owned adm-price-overridden">
+                                      Set in Admin
+                                    </span>
+                                  )}
                                 </span>
+                                {/* What the sheet holds for this service while
+                                    the override is in force. The sync rewrites
+                                    it every run, so this stays true as the
+                                    sheet changes — the point being that an
+                                    override you can't audit is worse than no
+                                    override at all. Hidden when the sheet
+                                    agrees, since there's nothing to compare. */}
+                                {p.source === "admin" && p.sheet_value && (
+                                  <span className="adm-sheet-says">
+                                    The call sheet says {p.sheet_value}
+                                  </span>
+                                )}
                               </div>
                               <div className="adm-user-badges">
                                 {p.species && (
@@ -8406,85 +8709,105 @@ export default function AdminPage() {
                             )}
 
                             <div className="adm-user-actions adm-pv-actions adm-price-actions">
-                              {/* The call sheet owns the number on a sheet
-                                  price. Editing it here would be undone: the
-                                  sync replaces sheet prices by value, sees this
-                                  one is no longer in the sheet, deletes it and
-                                  re-adds the sheet's version. So the price edit
-                                  is blocked and the real route is named.
-                                  Deleting is still allowed — that's how a bad
-                                  price comes off ahead of a sheet fix.
+                              {/* Edit is available on every price, whatever its
+                                  source. It used to be hidden on call-sheet
+                                  prices because the sync reconciles them by
+                                  value: an edit from $95 to $100 looked like a
+                                  sheet row the sheet no longer contained, so
+                                  the next run deleted it and put $95 back.
+                                  Hiding the button stopped the silent reversal
+                                  but took away the ability to correct a price,
+                                  which was the wrong trade. The sync now skips
+                                  any vet+service holding an 'admin' row, so
+                                  saving here takes the price over and it
+                                  stands. */}
+                              <button
+                                className="adm-b adm-b-outline"
+                                onClick={() => {
+                                  if (editing) {
+                                    setEditingPrice(null);
+                                  } else {
+                                    setShowAddPrice(false);
+                                    // One editor at a time — the note panel
+                                    // and the full price form both edit the
+                                    // same field, so two open at once is two
+                                    // drafts of it.
+                                    setEditingNote(null);
+                                    setNoteDraft("");
+                                    setHandBackConfirm(null);
+                                    setEditingPrice(p.id);
+                                    setPriceForm({
+                                      service_id: p.service_id,
+                                      price_low: p.price_low ?? "",
+                                      price_high: p.price_high ?? "",
+                                      price_type: p.price_type || "",
+                                      includes_bloodwork: p.includes_bloodwork,
+                                      includes_xrays: p.includes_xrays,
+                                      includes_anesthesia:
+                                        p.includes_anesthesia,
+                                      species: p.species || "",
+                                      species_other: "",
+                                      call_for_quote: p.call_for_quote,
+                                      notes: p.notes || "",
+                                      vaccines_included:
+                                        p.vaccines_included || "",
+                                    });
+                                    setEditPriceError(false);
+                                  }
+                                }}
+                              >
+                                {editing ? "Cancel" : "Edit"}
+                              </button>
 
-                                  The note is a different matter. The sheet used
-                                  to carry price notes in column AL and the sync
-                                  no longer reads it, because one cell there
-                                  applied to a whole row and ended up stamped
-                                  onto every service's price. Nothing in the
-                                  sheet writes this field now, so a note written
-                                  here is safe — and this was the only field a
-                                  sheet price had no way to set. */}
-                              {p.source === "sheet" ? (
-                                <>
-                                  <button
-                                    className="adm-b adm-b-outline"
-                                    onClick={() => {
-                                      if (noteEditing) {
-                                        setEditingNote(null);
-                                        setNoteDraft("");
-                                      } else {
-                                        setShowAddPrice(false);
-                                        setEditingPrice(null);
-                                        setEditingNote(p.id);
-                                        setNoteDraft(p.notes || "");
-                                      }
-                                    }}
-                                  >
-                                    {noteEditing
-                                      ? "Cancel"
-                                      : hasText(p.notes)
-                                        ? "Edit note"
-                                        : "Add note"}
-                                  </button>
-                                </>
-                              ) : (
+                              {/* Note-only, and only on call-sheet prices —
+                                  this is the one path that does NOT take the
+                                  price over. The sheet stopped carrying price
+                                  notes when column AL was retired, so nothing
+                                  can overwrite a note written here, and the
+                                  price keeps syncing as normal. Without this
+                                  shortcut, adding a note would mean opening
+                                  the full form, and saving that would freeze
+                                  the number against the sheet as a side
+                                  effect of writing a sentence. */}
+                              {p.source === "sheet" && (
                                 <button
                                   className="adm-b adm-b-outline"
                                   onClick={() => {
-                                    if (editing) {
-                                      setEditingPrice(null);
-                                    } else {
-                                      setShowAddPrice(false);
-                                      // One editor at a time — the note panel
-                                      // and the full price form both edit the
-                                      // same field, so two open at once is two
-                                      // drafts of it.
+                                    if (noteEditing) {
                                       setEditingNote(null);
                                       setNoteDraft("");
-                                      setEditingPrice(p.id);
-                                      setPriceForm({
-                                        service_id: p.service_id,
-                                        price_low: p.price_low ?? "",
-                                        price_high: p.price_high ?? "",
-                                        price_type: p.price_type || "",
-                                        includes_bloodwork:
-                                          p.includes_bloodwork,
-                                        includes_xrays: p.includes_xrays,
-                                        includes_anesthesia:
-                                          p.includes_anesthesia,
-                                        species: p.species || "",
-                                        species_other: "",
-                                        call_for_quote: p.call_for_quote,
-                                        notes: p.notes || "",
-                                        vaccines_included:
-                                          p.vaccines_included || "",
-                                      });
-                                      setEditPriceError(false);
+                                      setHandBackConfirm(null);
+                                    } else {
+                                      setShowAddPrice(false);
+                                      setEditingPrice(null);
+                                      setEditingNote(p.id);
+                                      setNoteDraft(p.notes || "");
                                     }
                                   }}
                                 >
-                                  {editing ? "Cancel" : "Edit"}
+                                  {noteEditing
+                                    ? "Cancel"
+                                    : hasText(p.notes)
+                                      ? "Edit note"
+                                      : "Add note"}
                                 </button>
                               )}
+
+                              {/* The way out of an override. The confirm is a
+                                  block of its own below this row rather than a
+                                  member of it — a sentence of explanation
+                                  inside a flex row of 42px buttons stretched
+                                  the row and left the question nowhere near the
+                                  button it belonged to. */}
+                              {p.source === "admin" &&
+                                (handBackConfirm === p.id ? null : (
+                                  <button
+                                    className="adm-b adm-b-outline"
+                                    onClick={() => setHandBackConfirm(p.id)}
+                                  >
+                                    Hand back to call sheet
+                                  </button>
+                                ))}
                               {isDeleting ? (
                                 <div className="adm-team-confirm">
                                   <span className="adm-team-confirm-q">
@@ -8516,6 +8839,65 @@ export default function AdminPage() {
                                 </button>
                               )}
                             </div>
+
+                            {/* Full width, under the buttons, so the question
+                                and its two answers sit together at any width
+                                instead of fighting the button row for space.
+                                Below rather than above on mobile too: it reads
+                                as the consequence of the button you just
+                                pressed, which was directly above it. */}
+                            {p.source === "admin" &&
+                              handBackConfirm === p.id && (
+                                <div className="adm-handback">
+                                  <p className="adm-handback-q">
+                                    Hand this price back to the call sheet?
+                                  </p>
+                                  <p className="adm-handback-body">
+                                    Your price stays until the next sync, then
+                                    the call sheet&rsquo;s value replaces it.
+                                    Any note you&rsquo;ve written is kept.
+                                  </p>
+                                  <div className="adm-handback-actions">
+                                    <button
+                                      className="adm-b adm-b-outline"
+                                      onClick={() => setHandBackConfirm(null)}
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      className="adm-b adm-b-navy"
+                                      disabled={handBackSaving === p.id}
+                                      onClick={() => handBackToSheet(p.id)}
+                                    >
+                                      {handBackSaving === p.id
+                                        ? "Saving…"
+                                        : "Hand back"}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                            {/* Said before the save, not after it. Taking a
+                                price over from the sheet is a real change of
+                                ownership — Susan's cell stops affecting this
+                                service for this clinic — and discovering that
+                                from a changed label afterwards is too late to
+                                decide against it. Only on sheet prices: for
+                                one Admin already owns, saving changes nothing
+                                about where it comes from. */}
+                            {editing && p.source === "sheet" && (
+                              <p className="adm-takeover-note">
+                                Saving this takes the price over from the call
+                                sheet. The sheet will stop updating{" "}
+                                {p.services?.name || "this service"} for this
+                                clinic until you hand it back. A note on its own
+                                doesn&rsquo;t do that &mdash; use{" "}
+                                <strong>
+                                  {hasText(p.notes) ? "Edit note" : "Add note"}
+                                </strong>{" "}
+                                for that.
+                              </p>
+                            )}
 
                             {editing && (
                               <PriceForm
@@ -8558,6 +8940,7 @@ export default function AdminPage() {
                                     onClick={() => {
                                       setEditingNote(null);
                                       setNoteDraft("");
+                                      setHandBackConfirm(null);
                                     }}
                                   >
                                     Cancel
@@ -9098,14 +9481,13 @@ export default function AdminPage() {
                               genuinely changed its prices or a cell someone
                               cleared by accident. */}
                           {syncResult.removedList?.length > 0 && (
-                            <details className="adm-sync-detail">
-                              <summary>
-                                {syncResult.removedList.length} prices{" "}
-                                {syncResult.dryRun
+                            <SyncDetail
+                              label={`${syncResult.removedList.length} prices ${
+                                syncResult.dryRun
                                   ? "would be removed"
-                                  : "removed"}{" "}
-                                — no longer in the sheet
-                              </summary>
+                                  : "removed"
+                              } — no longer in the sheet`}
+                            >
                               <ul>
                                 {syncResult.removedList
                                   .slice(0, 30)
@@ -9119,14 +9501,35 @@ export default function AdminPage() {
                                   </li>
                                 )}
                               </ul>
-                            </details>
+                            </SyncDetail>
+                          )}
+                          {/* Prices the sync declined to touch because Admin
+                              owns them. Listed rather than only counted: a
+                              number that didn't change is the one outcome
+                              nobody can see by looking at the result. */}
+                          {syncResult.lockedList?.length > 0 && (
+                            <SyncDetail
+                              label={`${syncResult.lockedList.length} prices left to Admin — the sheet was ignored`}
+                            >
+                              <ul>
+                                {syncResult.lockedList
+                                  .slice(0, 30)
+                                  .map((n, i) => (
+                                    <li key={i}>{n}</li>
+                                  ))}
+                                {syncResult.lockedList.length > 30 && (
+                                  <li>
+                                    …and {syncResult.lockedList.length - 30}{" "}
+                                    more
+                                  </li>
+                                )}
+                              </ul>
+                            </SyncDetail>
                           )}
                           {syncResult.autoCreatedList?.length > 0 && (
-                            <details className="adm-sync-detail">
-                              <summary>
-                                {syncResult.autoCreatedList.length} vets
-                                auto-created as pending
-                              </summary>
+                            <SyncDetail
+                              label={`${syncResult.autoCreatedList.length} vets auto-created as pending`}
+                            >
                               <ul>
                                 {syncResult.autoCreatedList
                                   .slice(0, 30)
@@ -9141,15 +9544,14 @@ export default function AdminPage() {
                                   </li>
                                 )}
                               </ul>
-                            </details>
+                            </SyncDetail>
                           )}
 
                           {syncResult.notFound?.length > 0 && (
-                            <details className="adm-sync-detail warn">
-                              <summary>
-                                {syncResult.notFound.length} rows dropped (no
-                                phone or address to match)
-                              </summary>
+                            <SyncDetail
+                              tone="warn"
+                              label={`${syncResult.notFound.length} rows dropped (no phone or address to match)`}
+                            >
                               <ul>
                                 {syncResult.notFound
                                   .slice(0, 30)
@@ -9162,21 +9564,23 @@ export default function AdminPage() {
                                   </li>
                                 )}
                               </ul>
-                            </details>
+                            </SyncDetail>
                           )}
 
                           {syncResult.errors?.length > 0 && (
-                            <details className="adm-sync-detail error" open>
-                              <summary>
-                                {syncResult.errors.length} error
-                                {syncResult.errors.length !== 1 ? "s" : ""}
-                              </summary>
+                            <SyncDetail
+                              tone="error"
+                              defaultOpen
+                              label={`${syncResult.errors.length} error${
+                                syncResult.errors.length !== 1 ? "s" : ""
+                              }`}
+                            >
                               <ul>
                                 {syncResult.errors.map((e, i) => (
                                   <li key={i}>{e}</li>
                                 ))}
                               </ul>
-                            </details>
+                            </SyncDetail>
                           )}
                         </div>
                       ))}
@@ -10731,14 +11135,22 @@ export default function AdminPage() {
                   <input
                     placeholder="Search by name, email, or zip"
                     value={userSearch}
-                    onChange={(e) => setUserSearch(e.target.value)}
+                    onChange={(e) => {
+                      setUserSearch(e.target.value);
+                      // Back to the top of the list on a new search, so you
+                      // don't land halfway down someone else's results.
+                      setUserLimit(50);
+                    }}
                   />
                   {userSearch && (
                     <button
                       type="button"
                       className="adm-search-clear"
                       aria-label="Clear search"
-                      onClick={() => setUserSearch("")}
+                      onClick={() => {
+                        setUserSearch("");
+                        setUserLimit(50);
+                      }}
                     >
                       <X size={15} strokeWidth={2.6} />
                     </button>
@@ -10756,7 +11168,10 @@ export default function AdminPage() {
                     <button
                       key={f.k}
                       className={`adm-userfilter${userStatusFilter === f.k ? " active" : ""}`}
-                      onClick={() => setUserStatusFilter(f.k)}
+                      onClick={() => {
+                        setUserStatusFilter(f.k);
+                        setUserLimit(50);
+                      }}
                     >
                       {f.label}
                     </button>
@@ -10774,8 +11189,17 @@ export default function AdminPage() {
                   </div>
                 )}
 
+                {/* Capped. This list was rendering every matching user, and
+                    each card is a few dozen elements — so with a few thousand
+                    profiles, one keystroke in the search above rebuilt tens of
+                    thousands of nodes and the letter took seconds to appear.
+                    Pending Vets, Vets and Symptom Logs in this same file were
+                    already capped for the same reason; Users and Pets were the
+                    two that weren't.
+                    The slice goes AFTER the filter, so searching still looks
+                    at every user — it just stops drawing after 50. */}
                 <div className="adm-user-list">
-                  {filteredUsers.map((u) => (
+                  {filteredUsers.slice(0, userLimit).map((u) => (
                     <div key={u.id} className="adm-user-card">
                       <div className="adm-user-main">
                         <div className="adm-user-id">
@@ -10854,6 +11278,19 @@ export default function AdminPage() {
                     </div>
                   ))}
                 </div>
+                {filteredUsers.length > userLimit && (
+                  <div className="adm-showmore">
+                    <button
+                      className="adm-b adm-b-outline"
+                      onClick={() => setUserLimit((n) => n + 50)}
+                    >
+                      Show 50 more
+                    </button>
+                    <span className="adm-showmore-count">
+                      Showing {userLimit} of {filteredUsers.length}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -10869,14 +11306,20 @@ export default function AdminPage() {
                   <input
                     placeholder="Search by pet name or owner"
                     value={petSearch}
-                    onChange={(e) => setPetSearch(e.target.value)}
+                    onChange={(e) => {
+                      setPetSearch(e.target.value);
+                      setPetLimit(50);
+                    }}
                   />
                   {petSearch && (
                     <button
                       type="button"
                       className="adm-search-clear"
                       aria-label="Clear search"
-                      onClick={() => setPetSearch("")}
+                      onClick={() => {
+                        setPetSearch("");
+                        setPetLimit(50);
+                      }}
                     >
                       <X size={15} strokeWidth={2.6} />
                     </button>
@@ -10904,88 +11347,108 @@ export default function AdminPage() {
                       </div>
                     );
                   }
+                  // Capped for the same reason as the user list above — the
+                  // search sees every pet, the grid stops drawing after the
+                  // limit.
                   return (
-                    <div className="adm-pet-grid">
-                      {shown.map((pet) => {
-                        const ageYrs = pet.birthday
-                          ? Math.floor(
-                              (Date.now() - new Date(pet.birthday)) /
-                                (365.25 * 24 * 3600 * 1000),
-                            )
-                          : null;
-                        const ageLabel =
-                          ageYrs === null
-                            ? "—"
-                            : ageYrs < 1
-                              ? "< 1 yr"
-                              : ageYrs === 1
-                                ? "1 yr"
-                                : `${ageYrs} yrs`;
-                        return (
-                          <div key={pet.id} className="adm-pet-card">
-                            <div className="adm-pet-head">
-                              <span className="adm-pet-name">
-                                {pet.name || "Unnamed"}
-                              </span>
-                              <span className="adm-pet-owner">
-                                {pet.ownerName || "—"}
-                              </span>
-                            </div>
+                    <>
+                      <div className="adm-pet-grid">
+                        {shown.slice(0, petLimit).map((pet) => {
+                          const ageYrs = pet.birthday
+                            ? Math.floor(
+                                (Date.now() - new Date(pet.birthday)) /
+                                  (365.25 * 24 * 3600 * 1000),
+                              )
+                            : null;
+                          const ageLabel =
+                            ageYrs === null
+                              ? "—"
+                              : ageYrs < 1
+                                ? "< 1 yr"
+                                : ageYrs === 1
+                                  ? "1 yr"
+                                  : `${ageYrs} yrs`;
+                          return (
+                            <div key={pet.id} className="adm-pet-card">
+                              <div className="adm-pet-head">
+                                <span className="adm-pet-name">
+                                  {pet.name || "Unnamed"}
+                                </span>
+                                <span className="adm-pet-owner">
+                                  {pet.ownerName || "—"}
+                                </span>
+                              </div>
 
-                            <div className="adm-pet-attrs">
-                              <div className="adm-pet-attr">
-                                <span className="adm-pet-attr-l">Species</span>
-                                <span className="adm-pet-attr-v">
-                                  {pet.species || "—"}
-                                </span>
+                              <div className="adm-pet-attrs">
+                                <div className="adm-pet-attr">
+                                  <span className="adm-pet-attr-l">
+                                    Species
+                                  </span>
+                                  <span className="adm-pet-attr-v">
+                                    {pet.species || "—"}
+                                  </span>
+                                </div>
+                                <div className="adm-pet-attr">
+                                  <span className="adm-pet-attr-l">Breed</span>
+                                  <span className="adm-pet-attr-v">
+                                    {pet.breed || "—"}
+                                  </span>
+                                </div>
+                                <div className="adm-pet-attr">
+                                  <span className="adm-pet-attr-l">Age</span>
+                                  <span className="adm-pet-attr-v">
+                                    {ageLabel}
+                                  </span>
+                                </div>
+                                <div className="adm-pet-attr">
+                                  <span className="adm-pet-attr-l">Weight</span>
+                                  <span className="adm-pet-attr-v">
+                                    {pet.weight_value
+                                      ? `${pet.weight_value} lbs`
+                                      : "—"}
+                                  </span>
+                                </div>
                               </div>
-                              <div className="adm-pet-attr">
-                                <span className="adm-pet-attr-l">Breed</span>
-                                <span className="adm-pet-attr-v">
-                                  {pet.breed || "—"}
-                                </span>
-                              </div>
-                              <div className="adm-pet-attr">
-                                <span className="adm-pet-attr-l">Age</span>
-                                <span className="adm-pet-attr-v">
-                                  {ageLabel}
-                                </span>
-                              </div>
-                              <div className="adm-pet-attr">
-                                <span className="adm-pet-attr-l">Weight</span>
-                                <span className="adm-pet-attr-v">
-                                  {pet.weight_value
-                                    ? `${pet.weight_value} lbs`
-                                    : "—"}
-                                </span>
-                              </div>
-                            </div>
 
-                            <div className="adm-pet-foot">
-                              <span className="adm-pet-attr-l">Sex</span>
-                              <select
-                                className="adm-line-select adm-pet-select"
-                                value={pet.sex || ""}
-                                onChange={(e) =>
-                                  updatePetSex(pet.id, e.target.value || null)
-                                }
-                              >
-                                <option value="">— Select —</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Male (neutered)">
-                                  Male (neutered)
-                                </option>
-                                <option value="Female (spayed)">
-                                  Female (spayed)
-                                </option>
-                                <option value="Unknown">Unknown</option>
-                              </select>
+                              <div className="adm-pet-foot">
+                                <span className="adm-pet-attr-l">Sex</span>
+                                <select
+                                  className="adm-line-select adm-pet-select"
+                                  value={pet.sex || ""}
+                                  onChange={(e) =>
+                                    updatePetSex(pet.id, e.target.value || null)
+                                  }
+                                >
+                                  <option value="">— Select —</option>
+                                  <option value="Male">Male</option>
+                                  <option value="Female">Female</option>
+                                  <option value="Male (neutered)">
+                                    Male (neutered)
+                                  </option>
+                                  <option value="Female (spayed)">
+                                    Female (spayed)
+                                  </option>
+                                  <option value="Unknown">Unknown</option>
+                                </select>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                      {shown.length > petLimit && (
+                        <div className="adm-showmore">
+                          <button
+                            className="adm-b adm-b-outline"
+                            onClick={() => setPetLimit((n) => n + 50)}
+                          >
+                            Show 50 more
+                          </button>
+                          <span className="adm-showmore-count">
+                            Showing {petLimit} of {shown.length}
+                          </span>
+                        </div>
+                      )}
+                    </>
                   );
                 })()}
               </div>

@@ -3,19 +3,56 @@
 import Link from "next/link";
 import BlogFaq from "./BlogFaq";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { BRAND, CTA, formatDate, getPage, getActiveCategories } from "../lib/blogPosts";
+import {
+  BRAND,
+  CTA,
+  formatDate,
+  getPage,
+  getActiveCategories,
+} from "../lib/blogPosts";
 
 // Falls back to system sans (never serif) if the font variable isn't set.
-const FONT = "var(--font-urbanist, 'Urbanist'), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+const FONT =
+  "var(--font-urbanist, 'Urbanist'), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
 // ── Topic colors for the price covers ─────────────────────────────────────
 // Each article's card art is its own price range, drawn in a brand color.
 const TONES = {
-  Dental: { bg: "#CF5C36", fg: "#FFFFFF", sub: "rgba(255,255,255,0.88)", track: "rgba(255,255,255,0.28)", band: "#172531" },
-  Surgery: { bg: "#172531", fg: "#FFFFFF", sub: "rgba(255,255,255,0.72)", track: "rgba(255,255,255,0.16)", band: "#CF5C36" },
-  Exams: { bg: "#E8D9C0", fg: "#172531", sub: "rgba(23,37,49,0.72)", track: "rgba(23,37,49,0.14)", band: "#CF5C36" },
-  Vaccines: { bg: "#2C4657", fg: "#FFFFFF", sub: "rgba(255,255,255,0.75)", track: "rgba(255,255,255,0.16)", band: "#EFC88B" },
-  Emergency: { bg: "#EFC88B", fg: "#172531", sub: "rgba(23,37,49,0.75)", track: "rgba(23,37,49,0.16)", band: "#CF5C36" },
+  Dental: {
+    bg: "#CF5C36",
+    fg: "#FFFFFF",
+    sub: "rgba(255,255,255,0.88)",
+    track: "rgba(255,255,255,0.28)",
+    band: "#172531",
+  },
+  Surgery: {
+    bg: "#172531",
+    fg: "#FFFFFF",
+    sub: "rgba(255,255,255,0.72)",
+    track: "rgba(255,255,255,0.16)",
+    band: "#CF5C36",
+  },
+  Exams: {
+    bg: "#E8D9C0",
+    fg: "#172531",
+    sub: "rgba(23,37,49,0.72)",
+    track: "rgba(23,37,49,0.14)",
+    band: "#CF5C36",
+  },
+  Vaccines: {
+    bg: "#2C4657",
+    fg: "#FFFFFF",
+    sub: "rgba(255,255,255,0.75)",
+    track: "rgba(255,255,255,0.16)",
+    band: "#EFC88B",
+  },
+  Emergency: {
+    bg: "#EFC88B",
+    fg: "#172531",
+    sub: "rgba(23,37,49,0.75)",
+    track: "rgba(23,37,49,0.16)",
+    band: "#CF5C36",
+  },
 };
 const toneFor = (topic) => TONES[topic] || TONES.Dental;
 
@@ -26,7 +63,22 @@ export const BLOG_CSS = `
 
   /* ── Shared bits ───────────────────────────────────────────────────── */
   /* Same as the site's .badge .badge-terracotta (globals.css). */
-  .b-topic { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; border: var(--pill-border-w, 2px) solid rgba(139,58,30,0.22); background: #FEF3EB; color: #8B3A1E; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; line-height: 1.4; }
+  .b-topic {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    border: var(--pill-border-w, 2px) solid rgba(139,58,30,0.22);
+    background: #FEF3EB;
+    color: #8B3A1E;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    line-height: initial;
+    height: 31px;
+    }
   /* Same as the site's small gold/terracotta eyebrow labels. */
   .b-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; margin: 0 0 12px; }
   .b-meta { font-size: 14px; font-weight: 600; color: #4D6473; margin: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
@@ -101,7 +153,20 @@ export const BLOG_CSS = `
   .bl-hero--plain { padding-bottom: 88px; }
   .bl-hero--plain + .bl-body > .bl-cats:first-child { margin-top: 48px; }
   .bl-cats ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
-  .bl-cat { display: inline-flex; align-items: center; min-height: 40px; padding: 0 18px; border-radius: 999px; border: 2px solid var(--color-border-strong, #D1C9BD); background: #fff; color: #172531; font-size: 14px; font-weight: 700; text-decoration: none; transition: border-color .15s, color .15s, background .15s; }
+  .bl-cat {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 2px solid var(--color-border-strong, #D1C9BD);
+    background: #fff;
+    color: #172531;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: border-color .15s, color .15s, background .15s;
+    }
   .bl-cat:hover { border-color: #CF5C36; color: #CF5C36; }
   .bl-cat[aria-current="page"] { background: #172531; border-color: #172531; color: #fff; }
   .bl-cat:focus-visible { outline: none; box-shadow: var(--shadow-focus, 0 0 0 3px rgba(207,92,54,0.25)); }
@@ -111,7 +176,7 @@ export const BLOG_CSS = `
   .bl-pager { margin-top: 48px; display: flex; justify-content: center; }
   .bl-pager ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .bl-pager a, .bl-pager span { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 14px; box-sizing: border-box; border-radius: 999px; font-size: 15px; font-weight: 700; text-decoration: none; }
-  .bl-pager a { color: #172531; background: #fff; border: 1px solid #E0D6C6; }
+  .bl-pager a { color: #172531; background: #fff; border: 2px solid #E0D6C6; }
   .bl-pager a:hover { border-color: #CF5C36; color: #CF5C36; }
   .bl-pager a:focus-visible { outline: 3px solid rgba(207,92,54,0.55); outline-offset: 2px; }
   .bl-pager [aria-current="page"] { background: #172531; color: #fff; border: 1px solid #172531; }
@@ -123,7 +188,7 @@ export const BLOG_CSS = `
     .bl-pager .bl-step, .bl-pager .bl-step--next { padding: 0; width: 44px; }
     .bl-step-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   }
-  .bl-pager .is-disabled { color: #9AA3AD; background: transparent; border: 1px solid #E7DFD2; }
+  .bl-pager .is-disabled { color: #9AA3AD; background: transparent; border: 2px solid #E7DFD2; }
 
   /* Waitlist band */
   .b-band { margin-top: 88px; position: relative; overflow: hidden; background: #172531; border-radius: 24px; padding: 48px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px 40px; align-items: center; }
@@ -170,7 +235,7 @@ export const BLOG_CSS = `
   .ba-glance-grid dd { margin: 0; font-size: clamp(24px, 2.8vw, 32px); font-weight: 800; color: #172531; letter-spacing: -0.03em; line-height: 1.1; }
   .ba-glance-grid div { display: flex; flex-direction: column; }
   .ba-glance-grid div:first-child dd { color: #CF5C36; }
-  .ba-glance-note { font-size: 13px; font-weight: 500; color: #4B5563; margin: 16px 0 0; padding-top: 14px; border-top: 1px solid #F1ECE3; }
+  .ba-glance-note { font-size: 14px; font-weight: 500; color: #4B5563; margin: 16px 0 0; padding-top: 14px; border-top: 1px solid #F1ECE3; }
 
   /* Layout: article + "On this page" */
   .ba-layout { display: grid; grid-template-columns: minmax(0, 680px) 240px; justify-content: space-between; gap: 64px; padding: 56px 0 24px; }
@@ -313,7 +378,13 @@ export function Inline({ text }) {
       const external = /^https?:\/\//.test(href);
       parts.push(
         external ? (
-          <a key={k++} href={href} className="ba-link" target="_blank" rel="noopener noreferrer">
+          <a
+            key={k++}
+            href={href}
+            className="ba-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             {m[2]}
           </a>
         ) : (
@@ -342,11 +413,22 @@ function pos(v, lo, hi) {
 export function PriceCover({ post }) {
   const c = post.cover;
   const t = toneFor(post.topic);
-  if (!c) return <div className="b-cover" style={{ background: t.bg }} aria-hidden="true" />;
+  if (!c)
+    return (
+      <div
+        className="b-cover"
+        style={{ background: t.bg }}
+        aria-hidden="true"
+      />
+    );
   const left = pos(c.typicalLow, c.low, c.high);
   const right = pos(c.typicalHigh, c.low, c.high);
   return (
-    <div className="b-cover" style={{ background: t.bg, color: t.fg }} aria-hidden="true">
+    <div
+      className="b-cover"
+      style={{ background: t.bg, color: t.fg }}
+      aria-hidden="true"
+    >
       <p className="b-cover-label" style={{ color: t.sub }}>
         {c.label}, typical in California
       </p>
@@ -354,7 +436,14 @@ export function PriceCover({ post }) {
         {money(c.typicalLow)}–{money(c.typicalHigh)}
       </p>
       <div className="b-cover-track" style={{ background: t.track }}>
-        <div className="b-cover-band" style={{ left: `${left}%`, width: `${Math.max(3, right - left)}%`, background: t.band }} />
+        <div
+          className="b-cover-band"
+          style={{
+            left: `${left}%`,
+            width: `${Math.max(3, right - left)}%`,
+            background: t.band,
+          }}
+        />
       </div>
       <div className="b-cover-ends" style={{ color: t.sub }}>
         <span>{money(c.low)}</span>
@@ -383,7 +472,8 @@ export function FeaturedCard({ post }) {
           <span>{post.readMinutes} min read</span>
         </p>
         <span className="bl-feature-cta">
-          Read article <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
+          Read article{" "}
+          <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
         </span>
       </div>
     </Link>
@@ -405,7 +495,9 @@ export function PostCard({ post, headingLevel = 3 }) {
           {post.title}
         </H>
         <p className="bl-card-dek">{post.dek}</p>
-        <span className="bl-card-date">{formatDate(post.updated || post.published)}</span>
+        <span className="bl-card-date">
+          {formatDate(post.updated || post.published)}
+        </span>
       </div>
     </Link>
   );
@@ -442,7 +534,12 @@ export function Pagination({ page, totalPages, category = null }) {
       <ol>
         <li>
           {page > 1 ? (
-            <Link href={pageHref(page - 1)} rel="prev" className="bl-step" aria-label="Previous page">
+            <Link
+              href={pageHref(page - 1)}
+              rel="prev"
+              className="bl-step"
+              aria-label="Previous page"
+            >
               <ChevronLeft size={18} strokeWidth={2.4} aria-hidden="true" />
               <span className="bl-step-label">Previous</span>
             </Link>
@@ -456,7 +553,9 @@ export function Pagination({ page, totalPages, category = null }) {
         {nums.map((n) => (
           <li key={n}>
             {typeof n === "string" ? (
-              <span className="bl-gap" aria-hidden="true">…</span>
+              <span className="bl-gap" aria-hidden="true">
+                …
+              </span>
             ) : n === page ? (
               <span aria-current="page">{n}</span>
             ) : (
@@ -468,12 +567,20 @@ export function Pagination({ page, totalPages, category = null }) {
         ))}
         <li>
           {page < totalPages ? (
-            <Link href={pageHref(page + 1)} rel="next" className="bl-step bl-step--next" aria-label="Next page">
+            <Link
+              href={pageHref(page + 1)}
+              rel="next"
+              className="bl-step bl-step--next"
+              aria-label="Next page"
+            >
               <span className="bl-step-label">Next</span>
               <ChevronRight size={18} strokeWidth={2.4} aria-hidden="true" />
             </Link>
           ) : (
-            <span className="bl-step bl-step--next is-disabled" aria-disabled="true">
+            <span
+              className="bl-step bl-step--next is-disabled"
+              aria-disabled="true"
+            >
               <span className="bl-step-label">Next</span>
               <ChevronRight size={18} strokeWidth={2.4} aria-hidden="true" />
             </span>
@@ -490,7 +597,11 @@ export function CategoryNav({ current, cats }) {
     <nav className="bl-cats" aria-label="Blog categories">
       <ul>
         <li>
-          <Link href="/blog#articles" className="bl-cat" aria-current={!current ? "page" : undefined}>
+          <Link
+            href="/blog#articles"
+            className="bl-cat"
+            aria-current={!current ? "page" : undefined}
+          >
             All
           </Link>
         </li>
@@ -525,7 +636,8 @@ export function EndNote({ title, text }) {
         {CTA.line}
       </p>
       <Link href={CTA.href} className="b-btn">
-        {CTA.label} <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
+        {CTA.label}{" "}
+        <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
       </Link>
     </aside>
   );
@@ -538,11 +650,14 @@ export function WaitlistBand() {
         <p className="b-eyebrow" style={{ color: "#EFC88B" }}>
           {BRAND}
         </p>
-        <p className="b-band-title">Know what you&apos;ll pay before your next vet visit</p>
+        <p className="b-band-title">
+          Know what you&apos;ll pay before your next vet visit
+        </p>
         <p className="b-band-text">{CTA.line}</p>
       </div>
       <Link href={CTA.href} className="b-btn">
-        {CTA.label} <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
+        {CTA.label}{" "}
+        <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
       </Link>
     </aside>
   );
@@ -563,7 +678,10 @@ function PriceRange({ label, low, typicalLow, typicalHigh, high, note }) {
       </p>
       <p className="ba-range-cap">What most clinics charge</p>
       <div className="ba-range-track" aria-hidden="true">
-        <div className="ba-range-band" style={{ left: `${left}%`, width: `${Math.max(2, right - left)}%` }} />
+        <div
+          className="ba-range-band"
+          style={{ left: `${left}%`, width: `${Math.max(2, right - left)}%` }}
+        />
       </div>
       <div className="ba-range-ends" aria-hidden="true">
         <span>
@@ -663,14 +781,20 @@ export function BlogBlocks({ blocks }) {
               <Inline text={b.text} /> {CTA.line}
             </p>
             <Link href={CTA.href} className="b-btn">
-              {CTA.label} <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
+              {CTA.label}{" "}
+              <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
             </Link>
           </aside>
         );
       case "faq":
         // Answers are rendered here on the server (bold/links work), then
         // handed to the How-It-Works-style toggle.
-        return <BlogFaq key={i} items={b.items.map((f) => ({ q: f.q, a: <Inline text={f.a} /> }))} />;
+        return (
+          <BlogFaq
+            key={i}
+            items={b.items.map((f) => ({ q: f.q, a: <Inline text={f.a} /> }))}
+          />
+        );
       default:
         return null;
     }
@@ -680,8 +804,13 @@ export function BlogBlocks({ blocks }) {
 // ── The /blog list (every /blog address) ─────────────────────
 
 export async function BlogIndex({ page = 1, category = null }) {
-  const [{ lead, posts, totalPages }, cats] = await Promise.all([getPage(page, category), getActiveCategories()]);
-  const catLabel = category ? cats.find((c) => c.key === category)?.label : null;
+  const [{ lead, posts, totalPages }, cats] = await Promise.all([
+    getPage(page, category),
+    getActiveCategories(),
+  ]);
+  const catLabel = category
+    ? cats.find((c) => c.key === category)?.label
+    : null;
   const total = (lead ? 1 : 0) + posts.length;
   return (
     <>
@@ -701,8 +830,8 @@ export async function BlogIndex({ page = 1, category = null }) {
                 dog owners.
               </h1>
               <p className="bl-sub">
-                What vet care really costs, how to look after your dog, and the things we wish someone
-                had told us sooner.
+                What vet care really costs, how to look after your dog, and the
+                things we wish someone had told us sooner.
               </p>
             </div>
           </div>
@@ -725,7 +854,8 @@ export async function BlogIndex({ page = 1, category = null }) {
                 <section aria-labelledby="bl-all">
                   <div className="bl-section-head">
                     <h2 id="bl-all" className="bl-h2">
-                      {catLabel || (page > 1 ? "More articles" : "Latest articles")}
+                      {catLabel ||
+                        (page > 1 ? "More articles" : "Latest articles")}
                     </h2>
                   </div>
                   <ul className="bl-grid">
@@ -737,7 +867,11 @@ export async function BlogIndex({ page = 1, category = null }) {
                   </ul>
                 </section>
               )}
-              <Pagination page={page} totalPages={totalPages} category={category} />
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                category={category}
+              />
             </>
           )}
           <WaitlistBand />

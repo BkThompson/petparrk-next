@@ -1222,7 +1222,7 @@ function EditorView({ pet, onPetChange }) {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          padding: 4px 10px;
+          padding: 3px 12px;
           border-radius: 9999px;
           font-size: 11px;
           font-weight: 700;
@@ -1230,6 +1230,8 @@ function EditorView({ pet, onPetChange }) {
           text-transform: uppercase;
           white-space: nowrap;
           flex-shrink: 0;
+          line-height: initial;
+          height: 31px;
           /* Borders match the identical pills on the Care Card view, and the
              wider site convention: an outline in each state's own colour at
              the shared thickness. Transparent here so a status with no variant
@@ -2385,11 +2387,13 @@ function EditorView({ pet, onPetChange }) {
           font-size: 14px;
           font-weight: 600;
           border-radius: 999px;
-          line-height: 1.3;
+          line-height: initial;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pce-tag-chip--display {
-          padding: 4px 10px;
+        padding: 6px 12px;
+          line-height: initial;
+          height: 31px;
         }
         .pce-tag-chip-remove {
           display: inline-flex;
@@ -2611,13 +2615,14 @@ function EditorView({ pet, onPetChange }) {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 6px 12px;
+          padding: 3px 12px;
+          height: 31px;
           background: var(--color-cream, #F5F0E8);
           color: var(--color-navy-dark, #172531);
           font-size: 14px;
           font-weight: 600;
           border-radius: 999px;
-          line-height: 1.3;
+          line-height: initial;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pce-identity-tag-chip .pce-identity-tag-emoji {

@@ -4,8 +4,22 @@
 // One article. Server component on purpose (no "use client"). Every article
 // is built as static HTML at deploy time — fast, and readable by search engines.
 import { notFound } from "next/navigation";
-import { BRAND, getAllPosts, getPost, getRelated, getSettings, formatDate, SITE_URL } from "../../../lib/blogPosts";
-import { BLOG_CSS, BlogBlocks, EndNote, PostCard, slugify } from "../../../components/BlogBlocks";
+import {
+  BRAND,
+  getAllPosts,
+  getPost,
+  getRelated,
+  getSettings,
+  formatDate,
+  SITE_URL,
+} from "../../../lib/blogPosts";
+import {
+  BLOG_CSS,
+  BlogBlocks,
+  EndNote,
+  PostCard,
+  slugify,
+} from "../../../components/BlogBlocks";
 import Breadcrumb from "../../../components/Breadcrumb";
 
 // Newly published edits appear within this many seconds.
@@ -46,7 +60,9 @@ export default async function BlogPost({ params }) {
   const url = `${SITE_URL}/blog/${post.slug}`;
   const related = await getRelated(post.slug, 3);
   const author = post.authorInfo;
-  const dateLabel = post.updated ? `Updated ${formatDate(post.updated)}` : formatDate(post.published);
+  const dateLabel = post.updated
+    ? `Updated ${formatDate(post.updated)}`
+    : formatDate(post.published);
 
   const jsonLd = [
     {
@@ -64,8 +80,18 @@ export default async function BlogPost({ params }) {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Blog", item: `${SITE_URL}/blog` },
-        { "@type": "ListItem", position: 2, name: post.crumb || post.title, item: url },
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Blog",
+          item: `${SITE_URL}/blog`,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: post.crumb || post.title,
+          item: url,
+        },
       ],
     },
   ];
@@ -81,13 +107,20 @@ export default async function BlogPost({ params }) {
       <style>{BLOG_CSS}</style>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
       />
       <main className="ba">
         <div className="ba-crumbs">
           <div className="pp-container">
             <div className="ba-crumbs-inner">
-              <Breadcrumb items={[{ label: "Blog", href: "/blog" }, { label: post.crumb || post.title }]} />
+              <Breadcrumb
+                items={[
+                  { label: "Blog", href: "/blog" },
+                  { label: post.crumb || post.title },
+                ]}
+              />
             </div>
           </div>
         </div>
@@ -108,7 +141,8 @@ export default async function BlogPost({ params }) {
                 <div>
                   {author && (
                     <p className="ba-author">
-                      {settings.bylinePrefix ? `${settings.bylinePrefix} ` : ""}{author.name}
+                      {settings.bylinePrefix ? `${settings.bylinePrefix} ` : ""}
+                      {author.name}
                     </p>
                   )}
                   <p className="b-meta">
@@ -136,7 +170,9 @@ export default async function BlogPost({ params }) {
                 ))}
               </dl>
               <p className="ba-glance-note">
-                From real prices California clinics gave us. Typical means the middle half of clinics.
+                These numbers are a starting point, not a quote. If your
+                clinic&apos;s price is higher, ask what&apos;s included.
+                Sometimes there&apos;s a good reason.
               </p>
             </section>
           )}
@@ -154,9 +190,20 @@ export default async function BlogPost({ params }) {
               {/* Same for every article — edited once in the CMS under "Blog settings". */}
               {/* Leave both end-note fields empty in Blog settings to hide the box. */}
               {(settings.endNoteTitle || settings.endNoteText) && (
-                <EndNote title={settings.endNoteTitle} text={settings.endNoteText} />
+                <EndNote
+                  title={settings.endNoteTitle}
+                  text={settings.endNoteText}
+                />
               )}
-              <BlogBlocks blocks={[{ type: "callout", title: settings.disclaimerTitle, text: settings.disclaimerText }]} />
+              <BlogBlocks
+                blocks={[
+                  {
+                    type: "callout",
+                    title: settings.disclaimerTitle,
+                    text: settings.disclaimerText,
+                  },
+                ]}
+              />
 
               {author && (
                 <footer className="ba-author-box">
@@ -165,10 +212,15 @@ export default async function BlogPost({ params }) {
                   </span>
                   <div>
                     <p className="ba-author">{author.name}</p>
-                    <p className="ba-author-role" style={author.bio ? undefined : { margin: 0 }}>
+                    <p
+                      className="ba-author-role"
+                      style={author.bio ? undefined : { margin: 0 }}
+                    >
                       {author.role}
                     </p>
-                    {author.bio && <p className="ba-author-bio">{author.bio}</p>}
+                    {author.bio && (
+                      <p className="ba-author-bio">{author.bio}</p>
+                    )}
                   </div>
                 </footer>
               )}

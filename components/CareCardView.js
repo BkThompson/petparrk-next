@@ -50,7 +50,6 @@ import Breadcrumb from "./Breadcrumb";
 import VisitRecap from "./VisitRecap";
 import PetInsights from "./PetInsights";
 import { getActiveVisitPrepForPet, getRecapsForPet } from "../lib/copilotApi";
-import { speciesBucket } from "../lib/petTileHelpers";
 
 // ----------------------------------------------------------------------------
 // Main component. Data comes in via props; each page owns its own loading.
@@ -1562,22 +1561,14 @@ function NotesSection({ notes }) {
   );
 }
 
-// Buckets via the shared helper rather than matching raw species strings.
-// The old version tested for "rabbit" and "fish" exactly, so a hamster, guinea
-// pig, ferret or turtle fell through to Sparkles here while Pet Card — which
-// buckets them — showed the right animal. Same pet, two different icons
-// depending on which page you were on.
-const CARE_SPECIES_ICON = {
-  dog: Dog,
-  cat: Cat,
-  bird: Bird,
-  small_furry: Rabbit,
-  reptile_fish: Fish,
-  mixed: Sparkles,
-};
-
 function getSpeciesIcon(species) {
-  return CARE_SPECIES_ICON[speciesBucket(species)] || Sparkles;
+  const s = (species || "").toLowerCase();
+  if (s === "dog") return Dog;
+  if (s === "cat") return Cat;
+  if (s === "bird") return Bird;
+  if (s === "rabbit") return Rabbit;
+  if (s === "fish") return Fish;
+  return Sparkles;
 }
 
 function capitalize(s) {
@@ -1822,18 +1813,13 @@ function CareCardStyles() {
         object-fit: cover;
         display: block;
       }
-      /* Same treatment as the placeholder on Pet Card: navy surface, white
-         species icon. Both are answering "no photo yet" for the same pet, so
-         they should look the same wherever you meet them. A beige panel with a
-         grey icon read as an empty slot rather than a deliberate stand-in. */
       .pcc-pet-photo-placeholder {
         width: 100%;
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #2C4657 0%, #172531 100%);
-        color: rgba(255,255,255,0.9);
+        color: #717A86;
       }
       .pcc-pet-header-info {
         flex: 1;
@@ -1874,18 +1860,12 @@ function CareCardStyles() {
 
       /* Section — white card wrapping each topic.
          Matches editor's .pce-section exactly. */
-      /* Same shadow the pet header already carries. The header and the sections
-         share a surface, radius and border, but only the header lifted off the
-         page — so every section below it, Insights included, read as flat by
-         comparison. One rule here covers all of them rather than adding it to
-         Insights alone. */
       .pcc-section {
         background: #fff;
         border-radius: 16px;
         padding: 28px 24px;
         margin-bottom: 20px;
         border: 1px solid rgba(23, 37, 49, 0.06);
-        box-shadow: 0 2px 12px rgba(23, 37, 49, 0.05);
       }
       /* Safety section — viewer-facing visual urgency. Subtle red tint so
          a sitter scanning the card sees allergies/conditions first. The
@@ -2023,46 +2003,47 @@ function CareCardStyles() {
         word-break: break-word;
       }
 
-      /* Status pill — inline with title. Class names + colors match editor. */
+      /* Status pill — inline with title. Class names + colors match editor.
+         The 2px border follows the site-wide pill convention (--pill-border-w
+         in globals.css): a transparent border declared FIRST so a browser
+         without color-mix support keeps the same box size and simply shows no
+         outline, then a border-color mixed from the pill's OWN text colour.
+         That one line gives every variant below its matching outline — red on
+         Overdue, amber on Due soon, green on Current and Active, grey on
+         Ended — instead of one shared grey that would flatten the colour
+         coding the pills exist to carry. */
       .pcc-list-item-status {
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        padding: 4px 10px;
+        padding: 3px 12px;
         border-radius: 9999px;
-        font-size: 11px;
+        font-size: 13px;
         font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        // text-transform: uppercase;
         white-space: nowrap;
         flex-shrink: 0;
-        /* Matches the pills on Home, Find a Vet and the vet page: an outline in
-           each state's own colour, at the site-wide thickness. A shared grey
-           would flatten overdue, soon, active and ended into one shape and
-           lose the distinction the colour is carrying. Transparent in the base
-           rule so a status without a variant keeps the same box size. */
+        line-height: initial;
         border: var(--pill-border-w, 2px) solid transparent;
+        border-color: color-mix(in srgb, currentColor 30%, transparent);
       }
       .pcc-list-item-status.overdue {
         background: rgba(201, 64, 64, 0.12);
         color: #C94040;
-        border-color: rgba(201, 64, 64, 0.28);
       }
       .pcc-list-item-status.soon {
         background: rgba(217, 162, 27, 0.14);
         color: #8C6A11;
-        border-color: rgba(217, 162, 27, 0.34);
       }
       .pcc-list-item-status.ok,
       .pcc-list-item-status.active {
         background: rgba(26, 102, 65, 0.12);
         color: #1A6641;
-        border-color: rgba(26, 102, 65, 0.28);
       }
       .pcc-list-item-status.ended {
         background: rgba(113, 122, 134, 0.14);
         color: #4B5563;
-        border-color: rgba(113, 122, 134, 0.32);
       }
 
       /* ── Phase B: Visit prep + recap (owner-only) ───────────────── */
@@ -2390,7 +2371,7 @@ function CareCardStyles() {
         .pcc-list-item-meta--identity .pcc-list-item-meta-label {
           min-width: 72px;
         }
-    
+
         .pcc-list-item-meta--contacts .pcc-list-item-meta-label {
           min-width: 40px;
         }
@@ -2415,6 +2396,20 @@ function CareCardStyles() {
           line-height: 1.4;
           word-break: break-word;
         }
+      }
+
+      /* Medications — keep the label and its value on ONE line at EVERY
+         width: "Dose: 10mg", not "Dose:" with the amount dropped underneath.
+         The generic .pcc-list-item-meta-row rules stack label above value in
+         two places — the <=375px block and the >=720px block above — and this
+         selector carries one more class than either, so it wins at every
+         width without !important and without an extra media query. Scoped to
+         --medications, so Vaccinations, Vets, Visits, Identity, Insurance,
+         Contacts and Specialists are untouched. */
+      .pcc-list-item-meta--medications .pcc-list-item-meta-row {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 8px;
       }
 
       /* Vet card variants — emergency vet gets a warning-red treatment. */

@@ -527,10 +527,19 @@ export default function HealthHistoryPage() {
         /* Filter pills */
         .hh-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
         .hh-pill {
-          display: inline-flex; align-items: center;
-          padding: 7px 16px; border-radius: 999px; border: 1.5px solid ${C.borderStrong};
-          background: ${C.white}; color: ${C.slate}; font-size: 13px; font-weight: 700;
-          cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+          display: inline-flex; 
+          align-items: center;
+          padding: 6px 12px; 
+          border-radius: 999px; 
+          border: 2px solid ${C.borderStrong};
+          background: ${C.white}; 
+          line-height: initial;
+          height: 31px;
+          color: ${C.slate}; 
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer; 
+          transition: background 0.15s, color 0.15s, border-color 0.15s;
         }
         .hh-pill:hover { border-color: ${C.terracotta}; color: ${C.terracotta}; }
         .hh-pill.is-active {
@@ -609,14 +618,15 @@ export default function HealthHistoryPage() {
         .hh-diff {
           display: inline-flex;
           align-items: center;
-          padding: 3px 10px;
+          padding: 3px 12px;
           border-radius: 999px;
           background: ${C.cream};
           border: var(--pill-border-w, 2px) solid ${C.border};
           font-size: 14px;
           font-weight: 600;
           color: ${C.slate};
-          line-height: 1.35;
+          line-height: initial;
+          height: 31px;
         }
 
         /* Always top-aligned, at every width — it points at the row it opens,

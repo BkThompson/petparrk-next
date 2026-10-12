@@ -72,8 +72,17 @@ const COL = {
   // verification. The column stays in the sheet as a spacer — removing it
   // there would shift every column after it and the sync would silently read
   // the wrong ones.
-  // AL — price notes, shown publicly beneath each price.
-  priceNotes: 37,
+  // 37 is AL, the old "price notes" column. No longer read, and the reason is
+  // worth keeping: AL holds one value for a whole row, but a row holds up to
+  // 17 service prices. The sync handed that single cell to every service
+  // column, so one note in AL was stamped onto a dozen unrelated prices on the
+  // vet page. It was only ever correct for a multi-price cell ("50 / 75") whose
+  // note happened to be split the same way, and silently wrong everywhere else.
+  //
+  // A note that applies to every price is AM's job. A note that applies to one
+  // price is written in Admin, against that price. AL stays in the sheet as a
+  // spacer — deleting the column there would shift AM left and the sync would
+  // start reading the wrong one.
   // AM — the clinic's note about its pricing as a whole, shown publicly under
   // the price list: why a price needs an exam first, what a range assumes.
   // Lands in vets.pricing_note, the field Admin already calls "Public pricing
@@ -142,7 +151,8 @@ function parseSinglePrice(str) {
   return null;
 }
 
-function parsePriceEntries(priceVal, noteVal) {
+// Prices only. Notes are no longer read from the sheet — see COL above.
+function parsePriceEntries(priceVal) {
   if (!priceVal || priceVal.toString().trim() === "") return [];
   const firstLine = priceVal
     .toString()
@@ -160,7 +170,6 @@ function parsePriceEntries(priceVal, noteVal) {
         price_high: null,
         price_type: null,
         call_for_quote: true,
-        note: null,
       },
     ];
   }
@@ -169,15 +178,10 @@ function parsePriceEntries(priceVal, noteVal) {
     .split("/")
     .map((p) => p.trim())
     .filter(Boolean);
-  const noteFirstLine = (noteVal || "")
-    .toString()
-    .split(/[\n\r]/)[0]
-    .trim();
-  const noteParts = noteFirstLine.split("/").map((n) => n.trim());
   const entries = [];
-  for (let i = 0; i < priceParts.length; i++) {
-    const parsed = parseSinglePrice(priceParts[i]);
-    if (parsed) entries.push({ ...parsed, note: noteParts[i] || null });
+  for (const part of priceParts) {
+    const parsed = parseSinglePrice(part);
+    if (parsed) entries.push(parsed);
   }
   return entries;
 }
@@ -268,7 +272,14 @@ export async function POST(request) {
 
   const existingPrices = await loadAll(
     "vet_prices",
-    "id, vet_id, pending_vet_id, service_id, price_low, price_high, price_type, call_for_quote, source, region",
+    // `notes` is read so a note written in Admin can be carried onto the
+    // replacement row when a sheet price changes — see the reconciliation
+    // below. Without it here, r.notes is undefined and every price edit
+    // quietly wipes the note that explained it.
+    // sheet_value is read so a locked group's "the call sheet says …" line can
+    // be refreshed only when it has actually changed, rather than rewriting
+    // every override on every run.
+    "id, vet_id, pending_vet_id, service_id, price_low, price_high, price_type, call_for_quote, source, region, notes, sheet_value",
   );
   // Index existing prices by vet+service so we can do replace-per-service
   // scoped to sheet-sourced rows, and detect cross-source conflicts.
@@ -329,6 +340,13 @@ export async function POST(request) {
     removedList: [],
     conflictsFound: 0,
     conflictList: [],
+    // Prices Admin has taken over. The sheet is the bulk entry point, Admin is
+    // the final word — so a price edited in Admin wins, and the sync reports
+    // what it left alone rather than quietly doing nothing. Without this the
+    // override is invisible: Susan changes a cell, the number doesn't move,
+    // and there's nothing to point at.
+    pricesLocked: 0,
+    lockedList: [],
     notFound: [],
     errors: [],
     dryRun,
@@ -496,9 +514,8 @@ export async function POST(request) {
         }
       }
 
-      const priceNotesRaw = row[COL.priceNotes] || "";
       for (const svc of SERVICE_MAP) {
-        const entries = parsePriceEntries(row[svc.col], priceNotesRaw);
+        const entries = parsePriceEntries(row[svc.col]);
         if (!entries.length) continue;
 
         const serviceId = serviceMap[normalize(svc.name)];
@@ -561,8 +578,50 @@ export async function POST(request) {
       : `${numKey(row.price_low)}|${numKey(row.price_high)}|${row.price_type ?? ""}`;
   }
 
+  // What the sheet currently holds for a vet+service, as something to read.
+  // Stored on an Admin-owned price so the Prices tab can say "the call sheet
+  // says $50–$70" beside the overridden number — and because the sync rewrites
+  // it every run, that line stays true as the sheet changes rather than being
+  // a snapshot from whenever the override was made.
+  //
+  // Deliberately a display string, not numbers. It exists to be shown to a
+  // person comparing two values by eye; nothing computes with it.
+  function money(n) {
+    const num = Number(n);
+    if (Number.isNaN(num)) return String(n);
+    return num % 1 === 0
+      ? `$${num.toLocaleString("en-US")}`
+      : `$${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  function sheetValueText(entries) {
+    if (!entries || entries.length === 0) return null;
+    const parts = entries.map((e) => {
+      if (e.call_for_quote) return "Call for quote";
+      if (e.price_type === "starting") return `${money(e.price_low)}+`;
+      if (e.price_type === "range" && e.price_high != null)
+        return `${money(e.price_low)}–${money(e.price_high)}`;
+      return money(e.price_low);
+    });
+    // A cell holding "45/55" produced two entries; show both the way the cell
+    // reads rather than picking one and hiding the other.
+    return parts.join(" / ");
+  }
+
   // Build the payload for a sheet price entry.
-  function buildPayload(entry, serviceId, region, vetId, isPending) {
+  //
+  // `carriedNote` is a note written in Admin against the sheet row this one
+  // replaces — see the reconciliation below. The sheet never supplies a note
+  // of its own any more, so this is the only way `notes` gets a value here,
+  // and it is always something a person typed in Admin rather than anything
+  // read out of a cell.
+  function buildPayload(
+    entry,
+    serviceId,
+    region,
+    vetId,
+    isPending,
+    carriedNote,
+  ) {
     const base = entry.call_for_quote
       ? {
           service_id: serviceId,
@@ -570,6 +629,10 @@ export async function POST(request) {
           price_high: null,
           price_type: null,
           call_for_quote: true,
+          // Nothing carried onto a declined row. A clinic that has stopped
+          // sharing a price has changed its answer, not its price, and a note
+          // explaining what the old number included would be left standing
+          // over "Call for quote".
           notes: null,
           is_verified: true,
           source: "sheet",
@@ -581,7 +644,7 @@ export async function POST(request) {
           price_high: entry.price_high,
           price_type: entry.price_type,
           call_for_quote: false,
-          notes: entry.note || null,
+          notes: carriedNote || null,
           is_verified: true,
           source: "sheet",
           region: region || null,
@@ -639,6 +702,19 @@ export async function POST(request) {
       const existingSheet = existing.filter((r) => r.source === "sheet");
       const existingNonSheet = existing.filter((r) => r.source !== "sheet");
 
+      // Admin has taken this one over — leave it alone and say so. Reported
+      // here as well as in the live run, so the preview tells you what the
+      // sync is going to decline to touch before you commit to it.
+      if (existing.some((r) => r.source === "admin")) {
+        results.pricesLocked++;
+        results.lockedList.push(
+          `${g.vetName} — ${g.svcName}: sheet says ${
+            sheetValueText(g.entries) || "nothing"
+          }, Admin's value stands`,
+        );
+        continue;
+      }
+
       const newSigs = new Set(g.entries.map(entrySig));
       const oldSigs = new Set(existingSheet.map(rowSig));
 
@@ -663,8 +739,20 @@ export async function POST(request) {
           );
         }
       }
-      // Conflict: group will have sheet + non-sheet prices.
-      if (existingNonSheet.length > 0 && g.entries.length > 0) {
+      // Conflict: the group will hold both sheet and non-sheet prices AND
+      // they disagree. The value check was added to the live run but not
+      // here, so the preview counted every co-existing pair as a dispute and
+      // reported conflicts the sync then didn't flag — a preview that doesn't
+      // predict the run is worse than no preview.
+      const nonSheetSigsDry = new Set(existingNonSheet.map(rowSig));
+      const valuesDifferDry =
+        existingNonSheet.some((r) => !newSigs.has(rowSig(r))) ||
+        g.entries.some((e) => !nonSheetSigsDry.has(entrySig(e)));
+      if (
+        existingNonSheet.length > 0 &&
+        g.entries.length > 0 &&
+        valuesDifferDry
+      ) {
         results.conflictsFound++;
         results.conflictList.push(`${g.vetName} — ${g.svcName}`);
       }
@@ -709,6 +797,7 @@ export async function POST(request) {
   const idsToDelete = [];
   const pricesToInsert = [];
   const conflictKeysToFlag = []; // { vetId, isPending, serviceId }
+  const sheetValueUpdates = []; // { ids:[], text } — for locked groups
 
   for (const g of groups.values()) {
     if (!g.vetId) continue; // scheduled vet failed to create
@@ -716,13 +805,45 @@ export async function POST(request) {
     const existingSheet = existing.filter((r) => r.source === "sheet");
     const existingNonSheet = existing.filter((r) => r.source !== "sheet");
 
+    // ── Admin override ──
+    // The sheet is where prices are entered in bulk; Admin is where they're
+    // finalised. So a price someone edited in Admin wins, and this whole
+    // vet+service is left alone: nothing inserted, nothing deleted, no
+    // conflict raised. Without the skip, the reconciliation below would see
+    // an Admin value the sheet doesn't contain, delete it as a stale sheet
+    // row, and put the sheet's number back — which is exactly the silent
+    // reversal that made the Edit button get taken away in the first place.
+    //
+    // The group's own sheet rows (a second price from a "45/55" cell, say)
+    // are frozen too. That's the honest reading of "Admin owns this service
+    // for this clinic", rather than half the service syncing and half not.
+    const adminRows = existing.filter((r) => r.source === "admin");
+    if (adminRows.length > 0) {
+      results.pricesLocked++;
+      const text = sheetValueText(g.entries);
+      results.lockedList.push(
+        `${g.vetName} — ${g.svcName}: sheet says ${
+          text || "nothing"
+        }, Admin's value stands`,
+      );
+      // Refresh what the sheet says on the overriding rows, so the Prices tab
+      // can show it and keep showing the truth as the sheet changes.
+      const stale = adminRows.filter((r) => (r.sheet_value || null) !== text);
+      if (stale.length > 0) {
+        sheetValueUpdates.push({ ids: stale.map((r) => r.id), text });
+      }
+      continue;
+    }
+
     const newSigs = new Set(g.entries.map(entrySig));
     const oldSigs = new Set(existingSheet.map(rowSig));
 
     // Delete old sheet rows no longer present in the sheet.
+    const departing = [];
     for (const r of existingSheet) {
       if (!newSigs.has(rowSig(r))) {
         idsToDelete.push(r.id);
+        departing.push(r);
         results.pricesRemoved++;
         results.removedList.push(
           `${g.vetName} — ${g.svcName}: ${
@@ -734,14 +855,41 @@ export async function POST(request) {
       }
     }
     // Insert new sheet entries not already present.
+    const arriving = [];
     for (const e of g.entries) {
       if (oldSigs.has(entrySig(e))) {
         results.pricesSkipped++;
       } else {
-        pricesToInsert.push(
-          buildPayload(e, g.serviceId, g.region, g.vetId, g.isPending),
-        );
+        arriving.push(e);
       }
+    }
+
+    // A changed price is a delete plus an insert, which used to take any note
+    // written in Admin against that price down with it — Susan edits $50 to
+    // $65 and "includes the exam", still true, silently disappears from the
+    // vet page. Carry those notes onto the replacements.
+    //
+    // Only when the counts line up, which covers the real cases: one price
+    // changing (1→1), and a whole multi-price cell being rewritten (n→n). An
+    // uneven swap — two prices becoming one, or one becoming three — has no
+    // honest mapping, so nothing is carried rather than guessing which new
+    // number a note belonged to.
+    const carryNotes =
+      departing.length > 0 &&
+      departing.length === arriving.length &&
+      departing.some((r) => r.notes);
+
+    for (let i = 0; i < arriving.length; i++) {
+      pricesToInsert.push(
+        buildPayload(
+          arriving[i],
+          g.serviceId,
+          g.region,
+          g.vetId,
+          g.isPending,
+          carryNotes ? departing[i].notes : null,
+        ),
+      );
     }
     // Flag a conflict only when the values actually disagree. This used to
     // fire whenever a service had both a sheet and a non-sheet price, without
@@ -787,6 +935,30 @@ export async function POST(request) {
     results.pricesAdded += batch.length;
   }
 
+  // 5b. Refresh "the call sheet says …" on Admin-owned prices whose sheet
+  //     cell has changed since the override was made. Nothing else about
+  //     those rows is touched — this writes one display-only column so the
+  //     Prices tab can show the two values side by side. Grouped by text so
+  //     identical values go out in one statement rather than one per row.
+  const byText = new Map();
+  for (const u of sheetValueUpdates) {
+    const key = u.text ?? "";
+    if (!byText.has(key)) byText.set(key, []);
+    byText.get(key).push(...u.ids);
+  }
+  for (const [text, ids] of byText.entries()) {
+    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+      const batch = ids.slice(i, i + BATCH_SIZE);
+      const { error } = await supabase
+        .from("vet_prices")
+        .update({ sheet_value: text || null })
+        .in("id", batch);
+      if (error) {
+        results.errors.push(`sheet_value refresh failed: ${error.message}`);
+      }
+    }
+  }
+
   // 6. Flag conflicts (set in_conflict + conflict_key on all rows for each
   //    conflicted vet+service).
   for (const c of conflictKeysToFlag) {
@@ -825,6 +997,10 @@ function buildSummary(r) {
     `${r.pricesAdded} prices ${r.dryRun ? "would be added" : "added"}, ` +
     `${r.pricesRemoved} ${verb} removed, ` +
     `${r.pricesSkipped} unchanged, ` +
+    // Named in the summary rather than left to the detail lists. A number the
+    // sync declined to change is the one thing someone reading this needs to
+    // know about and can't infer from the others.
+    `${r.pricesLocked} left to Admin, ` +
     `${r.conflictsFound} conflict${r.conflictsFound !== 1 ? "s" : ""} flagged, ` +
     `${r.notFound.length} rows dropped (no phone/address).`
   );

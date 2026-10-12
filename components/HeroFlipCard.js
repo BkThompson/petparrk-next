@@ -538,14 +538,17 @@ function buildFront(pet, data, theme) {
   // Stats → Personality → Badges). Chip rows, same styling as the back.
   const frontChip = {
     display: "inline-flex",
-    fontSize: "13px",
+    alignItems: "center",
+    boxSizing: "border-box",
+    height: "31px",
+    fontSize: "14px",
     fontWeight: "600",
-    padding: "5px 12px",
+    padding: "3px 12px",
     borderRadius: "999px",
     background: theme.chipBg,
     color: ink,
     border: `1px solid ${theme.cardBorder}`,
-    lineHeight: "1.2",
+    lineHeight: "initial",
   };
   const frontSecTitle = (t) =>
     el(
@@ -672,14 +675,17 @@ function buildBack(pet, data, theme) {
 
   const baseChip = {
     display: "inline-flex",
-    fontSize: "13px",
+    alignItems: "center",
+    boxSizing: "border-box",
+    height: "31px",
+    fontSize: "14px",
     fontWeight: "600",
-    padding: "5px 12px",
+    padding: "3px 12px",
     borderRadius: "999px",
     background: theme.chipBg,
     color: ink,
     border: `1px solid ${theme.cardBorder}`,
-    lineHeight: "1.2",
+    lineHeight: "initial",
   };
   // Mirror the hero card's chip styling exactly:
   //   background: color-mix(srgb, color 14%, card)
@@ -790,8 +796,8 @@ function buildBack(pet, data, theme) {
       color: ink,
       fontWeight: "500",
     });
-    const q1 = el("span", { color: accentOnCard, fontWeight: "800" }, "\u201C");
-    const q2 = el("span", { color: accentOnCard, fontWeight: "800" }, "\u201D");
+    const q1 = el("span", { color: accentOnCard, fontWeight: "800" }, "“");
+    const q2 = el("span", { color: accentOnCard, fontWeight: "800" }, "”");
     body.appendChild(q1);
     body.appendChild(document.createTextNode(data.fun_fact));
     body.appendChild(q2);

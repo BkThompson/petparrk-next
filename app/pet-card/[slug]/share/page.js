@@ -1954,7 +1954,9 @@ export default function SharePrivacyPage() {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
         }
         .pce-tag-chip--display {
-          padding: 4px 10px;
+         padding: 6px 12px;
+          line-height: initial;
+          height: 31px;
         }
         .pce-tag-chip-remove {
           display: inline-flex;

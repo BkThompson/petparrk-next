@@ -46,6 +46,16 @@ const PRICE_RANGES = [
   { label: "No Pricing Available", value: "noprice" },
 ];
 
+// The names the services table actually uses for the two surgery chips below.
+// The card used to look for "Spay (~40lb dog)" and "Neuter (~40lb dog)", which
+// exist nowhere — the sync writes "Spay" and "Neuter", and SERVICE_MAP in
+// sync-sheets/route.js matches on those. So both chips never rendered, and a
+// clinic whose only prices were a spay and a neuter showed "No pricing
+// available" with the prices sitting in the database. Both spellings are
+// accepted in case an older row survives somewhere.
+const SPAY_NAMES = ["Spay", "Spay (~40lb dog)"];
+const NEUTER_NAMES = ["Neuter", "Neuter (~40lb dog)"];
+
 function StarField() {
   const dots = React.useMemo(() => {
     const arr = [];
@@ -581,11 +591,45 @@ function VetsContent() {
         .select("*")
         .eq("status", "active")
         .order("name");
-      const { data: pd } = await supabase
-        .from("vet_prices")
-        .select("*, services(name)");
+
+      // Paginated on purpose. Supabase returns at most 1000 rows per request,
+      // and there are far more prices than that — so this used to see only the
+      // first thousand and every vet past them looked priceless. That is why
+      // cards read "No pricing available" for clinics whose own profile page
+      // showed prices fine. The sync route has the same loop for the same
+      // reason; this page never got one.
+      //
+      // Only the columns the card reads, rather than *. At this row count the
+      // difference between six columns and twenty is most of the payload.
+      const pd = [];
+      {
+        const PAGE = 1000;
+        let from = 0;
+        while (true) {
+          const { data: page, error } = await supabase
+            .from("vet_prices")
+            .select(
+              "vet_id, price_low, price_high, price_type, in_conflict, created_at, services(name)",
+            )
+            .range(from, from + PAGE - 1);
+          if (error) {
+            console.error("vet_prices page failed:", error);
+            break;
+          }
+          if (!page || page.length === 0) break;
+          pd.push(...page);
+          if (page.length < PAGE) break;
+          from += PAGE;
+        }
+      }
+
       const pm = {};
-      pd?.forEach((p) => {
+      pd.forEach((p) => {
+        // A price flagged in_conflict has two sources disagreeing and nobody
+        // has decided between them yet. The vet's own page hides those; this
+        // page was showing them, so a contested number could appear on a card
+        // and then not exist on the profile it links to.
+        if (p.in_conflict) return;
         if (!pm[p.vet_id]) pm[p.vet_id] = [];
         pm[p.vet_id].push(p);
       });
@@ -1160,12 +1204,11 @@ function VetsContent() {
                       p.services?.name === "Dental Cleaning" && p.price_low,
                   );
                   const spay = vp.find(
-                    (p) =>
-                      p.services?.name === "Spay (~40lb dog)" && p.price_low,
+                    (p) => SPAY_NAMES.includes(p.services?.name) && p.price_low,
                   );
                   const neuter = vp.find(
                     (p) =>
-                      p.services?.name === "Neuter (~40lb dog)" && p.price_low,
+                      NEUTER_NAMES.includes(p.services?.name) && p.price_low,
                   );
                   const lu = vet.last_verified
                     ? new Date(vet.last_verified + "T12:00:00")

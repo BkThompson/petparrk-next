@@ -5791,7 +5791,7 @@ const heroEditorCss = `
     color:var(--navy); 
   }
   .he-display-stats { display:flex; flex-wrap:wrap; gap:8px; }
-  .he-display-stat { display:inline-flex; align-items:center; padding:6px 12px; background:var(--cream); border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:999px; font-size:14px; font-weight:700; color:var(--navy); }
+  .he-display-stat { display:inline-flex; align-items:center; padding:6px 12px; background:var(--cream); border:var(--pill-border-w, 2px) solid var(--control-border); border-radius:999px; font-size:14px; font-weight:700; color:var(--navy); line-height: initial; height: 31px;}
   .he-display-theme { display:inline-flex; align-items:center; gap:10px; font-size:15px; font-weight:600; color:var(--navy); }
   .he-display-swatch { width:32px; height:22px; border-radius:7px; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08); }
   .he-edit-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
@@ -6720,6 +6720,8 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
         }
 .pce-tag-chip--display {
           padding: 6px 12px;
+          line-height: initial;
+          height: 31px;
         }
 .pce-tag-chip-remove {
           display: inline-flex;

@@ -1534,9 +1534,9 @@ const heroCardCss = `
      wrong while Preferences, which has no toggle in its row, stayed correct. */
   .hc-tags { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
   .hc-tag {
-    display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--t-chip-bg);
+    display:inline-flex; align-items:center; gap:5px; height:31px; padding:3px 12px; box-sizing:border-box; background:var(--t-chip-bg);
     border:1px solid var(--t-card-border); border-radius:999px; font-size:14px; font-weight:600;
-    color:var(--t-chip-text); white-space:nowrap;line-height: 1.2;
+    color:var(--t-chip-text); white-space:nowrap;line-height: initial;
   }
   /* Sized exactly like the tags beside it. The 44px min-height that used to be
      here was for the tap minimum, but it made the toggle taller than every
@@ -1568,8 +1568,9 @@ const heroCardCss = `
   .hc-like-col.hc-foods h4 { color:var(--t-foods); }
   .hc-like-col ul { list-style:none; display:flex; flex-wrap:wrap; gap:8px; padding:0; margin:0; }
   .hc-like-col li {
-    font-size:14px; font-weight:600; color:var(--t-chip-text); line-height:1.2;
-    padding:6px 12px; border-radius:999px; background:var(--t-chip-bg);
+    display:inline-flex; align-items:center; height:31px; box-sizing:border-box;
+    font-size:14px; font-weight:600; color:var(--t-chip-text); line-height:initial;
+    padding:3px 12px; border-radius:999px; background:var(--t-chip-bg);
     border:1px solid var(--t-card-border); white-space:nowrap;
   }
   .hc-like-col.hc-loves li {
@@ -1584,11 +1585,18 @@ const heroCardCss = `
     background:color-mix(in srgb, var(--t-foods) 14%, var(--t-card));
     border-color:color-mix(in srgb, var(--t-foods) 55%, transparent);
   }
-  .hc-like-toggle-li { display:contents; }
+  /* The toggle's wrapper li must NOT be a pill itself — it only holds the
+     button, which is the real pill. .hc-like-col li above sets a border/bg/
+     height, and that has higher specificity than a bare .hc-like-toggle-li, so
+     the wrapper rendered its own pill AROUND the button = a double border and a
+     taller control. Scoping the reset as .hc-like-col li.hc-like-toggle-li
+     out-specifies the li rule and strips all of it back to display:contents. */
+  .hc-like-col li.hc-like-toggle-li { display:contents; background:none; border:none; padding:0; height:auto; }
   .hc-like-toggle {
-    display:inline-flex; align-items:center; gap:5px; padding:6px 12px;
+    display:inline-flex; align-items:center; gap:5px; height:31px; padding:3px 12px; box-sizing:border-box;
+    line-height:initial;
     background:transparent; border:1px solid var(--t-card-border); border-radius:999px;
-    font-family:inherit; font-size:13px; font-weight:700; color:var(--t-accent-on-card);
+    font-family:inherit; font-size:14px; font-weight:700; color:var(--t-accent-on-card);
     cursor:pointer; white-space:nowrap;
   }
   .hc-like-toggle:hover { background:var(--t-chip-bg); }
