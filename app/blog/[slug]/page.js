@@ -84,12 +84,18 @@ export default async function BlogPost({ params }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <main className="ba">
+        <div className="ba-crumbs">
+          <div className="pp-container">
+            <div className="ba-crumbs-inner">
+              <Breadcrumb items={[{ label: "Blog", href: "/blog" }, { label: post.crumb || post.title }]} />
+            </div>
+          </div>
+        </div>
         <header className="ba-head">
           <div className="bl-hero-glow" />
           <div className="bl-hero-ranges" />
           <div className="pp-container">
             <div className="ba-head-inner">
-              <Breadcrumb items={[{ label: "Blog", href: "/blog" }, { label: post.crumb || post.title }]} />
               <span className="b-topic">{post.topic}</span>
               <h1 className="ba-h1">{post.title}</h1>
               {post.dek && <p className="ba-dek">{post.dek}</p>}

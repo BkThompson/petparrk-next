@@ -40,6 +40,10 @@ export const LOADER_MESSAGES = {
   symptomChecker: "Loading symptom checker…", // /symptom-checker
   symptomChat: "Loading chat…", // /symptom-checker/chat
 
+  // ── Blog ────────────────────────────────────────────────────────────
+  blog: "Loading blog…", // /blog (and its categories and pages)
+  blogArticle: "Loading article…", // /blog/[slug] (one article)
+
   // ── Marketing / info pages ──────────────────────────────────────────
   home: "Loading PetParrk…", // /
   about: "Loading about…", // /about

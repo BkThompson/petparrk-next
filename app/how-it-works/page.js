@@ -280,7 +280,7 @@ export default function HowItWorksPage() {
 
 
 
-        .bt { height:48px; padding:0 32px; line-height:0; border-radius:12px; font-size:15px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; font-family:var(--font-urbanist,'Urbanist',sans-serif); transition:background .25s,color .25s; }
+        .bt { height:48px; padding:0 24px; line-height:0; border-radius:12px; font-size:15px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; font-family:var(--font-urbanist,'Urbanist',sans-serif); transition:background .25s,color .25s; }
         .bt-tc { background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); }
         .bt-tc:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
         .bt-dk { background:transparent; color:var(--color-navy-dark,#172531); border:2px solid var(--color-navy-dark,#172531); }

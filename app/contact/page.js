@@ -135,7 +135,7 @@ export default function ContactPage() {
         .eb-s:hover { background:var(--color-navy-dark,#172531); color:#fff; }
         .ico { position:relative; max-width:515px; margin:0 auto; border-radius:22px; padding:1.5px; background:linear-gradient(135deg,rgba(239,200,139,0.4) 0%,rgba(207,92,54,0.2) 15%,transparent 35%,transparent 65%,rgba(207,92,54,0.15) 85%,rgba(239,200,139,0.35) 100%); }
         .ici { border-radius:20px; overflow:hidden; background:linear-gradient(160deg,#2C4657 0%,#172531 100%); }
-        .bc { height:48px; padding:0 32px; line-height:1; background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px; font-size:15px; font-weight:700; text-decoration:none; font-family:var(--font-urbanist,'Urbanist',sans-serif); display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:background .25s,color .25s; }
+        .bc { height:48px; padding:0 24px; line-height:1; background:var(--color-terracotta,#CF5C36); color:#fff; border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px; font-size:15px; font-weight:700; text-decoration:none; font-family:var(--font-urbanist,'Urbanist',sans-serif); display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:background .25s,color .25s; }
         .bc:hover { background:#fff; color:var(--color-terracotta,#CF5C36); }
         .contact-header { min-height:393px; height:393px; overflow:hidden; }
         @media (max-width: 768px) {

@@ -285,7 +285,13 @@ export default function HomeDashboard({ session, savedVets = [] }) {
 
   return (
     <section className="hd-band">
-      <div className="pp-container hd-wrap">
+      {/* 1040px, not the 1280px the sections below use. The two top cards
+          want roughly 330–400px each, so at 1280 every quick-action row held
+          one label and an arrow about 270px apart, and the pets rows stranded
+          "Check now" a thousand pixels from the pet's name. .pp-container-mixed
+          is the middle tier for exactly this: a card layout that isn't the
+          full grid and isn't a text column. */}
+      <div className="pp-container-mixed hd-wrap">
         <style>{`
         .hd-band { background: #fff; border-bottom: 1px solid ${C.border}; }
         .hd-wrap { padding-top: 40px; padding-bottom: 48px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
@@ -374,7 +380,7 @@ export default function HomeDashboard({ session, savedVets = [] }) {
         /* Page tier — matches the site boundary in globals.css so the
            dashboard's gutter flips at the same width as every other
            section on the homepage. Horizontal padding comes from
-           .pp-container; never set it here. */
+           .pp-container-mixed; never set it here. */
         @media (max-width: 768px) {
           .hd-wrap { padding-bottom: 4px; }
           .hd-greeting { font-size: 22px; }
@@ -445,7 +451,7 @@ export default function HomeDashboard({ session, savedVets = [] }) {
             ) : (
               <p className="hd-tier-level">
                 {loading
-                  ? "\u00A0"
+                  ? " "
                   : "Start building your pet's profile to level up."}
               </p>
             )}

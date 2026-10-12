@@ -1,10 +1,8 @@
 // Server-safe blog UI: no hooks, no "use client". Pages that import this stay
 // server components, so Google gets fully rendered HTML.
 import Link from "next/link";
-// Breadcrumb is your existing component (components/Breadcrumb.js).
-import Breadcrumb from "./Breadcrumb";
 import BlogFaq from "./BlogFaq";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { BRAND, CTA, formatDate, getPage, getActiveCategories } from "../lib/blogPosts";
 
 // Falls back to system sans (never serif) if the font variable isn't set.
@@ -97,6 +95,8 @@ export const BLOG_CSS = `
 
   /* Category buttons — pill shape with the site's 2px chip border */
   .bl-cats { margin: 56px 0 0; }
+  /* Page and category links land here, not back at the top banner. */
+  #articles { scroll-margin-top: 88px; }
   /* Category or page-2 views have no featured card overlapping the banner. */
   .bl-hero--plain { padding-bottom: 88px; }
   .bl-hero--plain + .bl-body > .bl-cats:first-child { margin-top: 48px; }
@@ -115,6 +115,14 @@ export const BLOG_CSS = `
   .bl-pager a:hover { border-color: #CF5C36; color: #CF5C36; }
   .bl-pager a:focus-visible { outline: 3px solid rgba(207,92,54,0.55); outline-offset: 2px; }
   .bl-pager [aria-current="page"] { background: #172531; color: #fff; border: 1px solid #172531; }
+  .bl-pager .bl-step { gap: 6px; padding: 0 16px 0 12px; }
+  .bl-pager .bl-gap { min-width: 24px; padding: 0; color: #4D6473; }
+  .bl-pager .bl-step--next { padding: 0 12px 0 16px; }
+  /* Phones: arrows only (the words stay for screen readers). */
+  @media (max-width: 480px) {
+    .bl-pager .bl-step, .bl-pager .bl-step--next { padding: 0; width: 44px; }
+    .bl-step-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  }
   .bl-pager .is-disabled { color: #9AA3AD; background: transparent; border: 1px solid #E7DFD2; }
 
   /* Waitlist band */
@@ -125,23 +133,24 @@ export const BLOG_CSS = `
   .b-band-title { font-size: clamp(24px, 3vw, 32px); font-weight: 800; color: #fff; letter-spacing: -0.025em; line-height: 1.15; margin: 0 0 10px; }
   .b-band-text { font-size: 17px; font-weight: 500; line-height: 1.6; color: rgba(255,255,255,0.75); margin: 0; max-width: 560px; }
   /* Same as How It Works .bt .bt-tc: 12px corners, 2px border, colors flip on hover. */
-  .b-btn { height: 48px; padding: 0 32px; box-sizing: border-box; border-radius: 12px; font-size: 15px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; background: #CF5C36; color: #fff; border: 2px solid #CF5C36; transition: background .25s, color .25s; }
+  .b-btn { height: 48px; padding: 0 24px; box-sizing: border-box; border-radius: 12px; font-size: 15px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; background: #CF5C36; color: #fff; border: 2px solid #CF5C36; transition: background .25s, color .25s; }
   .b-btn:hover { background: #fff; color: #CF5C36; }
   .b-btn:focus-visible { outline: 3px solid #EFC88B; outline-offset: 3px; }
 
   /* ── Article: header ───────────────────────────────────────────────── */
   /* Same navy banner as the blog home page (glow + faint price lines). */
-  .ba-head { position: relative; overflow: hidden; padding: 36px 0 132px; background: #172531; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .ba-head { position: relative; overflow: hidden; padding: 56px 0 132px; background: #172531; border-bottom: 1px solid rgba(255,255,255,0.07); }
   .ba-head .pp-container { z-index: 1; }
-  .ba-head .bc-link { color: #EFC88B; }
-  .ba-head .bc-link:hover { color: #fff; }
-  .ba-head .bc-current, .ba-head .bc-plain { color: rgba(255,255,255,0.85); }
-  .ba-head .bc-sep { color: rgba(255,255,255,0.5); }
+  /* Article titles are long, so the faint price lines sit further back here. */
+  .ba-head .bl-hero-ranges { opacity: 0.3; }
+  /* Breadcrumb: a slim strip below the site navbar, above the banner. */
+  .ba-crumbs { background: #F5F0E8; padding: 14px 0; border-bottom: 1px solid #E7DFD2; }
+  .ba-crumbs-inner { max-width: 984px; margin: 0 auto; }
+  .ba-crumbs .bc-nav { margin: 0; }
   .ba-head .pp-container { position: relative; }
   /* Header, glance card and body share one centered column (680 + 64 + 240). */
   .ba-head-inner, .ba-glance, .ba-layout { max-width: 984px; margin-left: auto; margin-right: auto; }
   .ba-head-inner > .ba-h1, .ba-head-inner > .ba-dek { max-width: 820px; }
-  .ba-head .bc-nav { margin-bottom: 36px; }
   .ba-h1 { font-size: clamp(30px, 5.5vw, 56px); font-weight: 800; color: #fff; letter-spacing: -0.025em; line-height: 1.05; margin: 14px 0 16px; }
   .ba-dek { font-size: clamp(18px, 2.1vw, 21px); font-weight: 500; line-height: 1.55; color: rgba(255,255,255,0.7); margin: 0 0 28px; max-width: 700px; }
   .ba-byline { display: flex; align-items: center; gap: 14px; }
@@ -202,7 +211,9 @@ export const BLOG_CSS = `
   .ba-table-wrap { overflow-x: auto; margin: 28px 0 32px; border: 1px solid #E7DFD2; border-radius: 16px; background: #fff; }
   .ba-table { width: 100%; border-collapse: collapse; font-size: 16px; }
   .ba-table caption { text-align: left; font-size: 15px; font-weight: 800; color: #172531; padding: 18px 20px 6px; }
-  .ba-table th { text-align: left; font-weight: 700; font-size: 14px; color: #4D6473; padding: 12px 20px; border-bottom: 1px solid #EDE6DA; background: #FBF8F3; }
+  .ba-table th { text-align: left; font-weight: 700; font-size: 15px; color: #4D6473; padding: 12px 20px; border-top: 1px solid #EDE6DA; border-bottom: 1px solid #EDE6DA; background: #FBF8F3; }
+  /* No caption: the table's own frame is the top edge, so skip the extra line. */
+  .ba-table thead:first-child th { border-top: 0; }
   .ba-table td { padding: 14px 20px; border-bottom: 1px solid #F1ECE3; font-weight: 500; line-height: 1.5; vertical-align: top; }
   .ba-table td:first-child { font-weight: 700; color: #172531; }
   .ba-table tr:last-child td { border-bottom: 0; }
@@ -232,7 +243,7 @@ export const BLOG_CSS = `
     .bl-feature .b-cover { min-height: 230px; padding: 28px; }
     .bl-feature-body { padding: 28px 28px 30px; }
     .ba-layout { grid-template-columns: minmax(0, 1fr); max-width: 680px; padding-top: 40px; gap: 0; }
-    .ba-head-inner, .ba-glance { max-width: 680px; }
+    .ba-head-inner, .ba-glance, .ba-crumbs-inner { max-width: 680px; }
     .ba-toc { display: none; }
     .ba-toc-mobile { display: block; margin: 0 0 8px; background: #fff; border: 1px solid #E7DFD2; border-radius: 16px; }
     .ba-toc-mobile summary { cursor: pointer; list-style: none; padding: 16px 20px; font-size: 15px; font-weight: 800; color: #172531; display: flex; justify-content: space-between; align-items: center; }
@@ -255,8 +266,7 @@ export const BLOG_CSS = `
     .bl-section-head { margin-top: 52px; }
     .b-btn { width: 100%; }
     .b-band { grid-template-columns: 1fr; padding: 32px 24px; border-radius: 20px; margin-top: 64px; }
-    .ba-head { padding: 24px 0 112px; }
-    .ba-head .bc-nav { margin-bottom: 24px; }
+    .ba-head { padding: 40px 0 112px; }
     .ba-glance { margin-top: -80px; padding: 22px 20px 18px; border-radius: 16px; }
     .ba-glance-grid { grid-template-columns: 1fr; }
     .ba-glance-grid div { flex-direction: row; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 0; border-left: 0; border-top: 1px solid #EDE6DA; }
@@ -411,24 +421,43 @@ export function blogHref({ page = 1, category = null } = {}) {
 }
 
 export function Pagination({ page, totalPages, category = null }) {
-  const pageHref = (n) => blogHref({ page: n, category });
+  const pageHref = (n) => `${blogHref({ page: n, category })}#articles`;
   if (totalPages <= 1) return null;
-  const nums = Array.from({ length: totalPages }, (_, i) => i + 1);
+  // Up to 7 pages: show every number. More: first, last, and the pages
+  // around the current one, with "…" for the gaps (1 … 4 5 6 … 12).
+  const nums = [];
+  if (totalPages <= 7) {
+    for (let n = 1; n <= totalPages; n++) nums.push(n);
+  } else {
+    const start = Math.max(2, page - 1);
+    const end = Math.min(totalPages - 1, page + 1);
+    nums.push(1);
+    if (start > 2) nums.push("gap-start");
+    for (let n = start; n <= end; n++) nums.push(n);
+    if (end < totalPages - 1) nums.push("gap-end");
+    nums.push(totalPages);
+  }
   return (
     <nav className="bl-pager" aria-label="Blog pages">
       <ol>
         <li>
           {page > 1 ? (
-            <Link href={pageHref(page - 1)} rel="prev">
-              Newer
+            <Link href={pageHref(page - 1)} rel="prev" className="bl-step" aria-label="Previous page">
+              <ChevronLeft size={18} strokeWidth={2.4} aria-hidden="true" />
+              <span className="bl-step-label">Previous</span>
             </Link>
           ) : (
-            <span className="is-disabled">Newer</span>
+            <span className="bl-step is-disabled" aria-disabled="true">
+              <ChevronLeft size={18} strokeWidth={2.4} aria-hidden="true" />
+              <span className="bl-step-label">Previous</span>
+            </span>
           )}
         </li>
         {nums.map((n) => (
           <li key={n}>
-            {n === page ? (
+            {typeof n === "string" ? (
+              <span className="bl-gap" aria-hidden="true">…</span>
+            ) : n === page ? (
               <span aria-current="page">{n}</span>
             ) : (
               <Link href={pageHref(n)} aria-label={`Page ${n}`}>
@@ -439,11 +468,15 @@ export function Pagination({ page, totalPages, category = null }) {
         ))}
         <li>
           {page < totalPages ? (
-            <Link href={pageHref(page + 1)} rel="next">
-              Older
+            <Link href={pageHref(page + 1)} rel="next" className="bl-step bl-step--next" aria-label="Next page">
+              <span className="bl-step-label">Next</span>
+              <ChevronRight size={18} strokeWidth={2.4} aria-hidden="true" />
             </Link>
           ) : (
-            <span className="is-disabled">Older</span>
+            <span className="bl-step bl-step--next is-disabled" aria-disabled="true">
+              <span className="bl-step-label">Next</span>
+              <ChevronRight size={18} strokeWidth={2.4} aria-hidden="true" />
+            </span>
           )}
         </li>
       </ol>
@@ -457,14 +490,14 @@ export function CategoryNav({ current, cats }) {
     <nav className="bl-cats" aria-label="Blog categories">
       <ul>
         <li>
-          <Link href="/blog" className="bl-cat" aria-current={!current ? "page" : undefined}>
+          <Link href="/blog#articles" className="bl-cat" aria-current={!current ? "page" : undefined}>
             All
           </Link>
         </li>
         {cats.map((c) => (
           <li key={c.key}>
             <Link
-              href={blogHref({ category: c.key })}
+              href={`${blogHref({ category: c.key })}#articles`}
               className="bl-cat"
               aria-current={current === c.key ? "page" : undefined}
             >
@@ -659,20 +692,9 @@ export async function BlogIndex({ page = 1, category = null }) {
           <div className="bl-hero-ranges" />
           <div className="pp-container">
             <div className="bl-hero-inner">
-              {(page > 1 || catLabel) && (
-                <Breadcrumb
-                  items={[
-                    { label: "Blog", href: "/blog" },
-                    ...(catLabel ? [{ label: catLabel, href: page > 1 ? blogHref({ category }) : undefined }] : []),
-                    ...(page > 1 ? [{ label: `Page ${page}` }] : []),
-                  ]}
-                />
-              )}
-              {!(page > 1 || catLabel) && (
-                <p className="b-eyebrow" style={{ color: "#EFC88B" }}>
-                  Blog
-                </p>
-              )}
+              <p className="b-eyebrow" style={{ color: "#EFC88B" }}>
+                Blog
+              </p>
               <h1 className="bl-h1">
                 Honest answers for
                 <br />
@@ -697,13 +719,13 @@ export async function BlogIndex({ page = 1, category = null }) {
           ) : (
             <>
               {lead && <FeaturedCard post={lead} />}
+              <div id="articles" />
               <CategoryNav current={category} cats={cats} />
               {posts.length > 0 && (
                 <section aria-labelledby="bl-all">
                   <div className="bl-section-head">
                     <h2 id="bl-all" className="bl-h2">
-                      {catLabel || "Latest articles"}
-                      {page > 1 ? `, page ${page}` : ""}
+                      {catLabel || (page > 1 ? "More articles" : "Latest articles")}
                     </h2>
                   </div>
                   <ul className="bl-grid">

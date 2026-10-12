@@ -549,7 +549,7 @@ const PAGE_CSS = `
 
 
   .btn-tc {
-    height:48px; padding:0 32px; line-height:1;
+    height:48px; padding:0 24px; line-height:1;
     background:var(--color-terracotta,#CF5C36); color:#fff;
     border:2px solid var(--color-terracotta,#CF5C36); border-radius:12px;
     font-size:15px; font-weight:700; text-decoration:none;

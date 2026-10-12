@@ -341,10 +341,62 @@ function hasText(html) {
   );
 }
 
-function parseNotes(n) {
-  if (!n) return [];
-  return n.split(" / ").map((x) => x.trim());
+// Turns the raw vet_prices rows into what the page shows. Pulled out of the
+// fetch so the initial load and the refresh-on-return below can't drift apart
+// — two copies of this is two sets of rules about which prices are visible.
+function derivePrices(rows) {
+  // Prices flagged in_conflict have competing values under review — never
+  // show a contested number publicly. Filter them out of the displayed
+  // prices, and collect the affected service names to show a neutral
+  // "pricing under review" note instead.
+  const conflicted = rows.filter((p) => p.in_conflict);
+  // Two sources can hold the same price — Susan types it in Admin and it
+  // also comes through the call sheet. That's agreement, not a duplicate
+  // worth printing twice, so collapse identical rows for a service.
+  const seenPrice = new Set();
+  const clean = rows
+    .filter((p) => !p.in_conflict)
+    // Sort before collapsing, so which of two identical rows survives is
+    // decided rather than left to whatever order Postgres returned. A row
+    // carrying a note wins: the note is the only thing that differs
+    // between them, so dropping that row loses real information while
+    // dropping the other loses nothing. This is why a note written in
+    // Admin could vanish — the number still showed, because the row that
+    // happened to win was the one without it.
+    .sort((a, b) => (hasText(b.notes) ? 1 : 0) - (hasText(a.notes) ? 1 : 0))
+    .filter((p) => {
+      // Species is deliberately not part of this key. It used to be, and it
+      // was why the same price printed twice: the sync writes sheet prices
+      // with no species at all, while Admin requires one, so a $50 exam from
+      // the call sheet and the same $50 exam typed in Admin had different
+      // keys and both got through. This page never displays species, so two
+      // rows that differ only by it are the same row as far as a reader is
+      // concerned, and the second one is noise.
+      const key = [
+        p.service_id,
+        p.price_low,
+        p.price_high,
+        p.price_type,
+        p.call_for_quote,
+      ].join("|");
+      if (seenPrice.has(key)) return false;
+      seenPrice.add(key);
+      return true;
+    });
+  const reviewServiceNames = Array.from(
+    new Set(conflicted.map((p) => p.services?.name).filter(Boolean)),
+  );
+  return { clean, reviewServiceNames };
 }
+
+// Per-price notes used to be split on " / " and printed as plain text. That
+// was for the call sheet's old price-notes column, which packed several notes
+// into one cell — the sync no longer reads it, and nothing writes that shape
+// any more. Every note now comes from the "Public note" field on a price in
+// Admin, which is the same rich-text editor as the clinic note below, so a
+// note is HTML and is rendered as HTML. Printed as text it showed its own
+// <p> tags the moment anyone bolded a word or pressed Enter, and showed a
+// blank line when the field was cleared (hence hasText above).
 
 // Fix #8 — renders a single hours line, handles split hours without comma
 function HoursLine({ line }) {
@@ -561,6 +613,8 @@ export default function VetPage() {
   const inlineSubmitRef = useRef(null);
   const submitCtaRef = useRef(null);
   const sbWidthRef = useRef(0);
+  // Timestamp of the last price fetch, for throttling the refresh below.
+  const lastFetchRef = useRef(Date.now());
 
   // Close the inline submit-price form and restore scroll to the trigger,
   // so the user isn't left stranded at the bottom of the page.
@@ -600,35 +654,8 @@ export default function VetPage() {
         .from("vet_prices")
         .select("*, services(id,name,category,sort_order), vets(city)");
       setVet(vetData);
-      // Prices flagged in_conflict have competing values under review — never
-      // show a contested number publicly. Filter them out of the displayed
-      // prices, and collect the affected service names to show a neutral
-      // "pricing under review" note instead.
-      const allVetPrices = priceData || [];
-      const conflicted = allVetPrices.filter((p) => p.in_conflict);
-      // Two sources can hold the same price — Susan types it in Admin and it
-      // also comes through the call sheet. That's agreement, not a duplicate
-      // worth printing twice, so collapse identical rows for a service.
-      const seenPrice = new Set();
-      const cleanPrices = allVetPrices
-        .filter((p) => !p.in_conflict)
-        .filter((p) => {
-          const key = [
-            p.service_id,
-            p.price_low,
-            p.price_high,
-            p.price_type,
-            p.call_for_quote,
-            p.species || "",
-          ].join("|");
-          if (seenPrice.has(key)) return false;
-          seenPrice.add(key);
-          return true;
-        });
-      const reviewServiceNames = Array.from(
-        new Set(conflicted.map((p) => p.services?.name).filter(Boolean)),
-      );
-      setPrices(cleanPrices);
+      const { clean, reviewServiceNames } = derivePrices(priceData || []);
+      setPrices(clean);
       setReviewServices(reviewServiceNames);
       setAllPrices(allPricesData || []);
       setLoading(false);
@@ -638,6 +665,51 @@ export default function VetPage() {
       }
     }
     fetchData();
+  }, [slug]);
+
+  // Prices change in Admin while this page is already open — a note gets
+  // added, a number gets corrected — and the fetch above only ever runs once
+  // per visit, so the page kept showing what it loaded with until someone
+  // thought to reload it. Refetch when the tab comes back to the front.
+  //
+  // visibilitychange rather than focus: focus also fires when devtools opens
+  // or a dialog closes, which is what made the Admin page jump around.
+  //
+  // Only this vet's record and its own prices. The all-prices query behind
+  // the regional averages reads the whole table, and an average over
+  // thousands of rows doesn't move enough to be worth repeating.
+  //
+  // No setLoading here on purpose — flipping it would replace the page with
+  // the loader every time you came back to the tab.
+  useEffect(() => {
+    if (!slug) return;
+    async function refresh() {
+      const { data: vetData } = await supabase
+        .from("vets")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+      if (!vetData) return;
+      const { data: priceData } = await supabase
+        .from("vet_prices")
+        .select("*, services(id,name,category,sort_order)")
+        .eq("vet_id", vetData.id);
+      setVet(vetData);
+      const { clean, reviewServiceNames } = derivePrices(priceData || []);
+      setPrices(clean);
+      setReviewServices(reviewServiceNames);
+    }
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      // Throttled, so flicking between tabs doesn't re-query on every switch.
+      // Short, because the point is that a save in Admin shows up when you
+      // come back here, not a minute later.
+      if (Date.now() - lastFetchRef.current < 3000) return;
+      lastFetchRef.current = Date.now();
+      refresh();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [slug]);
 
   useEffect(() => {
@@ -821,7 +893,7 @@ export default function VetPage() {
         .acc-wrap{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 0.38s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease;}
         .acc-wrap.open{grid-template-rows:1fr;opacity:1;}
         .acc-inner{overflow:hidden; margin-top: 15px;}
-        .expand-btn{position:relative;width:28px;height:28px;border-radius:50%;border:1.5px solid ${C.terracotta};background:transparent;color:${C.terracotta};cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s,color 0.2s;outline:none;}
+        .expand-btn{position:relative;width:28px;height:28px;border-radius:50%;border:2px solid ${C.terracotta};background:transparent;color:${C.terracotta};cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s,color 0.2s;outline:none;}
         .expand-btn:hover,.expand-btn.is-open{background:${C.terracotta};color:#fff;}
         .expand-btn.is-open:hover{background:#a8471d;border-color:#a8471d;}
         .expand-btn::after{content:"";position:absolute;inset:-8px;}
@@ -831,7 +903,7 @@ export default function VetPage() {
            here so they can be targeted in one place; only the state colours
            stay inline, since they depend on the vet's data. */
         .vs-detail-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:14px;font-weight:700;border:var(--pill-border-w,2px) solid transparent;width:fit-content;}
-        .report-price-btn{background:none;border:none;color:${C.muted};font-size:13px;font-weight:600;cursor:pointer;padding:14px 10px;text-decoration:underline;font-family:inherit;transition:color 0.15s;}
+        .report-price-btn{background:none;border:none;color:${C.muted};font-size:13px;font-weight:600;cursor:pointer;padding:14px 0px 14px 10px;text-decoration:underline;font-family:inherit;transition:color 0.15s;}
         .report-price-btn:hover{color:${C.terracotta};}
         .price-row{padding:16px 0 0;}
         /* Canonical modal backdrop: navy 55% + 4px blur. Same treatment as
@@ -868,6 +940,19 @@ export default function VetPage() {
         .vs-pricegroup-h{margin:0 0 4px;font-size:18px;font-weight:800;letter-spacing:0.02em;text-transform:uppercase;color:${C.navyDark};}
         .vs-section-h{margin:0 0 4px;font-size:22px;font-weight:800;color:${C.navyDark};font-family:var(--font-urbanist,system-ui);}
         .vs-service-name{font-size:16px;font-weight:600;color:${C.navyDark};overflow-wrap:break-word;}
+        /* The note a clinic gave for one price — "exam fee waived on a first
+           visit", "includes the take-home medication". Sits under the service
+           name it belongs to, quieter than it, and no panel: it reads as part
+           of the row rather than an aside attached to it. Rich text from
+           Admin, so its paragraphs and lists need sizing explicitly to be
+           targetable at all. */
+        .vs-pricenote{margin:2px 0 0;max-width:710px;font-size:15px;font-weight:500;color:${C.muted};line-height:1.55;overflow-wrap:break-word;}
+        .vs-pricenote p{margin:0 0 6px;font-size:15px;line-height:1.55;}
+        .vs-pricenote p:last-child{margin:0;}
+        .vs-pricenote ul,.vs-pricenote ol{margin:4px 0 0;padding-left:20px;}
+        .vs-pricenote li{font-size:15px;line-height:1.55;}
+        .vs-pricenote strong{font-weight:700;color:${C.slate};}
+        .vs-pricenote a{color:${C.terracotta};text-decoration:underline;}
         /* Matches the per-service note panels — same surface, radius, padding
            and label treatment — so it belongs to the page rather than sitting
            on it. Separated by a rule and more space above, because it's about
@@ -1908,7 +1993,6 @@ export default function VetPage() {
                               const accordionCopy =
                                 ACCORDION_COPY[p.services?.id];
                               const isExpanded = !!expandedRows[p.id];
-                              const noteLines = parseNotes(p.notes);
                               // Every row keeps its divider now. Without it the
                               // last row of a group ran straight into the next
                               // group's heading with nothing between them.
@@ -1927,21 +2011,14 @@ export default function VetPage() {
                                         <span className="vs-service-name">
                                           {p.services?.name}
                                         </span>
-                                        {noteLines.map((note, j) => (
-                                          <p
-                                            key={j}
-                                            style={{
-                                              margin: "2px 0 0",
-                                              fontSize: "15px",
-                                              fontWeight: 500,
-                                              maxWidth: "710px",
-                                              color: C.muted,
-                                              overflowWrap: "break-word",
+                                        {hasText(p.notes) && (
+                                          <div
+                                            className="vs-pricenote"
+                                            dangerouslySetInnerHTML={{
+                                              __html: p.notes,
                                             }}
-                                          >
-                                            {note}
-                                          </p>
-                                        ))}
+                                          />
+                                        )}
                                       </div>
                                       <div
                                         style={{

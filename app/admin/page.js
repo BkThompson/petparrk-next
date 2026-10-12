@@ -631,16 +631,107 @@ function sanitizeRichText(html) {
     "LI",
     "A",
   ]);
+  // Dropped with their contents. Unwrapping one of these to text used to dump
+  // its source into the note — pasting from a web page could leave a block of
+  // CSS or the text of a script sitting under a price. Inert either way, but
+  // it has no business being there.
+  const dropped = new Set([
+    "SCRIPT",
+    "STYLE",
+    "NOSCRIPT",
+    "TEMPLATE",
+    "IFRAME",
+    "OBJECT",
+    "EMBED",
+    "APPLET",
+    "META",
+    "LINK",
+    "HEAD",
+    "TITLE",
+  ]);
+  // Disallowed tags that are block-level in the browser, so dropping them
+  // loses a line break rather than just a wrapper. contentEditable produces
+  // DIV for every Enter keypress (Chrome's default paragraph separator), which
+  // is why two typed lines used to come back joined into one: the DIV was
+  // flattened to bare text and the break went with it. These become <p>, which
+  // is allowed, styled, and renders as its own line everywhere a note is shown.
+  //
+  // Table and list *containers* are deliberately not here. Turning TABLE and
+  // TR into paragraphs as well as their cells produced <p><p><p>a</p></p></p>,
+  // which no browser renders as written. They unwrap instead, so only the
+  // cells become lines.
+  const blockish = new Set([
+    "DIV",
+    "SECTION",
+    "ARTICLE",
+    "ASIDE",
+    "MAIN",
+    "HEADER",
+    "FOOTER",
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H5",
+    "H6",
+    "BLOCKQUOTE",
+    "PRE",
+    "ADDRESS",
+    "FIGCAPTION",
+    "DD",
+    "DT",
+    "TD",
+    "TH",
+  ]);
   const container = document.createElement("div");
   container.innerHTML = html;
-  const walk = (node) => {
+  // insideP tracks whether we're already inside a paragraph. A block nested in
+  // one can't become another <p> — <p> cannot contain <p>, and the browser
+  // silently closes the outer one, scrambling the order. It becomes a <br>
+  // plus its contents, which keeps the line break without the invalid nesting.
+  const walk = (node, insideP) => {
     const children = Array.from(node.childNodes);
     for (const child of children) {
       if (child.nodeType === 1) {
+        if (dropped.has(child.tagName)) {
+          node.removeChild(child);
+          continue;
+        }
         if (!allowed.has(child.tagName)) {
-          // Unwrap disallowed tags: replace with their text/children
-          const text = document.createTextNode(child.textContent || "");
-          node.replaceChild(text, child);
+          // A <p> can hold neither another <p> nor a list, so a block that
+          // contains one of those can't become a paragraph either — the
+          // browser would close the <p> early and reorder what follows. Those
+          // unwrap instead; the list or paragraph inside already carries the
+          // break that the wrapper was there for.
+          const holdsBlock = child.querySelector
+            ? !!child.querySelector("p, ul, ol")
+            : false;
+          if (blockish.has(child.tagName) && !insideP && !holdsBlock) {
+            // Keep the break: swap the block for a <p> holding the same
+            // children, then clean those as normal.
+            const p = document.createElement("p");
+            while (child.firstChild) p.appendChild(child.firstChild);
+            node.replaceChild(p, child);
+            walk(p, true);
+            continue;
+          }
+          // Inline wrapper (SPAN, FONT, a pasted <mark>…), a table or list
+          // container, or a block already inside a paragraph — unwrap it in
+          // place, keeping its children rather than collapsing them to text.
+          // textContent was being used here, which threw away any formatting
+          // inside: "<span>a <b>bold</b> word</span>" came back unbolded.
+          //
+          // Clean the inside first, then lift the cleaned children out, so
+          // nothing nested escapes the allowlist by being hoisted past it.
+          walk(child, insideP);
+          if (blockish.has(child.tagName) && child.previousSibling) {
+            node.insertBefore(document.createElement("br"), child);
+          }
+          while (child.firstChild) {
+            node.insertBefore(child.firstChild, child);
+          }
+          node.removeChild(child);
+          continue;
         } else if (child.tagName === "A") {
           // For links, keep only a safe http(s) href; strip everything else.
           const href = child.getAttribute("href") || "";
@@ -652,7 +743,7 @@ function sanitizeRichText(html) {
             child.setAttribute("target", "_blank");
             child.setAttribute("rel", "noopener noreferrer");
           }
-          walk(child);
+          walk(child, insideP);
         } else {
           // Strip all attributes (no styles, classes, event handlers, etc.)
           while (child.attributes.length > 0) {
@@ -665,10 +756,10 @@ function sanitizeRichText(html) {
             );
             repl.innerHTML = child.innerHTML;
             node.replaceChild(repl, child);
-            walk(repl);
+            walk(repl, insideP);
             continue;
           }
-          walk(child);
+          walk(child, insideP || child.tagName === "P");
         }
       } else if (child.nodeType === 8) {
         // strip comment nodes
@@ -676,7 +767,13 @@ function sanitizeRichText(html) {
       }
     }
   };
-  walk(container);
+  walk(container, false);
+  // Paragraphs with nothing at all in them — left behind by the unwrapping
+  // above, and by browsers splitting invalid markup before we see it. A <p>
+  // holding just a <br> is kept: that's a blank line someone typed on purpose.
+  container.querySelectorAll("p").forEach((p) => {
+    if (p.childNodes.length === 0) p.remove();
+  });
   return container.innerHTML.trim();
 }
 
@@ -2862,6 +2959,8 @@ export default function AdminPage() {
     setEditingVet(null);
     setEditingPendingVet(null);
     setEditingPrice(null);
+    setEditingNote(null);
+    setNoteDraft("");
     setShowAddVet(false);
     setShowAddPrice(false);
     setCallReviewEditing(null);
@@ -2891,6 +2990,8 @@ export default function AdminPage() {
       setEditingVet(null);
       setEditingPendingVet(null);
       setEditingPrice(null);
+      setEditingNote(null);
+      setNoteDraft("");
       setShowAddPrice(false);
       setCallReviewEditing(null);
       setShowInviteForm(false);
@@ -2980,6 +3081,13 @@ export default function AdminPage() {
   const [editingPrice, setEditingPrice] = useState(null);
   const [priceForm, setPriceForm] = useState({});
   const [priceSaving, setPriceSaving] = useState(false);
+  // Note-only editing, for prices the call sheet owns. The sheet sets the
+  // number and the sync would undo any change to it, but nothing in the sheet
+  // writes the note any more — so the note is editable even where the price
+  // isn't, and it gets its own small editor rather than the full price form.
+  const [editingNote, setEditingNote] = useState(null);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
   const [showAddPrice, setShowAddPrice] = useState(false);
   const [addPriceForm, setAddPriceForm] = useState({
     service_id: "",
@@ -3238,6 +3346,8 @@ export default function AdminPage() {
     setEditingVet(null);
     setShowAddVet(false);
     setEditingPrice(null);
+    setEditingNote(null);
+    setNoteDraft("");
     setShowAddPrice(false);
     setEditingPendingVet(null);
   }, [tab]);
@@ -4955,7 +5065,10 @@ export default function AdminPage() {
       includes_anesthesia: !!f.includes_anesthesia,
       species: f.species === "other" ? f.species_other || "Other" : f.species,
       call_for_quote: !!f.call_for_quote,
-      notes: f.notes || null,
+      // Same normalisation as savePriceNote: an emptied rich-text field leaves
+      // "<p></p>" behind, which is a non-empty string, so a cleared note would
+      // otherwise stay set as far as the database is concerned.
+      notes: hasText(f.notes) ? f.notes : null,
       vaccines_included: f.vaccines_included || null,
       is_verified: true,
     };
@@ -4982,6 +5095,38 @@ export default function AdminPage() {
       if (callReviewVetId === selectedVetId) fetchReviewPrices(callReviewVetId);
     }
     setPriceSaving(false);
+  }
+
+  // Saves the public note and nothing else. Used for call-sheet prices, where
+  // writing the price columns is what the sync would undo — this touches one
+  // column the sync no longer writes, so it holds.
+  //
+  // An emptied editor is stored as null rather than "<p></p>", which the
+  // rich-text editor leaves behind and which is a non-empty string: left as
+  // that, the vet page and this list both have to defend against it, and a
+  // cleared note reads as still set.
+  async function savePriceNote(id) {
+    setNoteSaving(true);
+    const value = hasText(noteDraft) ? noteDraft : null;
+    const { data, error } = await supabase
+      .from("vet_prices")
+      .update({ notes: value })
+      .eq("id", id)
+      .select();
+    if (error) {
+      alert("Note save failed: " + error.message + "\n\nCode: " + error.code);
+    } else if (!data || data.length === 0) {
+      alert(
+        "Save ran but 0 rows were updated.\n\nCheck Supabase RLS policies on vet_prices.",
+      );
+    } else {
+      setVetPrices((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, notes: value } : p)),
+      );
+      setEditingNote(null);
+      setNoteDraft("");
+    }
+    setNoteSaving(false);
   }
 
   async function deletePrice(id) {
@@ -5019,7 +5164,7 @@ export default function AdminPage() {
             ? addPriceForm.species_other || "Other"
             : addPriceForm.species,
         call_for_quote: addPriceForm.call_for_quote,
-        notes: addPriceForm.notes,
+        notes: hasText(addPriceForm.notes) ? addPriceForm.notes : null,
         vaccines_included: addPriceForm.vaccines_included || null,
       })
       .select("*, services(name)")
@@ -5567,13 +5712,35 @@ export default function AdminPage() {
         @media (min-width: 961px) { .adm-page-root { padding: 32px 16px 20px; } }
         @media (max-width: 768px) { .adm-page-root { padding: 16px; } }
         .adm-shell { display: flex; gap: 20px; align-items: flex-start; }
+        /* The nav is ~715px of content against a viewport-height cap, so on
+           anything shorter than about 755px — a laptop with devtools docked, a
+           short window — it was taller than its own box. Without overflow-y it
+           had no scroll container: the white card stopped at max-height and
+           the remaining buttons painted outside it with no way to reach them.
+           The mobile drawer below 960px always had this; the sticky desktop
+           one didn't.
+           overscroll-behavior stops a flick at the end of the nav from
+           carrying on into the page scroll behind it.
+           dvh first, vh after as the fallback — a later declaration wins where
+           it's understood, and dvh tracks the actually-visible viewport. */
         .adm-sidebar {
           width: 214px; flex-shrink: 0; background: #ffffff;
           border: 1px solid #ede8e0; border-radius: 16px;
           padding: 14px 0; position: sticky; top: 20px;
           display: flex; flex-direction: column;
           max-height: calc(100vh - 40px);
+          max-height: calc(100dvh - 40px);
+          overflow-y: auto;
+          overscroll-behavior: contain;
+          scrollbar-width: thin;
+          scrollbar-color: #DAD3C5 transparent;
         }
+        /* WebKit equivalent of scrollbar-width/color — a default 15px bar in a
+           214px card eats the labels. */
+        .adm-sidebar::-webkit-scrollbar { width: 8px; }
+        .adm-sidebar::-webkit-scrollbar-track { background: transparent; }
+        .adm-sidebar::-webkit-scrollbar-thumb { background: #DAD3C5; border-radius: 9999px; }
+        .adm-sidebar::-webkit-scrollbar-thumb:hover { background: #c3b9a8; }
         .adm-nav-group-label {
           padding: 10px 20px 4px; font-size: 11px; font-weight: 800;
           text-transform: uppercase; letter-spacing: 0.09em; color: #717a86;
@@ -5963,8 +6130,22 @@ export default function AdminPage() {
         .adm-sync-guide-wrap.open > .adm-sync-guide { margin-top: 12px; }
         .adm-sync-guide-inner { padding: 16px; background: #fff; border: 1px solid #EDE8E0; border-radius: 10px; }
         .adm-sync-guide-lead { margin: 0 0 12px; font-size: 15px; font-weight: 500; color: #4b5563; line-height: 1.6; }
-        .adm-sync-guide-lead code, .adm-sync-guide-list code { background: #f3efe8; border: 1px solid #e5ded2; border-radius: 5px; padding: 1px 6px; font-size: 14px; font-family: ui-monospace, monospace; color: #8B3A1E; white-space: nowrap; }
+        .adm-sync-guide-lead code, .adm-sync-guide-list code, .adm-sync-guide-item code { background: #f3efe8; border: 1px solid #e5ded2; border-radius: 5px; padding: 1px 6px; font-size: 14px; font-family: ui-monospace, monospace; color: #8B3A1E; white-space: nowrap; }
         .adm-sync-guide-list { margin: 0; display: flex; flex-direction: column; gap: 16px; }
+        /* A line of explanation under a heading, before the bullets — for
+           saying which columns a rule applies to without burying it in the
+           list itself. */
+        .adm-sync-guide-note { margin: 0 0 8px; font-size: 15px; font-weight: 500; color: #4b5563; line-height: 1.6; }
+        .adm-sync-guide-item .adm-sync-guide-note:last-child { margin: 8px 0 0; }
+        /* The column map. Reads by position, which is the whole reason it
+           exists, so it's laid out as a reference table rather than prose.
+           Wraps into however many columns fit — 27 rows in one stack is a
+           wall nobody reads. */
+        .adm-colmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 2px 18px; margin: 0; }
+        .adm-colmap-row { display: flex; align-items: baseline; gap: 10px; padding: 3px 0; min-width: 0; }
+        .adm-colmap-col { flex-shrink: 0; min-width: 34px; text-align: center; }
+        .adm-colmap-what { font-size: 15px; font-weight: 500; color: #4b5563; line-height: 1.5; overflow-wrap: break-word; min-width: 0; }
+        .adm-sync-guide-inner > .adm-sync-guide-item { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #EDE8E0; }
         .adm-sync-guide-item .adm-sync-guide-h { margin: 0 0 6px; font-size: 14px; font-weight: 800; color: #172531; text-transform: uppercase; letter-spacing: 0.04em; }
         .adm-sync-guide-item ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
         .adm-sync-guide-item li { font-size: 15px; font-weight: 500; color: #4b5563; line-height: 1.6; }
@@ -6245,25 +6426,49 @@ export default function AdminPage() {
            whatever it opens beneath it. Panel matches the admin's card
            treatment; the toggle is a plain text link, not a button competing
            with Approve and Reject. */
-        /* Says where a price is governed from, in place of an Edit button
-           whose work the next sync would reverse. */
-        /* Same shape as .adm-status-pill so it sits beside Delete as a
-           sibling rather than a panel. Neutral colour: it reports where the
-           price is governed from, not a state that's good or bad. */
+        /* Says where this number came from. The pill, on the same line as the
+           number it describes — the shape is what makes it read as a label
+           rather than more of the grey sentence after the price. Same size,
+           padding, radius and border weight as .adm-price-species, so the two
+           pills in this card match. */
         .adm-sheet-owned {
           display: inline-flex; align-items: center; justify-content: center;
-          height: 42px; padding: 0 16px; border-radius: 9999px;
+          margin-left: 8px; vertical-align: middle;
+          font-size: 13px; font-weight: 700; padding: 3px 11px;
+          border-radius: 9999px;
           background: #f5f0e8; color: #717A86;
           border: var(--pill-border-w, 2px) solid rgba(113, 122, 134, 0.26);
           white-space: nowrap; box-sizing: border-box;
         }
-        .adm-sheet-owned-title { font-size: 15px; font-weight: 700; }
+        /* Note-only editor, for a price whose number the call sheet owns.
+           Same surface, border and radius as .adm-pv-editform so it reads as
+           the same kind of panel, just the one field tall. */
+        .adm-notepanel {
+          margin-top: 4px; background: #faf9f7;
+          border: 1px solid #ede8e0; border-radius: 12px; padding: 18px;
+        }
+        .adm-notepanel-hint {
+          margin: 4px 0 10px; font-size: 14px; font-weight: 500;
+          line-height: 1.55; color: #717A86; text-wrap: pretty;
+        }
+        .adm-notepanel-actions {
+          display: flex; justify-content: flex-end; gap: 10px;
+          margin-top: 20px; padding-top: 18px; border-top: 1px solid #e5ded2;
+        }
+        @media (max-width: 640px) {
+          .adm-notepanel-actions { flex-direction: column-reverse; }
+          .adm-notepanel-actions .adm-b { width: 100%; }
+        }
         /* One line above the list, not one per price. */
+        /* Two sentences about two different things — which field the sheet
+           owns, and which one Admin owns. Run together they read as one long
+           qualification; on their own lines they read as two rules. */
         .adm-price-sheet-note {
           margin: 0 0 14px; padding: 12px 14px;
           background: #f5f0e8; border-radius: 10px;
-          font-size: 15px; font-weight: 500; line-height: 1.55;
-          color: #4b5563; 
+          font-size: 15px; font-weight: 500; line-height: 1.50;
+          color: #4b5563;
+          display: flex; flex-direction: column; gap: 8px; text-wrap: pretty;
         }
         .adm-receipt {
           margin-top: 8px;
@@ -6372,7 +6577,10 @@ export default function AdminPage() {
 
         @media (max-width: 960px) {
           .adm-topbar { position: sticky; top: 0; z-index: 60; background: #fff; margin: -20px -16px 22px; padding: 13px 16px; border-bottom: 1px solid #ede8e0; box-shadow: 0 1px 3px rgba(23,37,49,0.06); transition: box-shadow 0.2s ease; will-change: transform; transform: translateZ(0); }
-          .adm-sidebar { position: fixed; top: 66px; left: 0; bottom: 0; width: 260px; border-radius: 0; z-index: 55; transform: translateX(-100%); transition: transform 0.25s ease; overflow-y: auto; padding-top: 14px; display: flex; flex-direction: column; }
+          /* max-height is cleared here on purpose: the drawer is fixed with
+             top/bottom, so its height already comes from the viewport. A
+             leftover calc() cap would fight that and clip the last item. */
+          .adm-sidebar { position: fixed; top: 66px; left: 0; bottom: 0; width: 260px; max-height: none; border-radius: 0; z-index: 55; transform: translateX(-100%); transition: transform 0.25s ease; overflow-y: auto; padding-top: 14px; display: flex; flex-direction: column; }
           .adm-sidebar.open { transform: translateX(0); }
           .adm-hamburger { display: flex; }
           .adm-shell { display: block; }
@@ -7954,6 +8162,8 @@ export default function AdminPage() {
                             setVetPrices([]);
                             setShowVetDropdown(false);
                             setEditingPrice(null);
+                            setEditingNote(null);
+                            setNoteDraft("");
                             setShowAddPrice(false);
                           }}
                         >
@@ -8009,10 +8219,17 @@ export default function AdminPage() {
                     {!pricesLoading &&
                       vetPrices.some((p) => p.source === "sheet") && (
                         <p className="adm-price-sheet-note">
-                          Prices from the call sheet are edited in the sheet,
-                          not here. To change one, edit the cell — or add a
-                          manual price for that service, which the sync never
-                          touches.
+                          <span>
+                            The <strong>number</strong> on a call-sheet price is
+                            edited in the sheet, not here — change it here and
+                            the next sync puts the sheet&rsquo;s version back.
+                          </span>
+                          <span>
+                            The <strong>note</strong> under it belongs here: the
+                            sheet no longer carries price notes, so Add note is
+                            the only place one is written, and it survives a
+                            price change.
+                          </span>
                         </p>
                       )}
                     <div className="adm-price-head">
@@ -8086,6 +8303,7 @@ export default function AdminPage() {
                     <div className="adm-user-list">
                       {vetPrices.map((p) => {
                         const editing = editingPrice === p.id;
+                        const noteEditing = editingNote === p.id;
                         const isDeleting = deletePriceConfirm === p.id;
                         return (
                           <div key={p.id} className="adm-user-card">
@@ -8108,6 +8326,24 @@ export default function AdminPage() {
                                     <span className="adm-price-type">
                                       {" "}
                                       ({p.price_type})
+                                    </span>
+                                  )}
+                                  {/* Provenance reads best attached to the
+                                      thing it describes — this says where
+                                      *this number* came from, so it belongs on
+                                      the same line as the number. It was a
+                                      pill in the button row first, where it
+                                      looked like a disabled button and made
+                                      the Edit button seem missing rather than
+                                      deliberately replaced; then a pill in the
+                                      badge row, which put it at the opposite
+                                      corner of the card from the price. As
+                                      quiet text here it needs no shape of its
+                                      own, and the badge row goes back to
+                                      holding only species. */}
+                                  {p.source === "sheet" && (
+                                    <span className="adm-sheet-owned">
+                                      From call sheet
                                     </span>
                                   )}
                                 </span>
@@ -8170,25 +8406,46 @@ export default function AdminPage() {
                             )}
 
                             <div className="adm-user-actions adm-pv-actions adm-price-actions">
-                              {/* Sheet prices are owned by the call sheet.
-                                  Editing one here would be undone: the sync
-                                  replaces sheet prices by value, sees this one
-                                  is no longer in the sheet, deletes it and
-                                  re-adds the sheet's version. Rather than let
-                                  someone lose that work, the edit is blocked
-                                  and the real routes are named. Deleting is
-                                  still allowed — that's how a bad price comes
-                                  off ahead of a sheet fix. */}
+                              {/* The call sheet owns the number on a sheet
+                                  price. Editing it here would be undone: the
+                                  sync replaces sheet prices by value, sees this
+                                  one is no longer in the sheet, deletes it and
+                                  re-adds the sheet's version. So the price edit
+                                  is blocked and the real route is named.
+                                  Deleting is still allowed — that's how a bad
+                                  price comes off ahead of a sheet fix.
+
+                                  The note is a different matter. The sheet used
+                                  to carry price notes in column AL and the sync
+                                  no longer reads it, because one cell there
+                                  applied to a whole row and ended up stamped
+                                  onto every service's price. Nothing in the
+                                  sheet writes this field now, so a note written
+                                  here is safe — and this was the only field a
+                                  sheet price had no way to set. */}
                               {p.source === "sheet" ? (
-                                // Visible, not a title attribute. A tooltip
-                                // takes a second of hovering and never appears
-                                // on a tap — too hidden for the explanation of
-                                // why an Edit button isn't there.
-                                <span className="adm-sheet-owned">
-                                  <span className="adm-sheet-owned-title">
-                                    From call sheet
-                                  </span>
-                                </span>
+                                <>
+                                  <button
+                                    className="adm-b adm-b-outline"
+                                    onClick={() => {
+                                      if (noteEditing) {
+                                        setEditingNote(null);
+                                        setNoteDraft("");
+                                      } else {
+                                        setShowAddPrice(false);
+                                        setEditingPrice(null);
+                                        setEditingNote(p.id);
+                                        setNoteDraft(p.notes || "");
+                                      }
+                                    }}
+                                  >
+                                    {noteEditing
+                                      ? "Cancel"
+                                      : hasText(p.notes)
+                                        ? "Edit note"
+                                        : "Add note"}
+                                  </button>
+                                </>
                               ) : (
                                 <button
                                   className="adm-b adm-b-outline"
@@ -8197,6 +8454,12 @@ export default function AdminPage() {
                                       setEditingPrice(null);
                                     } else {
                                       setShowAddPrice(false);
+                                      // One editor at a time — the note panel
+                                      // and the full price form both edit the
+                                      // same field, so two open at once is two
+                                      // drafts of it.
+                                      setEditingNote(null);
+                                      setNoteDraft("");
                                       setEditingPrice(p.id);
                                       setPriceForm({
                                         service_id: p.service_id,
@@ -8265,6 +8528,49 @@ export default function AdminPage() {
                                 submitLabel="Save changes"
                                 error={editPriceError}
                               />
+                            )}
+
+                            {/* One field, so it gets one field's worth of
+                                chrome rather than the whole price form with
+                                everything in it disabled. Same editor and the
+                                same wording as the Public note field inside
+                                PriceForm, so a note written here and a note
+                                written there are plainly the same thing. */}
+                            {noteEditing && (
+                              <div className="adm-notepanel">
+                                <label className="adm-field-label">
+                                  Public note
+                                </label>
+                                <p className="adm-notepanel-hint">
+                                  Shown to visitors beneath this price (e.g.
+                                  &ldquo;Exam fee waived on first visit&rdquo;).
+                                  Saved here, not in the call sheet — a later
+                                  sync won&rsquo;t clear it.
+                                </p>
+                                <RichTextEditor
+                                  value={noteDraft}
+                                  onChange={setNoteDraft}
+                                  placeholder="Optional"
+                                />
+                                <div className="adm-notepanel-actions">
+                                  <button
+                                    className="adm-b adm-b-outline"
+                                    onClick={() => {
+                                      setEditingNote(null);
+                                      setNoteDraft("");
+                                    }}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    className="adm-b adm-b-primary"
+                                    onClick={() => savePriceNote(p.id)}
+                                    disabled={noteSaving}
+                                  >
+                                    {noteSaving ? "Saving…" : "Save note"}
+                                  </button>
+                                </div>
+                              </div>
                             )}
                           </div>
                         );
@@ -8364,15 +8670,90 @@ export default function AdminPage() {
                           <div className="adm-sync-guide-inner">
                             <p className="adm-sync-guide-lead">
                               The sync only reads a row when its{" "}
-                              <strong>Call Status</strong> cell is exactly{" "}
-                              <code>Called - Got Prices</code>. Everything else
-                              is ignored, so Susan can keep working — rows
-                              aren't touched until they're marked done.
+                              <strong>Call Status</strong> (<code>I</code>) cell
+                              is exactly <code>Called - Got Prices</code>.
+                              Everything else is ignored, so Susan can keep
+                              working — rows aren't touched until they're marked
+                              done.
                             </p>
+                            {/* The sync reads cells by POSITION, not by header
+                                name, so this table is the contract. Anyone who
+                                inserts or deletes a column shifts everything
+                                after it and the import silently starts reading
+                                the wrong field — hence the warning at the
+                                bottom and the two retired-but-kept columns. */}
+                            <div className="adm-sync-guide-item">
+                              <p className="adm-sync-guide-h">
+                                Which column is which
+                              </p>
+                              <p className="adm-sync-guide-note">
+                                The sync reads cells by their{" "}
+                                <strong>position</strong>, not by the header
+                                text. These are the only columns it looks at.
+                              </p>
+                              <div className="adm-colmap">
+                                {[
+                                  ["B", "Clinic Name"],
+                                  ["C", "Phone"],
+                                  ["D", "Address"],
+                                  ["E", "City"],
+                                  ["F", "Zip"],
+                                  ["G", "Vet Type"],
+                                  ["H", "Hours"],
+                                  ["I", "Call Status — the on/off switch"],
+                                  ["K", "Accepting New Patients"],
+                                  ["L", "CareCredit"],
+                                  ["O", "Doctor Exam"],
+                                  ["P", "Vet Tech Exam"],
+                                  ["Q", "Rabies"],
+                                  ["R", "DHPP"],
+                                  ["S", "FVRCP"],
+                                  ["T", "FeLV"],
+                                  ["U", "Bordetella"],
+                                  ["V", "Canine Influenza"],
+                                  ["W", "Leptospirosis"],
+                                  ["X", "Vaccine Package — Dog"],
+                                  ["Y", "Vaccine Package — Cat"],
+                                  ["Z", "Spay"],
+                                  ["AA", "Neuter"],
+                                  ["AB", "Dental Cleaning"],
+                                  ["AC", "Dental Cleaning (No Anesthesia)"],
+                                  ["AG", "Emergency Visit"],
+                                  ["AH", "Urgent Care Visit"],
+                                  ["AJ", "Internal Admin Notes — private"],
+                                  ["AK", "Verified by Susan — retired, unread"],
+                                  ["AL", "Price Notes — retired, unread"],
+                                  ["AM", "Public Notes — public"],
+                                ].map(([col, what]) => (
+                                  <div className="adm-colmap-row" key={col}>
+                                    <code className="adm-colmap-col">
+                                      {col}
+                                    </code>
+                                    <span className="adm-colmap-what">
+                                      {what}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="adm-sync-guide-note">
+                                <strong>Verified by Susan</strong> (
+                                <code>AK</code>) and{" "}
+                                <strong>Price Notes</strong> (<code>AL</code>)
+                                are retired and no longer read &mdash; see
+                                below. Leave them where they are.
+                              </p>
+                            </div>
                             <div className="adm-sync-guide-list">
                               <div className="adm-sync-guide-item">
                                 <p className="adm-sync-guide-h">
                                   Entering a price
+                                </p>
+                                <p className="adm-sync-guide-note">
+                                  In any service column &mdash; from{" "}
+                                  <strong>Doctor Exam</strong> (<code>O</code>)
+                                  to <strong>Urgent Care Visit</strong> (
+                                  <code>AH</code>). The table above says which
+                                  letter is which service.
                                 </p>
                                 <ul>
                                   <li>
@@ -8406,8 +8787,11 @@ export default function AdminPage() {
                                     Note: extra prices come in{" "}
                                     <strong>without a species label</strong>.
                                     Dog vs. cat is only tracked where the sheet
-                                    has separate columns for it (e.g. the two
-                                    Vaccine Package columns).
+                                    has a separate column for each &mdash;{" "}
+                                    <strong>Vaccine Package — Dog</strong> (
+                                    <code>X</code>) and{" "}
+                                    <strong>Vaccine Package — Cat</strong> (
+                                    <code>Y</code>).
                                   </li>
                                 </ul>
                               </div>
@@ -8417,8 +8801,12 @@ export default function AdminPage() {
                                 </p>
                                 <ul>
                                   <li>
-                                    In the price cell, type <code>N/A</code>,{" "}
-                                    <code>Declined</code>, or{" "}
+                                    In that service&rsquo;s price cell &mdash;
+                                    anywhere from <strong>Doctor Exam</strong> (
+                                    <code>O</code>) to{" "}
+                                    <strong>Urgent Care Visit</strong> (
+                                    <code>AH</code>) &mdash; type{" "}
+                                    <code>N/A</code>, <code>Declined</code>, or{" "}
                                     <code>No Price</code>
                                   </li>
                                   <li>
@@ -8428,51 +8816,80 @@ export default function AdminPage() {
                                   </li>
                                 </ul>
                               </div>
+                              {/* AL was removed from the sync because one cell
+                                  there applied to a whole row, and a row holds
+                                  up to 17 prices — so a single note got stamped
+                                  onto every service that had a number. The
+                                  three-part split below (what used to be here,
+                                  what to do instead, what not to do to the
+                                  column) is the whole of what anyone working
+                                  the sheet needs to know. */}
                               <div className="adm-sync-guide-item">
                                 <p className="adm-sync-guide-h">
-                                  Adding a note to a price
+                                  A note under one price
                                 </p>
                                 <ul>
                                   <li>
-                                    Put it in the sheet's{" "}
-                                    <strong>Price Notes</strong> column
+                                    <strong>Not in the sheet any more.</strong>{" "}
+                                    <strong>Price Notes</strong> (
+                                    <code>AL</code>) is no longer read
                                   </li>
                                   <li>
-                                    If the price cell had two prices split by a
-                                    slash, split the notes the same way and in
-                                    the same order:{" "}
-                                    <code>
-                                      includes exam / first visit only
-                                    </code>{" "}
-                                    (first note → first price)
+                                    Write it here in Admin instead:{" "}
+                                    <strong>Prices</strong> → pick the vet →{" "}
+                                    <strong>Add note</strong> on the price it
+                                    belongs to. It shows on the vet&rsquo;s page
+                                    under that one price
                                   </li>
                                   <li>
-                                    These are <strong>public</strong> — they
-                                    show on the vet&rsquo;s page underneath the
-                                    price. Keep them about the price itself,
-                                    like <code>includes exam</code>
+                                    <strong>Why it moved.</strong>{" "}
+                                    <strong>Price Notes</strong> (
+                                    <code>AL</code>) held one value for a whole
+                                    row, but a row holds up to 17 prices. The
+                                    sync had no way to tell which price the note
+                                    was for, so it put it on all of them &mdash;
+                                    one note about a dental fee appeared under
+                                    the rabies shot too
+                                  </li>
+                                  <li>
+                                    A note written in Admin{" "}
+                                    <strong>survives a price change</strong>. If
+                                    Susan changes $50 to $65 in the sheet,
+                                    &ldquo;includes the exam&rdquo; stays put
+                                  </li>
+                                  <li>
+                                    <strong>
+                                      Leave Price Notes (<code>AL</code>) where
+                                      it is.
+                                    </strong>{" "}
+                                    Susan can use it as scratch space &mdash;
+                                    nothing reads it &mdash; but deleting the
+                                    column shifts <strong>Public Notes</strong>{" "}
+                                    (<code>AM</code>) left and the sync starts
+                                    reading the wrong field
                                   </li>
                                 </ul>
                               </div>
                               <div className="adm-sync-guide-item">
                                 <p className="adm-sync-guide-h">
-                                  Why a price needs an exam first
+                                  A note about the clinic&rsquo;s pricing
                                 </p>
                                 <ul>
                                   <li>
-                                    Put it in the <strong>Public Notes</strong>{" "}
-                                    column (AM) — for anything that explains the
-                                    clinic&rsquo;s pricing as a whole:
-                                    &ldquo;dental needs an exam first&rdquo;,
-                                    &ldquo;this range assumes anesthesia&rdquo;,
-                                    &ldquo;bloodwork is required before
-                                    surgery&rdquo;
+                                    <strong>Public Notes</strong> (
+                                    <code>AM</code>) &mdash; for anything that
+                                    explains the clinic&rsquo;s pricing as a
+                                    whole: &ldquo;dental needs an exam
+                                    first&rdquo;, &ldquo;this range assumes
+                                    anesthesia&rdquo;, &ldquo;bloodwork is
+                                    required before surgery&rdquo;
                                   </li>
                                   <li>
                                     <strong>Public.</strong> It shows on the
-                                    vet&rsquo;s page beneath their prices, so
-                                    someone understands why a price is missing
-                                    or why a range is wide
+                                    vet&rsquo;s page above their prices, under
+                                    the heading &ldquo;About pricing
+                                    here&rdquo;, so someone understands why a
+                                    price is missing or why a range is wide
                                   </li>
                                   <li>
                                     This is the same field as{" "}
@@ -8481,18 +8898,27 @@ export default function AdminPage() {
                                     fills it only when that&rsquo;s empty, so
                                     anything written here is never overwritten
                                   </li>
+                                  <li>
+                                    <strong>
+                                      Public Notes (<code>AM</code>) is for the
+                                      clinic as a whole. Price Notes (
+                                      <code>AL</code>) is dead. One
+                                      price&rsquo;s note lives in Admin.
+                                    </strong>{" "}
+                                    If a note only makes sense next to one
+                                    number, it belongs in Admin, not here
+                                  </li>
                                 </ul>
                               </div>
                               <div className="adm-sync-guide-item">
                                 <p className="adm-sync-guide-h">
-                                  Notes about the clinic
+                                  Notes about the call
                                 </p>
                                 <ul>
                                   <li>
-                                    Those go in the{" "}
-                                    <strong>Internal Admin Notes</strong> column
-                                    — what was said on the call, who to ask for,
-                                    when to try again
+                                    <strong>Internal Admin Notes</strong> (
+                                    <code>AJ</code>) &mdash; what was said on
+                                    the call, who to ask for, when to try again
                                   </li>
                                   <li>
                                     <strong>Never shown publicly.</strong> They
@@ -8512,8 +8938,10 @@ export default function AdminPage() {
                                 </p>
                                 <ul>
                                   <li>
-                                    Type <code>Yes</code> or <code>No</code> in
-                                    those columns
+                                    Type <code>Yes</code> or <code>No</code> in{" "}
+                                    <strong>Accepting New Patients</strong> (
+                                    <code>K</code>) and{" "}
+                                    <strong>CareCredit</strong> (<code>L</code>)
                                   </li>
                                   <li>
                                     Blank or anything else = “unknown” (left off
@@ -8528,10 +8956,10 @@ export default function AdminPage() {
                                 <ul>
                                   <li>
                                     Every row has to land on the right clinic.
-                                    The sync matches on the{" "}
-                                    <strong>clinic name</strong> and the{" "}
-                                    <strong>phone number</strong> — either one
-                                    is enough
+                                    The sync matches on{" "}
+                                    <strong>Clinic Name</strong> (<code>B</code>
+                                    ) and <strong>Phone</strong> (<code>C</code>
+                                    ) — either one is enough
                                   </li>
                                   <li>
                                     <strong>
@@ -8563,6 +8991,49 @@ export default function AdminPage() {
                                     So you never need to add a clinic first —
                                     call it, fill in the row, and the sync
                                     creates it
+                                  </li>
+                                </ul>
+                              </div>
+                              {/* Last, and deliberately blunt. This is the one
+                                  mistake that breaks the import without
+                                  anything looking wrong: every value lands in
+                                  the field next door and the sync reports
+                                  success. */}
+                              <div className="adm-sync-guide-item">
+                                <p className="adm-sync-guide-h">
+                                  Never insert or delete a column
+                                </p>
+                                <ul>
+                                  <li>
+                                    The sync finds each value by{" "}
+                                    <strong>which column it sits in</strong>,
+                                    not by what the header says. Add or remove
+                                    one and everything after it shifts
+                                  </li>
+                                  <li>
+                                    Nothing errors when that happens. Prices
+                                    import into the wrong services, notes land
+                                    in the wrong field, and the sync still
+                                    reports success &mdash; which is why this is
+                                    worth saying twice
+                                  </li>
+                                  <li>
+                                    <strong>Verified by Susan</strong> (
+                                    <code>AK</code>) and{" "}
+                                    <strong>Price Notes</strong> (
+                                    <code>AL</code>) are unread on purpose. They
+                                    stay as spacers so{" "}
+                                    <strong>Public Notes</strong> (
+                                    <code>AM</code>) doesn&rsquo;t move
+                                  </li>
+                                  <li>
+                                    Renaming a header is safe. Reordering,
+                                    inserting or deleting is not. To add a
+                                    service, put the new column{" "}
+                                    <strong>at the far right</strong>, after{" "}
+                                    <strong>Public Notes</strong> (
+                                    <code>AM</code>), and tell me &mdash; the
+                                    sync needs a one-line change to read it
                                   </li>
                                 </ul>
                               </div>
