@@ -1,6 +1,6 @@
 "use client";
 
-const EFFECTIVE_DATE = "September 2, 2026";
+const EFFECTIVE_DATE = "October 13, 2026";
 const CONTACT_EMAIL = "[legal@petparrk.com]";
 
 export default function Accessibility() {
@@ -30,7 +30,7 @@ export default function Accessibility() {
           <div className="legal-page-title">
             <p className="legal-eyebrow">Legal</p>
             <h1 className="legal-h1">Accessibility Statement</h1>
-            <p className="legal-date">Effective Date: {EFFECTIVE_DATE}</p>
+            <p className="legal-date">Last updated: {EFFECTIVE_DATE}</p>
           </div>
           <div className="legal-section">
             <h2 className="legal-h2">Our Commitment</h2>
@@ -45,63 +45,114 @@ export default function Accessibility() {
               PetParrk is partially conformant with the Web Content
               Accessibility Guidelines (WCAG) 2.1 Level AA. Partially conformant
               means that some parts of the content do not fully conform to the
-              accessibility standard. We are working toward full conformance and
-              treat it as ongoing work rather than a finished state.
+              accessibility standard. The areas we know about are listed under
+              Known Limitations below. We are working toward full conformance
+              and treat it as ongoing work rather than a finished state.
             </p>
           </div>
           <div className="legal-divider" />
           <div className="legal-section">
-            <h2 className="legal-h2">Measures We Take</h2>
+            <h2 className="legal-h2">What We Have Done</h2>
             <p className="legal-p">
-              PetParrk takes the following measures to support accessibility:
+              In October 2026 we completed an accessibility review of PetParrk.
+              As a result:
             </p>
             <ul className="legal-ul">
               <li>
-                We review color contrast ratios to ensure text is legible for
-                users with low vision;
+                <strong>Color contrast.</strong> Text meets at least 4.5:1
+                contrast against its background (3:1 for large text), and form
+                field borders and focus indicators meet at least 3:1.
               </li>
               <li>
-                We use semantic HTML elements to support screen reader
-                navigation;
+                <strong>Keyboard.</strong> On the pages we tested, every link,
+                button, form field and card-style control can be reached and
+                used with a keyboard alone. A &ldquo;Skip to main content&rdquo; link is the first
+                item on every page.
               </li>
               <li>
-                We provide descriptive labels and alternative text for interface
-                elements and images;
+                <strong>Visible focus.</strong> Whatever you reach with the
+                keyboard shows a clear focus ring.
               </li>
               <li>
-                We design interactive elements to be operable via keyboard in
-                addition to mouse and touch input;
+                <strong>Pop-ups.</strong> Dialogs move focus inside when they
+                open, keep it there while open, close with the Escape key and
+                return you to where you were.
               </li>
               <li>
-                We consider accessibility when selecting third-party components
-                and libraries.
+                <strong>Labels and images.</strong> Every form field has a name
+                that screen readers announce. Meaningful images have text
+                alternatives, and decorative graphics are hidden from screen
+                readers.
+              </li>
+              <li>
+                <strong>Messages.</strong> Errors and status messages, such as a
+                password mismatch, are announced as soon as they appear.
+                Symptom Checker replies are read out once they finish.
+              </li>
+              <li>
+                <strong>Page structure.</strong> Pages use headings, landmarks
+                and lists so screen reader users can move around them quickly.
+              </li>
+              <li>
+                <strong>Reduced motion.</strong> If you turn on your device&apos;s
+                &ldquo;Reduce motion&rdquo; setting, animations and smooth
+                scrolling are switched off across the site.
               </li>
             </ul>
+          </div>
+          <div className="legal-divider" />
+          <div className="legal-section">
+            <h2 className="legal-h2">How We Tested</h2>
+            <ul className="legal-ul">
+              <li>
+                Automated checks against WCAG 2.1 A and AA on 25 pages, at
+                desktop and phone screen sizes.
+              </li>
+              <li>
+                Keyboard-only testing of every interactive element on 14 key
+                pages.
+              </li>
+              <li>
+                Manual testing with VoiceOver in Safari on macOS for the main
+                tasks: searching for a vet, reading a vet page, using the
+                Symptom Checker and creating an account.
+              </li>
+            </ul>
+            <p className="legal-p">
+              Automated tools catch only some accessibility problems, which is
+              why we also test by hand. We repeat these checks when we make
+              significant changes.
+            </p>
           </div>
           <div className="legal-divider" />
           <div className="legal-section">
             <h2 className="legal-h2">Known Limitations</h2>
             <p className="legal-p">
-              PetParrk is an actively developed product, and accessibility
-              improvements are incorporated on an ongoing basis. We prefer to
-              name what we know rather than describe our gaps in general terms.
-              Areas we are currently aware of:
+              We prefer to name what we know rather than describe our gaps in
+              general terms. Areas we are currently aware of:
             </p>
             <ul className="legal-ul">
               <li>
-                Some interactive elements do not yet show a clearly visible
-                focus indicator when navigated by keyboard. We are working
-                through these.
+                <strong>Signed-in areas.</strong> Your profile, the Pet Card
+                editors and health history have been checked for keyboard use
+                and labeling, but have had less hands-on screen reader testing
+                than the public pages.
               </li>
               <li>
-                Decorative animation on the About page respects the operating
-                system&apos;s reduced-motion setting. Where you find motion that
-                does not, we would like to hear about it.
+                <strong>The Find a Vet map</strong> is visual only. Every vet
+                shown on the map is also included in the text list of
+                results.
+              </li>
+              <li>
+                <strong>Third-party components.</strong> The security check on
+                sign-up is provided by Cloudflare, and the map by Mapbox. We
+                chose them with accessibility in mind, but we don&apos;t control
+                how they work.
               </li>
             </ul>
             <p className="legal-p">
               If you encounter a barrier that is not listed here, please report
-              it using the details below so we can prioritise a fix.
+              it using the details below so we can prioritize a fix.
             </p>
           </div>
           <div className="legal-divider" />
