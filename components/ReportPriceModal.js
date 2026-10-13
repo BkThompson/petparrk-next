@@ -418,7 +418,7 @@ export default function ReportPriceModal({
           width: 100%;
           height: 46px;
           padding: 11px 14px;
-          border: 1.5px solid ${C.border};
+          border: 1px solid var(--color-border-field);
           border-radius: 10px;
           font-size: 15px;
           font-weight: 500;

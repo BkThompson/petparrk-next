@@ -757,7 +757,7 @@ export default function InlineSubmitPriceForm({
           width: 100%;
           padding: 0 44px 0 14px;
           height: 44px;
-          border: 1px solid ${C.border};
+          border: 1px solid var(--color-border-field);
           border-radius: 12px;
           font-size: 15px;
           font-weight: 500;
@@ -904,7 +904,7 @@ export default function InlineSubmitPriceForm({
           width: 100%;
           height: 44px;
           padding: 0 14px;
-          border: 2px solid var(--color-border-strong);
+          border: 1px solid var(--color-border-field);
           border-radius: 12px;
           font-size: 15px;
           font-weight: 500;

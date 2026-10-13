@@ -550,7 +550,7 @@ export default function SharePrivacyPage() {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           color: var(--color-navy-dark);
           background: var(--color-white);
-          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.1);
+          border: 1px solid var(--color-border-field);
           border-radius: 12px;
           transition: border-color 0.15s, box-shadow 0.15s;
           box-sizing: border-box;
@@ -669,7 +669,7 @@ export default function SharePrivacyPage() {
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           color: var(--color-navy-dark);
           background: var(--color-white);
-          border: 1.5px solid rgb(var(--color-navy-dark-rgb) / 0.1);
+          border: 1px solid var(--color-border-field);
           border-radius: 10px;
           transition: border-color 0.15s, box-shadow 0.15s;
           box-sizing: border-box;
@@ -1138,7 +1138,7 @@ export default function SharePrivacyPage() {
           padding: 8px 10px;
           min-height: 44px;
           background: var(--color-white);
-          border: 1px solid rgb(var(--color-navy-dark-rgb) / 0.16);
+          border: 1px solid var(--color-border-field);
           border-radius: 12px;
           cursor: text;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
@@ -1672,7 +1672,7 @@ export default function SharePrivacyPage() {
           font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
           color: var(--color-navy-dark);
           // background: var(--color-cream);
-          border: 1px solid var(--color-border);
+          border: 1px solid var(--color-border-field);
           border-radius: 12px;
           outline: none;
           box-sizing: border-box;

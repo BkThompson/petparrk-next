@@ -410,7 +410,7 @@ export default function SymptomCheckerHomePage() {
         .sc-mob-stats .sc-stat-label { font-size:16px; font-weight:500; text-transform:capitalize; color:${C.muted}; white-space:nowrap; }
         .sc-mob-stats .sc-stat-value { font-size:16px; font-weight:600; color:${C.navyDark}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         }
-        .sc-input { width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid ${C.border}; font-size:16px; font-weight:500; font-family:var(--font-urbanist,system-ui); background:var(--color-white); outline:none; box-sizing:border-box; transition:border-color 0.15s; color:${C.navyDark}; -webkit-appearance:none; }
+        .sc-input { width:100%; padding:11px 14px; border-radius:10px; border:1px solid var(--color-border-field); font-size:16px; font-weight:500; font-family:var(--font-urbanist,system-ui); background:var(--color-white); outline:none; box-sizing:border-box; transition:border-color 0.15s; color:${C.navyDark}; -webkit-appearance:none; }
         .sc-input:focus { border-color:${C.terracotta}; }
         .sc-input::placeholder { color:${C.muted}; }
         .sc-resume-btn { padding:0px 24px; height:42px; background:${C.terracotta600}; color:var(--color-white); border:2px solid ${C.terracotta600}; border-radius:12px; font-size:15px; cursor:pointer; font-weight:700; white-space:nowrap; font-family:var(--font-urbanist,system-ui); transition:background 0.2s,color 0.2s; display:inline-flex; align-items:center; }

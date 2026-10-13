@@ -73,7 +73,7 @@ function ResetPasswordForm() {
 
   const inputStyle = {
     width: "100%", padding: "12px 14px", borderRadius: "8px",
-    border: "1.5px solid var(--color-border)", fontSize: "15px",
+    border: "1px solid var(--color-border-field)", fontSize: "15px",
     fontFamily: "system-ui, sans-serif", boxSizing: "border-box",
   };
 

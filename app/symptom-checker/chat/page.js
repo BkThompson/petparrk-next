@@ -2751,7 +2751,7 @@ export default function SymptomCheckerChatPage() {
         .chat-input-wrap {
           position: relative;
           background: var(--color-white);
-          border: 1.5px solid ${C.border};
+          border: 1px solid var(--color-border-field);
           border-radius: 16px;
           transition: border-color 0.15s, box-shadow 0.15s;
           display: flex;
@@ -2846,7 +2846,7 @@ export default function SymptomCheckerChatPage() {
         .triage-loc-btn { height: 42px; padding: 0 16px; border-radius: 12px; border: 2px solid ${C.terracotta600}; background: ${C.terracotta600}; color: var(--color-white); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s; }
         @media (hover: hover) { .triage-loc-btn:hover { background: var(--color-white); color: ${C.terracotta700}; } }
         .triage-loc-zip { display: flex; gap: 8px; }
-        .triage-loc-zip input { width: 110px; height: 42px; padding: 0 12px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border); font-family: inherit; font-size: 15px; font-weight: 500; color: ${C.navyDark}; background: var(--color-white); box-sizing: border-box; }
+        .triage-loc-zip input { width: 110px; height: 42px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--color-border-field); font-family: inherit; font-size: 15px; font-weight: 500; color: ${C.navyDark}; background: var(--color-white); box-sizing: border-box; }
         .triage-loc-zip input:focus { outline: none; border-color: ${C.terracotta}; }
         .triage-loc-zip button { height: 42px; padding: 0 14px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border); background: var(--color-white); color: ${C.navyDark}; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color 0.2s; }
         @media (hover: hover) { .triage-loc-zip button:hover { background: ${C.navyDark}; color: var(--color-white); border-color: ${C.navyDark}; } }
@@ -2875,7 +2875,7 @@ export default function SymptomCheckerChatPage() {
         .save-pet .save-pet-title { margin: 0 0 6px; font-size: 24px; line-height: 1.2; font-weight: 800; color: ${C.navyDark}; }
         .save-pet .save-pet-sub { margin: 0 0 14px; font-size: 16px; font-weight: 500; color: ${C.muted}; line-height: 1.55; text-wrap: pretty; }
         .save-pet-row { display: flex; gap: 10px; align-items: center; }
-        .save-pet-input { flex: 1; min-width: 0; height: 42px; padding: 0 14px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border); font-family: inherit; font-size: 15px; font-weight: 500; color: ${C.navyDark}; background: var(--color-white); box-sizing: border-box; }
+        .save-pet-input { flex: 1; min-width: 0; height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--color-border-field); font-family: inherit; font-size: 15px; font-weight: 500; color: ${C.navyDark}; background: var(--color-white); box-sizing: border-box; }
         .save-pet-input:focus { outline: none; border-color: ${C.terracotta}; }
         .save-pet-btn { height: 42px; padding: 0 22px; border-radius: 12px; border: 2px solid ${C.terracotta600}; background: ${C.terracotta600}; color: var(--color-white); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s; flex-shrink: 0; }
         @media (hover: hover) { .save-pet-btn:hover:not(:disabled) { background: var(--color-white); color: ${C.terracotta700}; } }

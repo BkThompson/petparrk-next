@@ -775,9 +775,9 @@ function VetsContent() {
         @media (hover: hover) { .filter-pill:hover {border-color:var(--color-navy-dark)} }
         .filter-pill.active{background:var(--color-navy-dark);color:var(--color-white);border-color:var(--color-navy-dark)}
         .sort-pill{font-size:15px}
-        .pp-select{padding:0 36px 0 14px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border);font-size:15px;font-weight:500;font-family:var(--font,'Urbanist',sans-serif);background:var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='${svgHex("muted")}' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;color:var(--color-ink);outline:none;cursor:pointer;height:44px;flex-shrink:0;appearance:none;-webkit-appearance:none}
+        .pp-select{padding:0 36px 0 14px;border-radius:12px;border: 1px solid var(--color-border-field);font-size:15px;font-weight:500;font-family:var(--font,'Urbanist',sans-serif);background:var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='${svgHex("muted")}' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;color:var(--color-ink);outline:none;cursor:pointer;height:44px;flex-shrink:0;appearance:none;-webkit-appearance:none}
         .pp-select:focus{border-color:var(--color-terracotta)}
-        .dir-search{width:100%;height:44px;flex-shrink:0;padding:0 14px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border);font-size:15px;font-weight:500;outline:none;box-sizing:border-box;font-family:var(--font,'Urbanist',sans-serif);background:var(--color-white);transition:border-color 0.15s}
+        .dir-search{width:100%;height:44px;flex-shrink:0;padding:0 14px;border-radius:12px;border: 1px solid var(--color-border-field);font-size:15px;font-weight:500;outline:none;box-sizing:border-box;font-family:var(--font,'Urbanist',sans-serif);background:var(--color-white);transition:border-color 0.15s}
         .dir-search:focus{border-color:var(--color-terracotta)}
         /* The wrapper carries the flex sizing the input used to; the input
            fills it. Right padding leaves room for the clear button. */
@@ -826,7 +826,7 @@ function VetsContent() {
         /* fbar-item and fbar-search now sit on .dir-search-wrap, so this
            targets the wrapper rather than the input it used to. */
         .dir-search-wrap.fbar-item{max-width:none}
-        .filters-btn{height:44px;padding:0 16px;border-radius:12px;border: var(--pill-border-w, 2px) solid var(--control-border);background:var(--color-white);color:var(--color-navy-dark);cursor:pointer;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;transition:all 0.15s}
+        .filters-btn{height:44px;padding:0 16px;border-radius:12px;border: 1px solid var(--color-border-field);background:var(--color-white);color:var(--color-navy-dark);cursor:pointer;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;transition:all 0.15s}
         @media (hover: hover) { .filters-btn:hover {border-color:var(--color-navy-dark)} }
         .filters-btn.open{background:var(--color-navy-dark);color:var(--color-white);border-color:var(--color-navy-dark)}
         .filters-badge{background:var(--color-terracotta-600);color:var(--color-white);font-size:12px;font-weight:700;border-radius:9999px;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
@@ -835,7 +835,7 @@ function VetsContent() {
         .pp-select.fbar-active{background-color:var(--color-navy-dark);color:var(--color-white);border-color:var(--color-navy-dark);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='${svgHex("white")}' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
         /* Custom filter dropdown (Option C: muted prefix + bold value) */
         .fdd-wrap{position:relative;display:flex}
-        .fdd-btn{width:100%;height:44px;padding:0 14px;border: var(--pill-border-w, 2px) solid var(--control-border);border-radius:12px;background:var(--color-white);color:var(--color-navy-dark);cursor:pointer;font-family:var(--font,'Urbanist',sans-serif);font-size:15px;display:inline-flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;transition:border-color 0.15s,background 0.15s;min-width:0}
+        .fdd-btn{width:100%;height:44px;padding:0 14px;border: 1px solid var(--color-border-field);border-radius:12px;background:var(--color-white);color:var(--color-navy-dark);cursor:pointer;font-family:var(--font,'Urbanist',sans-serif);font-size:15px;display:inline-flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;transition:border-color 0.15s,background 0.15s;min-width:0}
         @media (hover: hover) { .fdd-btn:hover {border-color:var(--color-navy-dark)} }
         .fdd-text{display:inline-flex;align-items:baseline;gap:5px;overflow:hidden;white-space:nowrap;min-width:0}
         .fdd-prefix{color:var(--color-muted);font-weight:600;flex-shrink:0}

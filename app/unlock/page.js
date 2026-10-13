@@ -163,7 +163,7 @@ export default function Unlock() {
     width: "100%",
     padding: "12px 14px",
     borderRadius: "10px",
-    border: "2px solid var(--color-border)",
+    border: "1px solid var(--color-border-field)",
     fontSize: "16px",
     fontWeight: "500",
     fontFamily: "var(--font-urbanist, system-ui)",

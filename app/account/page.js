@@ -169,7 +169,7 @@ export default function AccountSettings() {
         .acc-card-title { font-size: 16px; font-weight: 700; color: ${C.navyDark}; margin: 0 0 4px; font-family: var(--font-urbanist,'Urbanist',sans-serif); }
         .acc-card-sub { font-size: 16px; font-weight: 500;  color: ${C.muted}; margin: 0 0 20px; }
         .acc-label { display: block; font-size: 14px; font-weight: 600; color: ${C.slate}; margin-bottom: 6px; }
-        .acc-input { width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: 2px solid ${C.border}; font-size: 15px; font-weight: 500; font-family: var(--font-urbanist,system-ui); outline: none; box-sizing: border-box; background: ${C.white}; color: ${C.navyDark}; transition: border-color 0.15s; -webkit-appearance: none; }
+        .acc-input { width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--color-border-field); font-size: 15px; font-weight: 500; font-family: var(--font-urbanist,system-ui); outline: none; box-sizing: border-box; background: ${C.white}; color: ${C.navyDark}; transition: border-color 0.15s; -webkit-appearance: none; }
         .acc-input:focus { border-color: ${C.terracotta}; }
         .acc-input[readonly] { background: ${C.cream}; color: ${C.slate}; cursor: default; }
         .acc-field { margin-bottom: 16px; }

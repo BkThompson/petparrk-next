@@ -574,10 +574,10 @@ export default function Home() {
         .reveal-delay-1{transition-delay:0.12s} .reveal-delay-2{transition-delay:0.26s} .reveal-delay-3{transition-delay:0.40s}
 
         .hero-input-wrap { position:relative; }
-        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:2px solid rgb(var(--color-white-rgb) / 0.1); font-size:16px; font-weight:500; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgb(var(--color-white-rgb) / 0.06); color:var(--color-white); outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
+        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:2px solid rgb(var(--color-white-rgb) / 0.4); font-size:16px; font-weight:500; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgb(var(--color-white-rgb) / 0.06); color:var(--color-white); outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
         .hero-search::placeholder { color:rgb(var(--color-white-rgb) / 0.65); }
         /* Over the illustrated banner: a near-solid field so busy art doesn't show through. */
-        .hb .hero-search { background:rgb(var(--color-navy-dark-rgb) / 0.85); border-color:rgb(var(--color-white-rgb) / 0.18); }
+        .hb .hero-search { background:rgb(var(--color-navy-dark-rgb) / 0.85); border-color:rgb(var(--color-white-rgb) / 0.4); }
         .hb .hero-search:focus { background:rgb(var(--color-navy-dark-rgb) / 0.92); }
         .hero-search:focus { border-color:var(--color-terracotta); background:rgb(var(--color-white-rgb) / 0.09); box-shadow:0 0 0 6px rgb(var(--color-terracotta-rgb) / 0.08),0 0 24px rgb(var(--color-terracotta-rgb) / 0.12),0 8px 32px rgb(var(--color-black-rgb) / 0.2); }
         .hero-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--color-terracotta-600); color:var(--color-white); border:2px solid var(--color-terracotta-600); border-radius:12px; padding:10px 22px; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,'Urbanist',sans-serif); white-space:nowrap; transition:background 0.2s,color 0.2s; }

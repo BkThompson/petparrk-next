@@ -378,7 +378,7 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
         .vr-textarea {
           width: 100%;
           padding: 14px;
-          border: 1.5px solid var(--color-border);
+          border: 1px solid var(--color-border-field);
           border-radius: 12px;
           font-size: 16px;
           font-weight: 500;

@@ -129,7 +129,7 @@ export default function SavedVets() {
 
         .sv-body { background: ${C.cream}; min-height: calc(100vh - 64px); padding: 48px 0 96px; }
 
-        .sv-search { width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: var(--pill-border-w, 2px) solid var(--control-border); font-size: 15px; font-weight: 500; font-family: var(--font-urbanist,'Urbanist',sans-serif); background: ${C.white}; color: ${C.navyDark}; outline: none; box-sizing: border-box; transition: border-color 0.15s; }
+        .sv-search { width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--color-border-field); font-size: 15px; font-weight: 500; font-family: var(--font-urbanist,'Urbanist',sans-serif); background: ${C.white}; color: ${C.navyDark}; outline: none; box-sizing: border-box; transition: border-color 0.15s; }
         .sv-search:focus { border-color: ${C.terracotta}; }
         .sv-search::placeholder { color: ${C.muted}; }
         .sv-search-wrap { position: relative; display: flex; align-items: center; width: 100%; }
