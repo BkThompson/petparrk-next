@@ -25,8 +25,11 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useDialog } from "../lib/a11y";
 
 export function UnsavedChangesModal({ open, onChoice }) {
+  // Escape = keep editing, same as clicking outside.
+  const dialogRef = useDialog(open, () => onChoice("keep"));
   // Lock background scroll while the modal is open (and compensate for the
   // scrollbar's width so the page doesn't shift horizontally when it hides).
   useEffect(() => {
@@ -94,6 +97,7 @@ export function UnsavedChangesModal({ open, onChoice }) {
       }}
     >
       <div
+        ref={dialogRef}
         className="ucm-card"
         role="dialog"
         aria-modal="true"

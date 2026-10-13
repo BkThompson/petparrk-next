@@ -50,6 +50,7 @@ import Breadcrumb from "./Breadcrumb";
 import VisitRecap from "./VisitRecap";
 import PetInsights from "./PetInsights";
 import { getActiveVisitPrepForPet, getRecapsForPet } from "../lib/copilotApi";
+import { smoothScroll } from "../lib/a11y";
 
 // ----------------------------------------------------------------------------
 // Main component. Data comes in via props; each page owns its own loading.
@@ -165,7 +166,7 @@ function ScrollTopButton() {
       type="button"
       className="pcc-scrolltop"
       aria-label="Back to top"
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={() => window.scrollTo({ top: 0, behavior: smoothScroll() })}
     >
       <ArrowUp size={20} strokeWidth={2.4} />
     </button>
@@ -231,7 +232,7 @@ function CareJumpNav() {
     // Native scroll — honors the .pcc-anchor `scroll-margin-top`, so the
     // section always lands just below the navbar + sticky jump-nav. Robust
     // against smooth-scroll timing (no mid-animation rect measurement).
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.scrollIntoView({ behavior: smoothScroll(), block: "start" });
     if (history.replaceState) history.replaceState(null, "", `#${id}`);
   }
 
@@ -1068,7 +1069,7 @@ function VetVisitsSection({ items, isOwner = false, petId, slug }) {
   useEffect(() => {
     if (recapOpen && recapWidgetRef.current) {
       recapWidgetRef.current.scrollIntoView({
-        behavior: "smooth",
+        behavior: smoothScroll(),
         block: "center",
       });
     }

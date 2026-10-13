@@ -493,6 +493,7 @@ function MarketingView() {
 
           {/* Three features */}
           <section className="pc-features">
+            <h2 className="sr-only">What Pet Cards do</h2>
             <div className="pc-features-grid">
               <div className="pc-feature-card">
                 <div className="pc-feature-icon-wrap">
@@ -611,7 +612,7 @@ function EmptyPetsView({ error }) {
             <ArtEmptyPets width={140} />
           </div>
           <h2>No pets yet</h2>
-          {error ? <p className="pc-empty-err">{error}</p> : null}
+          {error ? <p role="alert" className="pc-empty-err">{error}</p> : null}
           <p>
             Add a pet from your profile to start building their Health and Hero
             cards.

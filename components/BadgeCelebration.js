@@ -266,7 +266,16 @@ export function BadgeCelebration({ celebrate, tierDef, onDone }) {
     .filter(Boolean)
     .join(" ");
 
+  // The burst is decoration; this line is what a screen reader announces.
+  const announcement = crossed
+    ? `New tier reached${tierDef?.name ? `: ${tierDef.name}` : ""}.`
+    : `Level up${celebrate?.level ? `: level ${celebrate.level}` : ""}.`;
+
   return (
+    <>
+    <span className="sr-only" role="status">
+      {announcement}
+    </span>
     <div
       className={cls}
       style={{ "--celeb-dur": `${cfg.dur}s` }}
@@ -334,6 +343,7 @@ export function BadgeCelebration({ celebrate, tierDef, onDone }) {
         <span className="pp-celeb-pointer" aria-hidden="true" />
       </div>
     </div>
+    </>
   );
 }
 

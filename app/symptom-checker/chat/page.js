@@ -44,6 +44,7 @@ import {
 } from "../../../lib/copilotApi";
 import { renderMarkdown } from "../../../lib/renderMarkdown";
 import { C } from "../../../lib/tokens";
+import { onActivate, smoothScroll } from "../../../lib/a11y";
 
 const SESSION_KEY = "petparrk_symptom_session";
 const NAVBAR_H = 64;
@@ -636,7 +637,7 @@ export default function SymptomCheckerChatPage() {
       setTriageMounted(true);
       setTimeout(() => {
         if (messagesAreaRef.current)
-          messagesAreaRef.current.scrollTo({ top: 0, behavior: "smooth" });
+          messagesAreaRef.current.scrollTo({ top: 0, behavior: smoothScroll() });
       }, 150);
     });
     // Vets are loaded by the location effect below, not here. This used to
@@ -928,7 +929,7 @@ export default function SymptomCheckerChatPage() {
       const el = document.querySelector(".triage-prep-toggle");
       if (el) {
         const y = el.getBoundingClientRect().top + window.scrollY - 120;
-        window.scrollTo({ top: y, behavior: "smooth" });
+        window.scrollTo({ top: y, behavior: smoothScroll() });
       }
     }, 120);
     setSavingPet(false);
@@ -986,7 +987,7 @@ export default function SymptomCheckerChatPage() {
   // Scroll to top whenever guidedStep changes (better UX on mobile)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: smoothScroll() });
     }
   }, [guidedStep]);
 
@@ -1407,7 +1408,7 @@ export default function SymptomCheckerChatPage() {
               marginTop: "2px",
             }}
           >
-            <svg
+            <svg aria-hidden="true"
               width="16"
               height="16"
               viewBox="-1.5 -1 21 25"
@@ -1642,7 +1643,7 @@ export default function SymptomCheckerChatPage() {
       },
     }[triageResult];
     return (
-      <div
+      <div role={!triageCardExpanded ? "button" : undefined} tabIndex={!triageCardExpanded ? 0 : undefined} aria-expanded={triageCardExpanded} onKeyDown={!triageCardExpanded ? onActivate(() => setTriageCardExpanded(true)) : undefined}
         style={{
           marginBottom: "16px",
           background: cfg.bg,
@@ -1793,7 +1794,7 @@ export default function SymptomCheckerChatPage() {
                       <button type="submit">Search</button>
                     </form>
                   </div>
-                  {locError && <p className="triage-loc-error">{locError}</p>}
+                  {locError && <p role="alert" className="triage-loc-error">{locError}</p>}
                 </div>
               )}
 
@@ -2118,7 +2119,7 @@ export default function SymptomCheckerChatPage() {
                             document
                               .querySelector(".save-pet")
                               ?.scrollIntoView({
-                                behavior: "smooth",
+                                behavior: smoothScroll(),
                                 block: "center",
                               });
                           }, 60);
@@ -2160,7 +2161,7 @@ export default function SymptomCheckerChatPage() {
                     </button>
                   )}
                   {visitPrepError && (
-                    <p className="triage-prep-error">{visitPrepError}</p>
+                    <p role="alert" className="triage-prep-error">{visitPrepError}</p>
                   )}
                   {visitPrep && (
                     <div
@@ -2404,7 +2405,7 @@ export default function SymptomCheckerChatPage() {
                     {SYMPTOM_AREAS.map((area) => {
                       const Art = area.art;
                       return (
-                        <div
+                        <div role="button" tabIndex={0} onKeyDown={onActivate(() => selectArea(area.id))}
                           key={area.id}
                           className="g-card"
                           onClick={() => selectArea(area.id)}
@@ -2495,7 +2496,7 @@ export default function SymptomCheckerChatPage() {
                       {DURATIONS.map((d) => {
                         const Icon = d.icon;
                         return (
-                          <div
+                          <div role="button" tabIndex={0} onKeyDown={onActivate(() => selectDuration(d.id))}
                             key={d.id}
                             className="g-card"
                             onClick={() => selectDuration(d.id)}
@@ -2581,7 +2582,7 @@ export default function SymptomCheckerChatPage() {
                     {SEVERITIES.map((s) => {
                       const Icon = s.icon;
                       return (
-                        <div
+                        <div role="button" tabIndex={0} onKeyDown={onActivate(() => selectSeverity(s.id))}
                           key={s.id}
                           className="g-sev"
                           disabled={
@@ -3162,7 +3163,7 @@ export default function SymptomCheckerChatPage() {
                   </button>
                 </div>
                 {savePetError && (
-                  <p className="save-pet-error">{savePetError}</p>
+                  <p role="alert" className="save-pet-error">{savePetError}</p>
                 )}
                 <button
                   type="button"
@@ -3262,7 +3263,7 @@ export default function SymptomCheckerChatPage() {
               <div
                 className={`chat-input-wrap${recording ? " recording" : ""}`}
               >
-                <textarea
+                <textarea aria-label="Describe what's happening"
                   ref={textareaRef}
                   className="chat-textarea"
                   value={input}
@@ -3297,7 +3298,7 @@ export default function SymptomCheckerChatPage() {
                     disabled={loading || streaming || !input.trim()}
                     title="Send"
                   >
-                    <svg
+                    <svg aria-hidden="true"
                       width="18"
                       height="18"
                       viewBox="0 0 12 13"

@@ -189,7 +189,7 @@ export default function PetFormCard({
               {formPhotoUrl ? (
                 <img
                   src={formPhotoUrl}
-                  alt="pet"
+                  alt="Pet photo"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               ) : (
@@ -278,7 +278,7 @@ export default function PetFormCard({
               *
             </span>
           </label>
-          <input
+          <input aria-label="Name"
             className="input"
             value={petForm.name}
             onChange={(e) => setPetForm({ ...petForm, name: e.target.value })}
@@ -297,7 +297,7 @@ export default function PetFormCard({
               *
             </span>
           </label>
-          <select
+          <select aria-label="Species"
             className="input"
             value={petForm.species}
             onChange={(e) =>
@@ -318,7 +318,7 @@ export default function PetFormCard({
           </select>
           {petForm.species === "Other" && (
             <div style={{ marginTop: "10px", marginBottom: "4px" }}>
-              <input
+              <input aria-label="Specify species"
                 className="input"
                 value={petForm.species_other || ""}
                 onChange={(e) =>
@@ -335,7 +335,7 @@ export default function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Breed</label>
-          <input
+          <input aria-label="Breed"
             className="input"
             value={petForm.breed}
             onChange={(e) => setPetForm({ ...petForm, breed: e.target.value })}
@@ -344,7 +344,7 @@ export default function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Sex</label>
-          <select
+          <select aria-label="Sex"
             className="input"
             value={petForm.sex || ""}
             onChange={(e) => setPetForm({ ...petForm, sex: e.target.value })}
@@ -357,7 +357,7 @@ export default function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Birthday</label>
-          <input
+          <input aria-label="Birthday"
             className="input"
             type="date"
             value={petForm.birthday}
@@ -372,7 +372,7 @@ export default function PetFormCard({
         <div className="field">
           <label className="label">Weight</label>
           <div className="pp-weight-row">
-            <input
+            <input aria-label="Weight"
               className="input pp-weight-input"
               type="number"
               inputMode="decimal"

@@ -52,6 +52,7 @@ import {
   computeCareCompleteCount,
 } from "../../lib/levelSystem";
 import LevelProgress from "../../components/LevelProgress";
+import { useDialog, smoothScroll } from "../../lib/a11y";
 
 export default function ProfilePage() {
   const {
@@ -189,6 +190,7 @@ export default function ProfilePage() {
       body.style.paddingRight = prevPadRight;
     };
   }, [showLevelModal]);
+  const levelDialogRef = useDialog(showLevelModal, () => setShowLevelModal(false));
 
   // Is the profile edit form changed vs the saved profile? Drives the
   // unsaved-changes warning before discarding.
@@ -843,7 +845,7 @@ export default function ProfilePage() {
                     <div className="pp-avatar-ring">
                       <div className="pp-avatar-inner">
                         {avatarUrl ? (
-                          <img src={avatarUrl} alt="avatar" />
+                          <img src={avatarUrl} alt="Profile photo" />
                         ) : (
                           avatarLetter
                         )}
@@ -1340,7 +1342,7 @@ export default function ProfilePage() {
                               .top +
                             window.scrollY -
                             80;
-                          window.scrollTo({ top, behavior: "smooth" });
+                          window.scrollTo({ top, behavior: smoothScroll() });
                         }, 150);
                       }
                     }}
@@ -1419,9 +1421,9 @@ export default function ProfilePage() {
             className="pp-modal-backdrop"
             onClick={() => setShowLevelModal(false)}
           >
-            <div className="pp-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="pp-modal" ref={levelDialogRef} role="dialog" aria-modal="true" aria-labelledby="pp-levels-title" onClick={(e) => e.stopPropagation()}>
               <div className="pp-modal-head">
-                <h3>Levels</h3>
+                <h3 id="pp-levels-title">Levels</h3>
                 <button
                   className="pp-modal-close"
                   onClick={() => setShowLevelModal(false)}

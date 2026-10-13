@@ -47,6 +47,7 @@ const VantaBackground = dynamic(
 );
 import { CssDesign } from "../../../../components/HeroBackgrounds";
 import { HEX } from "../../../../lib/tokens";
+import { onActivate, useDialog, smoothScroll } from "../../../../lib/a11y";
 
 // =============================================================
 // COLOR THEMES — reused from the profile banner palette
@@ -353,6 +354,8 @@ const HERO_SNAPSHOT_FIELDS = [
 // the useUnsavedChanges() hook: "save" | "discard" | "keep".
 // ============================================================================
 function UnsavedChangesModal({ open, onChoice }) {
+  // Escape = keep editing, same as clicking outside.
+  const dialogRef = useDialog(open, () => onChoice("keep"));
   // Lock background scroll while the modal is open (and compensate for the
   // scrollbar's width so the page doesn't shift horizontally when it hides).
   useEffect(() => {
@@ -395,6 +398,7 @@ function UnsavedChangesModal({ open, onChoice }) {
       }}
     >
       <div
+        ref={dialogRef}
         className="ucm-card"
         role="dialog"
         aria-modal="true"
@@ -820,7 +824,7 @@ function HeroBackground({ design, bg, accent }) {
   switch (design) {
     case "mountains":
       return (
-        <svg {...svgProps}>
+        <svg aria-hidden="true" {...svgProps}>
           <defs>
             <linearGradient id="hbSky" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={bgLight} />
@@ -852,7 +856,7 @@ function HeroBackground({ design, bg, accent }) {
 
     case "waves":
       return (
-        <svg {...svgProps}>
+        <svg aria-hidden="true" {...svgProps}>
           <defs>
             <linearGradient id="hbWv" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={bgLight} />
@@ -884,7 +888,7 @@ function HeroBackground({ design, bg, accent }) {
 
     case "aurora":
       return (
-        <svg {...svgProps}>
+        <svg aria-hidden="true" {...svgProps}>
           <defs>
             <linearGradient id="hbAur" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={bgDark} />
@@ -932,7 +936,7 @@ function HeroBackground({ design, bg, accent }) {
 
     case "starfield":
       return (
-        <svg {...svgProps}>
+        <svg aria-hidden="true" {...svgProps}>
           <defs>
             <radialGradient id="hbGlow" cx="70%" cy="22%" r="60%">
               <stop offset="0%" stopColor={accLight} stopOpacity="0.4" />
@@ -982,7 +986,7 @@ function HeroBackground({ design, bg, accent }) {
 
     case "aero":
       return (
-        <svg {...svgProps}>
+        <svg aria-hidden="true" {...svgProps}>
           <rect width="1200" height="1600" fill={bg} />
           <g fill="none" strokeLinecap="round">
             <path
@@ -1021,7 +1025,7 @@ function HeroBackground({ design, bg, accent }) {
 
     case "rings":
       return (
-        <svg {...svgProps}>
+        <svg aria-hidden="true" {...svgProps}>
           <rect width="1200" height="1600" fill={bg} />
           <g fill="none" stroke={accent} opacity="0.4">
             {[120, 240, 360, 480, 600, 720, 840].map((r, i) => (
@@ -1040,7 +1044,7 @@ function HeroBackground({ design, bg, accent }) {
 
     case "mesh":
       return (
-        <svg {...svgProps}>
+        <svg aria-hidden="true" {...svgProps}>
           <defs>
             <filter id="hbMesh">
               <feGaussianBlur stdDeviation="80" />
@@ -1070,7 +1074,7 @@ function HeroBackground({ design, bg, accent }) {
 
     case "chrome":
       return (
-        <svg {...svgProps}>
+        <svg aria-hidden="true" {...svgProps}>
           <defs>
             <linearGradient id="hbCh" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor={shade(bg, 0.5)} />
@@ -1089,7 +1093,7 @@ function HeroBackground({ design, bg, accent }) {
     case "flares":
       // Handled by the animated orb divs in the stage; render base only.
       return (
-        <svg {...svgProps}>
+        <svg aria-hidden="true" {...svgProps}>
           <rect width="1200" height="1600" fill={bg} />
         </svg>
       );
@@ -1097,7 +1101,7 @@ function HeroBackground({ design, bg, accent }) {
     case "plain":
     default:
       return (
-        <svg {...svgProps}>
+        <svg aria-hidden="true" {...svgProps}>
           <defs>
             <linearGradient id="hbPl" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={bgLight} />
@@ -1146,7 +1150,7 @@ function EmojiPicker({ value, onPick }) {
       </button>
       {open && (
         <div className="he-emoji-pop">
-          <input
+          <input aria-label="Search emoji"
             className="he-emoji-search"
             type="text"
             value={query}
@@ -2234,7 +2238,7 @@ function HeroEditorView({ pet, slug }) {
           )}
           <Collapse open={openFormId === "hero-title"}>
             <div className="he-field">
-              <input
+              <input aria-label="Hero title"
                 className="he-input"
                 type="text"
                 value={title}
@@ -2309,7 +2313,7 @@ function HeroEditorView({ pet, slug }) {
           )}
           <Collapse open={openFormId === "hero-description"}>
             <div className="he-field">
-              <textarea
+              <textarea aria-label="Description"
                 className="he-input he-textarea"
                 rows={2}
                 value={description}
@@ -2521,7 +2525,7 @@ function HeroEditorView({ pet, slug }) {
                           onPick={(em) => updateStat(i, { emoji: em })}
                         />
                         <div className="he-stat-field">
-                          <input
+                          <input aria-label="Stat name"
                             className="he-stat-label"
                             type="text"
                             value={s.label}
@@ -2558,7 +2562,7 @@ function HeroEditorView({ pet, slug }) {
                             </span>
                           </div>
                         </div>
-                        <input
+                        <input aria-label={`${s.label || "Stat"} (0 to 10)`}
                           className="he-stat-slider"
                           type="range"
                           min="0"
@@ -3123,12 +3127,14 @@ function HeroEditorView({ pet, slug }) {
               </p>
               <div className="he-photo-grid">
                 {heroPhotos.map((url, i) => (
-                  <div
+                  <div onKeyDown={onActivate(() => handleHeroPhotoSelect(i))}
                     key={url}
                     className={`he-photo-thumb${i === heroPhotoIndex ? " is-active" : ""}`}
                     onClick={() => handleHeroPhotoSelect(i)}
                     role="button"
                     tabIndex={0}
+                    aria-pressed={i === heroPhotoIndex}
+                    aria-label={`Use photo ${i + 1} as the hero photo`}
                   >
                     <img src={url} alt="" />
                     {i === heroPhotoIndex && (
@@ -3172,7 +3178,7 @@ function HeroEditorView({ pet, slug }) {
                   </label>
                 )}
               </div>
-              {photoError && <p className="he-photo-error">{photoError}</p>}
+              {photoError && <p role="alert" className="he-photo-error">{photoError}</p>}
               <p className="he-photo-hint">
                 Tap a photo to use it on your Hero Card. JPG or PNG, up to 5MB.
               </p>
@@ -3306,7 +3312,7 @@ function HeroScrollTopButton() {
       type="button"
       className="he-scrolltop"
       aria-label="Back to top"
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={() => window.scrollTo({ top: 0, behavior: smoothScroll() })}
     >
       <ArrowUp size={20} strokeWidth={2.4} />
     </button>
@@ -3320,6 +3326,7 @@ function TagInput({
   value,
   onChange,
   placeholder,
+  ariaLabel,
   maxLength = 40,
   maxTags = 12,
   autoFocus = false,
@@ -3410,7 +3417,7 @@ function TagInput({
           </span>
         ))}
         {!atLimit ? (
-          <input
+          <input aria-label={ariaLabel || placeholder || "Add an item"}
             ref={inputRef}
             type="text"
             className="pce-tag-input-field"
@@ -3669,7 +3676,7 @@ function NicknameCard({
           </button>
           <div className="pce-entry-card">
             <div className="pce-field">
-              <input
+              <input aria-label="Nickname"
                 type="text"
                 className="pce-input pce-input-hero-edit"
                 value={draft}
@@ -3855,6 +3862,7 @@ function TagArrayCard({
                 value={draft}
                 onChange={setDraft}
                 placeholder={placeholder}
+                ariaLabel={title}
                 autoFocus
               />
             </div>
@@ -4620,7 +4628,7 @@ function RescueExtensionCard({
           <div className="pce-entry-card">
             <div className="pce-field">
               <label className="pce-label">Their story</label>
-              <textarea
+              <textarea aria-label="Their story"
                 className="pce-textarea"
                 value={draftStory}
                 onChange={(e) => setDraftStory(e.target.value)}
@@ -4632,7 +4640,7 @@ function RescueExtensionCard({
             </div>
             <div className="pce-field">
               <label className="pce-label">Who or where they came from</label>
-              <input
+              <input aria-label="Who or where they came from"
                 type="text"
                 className="pce-input"
                 value={draftOrg}
@@ -4835,7 +4843,7 @@ function ServiceExtensionCard({
           <div className="pce-entry-card">
             <div className="pce-field">
               <label className="pce-label">Role</label>
-              <input
+              <input aria-label="Role"
                 type="text"
                 className="pce-input"
                 value={draftType}
@@ -4847,7 +4855,7 @@ function ServiceExtensionCard({
             </div>
             <div className="pce-field">
               <label className="pce-label">Organization</label>
-              <input
+              <input aria-label="Organization"
                 type="text"
                 className="pce-input"
                 value={draftOrg}
@@ -4858,7 +4866,7 @@ function ServiceExtensionCard({
             </div>
             <div className="pce-field">
               <label className="pce-label">Certification number</label>
-              <input
+              <input aria-label="Certification number"
                 type="text"
                 className="pce-input"
                 value={draftCert}
@@ -5203,7 +5211,7 @@ function ForeverLovedExtensionCard({
                 Date of birth{" "}
                 <span className="pce-label-optional">(optional)</span>
               </label>
-              <input
+              <input aria-label="Date of birth (optional)"
                 type="date"
                 className="pce-input"
                 value={draftBirth}
@@ -5213,7 +5221,7 @@ function ForeverLovedExtensionCard({
             </div>
             <div className="pce-field">
               <label className="pce-label">Date they passed</label>
-              <input
+              <input aria-label="Date they passed"
                 type="date"
                 className="pce-input"
                 value={draftDate}
@@ -5229,7 +5237,7 @@ function ForeverLovedExtensionCard({
             </div>
             <div className="pce-field">
               <label className="pce-label">Memorial message</label>
-              <textarea
+              <textarea aria-label="Memorial message"
                 className="pce-textarea"
                 value={draftMsg}
                 onChange={(e) => setDraftMsg(e.target.value)}
@@ -5445,7 +5453,7 @@ function TextareaCard({
           </button>
           <div className="pce-entry-card">
             <div className="pce-field">
-              <textarea
+              <textarea aria-label={title}
                 className="pce-textarea"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}

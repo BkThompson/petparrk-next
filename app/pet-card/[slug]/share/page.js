@@ -3360,7 +3360,7 @@ function ShareSection({ pet, onUpdate, setSaveStatus }) {
               : "Sharing is off. All existing links are disabled."}
           </p>
         </div>
-        <button
+        <button aria-label="Allow sharing"
           type="button"
           role="switch"
           aria-checked={masterOn}
@@ -3414,7 +3414,7 @@ function ShareSection({ pet, onUpdate, setSaveStatus }) {
                 : "Not listed. Turn on to feature this Hero Card on your profile."}
           </p>
         </div>
-        <button
+        <button aria-label="Show on public profile"
           type="button"
           role="switch"
           aria-checked={showOnProfile}

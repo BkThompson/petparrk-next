@@ -167,7 +167,7 @@ export default function Unlock() {
     fontSize: "16px",
     fontWeight: "500",
     fontFamily: "var(--font-urbanist, system-ui)",
-    outline: "none",
+    // No outline: "none" here: it would hide the site's focus ring.
     boxSizing: "border-box",
     background: "var(--color-white)",
     transition: "border-color 0.15s",
@@ -289,7 +289,7 @@ export default function Unlock() {
               maxWidth: "100%",
             }}
           >
-            <input
+            <input aria-label="Email"
               type="email"
               inputMode="email"
               autoComplete="email"
@@ -356,7 +356,7 @@ export default function Unlock() {
             <div
               style={{ position: "relative", width: "260px", maxWidth: "100%" }}
             >
-              <input
+              <input aria-label="Password"
                 type={showPw ? "text" : "password"}
                 placeholder="Enter password"
                 value={val}

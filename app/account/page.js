@@ -7,6 +7,7 @@ import PageLoader from "../../components/PageLoader";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { C } from "../../lib/tokens";
+import { useDialog } from "../../lib/a11y";
 
 
 export default function AccountSettings() {
@@ -30,6 +31,11 @@ export default function AccountSettings() {
 
   // Delete account
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const deleteDialogRef = useDialog(showDeleteModal, () => {
+    setShowDeleteModal(false);
+    setDeleteConfirm("");
+    setDeleteMsg(null);
+  });
 
   // Background scroll-lock while the delete modal is open. Safe because
   // .modal-box scrolls internally (max-height 86vh, overflow-y auto).
@@ -212,8 +218,8 @@ export default function AccountSettings() {
             setDeleteMsg(null);
           }}
         >
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h2 className="modal-title">Delete Account</h2>
+          <div className="modal-box" ref={deleteDialogRef} role="alertdialog" aria-modal="true" aria-labelledby="acc-delete-title" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-title" id="acc-delete-title">Delete Account</h2>
             <p className="modal-sub">
               This action is permanent and cannot be undone. All your pets,
               health records, saved vets, and account data will be deleted.
@@ -222,12 +228,12 @@ export default function AccountSettings() {
               Type <strong>DELETE</strong> in the field below to confirm.
             </div>
             {deleteMsg && (
-              <div className={`acc-msg acc-msg-${deleteMsg.type}`}>
+              <div role="status" className={`acc-msg acc-msg-${deleteMsg.type}`}>
                 {deleteMsg.text}
               </div>
             )}
             <div className="acc-field">
-              <input
+              <input aria-label="Type DELETE to confirm"
                 type="text"
                 className="acc-input"
                 placeholder="Type DELETE to confirm"
@@ -403,13 +409,13 @@ export default function AccountSettings() {
                 A confirmation link will be sent to your new email address.
               </p>
               {emailMsg && (
-                <div className={`acc-msg acc-msg-${emailMsg.type}`}>
+                <div role="status" className={`acc-msg acc-msg-${emailMsg.type}`}>
                   {emailMsg.text}
                 </div>
               )}
               <div className="acc-field">
                 <label className="acc-label">New Email Address</label>
-                <input
+                <input aria-label="New Email Address"
                   type="email"
                   className="acc-input"
                   placeholder="Enter new email address"
@@ -433,13 +439,13 @@ export default function AccountSettings() {
               <p className="acc-card-title">Change Password</p>
               <p className="acc-card-sub">Must be at least 8 characters.</p>
               {passwordMsg && (
-                <div className={`acc-msg acc-msg-${passwordMsg.type}`}>
+                <div role="status" className={`acc-msg acc-msg-${passwordMsg.type}`}>
                   {passwordMsg.text}
                 </div>
               )}
               <div className="acc-field">
                 <label className="acc-label">New Password</label>
-                <input
+                <input aria-label="New Password"
                   type="password"
                   className="acc-input"
                   placeholder="Enter new password"
@@ -449,7 +455,7 @@ export default function AccountSettings() {
               </div>
               <div className="acc-field">
                 <label className="acc-label">Confirm New Password</label>
-                <input
+                <input aria-label="Confirm New Password"
                   type="password"
                   className="acc-input"
                   placeholder="Repeat new password"

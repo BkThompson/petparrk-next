@@ -77,6 +77,13 @@ export default function LevelProgress({
   const lastCelebRef = useRef(null);
   useEffect(() => {
     if (!celebrate || !celebRef.current) return;
+    // Reduced motion: skip the particle burst entirely.
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
     const key = `${celebrate.level}-${celebrate.tierCrossed}`;
     if (lastCelebRef.current === key) return;
     lastCelebRef.current = key;

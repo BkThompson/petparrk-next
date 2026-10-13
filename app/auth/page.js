@@ -308,7 +308,8 @@ function AuthPageContent() {
     fontSize: "16px",
     fontWeight: "500",
     fontFamily: "var(--font-urbanist, system-ui)",
-    outline: "none",
+    // No outline: "none" — an inline style beats the site's :focus-visible
+    // ring, which left keyboard users with no sign of where they were.
     boxSizing: "border-box",
     background: "var(--color-white)",
     transition: "border-color 0.15s",
@@ -449,6 +450,8 @@ function AuthPageContent() {
         aria-live="polite"
       >
         <div
+          className="pp-spinner"
+          aria-hidden="true"
           style={{
             width: "32px",
             height: "32px",
@@ -629,7 +632,7 @@ function AuthPageContent() {
 
           {/* Banners */}
           {error && (
-            <div
+            <div role="alert"
               style={{
                 background: "var(--color-error-light)",
                 color: "var(--color-error)",
@@ -645,7 +648,7 @@ function AuthPageContent() {
             </div>
           )}
           {successMsg && (
-            <div
+            <div role="status"
               style={{
                 background: "var(--color-success-light)",
                 color: "var(--color-success-text)",
@@ -683,7 +686,7 @@ function AuthPageContent() {
               <form onSubmit={handleSignIn}>
                 <div style={{ marginBottom: "16px" }}>
                   <label style={labelStyle}>Email</label>
-                  <input
+                  <input aria-label="Email"
                     type="email"
                     required
                     value={email}
@@ -695,7 +698,7 @@ function AuthPageContent() {
                 <div style={{ marginBottom: "8px" }}>
                   <label style={labelStyle}>Password</label>
                   <div style={{ position: "relative" }}>
-                    <input
+                    <input aria-label="Password"
                       type={showPassword ? "text" : "password"}
                       required
                       value={password}
@@ -749,7 +752,7 @@ function AuthPageContent() {
               <form onSubmit={handleSignUp}>
                 <div style={{ marginBottom: "16px" }}>
                   <label style={labelStyle}>Full Name</label>
-                  <input
+                  <input aria-label="Full Name"
                     type="text"
                     required
                     value={fullName}
@@ -760,7 +763,7 @@ function AuthPageContent() {
                 </div>
                 <div style={{ marginBottom: "16px" }}>
                   <label style={labelStyle}>Email</label>
-                  <input
+                  <input aria-label="Email"
                     type="email"
                     required
                     value={email}
@@ -772,7 +775,7 @@ function AuthPageContent() {
                 <div style={{ marginBottom: "16px" }}>
                   <label style={labelStyle}>Password</label>
                   <div style={{ position: "relative" }}>
-                    <input
+                    <input aria-label="Password"
                       type={showPassword ? "text" : "password"}
                       required
                       value={password}
@@ -796,7 +799,7 @@ function AuthPageContent() {
                 </div>
                 <div style={{ marginBottom: "20px" }}>
                   <label style={labelStyle}>Confirm Password</label>
-                  <input
+                  <input aria-label="Confirm Password"
                     type={showPassword ? "text" : "password"}
                     required
                     value={confirmPassword}
@@ -853,7 +856,7 @@ function AuthPageContent() {
               <form onSubmit={handleForgotPassword}>
                 <div style={{ marginBottom: "20px" }}>
                   <label style={labelStyle}>Email</label>
-                  <input
+                  <input aria-label="Email"
                     type="email"
                     required
                     value={email}
@@ -948,7 +951,7 @@ export default function AuthPage() {
 
 function GoogleIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 48 48">
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 48 48">
       <path
         fill={GOOGLE_LOGO.amber450}
         d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.5 6.8 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z"

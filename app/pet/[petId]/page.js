@@ -545,7 +545,7 @@ export default function Home() {
               margin: "0 auto",
             }}
           >
-            <input
+            <input aria-label="Search by vet name or neighborhood"
               type="text"
               className="hero-search"
               placeholder="Search by vet name or neighborhood..."

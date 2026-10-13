@@ -32,6 +32,7 @@ import { extractReceiptPrices } from "../lib/copilotApi";
 import { supabase } from "../lib/supabase";
 import AutoGrowTextarea from "./AutoGrowTextarea";
 import { svgHex } from "../lib/tokens";
+import { onActivate } from "../lib/a11y";
 
 const SUBMIT_EMPTY_ENTRY = {
   service_name: "",
@@ -1459,7 +1460,7 @@ export default function InlineSubmitPriceForm({
                   <p className="isp-section-num">1. Which vet?</p>
                   <div className="isp-vet-picker" ref={dropdownRef}>
                     <div className="isp-vet-input-wrap">
-                      <input
+                      <input aria-label="Which vet?"
                         className="isp-vet-input"
                         type="text"
                         value={vetSearch}
@@ -1486,7 +1487,7 @@ export default function InlineSubmitPriceForm({
                     {showDropdown && vetSearch.trim() && (
                       <div className="isp-vet-dropdown">
                         {filteredVets.length === 0 ? (
-                          <div
+                          <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }}
                             className="isp-vet-result"
                             onClick={() => {
                               setNewVet({
@@ -1511,7 +1512,7 @@ export default function InlineSubmitPriceForm({
                           </div>
                         ) : (
                           filteredVets.map((vet) => (
-                            <div
+                            <div role="button" tabIndex={0} onKeyDown={onActivate(() => pickVet(vet))}
                               key={vet.id}
                               className="isp-vet-result"
                               onClick={() => pickVet(vet)}
@@ -1636,7 +1637,7 @@ export default function InlineSubmitPriceForm({
                           </button>
                         </div>
                       )}
-                      <input
+                      <input aria-label="Vet name"
                         className="isp-vet-input"
                         value={newVet.name}
                         onChange={(e) =>
@@ -1645,7 +1646,7 @@ export default function InlineSubmitPriceForm({
                         placeholder="Vet name *"
                         style={{ marginBottom: "8px" }}
                       />
-                      <input
+                      <input aria-label="Address"
                         className="isp-vet-input"
                         value={newVet.address}
                         onChange={(e) =>
@@ -1661,7 +1662,7 @@ export default function InlineSubmitPriceForm({
                           marginBottom: "8px",
                         }}
                       >
-                        <input
+                        <input aria-label="City"
                           className="isp-vet-input"
                           value={newVet.city}
                           onChange={(e) =>
@@ -1669,7 +1670,7 @@ export default function InlineSubmitPriceForm({
                           }
                           placeholder="City *"
                         />
-                        <input
+                        <input aria-label="ZIP"
                           className="isp-vet-input"
                           value={newVet.zip_code}
                           onChange={(e) =>
@@ -1684,7 +1685,7 @@ export default function InlineSubmitPriceForm({
                           style={{ maxWidth: "120px" }}
                         />
                       </div>
-                      <input
+                      <input aria-label="Phone"
                         className="isp-vet-input"
                         value={newVet.phone}
                         onChange={(e) =>
@@ -1726,7 +1727,7 @@ export default function InlineSubmitPriceForm({
                     use the service name and price.
                   </p>
                 </div>
-                <div
+                <div role="button" tabIndex={0} aria-label="Add receipt photos" onKeyDown={onActivate(() => { if (receiptFiles.length < MAX_RECEIPTS) receiptInputRef.current?.click(); })}
                   className={`isp-receipt-drop ${isDragging ? "drag" : ""} ${receiptFiles.length >= MAX_RECEIPTS ? "full" : ""}`}
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -1946,7 +1947,7 @@ export default function InlineSubmitPriceForm({
                       <label className="isp-label">
                         Service <span className="isp-required">*</span>
                       </label>
-                      <select
+                      <select aria-label="Service"
                         className="isp-select"
                         value={entry.service_name}
                         onChange={(e) =>
@@ -2017,7 +2018,7 @@ export default function InlineSubmitPriceForm({
                         <label className="isp-label">
                           What service was it?
                         </label>
-                        <input
+                        <input aria-label="What service was it?"
                           className="isp-input"
                           type="text"
                           value={entry.service_other || ""}
@@ -2033,7 +2034,7 @@ export default function InlineSubmitPriceForm({
                     {isVaccinePackage(entry.service_name) && (
                       <div className="isp-field">
                         <label className="isp-label">Vaccines Included</label>
-                        <input
+                        <input aria-label="Vaccines Included"
                           type="text"
                           className="isp-input"
                           value={entry.vaccines_included || ""}
@@ -2087,7 +2088,7 @@ export default function InlineSubmitPriceForm({
                             : "Price ($)"}{" "}
                           <span className="isp-required">*</span>
                         </label>
-                        <input
+                        <input aria-label={entry.price_type === "range" ? "Price Low ($)" : "Price ($)"}
                           type="number"
                           className="isp-input"
                           placeholder="e.g. 85"
@@ -2103,7 +2104,7 @@ export default function InlineSubmitPriceForm({
                             Price High ($){" "}
                             <span className="isp-required">*</span>
                           </label>
-                          <input
+                          <input aria-label="Price High ($)"
                             type="number"
                             className="isp-input"
                             placeholder="e.g. 200"
@@ -2119,7 +2120,7 @@ export default function InlineSubmitPriceForm({
                     {/* Species dropdown */}
                     <div className="isp-field">
                       <label className="isp-label">Species</label>
-                      <select
+                      <select aria-label="Species"
                         className="isp-select"
                         value={entry.species}
                         onChange={(e) =>
@@ -2136,7 +2137,7 @@ export default function InlineSubmitPriceForm({
                     </div>
                     {entry.species === "other" && (
                       <div className="isp-field">
-                        <input
+                        <input aria-label="Specify species"
                           type="text"
                           className="isp-input"
                           value={entry.species_other || ""}
@@ -2173,7 +2174,7 @@ export default function InlineSubmitPriceForm({
                     <div className="isp-grid-2">
                       <div>
                         <label className="isp-label">CareCredit</label>
-                        <select
+                        <select aria-label="CareCredit"
                           className="isp-select"
                           value={entry.carecredit}
                           onChange={(e) =>
@@ -2189,7 +2190,7 @@ export default function InlineSubmitPriceForm({
                         <label className="isp-label">
                           Accepting New Patients
                         </label>
-                        <select
+                        <select aria-label="Accepting New Patients"
                           className="isp-select"
                           value={entry.accepting_new_patients}
                           onChange={(e) =>
@@ -2231,7 +2232,7 @@ export default function InlineSubmitPriceForm({
                 <label className="isp-label">
                   Date of Visit <span style={{ color: C.terracotta700 }}>*</span>
                 </label>
-                <input
+                <input aria-label="Date of Visit"
                   type="date"
                   className="isp-input"
                   value={visitDate}
@@ -2250,7 +2251,7 @@ export default function InlineSubmitPriceForm({
 
               <div className="isp-field">
                 <label className="isp-label">Notes</label>
-                <AutoGrowTextarea
+                <AutoGrowTextarea aria-label="Notes"
                   className="isp-input"
                   value={submitterNote}
                   onChange={(e) => setSubmitterNote(e.target.value)}

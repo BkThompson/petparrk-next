@@ -6,6 +6,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
+import { useDialog } from "../lib/a11y";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import { C } from "../lib/tokens";
@@ -36,6 +37,7 @@ export default function ReportPriceModal({
   const [contactEmail, setContactEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const dialogRef = useDialog(open, onClose);
 
   useEffect(() => {
     if (open) {
@@ -127,7 +129,7 @@ export default function ReportPriceModal({
 
   return createPortal(
     <div className="rpm-overlay" onClick={onClose}>
-      <div className="rpm-card" onClick={(e) => e.stopPropagation()}>
+      <div className="rpm-card" ref={dialogRef} role="dialog" aria-modal="true" aria-label="Report incorrect price" onClick={(e) => e.stopPropagation()}>
         <button
           className="rpm-close"
           onClick={onClose}
@@ -208,7 +210,7 @@ export default function ReportPriceModal({
               <div className="rpm-field">
                 <label className="rpm-label">What should the price be?</label>
                 <div className="rpm-grid-2">
-                  <input
+                  <input aria-label="Suggested price, low"
                     type="number"
                     inputMode="numeric"
                     placeholder="Low"
@@ -216,7 +218,7 @@ export default function ReportPriceModal({
                     onChange={(e) => setSuggestedLow(e.target.value)}
                     className="rpm-input"
                   />
-                  <input
+                  <input aria-label="Suggested price, high (optional)"
                     type="number"
                     inputMode="numeric"
                     placeholder="High (optional)"
@@ -230,7 +232,7 @@ export default function ReportPriceModal({
 
             <div className="rpm-field">
               <label className="rpm-label">Additional context</label>
-              <textarea
+              <textarea aria-label="Additional context"
                 className="rpm-input rpm-textarea"
                 placeholder="How do you know? Any details help us verify faster."
                 value={reasonText}
@@ -242,7 +244,7 @@ export default function ReportPriceModal({
 
             <div className="rpm-field">
               <label className="rpm-label">Email for follow-up</label>
-              <input
+              <input aria-label="Email for follow-up"
                 type="email"
                 className="rpm-input"
                 placeholder="you@example.com"

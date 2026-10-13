@@ -111,7 +111,7 @@ export default async function BlogPost({ params }) {
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <main className="ba">
+      <div className="ba">
         <div className="ba-crumbs">
           <div className="pp-container">
             <div className="ba-crumbs-inner">
@@ -253,7 +253,7 @@ export default async function BlogPost({ params }) {
             </div>
           </section>
         )}
-      </main>
+      </div>
     </>
   );
 }

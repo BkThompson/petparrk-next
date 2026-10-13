@@ -35,7 +35,7 @@ function frame(title) {
    A receipt with a legible price on it. Reads at 36px. */
 export function ArtPricing({ size = 36, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -87,7 +87,7 @@ export function ArtPricing({ size = 36, title }) {
    A message bubble carrying a vitals trace. */
 export function ArtTriage({ size = 36, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -115,7 +115,7 @@ export function ArtTriage({ size = 36, title }) {
    A record card on a clip. */
 export function ArtRecord({ size = 36, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -151,7 +151,7 @@ export function ArtRecord({ size = 36, title }) {
    A price list with a dog waiting beside it. Sits on navy. */
 export function ArtSteps({ width = 320, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 320 240"
       xmlns="http://www.w3.org/2000/svg"
@@ -237,7 +237,7 @@ export function ArtSteps({ width = 320, title }) {
    Sits on white. An empty bowl is the invitation. */
 export function ArtEmptyPets({ width = 140, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 140 120"
       xmlns="http://www.w3.org/2000/svg"
@@ -306,7 +306,7 @@ export function ArtEmptyPets({ width = 140, title }) {
    meaning "nothing here", plus one terracotta object. */
 export function ArtNoResults({ width = 140, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 140 120"
       xmlns="http://www.w3.org/2000/svg"
@@ -380,7 +380,7 @@ export function ArtNoResults({ width = 140, title }) {
    empty state is also the invitation to submit the first price. */
 export function ArtNoPricing({ width = 140, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 140 120"
       xmlns="http://www.w3.org/2000/svg"
@@ -442,7 +442,7 @@ export function ArtNoPricing({ width = 140, title }) {
    a pencil over a note. */
 export function ArtSubmitPrice({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -493,7 +493,7 @@ export function ArtSubmitPrice({ size = 44, title }) {
    empty states on the site. */
 export function ArtNoChecks({ width = 140, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 140 120"
       xmlns="http://www.w3.org/2000/svg"
@@ -556,7 +556,7 @@ export function ArtNoChecks({ width = 140, title }) {
    "digestion". */
 export function ArtStomach({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -598,7 +598,7 @@ export function ArtStomach({ size = 44, title }) {
    beside each other read as neither. */
 export function ArtEyes({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -628,7 +628,7 @@ export function ArtEyes({ size = 44, title }) {
    read as "pet" and collided with every other pet mark on the site. */
 export function ArtSkin({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -658,7 +658,7 @@ export function ArtSkin({ size = 44, title }) {
    they don't merge into one blob at 44px. */
 export function ArtBreathing({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -695,7 +695,7 @@ export function ArtBreathing({ size = 44, title }) {
    which a curled-up dog silhouette did not. */
 export function ArtBehavior({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -724,7 +724,7 @@ export function ArtBehavior({ size = 44, title }) {
    reusing the plain paw. */
 export function ArtLimping({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -786,7 +786,7 @@ export function ArtLimping({ size = 44, title }) {
    "message us", which is the wrong promise. */
 export function ArtSomethingElse({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 36 36"
@@ -825,7 +825,7 @@ export function ArtSomethingElse({ size = 44, title }) {
    screen full of conflicting answers. */
 export function ArtProblemNight({ width = 420, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 400 300"
       xmlns="http://www.w3.org/2000/svg"
@@ -994,7 +994,7 @@ export function ArtProblemNight({ width = 420, title }) {
    and a total that is a range wide enough to be useless. */
 export function ArtProblemPrice({ width = 420, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 400 300"
       xmlns="http://www.w3.org/2000/svg"
@@ -1140,7 +1140,7 @@ export function ArtProblemPrice({ width = 420, title }) {
    sheets. Steeper angles and overlap so it reads as chaos. */
 export function ArtProblemScatter({ width = 420, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 400 300"
       xmlns="http://www.w3.org/2000/svg"
@@ -1342,7 +1342,7 @@ export function ArtProblemScatter({ width = 420, title }) {
    background — the room should feel bright, not nocturnal. */
 export function ArtContact({ width = 340, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 300 300"
       xmlns="http://www.w3.org/2000/svg"
@@ -1523,7 +1523,7 @@ export function ArtContact({ width = 340, title }) {
    empty states: cream object, dashed edge, one terracotta mark. */
 export function ArtNoSavedVets({ width = 140, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 140 120"
       xmlns="http://www.w3.org/2000/svg"
@@ -1578,7 +1578,7 @@ export function ArtNoSavedVets({ width = 140, title }) {
    same problem, so it should look the same. */
 export function ArtNoMatches({ width = 140, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={width}
       viewBox="0 0 140 120"
       xmlns="http://www.w3.org/2000/svg"
@@ -1659,7 +1659,7 @@ export function ArtNoMatches({ width = 140, title }) {
    frame used, so it reads larger without changing the tile. */
 export function ArtCareCard({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 44 44"
@@ -1697,7 +1697,7 @@ export function ArtCareCard({ size = 44, title }) {
    full size. */
 export function ArtHeroCard({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 44 44"
@@ -1729,7 +1729,7 @@ export function ArtHeroCard({ size = 44, title }) {
    Original drawing at full size. */
 export function ArtShareCard({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 44 44"
@@ -1788,7 +1788,7 @@ export function ArtShareCard({ size = 44, title }) {
    options. */
 export function ArtPickArea({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 44 44"
@@ -1845,7 +1845,7 @@ export function ArtPickArea({ size = 44, title }) {
 /* SCH-02 · How long — a clock, with the elapsed wedge marked. */
 export function ArtHowLong({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 44 44"
@@ -1879,7 +1879,7 @@ export function ArtHowLong({ size = 44, title }) {
    terracotta. Reads as a scale rather than a measurement. */
 export function ArtSeverity({ size = 44, title }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 44 44"

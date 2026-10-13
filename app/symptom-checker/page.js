@@ -537,7 +537,7 @@ export default function SymptomCheckerHomePage() {
         }}
       >
         {/* Crosshatch texture — fine diagonal lines at +45° and -45°, premium and geometric */}
-        <svg
+        <svg aria-hidden="true"
           style={{
             position: "absolute",
             inset: 0,
@@ -723,6 +723,8 @@ export default function SymptomCheckerHomePage() {
               >
                 How it works
               </p>
+              {/* Parent heading for the step cards (h3), for screen readers. */}
+              <h2 className="sr-only">How the symptom checker works</h2>
               <div
                 className="sc-steps-grid"
                 style={{
@@ -757,7 +759,7 @@ export default function SymptomCheckerHomePage() {
                     <div key={s.step} className="sc-step-outer">
                       <div className="sc-step-inner">
                         {/* Number watermark — faint terracotta on white */}
-                        <div
+                        <div aria-hidden="true" className="deco-num"
                           style={{
                             position: "absolute",
                             top: "12px",
@@ -769,9 +771,7 @@ export default function SymptomCheckerHomePage() {
                             userSelect: "none",
                             pointerEvents: "none",
                           }}
-                        >
-                          {s.step}
-                        </div>
+                         data-num={s.step} />
                         <div
                           style={{
                             width: "68px",
@@ -1341,7 +1341,7 @@ export default function SymptomCheckerHomePage() {
                         >
                           {label}
                         </label>
-                        <input
+                        <input aria-label={label}
                           value={guestPet[key]}
                           onChange={(e) =>
                             setGuestPet({ ...guestPet, [key]: e.target.value })

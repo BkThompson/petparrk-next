@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { ArrowRight, Search, Stethoscope, ClipboardList } from "lucide-react";
+import { onActivate } from "../../lib/a11y";
 
 function useScrollReveal(threshold = 0.08) {
   const ref = useRef(null);
@@ -142,7 +143,7 @@ const FAQS = [
 
 function PawShape({ fill = "white" }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       viewBox="0 0 100 100"
       xmlns="http://www.w3.org/2000/svg"
       fill={fill}
@@ -461,6 +462,8 @@ export default function HowItWorksPage() {
           className="pp-container"
           style={{ position: "relative", zIndex: 1 }}
         >
+          {/* Gives the step cards (h3) a parent heading for screen readers. */}
+          <h2 className="sr-only">What you can do with PetParrk</h2>
           <div ref={stepsRef} className="sg">
             {STEPS.map((step, i) => (
               <div
@@ -626,7 +629,7 @@ export default function HowItWorksPage() {
                   className="fq"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 >
-                  <div
+                  <div role="button" tabIndex={0} aria-expanded={openFaq === i} onKeyDown={onActivate(() => setOpenFaq(openFaq === i ? null : i))}
                     style={{
                       display: "flex",
                       justifyContent: "space-between",

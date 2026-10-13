@@ -12,6 +12,8 @@ import {
   ArtSteps,
 } from "../components/BrandArt";
 import { Heart, Check, X, ArrowRight, Lock } from "lucide-react";
+import HeroBanner from "../components/HeroBanner";
+import { heroArt } from "../lib/heroArt";
 
 function formatPrice(low, high, type) {
   if (!low) return null;
@@ -110,7 +112,7 @@ const STEPS = [
 
 function Bone({ fill }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       viewBox="0 0 120 44"
       xmlns="http://www.w3.org/2000/svg"
       style={{ width: "100%", height: "100%", display: "block" }}
@@ -126,7 +128,7 @@ function Bone({ fill }) {
 
 function Paw({ fill }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       viewBox="0 0 100 100"
       xmlns="http://www.w3.org/2000/svg"
       style={{ width: "100%", height: "100%", display: "block" }}
@@ -503,6 +505,37 @@ export default function Home() {
     );
   }
 
+  // Shared by the current hero and the illustrated one. margin centres it in
+  // the current (centred) hero and left-aligns it in the new one.
+  const heroForm = (margin) => (
+    <form
+      className="anim-4"
+      onSubmit={handleHeroSearch}
+      style={{ maxWidth: "580px", margin }}
+    >
+      <div className="hero-input-wrap">
+        <input
+          type="text"
+          className="hero-search"
+          placeholder="Search by vet name or neighborhood..."
+          aria-label="Search by vet name or neighborhood"
+          value={heroSearch}
+          onChange={(e) => setHeroSearch(e.target.value)}
+        />
+        {/* The label follows what the button will actually do. The
+            handler already branches on an empty field — it sends you to
+            the full directory — but a button reading "Search" with
+            nothing typed looks like it will do nothing. */}
+        <button type="submit" className="hero-btn">
+          {heroSearch.trim() ? "Search" : "Browse all vets"}
+        </button>
+      </div>
+    </form>
+  );
+  // Illustrated banner once Home's art exists (lib/heroArt.js); until then
+  // the current hero below.
+  const homeArt = heroArt("home");
+
   const showCTA = session === null;
   // Saved vets (full objects) for the logged-in dashboard strip.
   const savedVetsList = vets.filter((v) => savedVetIds.has(v.id));
@@ -542,7 +575,10 @@ export default function Home() {
 
         .hero-input-wrap { position:relative; }
         .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:2px solid rgb(var(--color-white-rgb) / 0.1); font-size:16px; font-weight:500; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgb(var(--color-white-rgb) / 0.06); color:var(--color-white); outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
-        .hero-search::placeholder { color:rgb(var(--color-white-rgb) / 0.35); }
+        .hero-search::placeholder { color:rgb(var(--color-white-rgb) / 0.65); }
+        /* Over the illustrated banner: a near-solid field so busy art doesn't show through. */
+        .hb .hero-search { background:rgb(var(--color-navy-dark-rgb) / 0.85); border-color:rgb(var(--color-white-rgb) / 0.18); }
+        .hb .hero-search:focus { background:rgb(var(--color-navy-dark-rgb) / 0.92); }
         .hero-search:focus { border-color:var(--color-terracotta); background:rgb(var(--color-white-rgb) / 0.09); box-shadow:0 0 0 6px rgb(var(--color-terracotta-rgb) / 0.08),0 0 24px rgb(var(--color-terracotta-rgb) / 0.12),0 8px 32px rgb(var(--color-black-rgb) / 0.2); }
         .hero-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--color-terracotta-600); color:var(--color-white); border:2px solid var(--color-terracotta-600); border-radius:12px; padding:10px 22px; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,'Urbanist',sans-serif); white-space:nowrap; transition:background 0.2s,color 0.2s; }
         @media (hover: hover) { .hero-btn:hover { background:var(--color-white); color:var(--color-terracotta-700); } }
@@ -714,6 +750,21 @@ export default function Home() {
       `}</style>
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
+      {homeArt ? (
+        <HeroBanner art={homeArt} variant="home">
+          <h1 className="hb-h1 anim-2">
+            Know what you'll pay before{" "}
+            <span style={{ color: "var(--color-gold)" }}>
+              your next vet visit.
+            </span>
+          </h1>
+          <p className="hb-lede anim-3">
+            PetParrk gives you real vet prices, instant symptom guidance, and a
+            health history your pet deserves.
+          </p>
+          {heroForm("0")}
+        </HeroBanner>
+      ) : (
       <section
         style={{
           background: "var(--color-navy-dark)",
@@ -799,31 +850,11 @@ export default function Home() {
               a health history your pet deserves.
             </p>
 
-            <form
-              className="anim-4"
-              onSubmit={handleHeroSearch}
-              style={{ maxWidth: "580px", margin: "0 auto" }}
-            >
-              <div className="hero-input-wrap">
-                <input
-                  type="text"
-                  className="hero-search"
-                  placeholder="Search by vet name or neighborhood..."
-                  value={heroSearch}
-                  onChange={(e) => setHeroSearch(e.target.value)}
-                />
-                {/* The label follows what the button will actually do. The
-                    handler already branches on an empty field — it sends you to
-                    the full directory — but a button reading "Search" with
-                    nothing typed looks like it will do nothing. */}
-                <button type="submit" className="hero-btn">
-                  {heroSearch.trim() ? "Search" : "Browse all vets"}
-                </button>
-              </div>
-            </form>
+            {heroForm("0 auto")}
           </div>
         </div>
       </section>
+      )}
 
       {/* ── LOGGED-IN DASHBOARD STRIP ────────────────────────────────── */}
       {session ? (
@@ -1344,7 +1375,7 @@ export default function Home() {
                   key={step.number}
                   className={`step-card reveal-right${stepsVisible ? " visible" : ""} reveal-delay-${i + 1}`}
                 >
-                  <div className="step-number">{step.number}</div>
+                  <div aria-hidden="true" className="step-number deco-num" data-num={step.number} />
                   <div style={{ paddingTop: "6px" }}>
                     <h3
                       style={{

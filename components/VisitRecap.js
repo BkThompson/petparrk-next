@@ -160,7 +160,7 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
       {mode === "typing" && (
         <div className="vr-typing">
           <p className="vr-label">What did the vet say?</p>
-          <textarea
+          <textarea aria-label="What did the vet say?"
             className="vr-textarea"
             placeholder="e.g. Bella has an ear infection. Vet prescribed Otomax, apply twice a day for 10 days. Come back in 2 weeks if not better."
             value={typedText}
@@ -168,7 +168,7 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
             rows={5}
             autoFocus
           />
-          {error && <p className="vr-error">{error}</p>}
+          {error && <p role="alert" className="vr-error">{error}</p>}
           <div className="vr-row-actions">
             <button className="vr-cancel-btn" onClick={reset}>
               Cancel
@@ -267,7 +267,7 @@ export default function VisitRecap({ petId, visitPrepId, onComplete }) {
             </p>
           )}
 
-          {error && <p className="vr-error">{error}</p>}
+          {error && <p role="alert" className="vr-error">{error}</p>}
 
           <div className="vr-row-actions">
             <button className="vr-cancel-btn" onClick={reset}>

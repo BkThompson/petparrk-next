@@ -37,6 +37,7 @@ export default function BlogFaq({ items }) {
           <div key={i} className="bfq-item">
             <button
               type="button"
+              id={`bfq-q-${i}`}
               className="bfq-btn"
               aria-expanded={open}
               aria-controls={`bfq-a-${i}`}
@@ -47,7 +48,7 @@ export default function BlogFaq({ items }) {
                 +
               </span>
             </button>
-            <div id={`bfq-a-${i}`} className={`bfq-a${open ? " open" : ""}`} role="region">
+            <div id={`bfq-a-${i}`} className={`bfq-a${open ? " open" : ""}`} role="region" aria-labelledby={`bfq-q-${i}`} inert={!open}>
               <div className="bfq-a-inner">
                 <p className="bfq-a-text">{faq.a}</p>
               </div>

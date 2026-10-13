@@ -267,7 +267,7 @@ function DogGolden() {
   const C = "var(--color-terracotta)",
     D = ABOUT_HERO_ART.red550;
   return (
-    <svg
+    <svg aria-hidden="true"
       width="152"
       height="92"
       viewBox="0 0 152 92"
@@ -360,7 +360,7 @@ function DogDachshund() {
   const C = "var(--color-navy-mid)",
     D = "var(--color-navy-dark)";
   return (
-    <svg
+    <svg aria-hidden="true"
       width="172"
       height="66"
       viewBox="0 0 172 66"
@@ -861,7 +861,7 @@ export default function AboutPage() {
           zIndex: 0,
         }}
       />
-      <svg style={{ position: "absolute", width: 0, height: 0 }}>
+      <svg aria-hidden="true" style={{ position: "absolute", width: 0, height: 0 }}>
         <filter
           id="aboutGrain"
           x="0%"
@@ -1332,7 +1332,7 @@ export default function AboutPage() {
                 key={val.title}
                 className={`value-stripe-row rv${valuesVisible ? " on" : ""} d${Math.min(i + 1, 5)}`}
               >
-                <div className="vsnum">{val.number}</div>
+                <div aria-hidden="true" className="vsnum deco-num" data-num={val.number} />
                 <div style={{ paddingTop: "12px" }}>
                   <h3
                     style={{
@@ -1382,7 +1382,7 @@ export default function AboutPage() {
                         : "none",
                     }}
                   >
-                    <div
+                    <div aria-hidden="true" className="deco-num"
                       style={{
                         fontSize: "52px",
                         fontWeight: "800",
@@ -1393,9 +1393,7 @@ export default function AboutPage() {
                         marginBottom: "14px",
                         userSelect: "none",
                       }}
-                    >
-                      {VALUES[txState.from].number}
-                    </div>
+                     data-num={VALUES[txState.from].number} />
                     <h3
                       style={{
                         fontSize: "22px",
@@ -1438,7 +1436,7 @@ export default function AboutPage() {
                         : "none",
                     }}
                   >
-                    <div
+                    <div aria-hidden="true" className="deco-num"
                       style={{
                         fontSize: "52px",
                         fontWeight: "800",
@@ -1449,9 +1447,7 @@ export default function AboutPage() {
                         marginBottom: "14px",
                         userSelect: "none",
                       }}
-                    >
-                      {VALUES[txState.to].number}
-                    </div>
+                     data-num={VALUES[txState.to].number} />
                     <h3
                       style={{
                         fontSize: "22px",
@@ -1481,7 +1477,7 @@ export default function AboutPage() {
                 </>
               ) : (
                 <div className="carousel-card">
-                  <div
+                  <div aria-hidden="true" className="deco-num"
                     style={{
                       fontSize: "52px",
                       fontWeight: "800",
@@ -1491,9 +1487,7 @@ export default function AboutPage() {
                       marginBottom: "14px",
                       userSelect: "none",
                     }}
-                  >
-                    {VALUES[activeValue].number}
-                  </div>
+                   data-num={VALUES[activeValue].number} />
                   <h3
                     style={{
                       fontSize: "22px",

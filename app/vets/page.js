@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { svgHex } from "../../lib/tokens";
 import { VETS_HERO_ART } from "../../lib/palettes";
+import { onActivate, smoothScroll } from "../../lib/a11y";
 
 function formatPrice(low, high, type) {
   if (!low) return null;
@@ -77,7 +78,7 @@ function StarField() {
     return arr;
   }, []);
   return (
-    <svg
+    <svg aria-hidden="true"
       style={{
         position: "absolute",
         inset: 0,
@@ -439,7 +440,7 @@ function FilterDropdown({
   };
 
   const renderOpt = (opt) => (
-    <div
+    <div role="option" aria-selected={opt.value === value} tabIndex={0} onKeyDown={onActivate(() => pick(opt.value))}
       key={opt.value}
       className={`fdd-opt${opt.value === value ? " sel" : ""}`}
       onClick={() => pick(opt.value)}
@@ -507,7 +508,7 @@ function VetsScrollTopButton() {
       type="button"
       className="vets-scrolltop"
       aria-label="Back to top"
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={() => window.scrollTo({ top: 0, behavior: smoothScroll() })}
     >
       <ArrowUp size={20} strokeWidth={2.4} />
       <style>{`
@@ -980,7 +981,7 @@ function VetsContent() {
                   Clearing a search that returned nothing used to mean
                   backspacing through the whole term. */}
               <div className="dir-search-wrap fbar-item fbar-search">
-                <input
+                <input aria-label="Search by vet name or neighborhood"
                   type="text"
                   className="dir-search"
                   placeholder="Search by vet name or neighborhood..."
@@ -1262,7 +1263,7 @@ function VetsContent() {
                                 .join(" · ")}
                             </p>
                           </div>
-                          <button
+                          <button type="button" aria-pressed={isSaved} aria-label={isSaved ? `Remove ${vet.name} from saved vets` : `Save ${vet.name}`}
                             onClick={(e) => toggleSave(e, vet.id)}
                             className={`heart-btn${animatingId === vet.id ? " heart-animating" : ""}`}
                           >

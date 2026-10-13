@@ -196,7 +196,7 @@ export default function ContactPage() {
         />
 
         {isMobile && (
-          <svg
+          <svg aria-hidden="true"
             style={{
               position: "absolute",
               inset: 0,
@@ -264,7 +264,7 @@ export default function ContactPage() {
         )}
 
         {!isMobile && (
-          <svg
+          <svg aria-hidden="true"
             style={{
               position: "absolute",
               bottom: 0,

@@ -66,6 +66,7 @@ import {
 import PageLoader from "../../../components/PageLoader";
 import { C, svgHex } from "../../../lib/tokens";
 import { BANNER_PALETTE, SPECIES_CARD_GRADIENT } from "../../../lib/palettes";
+import { onActivate, useDialog, smoothScroll } from "../../../lib/a11y";
 
 const SESSION_KEY = "petparrk_symptom_session";
 
@@ -450,6 +451,7 @@ export default function ProfilePage() {
   const [justSavedPet, setJustSavedPet] = useState(null);
   const [editingPetId, setEditingPetId] = useState(null);
   const [showLevelModal, setShowLevelModal] = useState(false);
+  const levelDialogRef = useDialog(showLevelModal, () => setShowLevelModal(false));
   const [expandedTiers, setExpandedTiers] = useState({});
   const [celebrate, setCelebrate] = useState(null);
   // Lock background scroll while the level modal is open (same pattern as
@@ -1201,7 +1203,7 @@ export default function ProfilePage() {
       const ref = target === "pet" ? petFormRef.current : formAreaRef.current;
       if (!ref) return;
       const top = ref.getBoundingClientRect().top + window.scrollY - 80;
-      window.scrollTo({ top, behavior: "smooth" });
+      window.scrollTo({ top, behavior: smoothScroll() });
     }, 150);
   }
   function startEditPet(pet) {
@@ -1240,7 +1242,7 @@ export default function ProfilePage() {
     if (!packSectionRef.current) return;
     const top =
       packSectionRef.current.getBoundingClientRect().top + window.scrollY - 80;
-    window.scrollTo({ top, behavior: "smooth" });
+    window.scrollTo({ top, behavior: smoothScroll() });
   }
 
   if (session === undefined || loading)
@@ -3131,7 +3133,7 @@ export default function ProfilePage() {
                     <div className="pp-avatar-ring">
                       <div className="pp-avatar-inner">
                         {avatarUrl ? (
-                          <img src={avatarUrl} alt="avatar" />
+                          <img src={avatarUrl} alt="Profile photo" />
                         ) : (
                           avatarLetter
                         )}
@@ -3890,9 +3892,9 @@ export default function ProfilePage() {
             className="pp-modal-backdrop"
             onClick={() => setShowLevelModal(false)}
           >
-            <div className="pp-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="pp-modal" ref={levelDialogRef} role="dialog" aria-modal="true" aria-labelledby="pp-levels-title" onClick={(e) => e.stopPropagation()}>
               <div className="pp-modal-head">
-                <h3>Levels</h3>
+                <h3 id="pp-levels-title">Levels</h3>
                 <button
                   className="pp-modal-close"
                   onClick={() => setShowLevelModal(false)}
@@ -4327,7 +4329,7 @@ function ProfileEditForm({
       <div className="form-grid">
         <div className="field">
           <label className="label">Display Name</label>
-          <input
+          <input aria-label="Display Name"
             className="input"
             value={profileForm.full_name}
             onChange={(e) =>
@@ -4338,7 +4340,7 @@ function ProfileEditForm({
         </div>
         <div className="field">
           <label className="label">Username</label>
-          <input
+          <input aria-label="Username"
             className="input"
             value={profileForm.username}
             onChange={(e) => {
@@ -4355,7 +4357,7 @@ function ProfileEditForm({
             style={{ borderColor: usernameError ? C.error : undefined }}
           />
           {usernameError ? (
-            <p
+            <p role="alert"
               style={{
                 margin: "4px 0 0",
                 fontSize: "14px",
@@ -4444,7 +4446,7 @@ function ProfileEditForm({
       </div>
       <div className="field">
         <label className="label">Bio</label>
-        <AutoGrowTextarea
+        <AutoGrowTextarea aria-label="Bio"
           className="input"
           value={profileForm.bio}
           onChange={(e) =>
@@ -4458,7 +4460,7 @@ function ProfileEditForm({
       <div className="form-grid">
         <div className="field">
           <label className="label">Zip Code</label>
-          <input
+          <input aria-label="Zip Code"
             className="input"
             value={profileForm.zip_code}
             onChange={(e) =>
@@ -4931,7 +4933,7 @@ function PetFormCard({
               {formPhotoUrl ? (
                 <img
                   src={formPhotoUrl}
-                  alt="pet"
+                  alt="Pet photo"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               ) : (
@@ -5020,7 +5022,7 @@ function PetFormCard({
               *
             </span>
           </label>
-          <input
+          <input aria-label="Name"
             className="input"
             value={petForm.name}
             onChange={(e) => setPetForm({ ...petForm, name: e.target.value })}
@@ -5039,7 +5041,7 @@ function PetFormCard({
               *
             </span>
           </label>
-          <select
+          <select aria-label="Species"
             className="input"
             value={petForm.species}
             onChange={(e) =>
@@ -5060,7 +5062,7 @@ function PetFormCard({
           </select>
           {petForm.species === "Other" && (
             <div style={{ marginTop: "10px", marginBottom: "4px" }}>
-              <input
+              <input aria-label="Specify species"
                 className="input"
                 value={petForm.species_other || ""}
                 onChange={(e) =>
@@ -5077,7 +5079,7 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Breed</label>
-          <input
+          <input aria-label="Breed"
             className="input"
             value={petForm.breed}
             onChange={(e) => setPetForm({ ...petForm, breed: e.target.value })}
@@ -5086,7 +5088,7 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Sex</label>
-          <select
+          <select aria-label="Sex"
             className="input"
             value={petForm.sex || ""}
             onChange={(e) => setPetForm({ ...petForm, sex: e.target.value })}
@@ -5099,7 +5101,7 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Birthday</label>
-          <input
+          <input aria-label="Birthday"
             className="input"
             type="date"
             value={petForm.birthday}
@@ -5114,7 +5116,7 @@ function PetFormCard({
         <div className="field">
           <label className="label">Weight</label>
           <div className="pp-weight-row">
-            <input
+            <input aria-label="Weight"
               className="input pp-weight-input"
               type="number"
               inputMode="decimal"
@@ -5178,7 +5180,7 @@ function PetFormCard({
       <p className="pp-section-divider">Medical</p>
       <div className="field">
         <label className="label">Microchip #</label>
-        <input
+        <input aria-label="Microchip #"
           className="input"
           value={petForm.microchip_number}
           onChange={(e) => {
@@ -5201,7 +5203,7 @@ function PetFormCard({
         />
         <p className="field-hint">9, 10, or 15 digits</p>
         {microchipError && (
-          <p
+          <p role="alert"
             style={{
               margin: "4px 0 0",
               fontSize: "13px",
@@ -5215,7 +5217,7 @@ function PetFormCard({
       </div>
       <div className="field">
         <label className="label">Allergies</label>
-        <input
+        <input aria-label="Allergies"
           className="input"
           value={petForm.allergies}
           onChange={(e) =>
@@ -5227,7 +5229,7 @@ function PetFormCard({
       </div>
       <div className="field">
         <label className="label">Medications</label>
-        <input
+        <input aria-label="Medications"
           className="input"
           value={petForm.medications}
           onChange={(e) =>
@@ -5238,7 +5240,7 @@ function PetFormCard({
       </div>
       <div className="field">
         <label className="label">Notes</label>
-        <AutoGrowTextarea
+        <AutoGrowTextarea aria-label="Notes"
           className="input"
           value={petForm.notes}
           onChange={(e) => setPetForm({ ...petForm, notes: e.target.value })}
@@ -5262,7 +5264,7 @@ function PetFormCard({
       <div className="form-grid">
         <div className="field">
           <label className="label">Owner Name</label>
-          <input
+          <input aria-label="Owner Name"
             className="input"
             value={petForm.owner_name}
             onChange={(e) =>
@@ -5273,7 +5275,7 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Owner Phone</label>
-          <input
+          <input aria-label="Owner Phone"
             className="input"
             value={petForm.owner_phone}
             onChange={(e) =>
@@ -5288,7 +5290,7 @@ function PetFormCard({
       </div>
       <div className="field">
         <label className="label">Owner Email</label>
-        <input
+        <input aria-label="Owner Email"
           className="input"
           type="email"
           value={petForm.owner_email}
@@ -5304,7 +5306,7 @@ function PetFormCard({
         <div className="field">
           <label className="label">Vet Name</label>
           <div ref={vetPickerRef} style={{ position: "relative" }}>
-            <input
+            <input aria-label="Vet name"
               className="input"
               value={petForm.vet_name}
               onChange={(e) => {
@@ -5333,7 +5335,7 @@ function PetFormCard({
                 }}
               >
                 {filteredPetVets.map((vet) => (
-                  <div
+                  <div role="button" tabIndex={0} onKeyDown={onActivate(() => pickPetVet(vet))}
                     key={vet.id}
                     onClick={() => pickPetVet(vet)}
                     style={{
@@ -5378,7 +5380,7 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Vet Phone</label>
-          <input
+          <input aria-label="Vet Phone"
             className="input"
             value={petForm.vet_phone}
             onChange={(e) =>
@@ -5393,7 +5395,7 @@ function PetFormCard({
       </div>
       <div className="field">
         <label className="label">Vet Address</label>
-        <input
+        <input aria-label="Vet Address"
           className="input"
           value={petForm.vet_address}
           onChange={(e) =>
@@ -5405,7 +5407,7 @@ function PetFormCard({
       <div className="form-grid">
         <div className="field">
           <label className="label">City</label>
-          <input
+          <input aria-label="City"
             className="input"
             value={petForm.vet_city}
             onChange={(e) =>
@@ -5416,7 +5418,7 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">ZIP</label>
-          <input
+          <input aria-label="ZIP"
             className="input"
             value={petForm.vet_zip}
             onChange={(e) =>

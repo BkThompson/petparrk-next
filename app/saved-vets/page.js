@@ -312,7 +312,7 @@ export default function SavedVets() {
                   Find a Vet. Clearing a search that returned nothing otherwise
                   means backspacing through the whole term. */}
               <div className="sv-search-wrap">
-                <input
+                <input aria-label="Search your saved vets"
                   type="text"
                   className="sv-search"
                   placeholder="Search your saved vets…"

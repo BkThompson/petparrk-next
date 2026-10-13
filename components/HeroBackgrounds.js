@@ -464,7 +464,7 @@ export function CssDesign({ design, bg, accent, lighting }) {
                 mixBlendMode: "screen",
               }}
             />
-            <svg
+            <svg aria-hidden="true"
               style={{ ...fill, opacity: 0.42, mixBlendMode: "overlay" }}
               xmlns="http://www.w3.org/2000/svg"
             >

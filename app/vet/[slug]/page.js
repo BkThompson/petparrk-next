@@ -22,6 +22,7 @@ import { C } from "../../../lib/petTileHelpers";
 import InlineSubmitPriceForm from "../../../components/InlineSubmitPriceForm";
 import ReportPriceModal from "../../../components/ReportPriceModal";
 import { VET_HERO_ART } from "../../../lib/palettes";
+import { useDialog, smoothScroll } from "../../../lib/a11y";
 
 const ACCORDION_COPY = {
   4: {
@@ -587,6 +588,7 @@ export default function VetPage() {
   const [allPrices, setAllPrices] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
   const [showPricingModal, setShowPricingModal] = useState(false);
+  const pricingDialogRef = useDialog(showPricingModal, () => setShowPricingModal(false));
 
   // Background scroll-lock while the pricing modal is open. Same pattern as
   // ReportPriceModal and the Profile modals. Safe here because .modal-box is
@@ -626,7 +628,7 @@ export default function VetPage() {
       if (!submitCtaRef.current) return;
       const top =
         submitCtaRef.current.getBoundingClientRect().top + window.scrollY - 120;
-      window.scrollTo({ top, behavior: "smooth" });
+      window.scrollTo({ top, behavior: smoothScroll() });
     }, 50);
   }
 
@@ -852,9 +854,9 @@ export default function VetPage() {
           >
             <Frown size={32} strokeWidth={2} />
           </div>
-          <p style={{ color: C.muted, fontSize: "15px", fontWeight: 500 }}>
+          <h1 style={{ color: C.muted, fontSize: "15px", fontWeight: 500, margin: "0 0 1em" }}>
             Vet not found.
-          </p>
+          </h1>
           <Link
             href="/vets"
             className="nav-link-dark"
@@ -1071,7 +1073,7 @@ export default function VetPage() {
           className="modal-overlay"
           onClick={() => setShowPricingModal(false)}
         >
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-box" ref={pricingDialogRef} role="dialog" aria-modal="true" aria-label="How pricing works" onClick={(e) => e.stopPropagation()}>
             <button
               className="modal-close"
               onClick={() => setShowPricingModal(false)}
@@ -2376,7 +2378,7 @@ export default function VetPage() {
                           inlineSubmitRef.current.getBoundingClientRect().top +
                           window.scrollY -
                           80;
-                        window.scrollTo({ top, behavior: "smooth" });
+                        window.scrollTo({ top, behavior: smoothScroll() });
                       }, 150);
                     }
                   }}

@@ -1,5 +1,5 @@
 import "./globals.css";
-import { Urbanist } from "next/font/google";
+import localFont from "next/font/local";
 import ToastProvider from "../components/ToastProvider";
 import NavbarWrapper from "../components/NavbarWrapper";
 import FooterWrapper from "../components/FooterWrapper";
@@ -8,9 +8,18 @@ import WelcomeModal from "../components/WelcomeModal";
 import { Suspense } from "react";
 import { HEX } from "../lib/tokens";
 
-const urbanist = Urbanist({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+// Urbanist is kept in the project (app/fonts, SIL Open Font License) rather
+// than fetched from Google at build time. Google Fonts sometimes answers with
+// a URL format next/font/google can't parse, which fails the Vercel build at
+// random (vercel/next.js#99114). Same font, same weights, same variable.
+const urbanist = localFont({
+  src: [
+    { path: "./fonts/urbanist-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/urbanist-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/urbanist-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/urbanist-700.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/urbanist-800.woff2", weight: "800", style: "normal" },
+  ],
   variable: "--font-urbanist",
   display: "swap",
 });
@@ -69,9 +78,13 @@ export default function RootLayout({ children }) {
           minHeight: "100vh",
         }}
       >
+        {/* First thing a keyboard user reaches: jumps past the navbar. */}
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <NavbarWrapper />
         <ScrollToTop />
-        <main style={{ flex: 1 }}>
+        <main id="main-content" tabIndex={-1} style={{ flex: 1 }}>
           <ToastProvider>
             {children}
             <Suspense fallback={null}>

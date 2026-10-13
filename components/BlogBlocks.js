@@ -627,7 +627,7 @@ export function CategoryNav({ current, cats }) {
  *  last sentence and the button follow the launch switch. */
 export function EndNote({ title, text }) {
   return (
-    <aside className="ba-gate">
+    <div className="ba-gate">
       {title && <p className="ba-gate-title">{title}</p>}
       <p className="ba-gate-text">
         {text && (
@@ -641,13 +641,13 @@ export function EndNote({ title, text }) {
         {CTA.label}{" "}
         <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
       </Link>
-    </aside>
+    </div>
   );
 }
 
 export function WaitlistBand() {
   return (
-    <aside className="b-band">
+    <div className="b-band">
       <div>
         <p className="b-eyebrow" style={{ color: "var(--color-gold)" }}>
           {BRAND}
@@ -661,7 +661,7 @@ export function WaitlistBand() {
         {CTA.label}{" "}
         <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
       </Link>
-    </aside>
+    </div>
   );
 }
 
@@ -768,16 +768,16 @@ export function BlogBlocks({ blocks }) {
         );
       case "callout":
         return (
-          <aside key={i} className="ba-callout">
+          <div key={i} className="ba-callout" role="note">
             {b.title && <p className="ba-callout-title">{b.title}</p>}
             <p className="ba-p">
               <Inline text={b.text} />
             </p>
-          </aside>
+          </div>
         );
       case "gate":
         return (
-          <aside key={i} className="ba-gate">
+          <div key={i} className="ba-gate">
             <p className="ba-gate-title">{b.title}</p>
             <p className="ba-gate-text">
               <Inline text={b.text} /> {CTA.line}
@@ -786,7 +786,7 @@ export function BlogBlocks({ blocks }) {
               {CTA.label}{" "}
               <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
             </Link>
-          </aside>
+          </div>
         );
       case "faq":
         // Answers are rendered here on the server (bold/links work), then
@@ -817,7 +817,7 @@ export async function BlogIndex({ page = 1, category = null }) {
   return (
     <>
       <style>{BLOG_CSS}</style>
-      <main className="bl">
+      <div className="bl">
         <header className={`bl-hero${lead ? "" : " bl-hero--plain"}`}>
           <div className="bl-hero-glow" />
           <div className="bl-hero-ranges" />
@@ -878,7 +878,7 @@ export async function BlogIndex({ page = 1, category = null }) {
           )}
           <WaitlistBand />
         </div>
-      </main>
+      </div>
     </>
   );
 }

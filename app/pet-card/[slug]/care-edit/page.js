@@ -113,6 +113,7 @@ import {
 } from "../../../../lib/petCardApi";
 import { svgHex } from "../../../../lib/tokens";
 import { BANNER_PALETTE } from "../../../../lib/palettes";
+import { useDialog } from "../../../../lib/a11y";
 
 // =============================================================
 // SPECIES MAPPING (matches Profile + Pet Card landing)
@@ -3705,7 +3706,7 @@ function EditorView({ pet, onPetChange }) {
               <h1 className="pce-pet-name">{pet.name || "Unnamed pet"}</h1>
               {ageStr ? <p className="pce-pet-quick-meta">{ageStr}</p> : null}
               {photoError ? (
-                <p className="pce-photo-error">{photoError}</p>
+                <p role="alert" className="pce-photo-error">{photoError}</p>
               ) : null}
             </div>
           </div>
@@ -3934,7 +3935,7 @@ function PetUrlField({ pet, onSlugChange }) {
         </button>
       </div>
       {error ? (
-        <p className="pce-field-hint pce-field-warn">{error}</p>
+        <p role="alert" className="pce-field-hint pce-field-warn">{error}</p>
       ) : saved ? (
         <p className="pce-field-hint pce-field-saved">URL updated.</p>
       ) : hasChanged ? (
@@ -4762,7 +4763,7 @@ function TextareaCard({
           </button>
           <div className="pce-entry-card">
             <div className="pce-field">
-              <textarea
+              <textarea aria-label={title}
                 className="pce-textarea"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -5007,7 +5008,7 @@ function FrequencyField({
     <div className="pce-frequency-block">
       <div className="pce-field">
         <label className="pce-label">Frequency</label>
-        <select
+        <select aria-label="Frequency"
           className="pce-select"
           value={frequency || "daily"}
           onChange={(e) => onFrequencyChange(e.target.value)}
@@ -5045,7 +5046,7 @@ function FrequencyField({
           </div>
           <div className="pce-field">
             <label className="pce-label">Repeats</label>
-            <select
+            <select aria-label="Repeats"
               className="pce-select"
               value={recurrenceInterval || "weekly"}
               onChange={(e) => onRecurrenceChange(e.target.value)}
@@ -5467,7 +5468,7 @@ function InlineAddFeedings({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
                   *
                 </span>
               </label>
-              <input
+              <input aria-label="Meal name"
                 type="text"
                 className="pce-input"
                 value={entry.name}
@@ -5487,7 +5488,7 @@ function InlineAddFeedings({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
           <div className="pce-field-grid two-col">
             <div className="pce-field">
               <label className="pce-label">Time</label>
-              <input
+              <input aria-label="Time"
                 type="time"
                 className="pce-input"
                 value={entry.time_of_day || ""}
@@ -5511,7 +5512,7 @@ function InlineAddFeedings({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
           <div className="pce-field-grid two-col">
             <div className="pce-field">
               <label className="pce-label">Food / brand</label>
-              <input
+              <input aria-label="Food / brand"
                 type="text"
                 className="pce-input"
                 value={entry.food}
@@ -5522,7 +5523,7 @@ function InlineAddFeedings({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Amount</label>
-              <input
+              <input aria-label="Amount"
                 type="text"
                 className="pce-input"
                 value={entry.amount}
@@ -5535,7 +5536,7 @@ function InlineAddFeedings({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Notes</label>
-            <textarea
+            <textarea aria-label="Notes"
               className="pce-textarea"
               value={entry.notes}
               onChange={(e) => updateEntry(idx, "notes", e.target.value)}
@@ -5690,7 +5691,7 @@ function FeedingModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
               *
             </span>
           </label>
-          <input
+          <input aria-label="Meal name"
             type="text"
             className="pce-input"
             value={name}
@@ -5703,7 +5704,7 @@ function FeedingModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
         <div className="pce-field-grid">
           <div className="pce-field">
             <label className="pce-label">Time</label>
-            <input
+            <input aria-label="Time"
               type="time"
               className="pce-input"
               value={timeOfDay}
@@ -5723,7 +5724,7 @@ function FeedingModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Food / brand</label>
-          <input
+          <input aria-label="Food / brand"
             type="text"
             className="pce-input"
             value={food}
@@ -5735,7 +5736,7 @@ function FeedingModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Amount</label>
-          <input
+          <input aria-label="Amount"
             type="text"
             className="pce-input"
             value={amount}
@@ -5747,7 +5748,7 @@ function FeedingModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Notes</label>
-          <textarea
+          <textarea aria-label="Notes"
             className="pce-textarea"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -6119,7 +6120,7 @@ function InlineAddWalks({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
                   *
                 </span>
               </label>
-              <input
+              <input aria-label="Activity name"
                 type="text"
                 className="pce-input"
                 value={entry.name}
@@ -6139,7 +6140,7 @@ function InlineAddWalks({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
           <div className="pce-field-grid two-col">
             <div className="pce-field">
               <label className="pce-label">Time</label>
-              <input
+              <input aria-label="Time"
                 type="time"
                 className="pce-input"
                 value={entry.time_of_day || ""}
@@ -6160,7 +6161,7 @@ function InlineAddWalks({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
             />
             <div className="pce-field">
               <label className="pce-label">Duration</label>
-              <input
+              <input aria-label="Duration"
                 type="text"
                 className="pce-input"
                 value={entry.duration}
@@ -6173,7 +6174,7 @@ function InlineAddWalks({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Notes</label>
-            <textarea
+            <textarea aria-label="Notes"
               className="pce-textarea"
               value={entry.notes}
               onChange={(e) => updateEntry(idx, "notes", e.target.value)}
@@ -6323,7 +6324,7 @@ function WalkModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
               *
             </span>
           </label>
-          <input
+          <input aria-label="Activity name"
             type="text"
             className="pce-input"
             value={name}
@@ -6336,7 +6337,7 @@ function WalkModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
         <div className="pce-field-grid">
           <div className="pce-field">
             <label className="pce-label">Time</label>
-            <input
+            <input aria-label="Time"
               type="time"
               className="pce-input"
               value={timeOfDay}
@@ -6356,7 +6357,7 @@ function WalkModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Duration</label>
-          <input
+          <input aria-label="Duration"
             type="text"
             className="pce-input"
             value={duration}
@@ -6368,7 +6369,7 @@ function WalkModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Notes</label>
-          <textarea
+          <textarea aria-label="Notes"
             className="pce-textarea"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -7007,7 +7008,7 @@ function InlineAddWeights({
                   *
                 </span>
               </label>
-              <input
+              <input aria-label="Date"
                 type="date"
                 className="pce-input"
                 value={entry.date}
@@ -7023,7 +7024,7 @@ function InlineAddWeights({
                   *
                 </span>
               </label>
-              <input
+              <input aria-label={`Weight (${weightUnit})`}
                 type="number"
                 inputMode="decimal"
                 step="0.1"
@@ -7045,7 +7046,7 @@ function InlineAddWeights({
 
           <div className="pce-field">
             <label className="pce-label">Notes</label>
-            <textarea
+            <textarea aria-label="Notes"
               className="pce-textarea"
               value={entry.notes}
               onChange={(e) => updateEntry(idx, "notes", e.target.value)}
@@ -7202,7 +7203,7 @@ function WeightModal({
                 *
               </span>
             </label>
-            <input
+            <input aria-label="Date"
               type="date"
               className="pce-input"
               value={date}
@@ -7218,7 +7219,7 @@ function WeightModal({
                 *
               </span>
             </label>
-            <input
+            <input aria-label={`Weight (${weightUnit})`}
               type="number"
               inputMode="decimal"
               step="0.1"
@@ -7232,7 +7233,7 @@ function WeightModal({
 
         <div className="pce-field">
           <label className="pce-label">Notes</label>
-          <textarea
+          <textarea aria-label="Notes"
             className="pce-textarea"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -7292,6 +7293,7 @@ function VetAutocomplete({
   onChange,
   onPick,
   placeholder,
+  ariaLabel,
   maxLength = 120,
 }) {
   // Loads the vet directory once and offers an autocomplete dropdown.
@@ -7359,7 +7361,7 @@ function VetAutocomplete({
 
   return (
     <div className="pce-vet-autocomplete" ref={dropdownRef}>
-      <input
+      <input aria-label={ariaLabel || placeholder || "Vet name or clinic"}
         type="text"
         className="pce-input"
         value={search}
@@ -7522,7 +7524,7 @@ function InlineAddVaccinations({ onCancel, onSave, confirmUnsaved }) {
                   *
                 </span>
               </label>
-              <input
+              <input aria-label="Vaccine type"
                 type="text"
                 className="pce-input"
                 value={entry.vaccine_type}
@@ -7544,7 +7546,7 @@ function InlineAddVaccinations({ onCancel, onSave, confirmUnsaved }) {
           <div className="pce-field-grid two-col">
             <div className="pce-field">
               <label className="pce-label">Given</label>
-              <input
+              <input aria-label="Given"
                 type="date"
                 className="pce-input"
                 value={entry.date_administered}
@@ -7555,7 +7557,7 @@ function InlineAddVaccinations({ onCancel, onSave, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Next due</label>
-              <input
+              <input aria-label="Next due"
                 type="date"
                 className="pce-input"
                 value={entry.next_due}
@@ -7564,7 +7566,7 @@ function InlineAddVaccinations({ onCancel, onSave, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Given by</label>
-              <VetAutocomplete
+              <VetAutocomplete ariaLabel="Given by"
                 value={entry.administered_by}
                 onChange={(v) => updateEntry(idx, "administered_by", v)}
                 placeholder="Search vets or type freely"
@@ -7572,7 +7574,7 @@ function InlineAddVaccinations({ onCancel, onSave, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Lot number</label>
-              <input
+              <input aria-label="Lot number"
                 type="text"
                 className="pce-input"
                 value={entry.lot_number}
@@ -7588,7 +7590,7 @@ function InlineAddVaccinations({ onCancel, onSave, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Notes</label>
-            <textarea
+            <textarea aria-label="Notes"
               className="pce-textarea"
               value={entry.notes}
               onChange={(e) => updateEntry(idx, "notes", e.target.value)}
@@ -7744,7 +7746,7 @@ function InlineAddMedications({ onCancel, onSave, confirmUnsaved }) {
                   *
                 </span>
               </label>
-              <input
+              <input aria-label="Medication name"
                 type="text"
                 className="pce-input"
                 value={entry.medication_name}
@@ -7766,7 +7768,7 @@ function InlineAddMedications({ onCancel, onSave, confirmUnsaved }) {
           <div className="pce-field-grid two-col">
             <div className="pce-field">
               <label className="pce-label">Dosage</label>
-              <input
+              <input aria-label="Dosage"
                 type="text"
                 className="pce-input"
                 value={entry.dosage}
@@ -7777,7 +7779,7 @@ function InlineAddMedications({ onCancel, onSave, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Frequency</label>
-              <input
+              <input aria-label="Frequency"
                 type="text"
                 className="pce-input"
                 value={entry.frequency}
@@ -7788,7 +7790,7 @@ function InlineAddMedications({ onCancel, onSave, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Started</label>
-              <input
+              <input aria-label="Started"
                 type="date"
                 className="pce-input"
                 value={entry.started_date}
@@ -7799,7 +7801,7 @@ function InlineAddMedications({ onCancel, onSave, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Ended (if applicable)</label>
-              <input
+              <input aria-label="Ended (if applicable)"
                 type="date"
                 className="pce-input"
                 value={entry.ended_date}
@@ -7811,7 +7813,7 @@ function InlineAddMedications({ onCancel, onSave, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Reason / condition</label>
-            <input
+            <input aria-label="Reason / condition"
               type="text"
               className="pce-input"
               value={entry.reason}
@@ -7823,7 +7825,7 @@ function InlineAddMedications({ onCancel, onSave, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Notes</label>
-            <textarea
+            <textarea aria-label="Notes"
               className="pce-textarea"
               value={entry.notes}
               onChange={(e) => updateEntry(idx, "notes", e.target.value)}
@@ -8345,7 +8347,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
                   *
                 </span>
               </label>
-              <input
+              <input aria-label="Vaccine type"
                 type="text"
                 className="pce-input"
                 value={vaccineType}
@@ -8365,7 +8367,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
           <div className="pce-field-grid two-col">
             <div className="pce-field">
               <label className="pce-label">Given</label>
-              <input
+              <input aria-label="Given"
                 type="date"
                 className="pce-input"
                 value={dateAdministered}
@@ -8374,7 +8376,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Next due</label>
-              <input
+              <input aria-label="Next due"
                 type="date"
                 className="pce-input"
                 value={nextDue}
@@ -8383,7 +8385,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Given by</label>
-              <VetAutocomplete
+              <VetAutocomplete ariaLabel="Given by"
                 value={administeredBy}
                 onChange={setAdministeredBy}
                 placeholder="Search vets or type freely"
@@ -8391,7 +8393,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Lot number</label>
-              <input
+              <input aria-label="Lot number"
                 type="text"
                 className="pce-input"
                 value={lotNumber}
@@ -8407,7 +8409,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Notes</label>
-            <textarea
+            <textarea aria-label="Notes"
               className="pce-textarea"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -8486,7 +8488,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
                     *
                   </span>
                 </label>
-                <input
+                <input aria-label="Vaccine type"
                   type="text"
                   className="pce-input"
                   value={entry.vaccine_type}
@@ -8508,7 +8510,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
             <div className="pce-field-grid two-col">
               <div className="pce-field">
                 <label className="pce-label">Given</label>
-                <input
+                <input aria-label="Given"
                   type="date"
                   className="pce-input"
                   value={entry.date_administered}
@@ -8519,7 +8521,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
               </div>
               <div className="pce-field">
                 <label className="pce-label">Next due</label>
-                <input
+                <input aria-label="Next due"
                   type="date"
                   className="pce-input"
                   value={entry.next_due}
@@ -8528,7 +8530,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
               </div>
               <div className="pce-field">
                 <label className="pce-label">Given by</label>
-                <VetAutocomplete
+                <VetAutocomplete ariaLabel="Given by"
                   value={entry.administered_by}
                   onChange={(v) => updateEntry(idx, "administered_by", v)}
                   placeholder="Search vets or type freely"
@@ -8536,7 +8538,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
               </div>
               <div className="pce-field">
                 <label className="pce-label">Lot number</label>
-                <input
+                <input aria-label="Lot number"
                   type="text"
                   className="pce-input"
                   value={entry.lot_number}
@@ -8554,7 +8556,7 @@ function VaccinationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
             <div className="pce-field">
               <label className="pce-label">Notes</label>
-              <textarea
+              <textarea aria-label="Notes"
                 className="pce-textarea"
                 value={entry.notes}
                 onChange={(e) => updateEntry(idx, "notes", e.target.value)}
@@ -8930,7 +8932,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
                   *
                 </span>
               </label>
-              <input
+              <input aria-label="Medication name"
                 type="text"
                 className="pce-input"
                 value={name}
@@ -8950,7 +8952,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
           <div className="pce-field-grid two-col">
             <div className="pce-field">
               <label className="pce-label">Dosage</label>
-              <input
+              <input aria-label="Dosage"
                 type="text"
                 className="pce-input"
                 value={dosage}
@@ -8961,7 +8963,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Frequency</label>
-              <input
+              <input aria-label="Frequency"
                 type="text"
                 className="pce-input"
                 value={frequency}
@@ -8972,7 +8974,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Started</label>
-              <input
+              <input aria-label="Started"
                 type="date"
                 className="pce-input"
                 value={startedDate}
@@ -8981,7 +8983,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
             </div>
             <div className="pce-field">
               <label className="pce-label">Ended (if applicable)</label>
-              <input
+              <input aria-label="Ended (if applicable)"
                 type="date"
                 className="pce-input"
                 value={endedDate}
@@ -8993,7 +8995,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Reason / condition</label>
-            <input
+            <input aria-label="Reason / condition"
               type="text"
               className="pce-input"
               value={reason}
@@ -9005,7 +9007,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Notes</label>
-            <textarea
+            <textarea aria-label="Notes"
               className="pce-textarea"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -9084,7 +9086,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
                     *
                   </span>
                 </label>
-                <input
+                <input aria-label="Medication name"
                   type="text"
                   className="pce-input"
                   value={entry.medication_name}
@@ -9106,7 +9108,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
             <div className="pce-field-grid two-col">
               <div className="pce-field">
                 <label className="pce-label">Dosage</label>
-                <input
+                <input aria-label="Dosage"
                   type="text"
                   className="pce-input"
                   value={entry.dosage}
@@ -9117,7 +9119,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
               </div>
               <div className="pce-field">
                 <label className="pce-label">Frequency</label>
-                <input
+                <input aria-label="Frequency"
                   type="text"
                   className="pce-input"
                   value={entry.frequency}
@@ -9130,7 +9132,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
               </div>
               <div className="pce-field">
                 <label className="pce-label">Started</label>
-                <input
+                <input aria-label="Started"
                   type="date"
                   className="pce-input"
                   value={entry.started_date}
@@ -9141,7 +9143,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
               </div>
               <div className="pce-field">
                 <label className="pce-label">Ended (if applicable)</label>
-                <input
+                <input aria-label="Ended (if applicable)"
                   type="date"
                   className="pce-input"
                   value={entry.ended_date}
@@ -9155,7 +9157,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
             <div className="pce-field">
               <label className="pce-label">Reason / condition</label>
-              <input
+              <input aria-label="Reason / condition"
                 type="text"
                 className="pce-input"
                 value={entry.reason}
@@ -9167,7 +9169,7 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
             <div className="pce-field">
               <label className="pce-label">Notes</label>
-              <textarea
+              <textarea aria-label="Notes"
                 className="pce-textarea"
                 value={entry.notes}
                 onChange={(e) => updateEntry(idx, "notes", e.target.value)}
@@ -9219,6 +9221,8 @@ function MedicationModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 // =============================================================
 
 function ModalShell({ title, onClose, children }) {
+  // Focus in, Tab kept inside, focus back on close. Escape is handled below.
+  const dialogRef = useDialog(true, onClose, { escape: false });
   // Close on Escape key
   useEffect(() => {
     function onKey(e) {
@@ -9279,6 +9283,7 @@ function ModalShell({ title, onClose, children }) {
       }}
     >
       <div
+        ref={dialogRef}
         className="pce-modal"
         role="dialog"
         aria-modal="true"
@@ -9848,7 +9853,7 @@ function InlineVetContactForm({
 
         <div className="pce-field">
           <label className="pce-label">Clinic / vet name</label>
-          <VetAutocomplete
+          <VetAutocomplete ariaLabel="Clinic / vet name"
             value={name}
             onChange={handleNameChange}
             onPick={handlePickVet}
@@ -9867,7 +9872,7 @@ function InlineVetContactForm({
 
         <div className="pce-field">
           <label className="pce-label">Street address</label>
-          <input
+          <input aria-label="Street address"
             type="text"
             className="pce-input"
             value={address}
@@ -9880,7 +9885,7 @@ function InlineVetContactForm({
 
         <div className="pce-field">
           <label className="pce-label">City, state, zip</label>
-          <input
+          <input aria-label="City, state, zip"
             type="text"
             className="pce-input"
             value={addressLine2}
@@ -9893,7 +9898,7 @@ function InlineVetContactForm({
 
         <div className="pce-field">
           <label className="pce-label">Notes</label>
-          <textarea
+          <textarea aria-label="Notes"
             className="pce-textarea"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -10270,7 +10275,7 @@ function InlineAddSpecialists({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
                 *
               </span>
             </label>
-            <VetAutocomplete
+            <VetAutocomplete ariaLabel="Name"
               value={entry.name}
               onChange={(v) => {
                 updateEntry(idx, "name", v);
@@ -10299,7 +10304,7 @@ function InlineAddSpecialists({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Specialty</label>
-            <input
+            <input aria-label="Specialty"
               type="text"
               className="pce-input"
               value={entry.specialty}
@@ -10320,7 +10325,7 @@ function InlineAddSpecialists({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Street address</label>
-            <input
+            <input aria-label="Street address"
               type="text"
               className="pce-input"
               value={entry.address}
@@ -10333,7 +10338,7 @@ function InlineAddSpecialists({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">City, state, zip</label>
-            <input
+            <input aria-label="City, state, zip"
               type="text"
               className="pce-input"
               value={entry.address_line2}
@@ -10348,7 +10353,7 @@ function InlineAddSpecialists({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Notes</label>
-            <textarea
+            <textarea aria-label="Notes"
               className="pce-textarea"
               value={entry.notes}
               onChange={(e) => updateEntry(idx, "notes", e.target.value)}
@@ -10500,7 +10505,7 @@ function SpecialistModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
               *
             </span>
           </label>
-          <VetAutocomplete
+          <VetAutocomplete ariaLabel="Name"
             value={name}
             onChange={handleNameChange}
             onPick={handlePickVet}
@@ -10510,7 +10515,7 @@ function SpecialistModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Specialty</label>
-          <input
+          <input aria-label="Specialty"
             type="text"
             className="pce-input"
             value={specialty}
@@ -10526,7 +10531,7 @@ function SpecialistModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Street address</label>
-          <input
+          <input aria-label="Street address"
             type="text"
             className="pce-input"
             value={address}
@@ -10539,7 +10544,7 @@ function SpecialistModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">City, state, zip</label>
-          <input
+          <input aria-label="City, state, zip"
             type="text"
             className="pce-input"
             value={addressLine2}
@@ -10552,7 +10557,7 @@ function SpecialistModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Notes</label>
-          <textarea
+          <textarea aria-label="Notes"
             className="pce-textarea"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -10948,7 +10953,7 @@ function InlineAddEmergencyContacts({
                 *
               </span>
             </label>
-            <input
+            <input aria-label="Name"
               type="text"
               className="pce-input"
               value={entry.name}
@@ -10960,7 +10965,7 @@ function InlineAddEmergencyContacts({
 
           <div className="pce-field">
             <label className="pce-label">Relationship</label>
-            <input
+            <input aria-label="Relationship"
               type="text"
               className="pce-input"
               value={entry.relationship}
@@ -10990,7 +10995,7 @@ function InlineAddEmergencyContacts({
 
           <div className="pce-field">
             <label className="pce-label">Email</label>
-            <input
+            <input aria-label="Email"
               type="email"
               className="pce-input"
               value={entry.email}
@@ -11002,7 +11007,7 @@ function InlineAddEmergencyContacts({
 
           <div className="pce-field">
             <label className="pce-label">Notes</label>
-            <textarea
+            <textarea aria-label="Notes"
               className="pce-textarea"
               value={entry.notes}
               onChange={(e) => updateEntry(idx, "notes", e.target.value)}
@@ -11147,7 +11152,7 @@ function EmergencyContactModal({
               *
             </span>
           </label>
-          <input
+          <input aria-label="Name"
             type="text"
             className="pce-input"
             value={name}
@@ -11158,7 +11163,7 @@ function EmergencyContactModal({
 
         <div className="pce-field">
           <label className="pce-label">Relationship</label>
-          <input
+          <input aria-label="Relationship"
             type="text"
             className="pce-input"
             value={relationship}
@@ -11184,7 +11189,7 @@ function EmergencyContactModal({
 
         <div className="pce-field">
           <label className="pce-label">Email</label>
-          <input
+          <input aria-label="Email"
             type="email"
             className="pce-input"
             value={email}
@@ -11196,7 +11201,7 @@ function EmergencyContactModal({
 
         <div className="pce-field">
           <label className="pce-label">Notes</label>
-          <textarea
+          <textarea aria-label="Notes"
             className="pce-textarea"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -11564,7 +11569,7 @@ function InlineAddVetVisits({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
                 *
               </span>
             </label>
-            <input
+            <input aria-label="Date"
               type="date"
               className="pce-input"
               value={entry.visit_date}
@@ -11574,7 +11579,7 @@ function InlineAddVetVisits({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Clinic / vet</label>
-            <VetAutocomplete
+            <VetAutocomplete ariaLabel="Clinic / vet"
               value={entry.clinic_name}
               onChange={(v) => {
                 updateEntry(idx, "clinic_name", v);
@@ -11599,7 +11604,7 @@ function InlineAddVetVisits({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Reason</label>
-            <input
+            <input aria-label="Reason"
               type="text"
               className="pce-input"
               value={entry.reason}
@@ -11611,7 +11616,7 @@ function InlineAddVetVisits({ onCancel, onSaveAll, onDone, confirmUnsaved }) {
 
           <div className="pce-field">
             <label className="pce-label">Notes</label>
-            <textarea
+            <textarea aria-label="Notes"
               className="pce-textarea"
               value={entry.notes}
               onChange={(e) => updateEntry(idx, "notes", e.target.value)}
@@ -11753,7 +11758,7 @@ function VetVisitModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
               *
             </span>
           </label>
-          <input
+          <input aria-label="Date"
             type="date"
             className="pce-input"
             value={visitDate}
@@ -11763,7 +11768,7 @@ function VetVisitModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Clinic / vet</label>
-          <VetAutocomplete
+          <VetAutocomplete ariaLabel="Clinic / vet"
             value={clinicName}
             onChange={handleClinicChange}
             onPick={handlePickVet}
@@ -11773,7 +11778,7 @@ function VetVisitModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Reason</label>
-          <input
+          <input aria-label="Reason"
             type="text"
             className="pce-input"
             value={reason}
@@ -11784,7 +11789,7 @@ function VetVisitModal({ item, onClose, onSave, onDelete, confirmUnsaved }) {
 
         <div className="pce-field">
           <label className="pce-label">Notes</label>
-          <textarea
+          <textarea aria-label="Notes"
             className="pce-textarea"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -12187,7 +12192,7 @@ function InlineInsuranceForm({
 
         <div className="pce-field">
           <label className="pce-label">Provider</label>
-          <select
+          <select aria-label="Provider"
             className="pce-input"
             value={providerChoice}
             onChange={(e) => setProviderChoice(e.target.value)}
@@ -12205,7 +12210,7 @@ function InlineInsuranceForm({
         {providerChoice === "__other__" ? (
           <div className="pce-field">
             <label className="pce-label">Provider name</label>
-            <input
+            <input aria-label="Provider name"
               type="text"
               className="pce-input"
               value={providerOther}
@@ -12219,7 +12224,7 @@ function InlineInsuranceForm({
 
         <div className="pce-field">
           <label className="pce-label">Policy number</label>
-          <input
+          <input aria-label="Policy number"
             type="text"
             className="pce-input"
             value={policyNumber}
@@ -12240,7 +12245,7 @@ function InlineInsuranceForm({
 
         <div className="pce-field">
           <label className="pce-label">Notes</label>
-          <textarea
+          <textarea aria-label="Notes"
             className="pce-textarea"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -12263,7 +12268,7 @@ function InlineInsuranceForm({
         {hasCarecredit ? (
           <div className="pce-field">
             <label className="pce-label">CareCredit account (optional)</label>
-            <input
+            <input aria-label="CareCredit account (optional)"
               type="text"
               className="pce-input"
               value={carecreditAccount}

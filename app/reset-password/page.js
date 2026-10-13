@@ -74,7 +74,7 @@ function ResetPasswordForm() {
   const inputStyle = {
     width: "100%", padding: "12px 14px", borderRadius: "8px",
     border: "1.5px solid var(--color-border)", fontSize: "15px",
-    fontFamily: "system-ui, sans-serif", outline: "none", boxSizing: "border-box",
+    fontFamily: "system-ui, sans-serif", boxSizing: "border-box",
   };
 
   return (
@@ -105,7 +105,7 @@ function ResetPasswordForm() {
         ) : (
           <form onSubmit={handleReset}>
             {message && (
-              <div style={{
+              <div role="status" style={{
                 background: status === "error" ? "var(--color-error-light)" : "var(--color-success-light)",
                 color: status === "error" ? "var(--color-error-text)" : GREEN,
                 borderRadius: "8px", padding: "10px 14px",
@@ -120,7 +120,7 @@ function ResetPasswordForm() {
                 New Password
               </label>
               <div style={{ position: "relative" }}>
-                <input
+                <input aria-label="New password"
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
@@ -141,7 +141,7 @@ function ResetPasswordForm() {
               <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--color-slate)", marginBottom: "6px" }}>
                 Confirm Password
               </label>
-              <input
+              <input aria-label="Confirm Password"
                 type={showPassword ? "text" : "password"}
                 required
                 value={confirm}

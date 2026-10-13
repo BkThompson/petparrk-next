@@ -139,6 +139,18 @@ export default function NavbarNew() {
     };
   }, [mobileOpen]);
 
+  // Escape closes the mobile menu. Focus isn't trapped in the panel because
+  // its close button lives in the navbar above it.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") closeMobileMenu();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mobileOpen]);
+
   useEffect(() => {
     closeMobileMenu();
   }, [pathname]);
@@ -457,7 +469,8 @@ export default function NavbarNew() {
                 indicatorRef.current.classList.remove("visible");
             }}
           >
-            <div className="pp-nav-indicator" ref={indicatorRef} />
+            {/* An <li>, not a <div>: a list may only contain list items. */}
+            <li className="pp-nav-indicator" ref={indicatorRef} aria-hidden="true" />
             {NAV_LINKS.map(({ href, label }) => (
               <li key={href}>
                 <Link
@@ -489,7 +502,7 @@ export default function NavbarNew() {
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
-                      alt="avatar"
+                      alt=""
                       onError={() => setAvatarError(true)}
                       style={{
                         width: "100%",

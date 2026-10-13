@@ -93,6 +93,7 @@ import {
   PawPrint,
 } from "lucide-react";
 import { C } from "../lib/tokens";
+import { onActivate } from "../lib/a11y";
 
 
 const SESSION_KEY = "petparrk_symptom_session";
@@ -540,7 +541,7 @@ export default function HomeDashboard({ session, savedVets = [] }) {
                         {td ? (
                           <div className="hd-pet-check">
                             <span className="hd-check-label">Last check:</span>
-                            <span
+                            <span role="button" tabIndex={0} onKeyDown={onActivate(() => resumeCheck(pet, chk))}
                               className="hd-pet-check-link"
                               onClick={() => resumeCheck(pet, chk)}
                             >

@@ -115,7 +115,7 @@ export default function ProfileEditForm({
       <div className="form-grid">
         <div className="field">
           <label className="label">Display Name</label>
-          <input
+          <input aria-label="Display Name"
             className="input"
             value={profileForm.full_name}
             onChange={(e) =>
@@ -126,7 +126,7 @@ export default function ProfileEditForm({
         </div>
         <div className="field">
           <label className="label">Username</label>
-          <input
+          <input aria-label="Username"
             className="input"
             value={profileForm.username}
             onChange={(e) => {
@@ -143,7 +143,7 @@ export default function ProfileEditForm({
             style={{ borderColor: usernameError ? C.error : undefined }}
           />
           {usernameError ? (
-            <p
+            <p role="alert"
               style={{
                 margin: "4px 0 0",
                 fontSize: "12px",
@@ -232,7 +232,7 @@ export default function ProfileEditForm({
       </div>
       <div className="field">
         <label className="label">Bio</label>
-        <AutoGrowTextarea
+        <AutoGrowTextarea aria-label="Bio"
           className="input"
           value={profileForm.bio}
           onChange={(e) =>
@@ -246,7 +246,7 @@ export default function ProfileEditForm({
       <div className="form-grid">
         <div className="field">
           <label className="label">Zip Code</label>
-          <input
+          <input aria-label="Zip Code"
             className="input"
             value={profileForm.zip_code}
             onChange={(e) =>

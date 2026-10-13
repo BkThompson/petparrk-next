@@ -3,7 +3,7 @@
 // Original viewBox 0 0 1200 1200; rendered to match Lucide icon API
 export default function SleepingDog({ size = 24, color = "currentColor", strokeWidth = 12, ...props }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width={size}
       height={size}

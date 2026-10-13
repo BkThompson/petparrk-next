@@ -23,6 +23,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { C } from "../lib/tokens";
+import { onActivate } from "../lib/a11y";
 
 const MAX_FILES = 5;
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB, matches the receipts bucket
@@ -211,7 +212,7 @@ export default function ReceiptBatchUpload({ vet, onDone }) {
     <div className="rbu-wrap">
       {(phase === "select" || phase === "processing") && (
         <>
-          <div
+          <div aria-label="Add receipt photos" onKeyDown={onActivate(() => { if (phase === "select" && files.length < MAX_FILES) inputRef.current?.click(); })}
             className={`rbu-drop ${dragOver ? "is-over" : ""} ${files.length >= MAX_FILES ? "is-full" : ""}`}
             onDragOver={(e) => {
               e.preventDefault();
@@ -268,7 +269,7 @@ export default function ReceiptBatchUpload({ vet, onDone }) {
             </div>
           )}
 
-          {submitError && <p className="rbu-error-msg">{submitError}</p>}
+          {submitError && <p role="alert" className="rbu-error-msg">{submitError}</p>}
 
           {phase === "select" && files.length > 0 && (
             <div className="rbu-actions">
@@ -454,7 +455,7 @@ function ReviewSummary({
         </div>
       )}
 
-      {error && <p className="rbu-error-msg">{error}</p>}
+      {error && <p role="alert" className="rbu-error-msg">{error}</p>}
 
       <div className="rbu-actions">
         <button
