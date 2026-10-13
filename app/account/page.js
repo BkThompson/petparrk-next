@@ -141,18 +141,42 @@ export default function AccountSettings() {
     setDeleting(true);
     setDeleteMsg(null);
     try {
-      // Delete user data first
-      await supabase.from("saved_vets").delete().eq("user_id", session.user.id);
-      await supabase.from("pets").delete().eq("user_id", session.user.id);
-      await supabase.from("profiles").delete().eq("id", session.user.id);
-      // Sign out — account deletion from Supabase requires admin API or edge function
-      // For now, sign out and flag account for deletion via support
+      // This used to delete rows straight from the browser, and it could never
+      // have worked: the pets delete filtered on user_id where the column is
+      // owner_id, and profiles has no DELETE policy so RLS refused it. All
+      // three were awaited without checking .error, then we signed the person
+      // out and sent them to /?deleted=true — telling them their account was
+      // gone while every row stayed exactly where it was.
+      //
+      // The real deletion has existed in /api/delete-account all along and
+      // nothing ever called it. It verifies the caller's token and deletes
+      // THAT user with the service role. profiles.id cascades from auth.users
+      // and every other table cascades from profiles or auth.users, so one
+      // delete clears the lot. price_submissions and price_reports are SET
+      // NULL on purpose: contributed prices stay, detached from the person.
+      const {
+        data: { session: current },
+      } = await supabase.auth.getSession();
+      const token = current?.access_token;
+      if (!token) throw new Error("no_session");
+
+      const res = await fetch("/api/delete-account", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error || "failed_" + res.status);
+      }
+
       await supabase.auth.signOut();
       router.push("/?deleted=true");
     } catch (e) {
+      // Now accurate. The route deletes the account before it touches
+      // anything else, so if we land here nothing has been removed.
       setDeleteMsg({
         type: "error",
-        text: "Something went wrong. Please contact us at legal@petparrk.com to complete account deletion.",
+        text: "We couldn't delete your account, and nothing has been changed. Please email legal@petparrk.com and we'll do it for you.",
       });
       setDeleting(false);
     }

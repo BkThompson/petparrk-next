@@ -42,3 +42,5 @@ next-env.d.ts
 .vscode/
 .price-gate-backup/
 price-gate/
+.account-delete-backup/
+account-delete/
