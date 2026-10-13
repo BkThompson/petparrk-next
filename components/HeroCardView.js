@@ -922,7 +922,7 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                       />
                       {meaningful(data.food_quirks) && (
                         <div className="hc-like-col hc-quirks">
-                          <h4>Food quirks</h4>
+                          <h2>Food quirks</h2>
                           <p className="hc-food-quirks">{data.food_quirks}</p>
                         </div>
                       )}
@@ -1229,7 +1229,7 @@ function ChipColumn({ className, chipClass, heading, items, cap }) {
   const visible = expanded ? items : items.slice(0, cap);
   return (
     <div className={`hc-like-col ${className}`}>
-      {heading ? <h4>{heading}</h4> : null}
+      {heading ? <h2>{heading}</h2> : null}
       <ul>
         {visible.map((item, i) => (
           <li key={i} className={expanded && i >= cap ? "hc-fade" : ""}>
@@ -1511,10 +1511,10 @@ const heroCardCss = `
   .hc-prefs-section { padding:22px; }
   .hc-prefs-title { margin-bottom:12px; }
   .hc-prefs { display:flex; flex-direction:column; gap:30px; align-items:stretch; }
-  .hc-like-col h4 { font-size:15px; font-weight:700; letter-spacing: 0.06em; margin-bottom:10px; display:flex; align-items:center; gap:5px; }
-  .hc-like-col.hc-loves h4 { color:var(--t-loves); }
-  .hc-like-col.hc-dislikes h4 { color:var(--t-dislikes); }
-  .hc-like-col.hc-foods h4 { color:var(--t-foods); }
+  .hc-like-col h2 { font-size:15px; font-weight:700; letter-spacing: 0.06em; margin-bottom:10px; display:flex; align-items:center; gap:5px; }
+  .hc-like-col.hc-loves h2 { color:var(--t-loves); }
+  .hc-like-col.hc-dislikes h2 { color:var(--t-dislikes); }
+  .hc-like-col.hc-foods h2 { color:var(--t-foods); }
   .hc-like-col ul { list-style:none; display:flex; flex-wrap:wrap; gap:8px; padding:0; margin:0; }
   .hc-like-col li {
     display:inline-flex; align-items:center; height:31px; box-sizing:border-box;
@@ -1550,7 +1550,7 @@ const heroCardCss = `
   }
   @media (hover: hover) { .hc-like-toggle:hover { background:var(--t-chip-bg); } }
   .hc-food-quirks { color:var(--t-card-text); font-size:16px; font-weight:500; line-height:1.5; margin:0; }
-  .hc-like-col.hc-quirks h4 { color:var(--t-foods); }
+  .hc-like-col.hc-quirks h2 { color:var(--t-foods); }
 
   .hc-funfact { color:var(--t-card-text); font-size:16px; font-weight:500; line-height:1.5; }
   .hc-quote { color:var(--t-accent-on-card); font-weight:800; }
@@ -1749,7 +1749,7 @@ const heroCardCss = `
       padding: 16px 26px;
     }
     /* the per-box LOVES / NOT A FAN headers (secondary, under the section title) */
-    .hc-card > .hc-leftcol .hc-like-col h4 {
+    .hc-card > .hc-leftcol .hc-like-col h2 {
       font-size: 15px; 
       font-weight: 700; 
       /* text-transform: uppercase; */

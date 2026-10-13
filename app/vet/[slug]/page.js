@@ -1082,7 +1082,7 @@ export default function VetPage() {
             >
               <X size={22} strokeWidth={2.2} />
             </button>
-            <h3
+            <h2
               style={{
                 margin: "0 0 16px",
                 fontSize: "17px",
@@ -1093,7 +1093,7 @@ export default function VetPage() {
               }}
             >
               About our pricing data
-            </h3>
+            </h2>
             <p
               style={{
                 margin: "0 0 12px",
@@ -1525,7 +1525,7 @@ export default function VetPage() {
                   border: `1px solid ${C.border}`,
                 }}
               >
-                <h3 className="vs-section-h">Price Comparison</h3>
+                <h2 className="vs-section-h">Price Comparison</h2>
                 <p
                   style={{
                     margin: "0 0 20px",
@@ -1810,7 +1810,7 @@ export default function VetPage() {
                   >
                     <Ban size={32} strokeWidth={2} />
                   </div>
-                  <h3
+                  <h2
                     style={{
                       margin: "0 0 8px",
                       fontSize: "18px",
@@ -1820,7 +1820,7 @@ export default function VetPage() {
                     }}
                   >
                     Not currently accepting new patients
-                  </h3>
+                  </h2>
                   <p
                     style={{
                       margin: "0 0 20px",
