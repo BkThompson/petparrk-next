@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, Info } from "lucide-react";
 
 export default function Unlock() {
   // Waitlist state
@@ -72,13 +72,30 @@ export default function Unlock() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [TURNSTILE_SITE_KEY, wlStatus]);
 
-  // Clear the spent token and the widget id. The widget's container unmounts
-  // with the form on the confirmation screen; when "Add another email" brings
-  // the form back, the effect (keyed on wlStatus) renders a fresh widget into
-  // the new container, which issues a new token. Never blocks the UI.
+  // Clear the spent token AND re-arm the widget.
+  //
+  // This used to only clear the two refs, which is why a second submit was a
+  // dead end: the token was gone from JavaScript, but the checkbox on screen
+  // still showed as ticked and its callback had already fired, so no new token
+  // could ever arrive. Every later submit then failed the guard in
+  // joinWaitlist() with "please complete the verification" — above a control
+  // offering nothing to complete.
+  //
+  // The success path escaped this by accident (the form unmounts on the
+  // confirmation screen, and "Add another email" renders a fresh widget into a
+  // fresh container). The error path has no unmount, so it stayed stuck.
+  //
+  // The id is deliberately kept. The widget is still mounted and now holds a
+  // fresh challenge. On the confirmation screen the container is gone, the
+  // reset throws, the catch swallows it, and the effect above renders a new
+  // widget because childElementCount is 0.
   function resetCaptcha() {
     captchaTokenRef.current = "";
-    widgetIdRef.current = null;
+    if (widgetIdRef.current !== null && window.turnstile?.reset) {
+      try {
+        window.turnstile.reset(widgetIdRef.current);
+      } catch {}
+    }
   }
 
   // Password-unlock state (Brandon/Susan preview access) — unchanged behavior.
@@ -99,7 +116,8 @@ export default function Unlock() {
     // gives a clear message instead of a confusing failure.
     if (TURNSTILE_SITE_KEY && !captchaTokenRef.current) {
       setWlStatus("error");
-      setWlError("Please complete the verification above, then try again.");
+      // "below", not "above" — the widget renders under the Join button.
+      setWlError("Please complete the verification below, then try again.");
       return;
     }
     setWlStatus("loading");
@@ -203,13 +221,31 @@ export default function Unlock() {
 
       {wlStatus === "done" || wlStatus === "already" ? (
         <>
-          <CheckCircle
-            size={40}
-            strokeWidth={2}
-            color="var(--color-success)"
-            style={{ marginBottom: "2px" }}
-          />
+          {/* Two different outcomes, two different faces. A green tick on both
+              made "nothing happened, you were already here" look exactly like
+              "you just joined" — and people read the icon before the words, so
+              the icon was actively telling them the wrong thing. Gold and an
+              information mark say *noted, nothing to do*; green and a tick stay
+              reserved for something that actually just happened. */}
+          {wlStatus === "already" ? (
+            <Info
+              size={40}
+              strokeWidth={2}
+              color="var(--color-gold)"
+              style={{ marginBottom: "2px" }}
+              aria-hidden="true"
+            />
+          ) : (
+            <CheckCircle
+              size={40}
+              strokeWidth={2}
+              color="var(--color-success)"
+              style={{ marginBottom: "2px" }}
+              aria-hidden="true"
+            />
+          )}
           <p
+            role="status"
             style={{
               margin: 0,
               fontSize: "18px",
@@ -218,8 +254,10 @@ export default function Unlock() {
               textAlign: "center",
             }}
           >
+            {/* No exclamation mark on the duplicate. Nothing was achieved, so
+                celebrating reads as the same outcome as joining. */}
             {wlStatus === "already"
-              ? "You're already on the list!"
+              ? "You're already on the list"
               : "You're on the list!"}
           </p>
           <p
@@ -235,7 +273,8 @@ export default function Unlock() {
           >
             {wlStatus === "already" ? (
               <>
-                This email is already signed up — we&apos;ll see you at launch.
+                We already have this address, so there&apos;s nothing more to do
+                — you&apos;ll hear from us at launch either way.
               </>
             ) : (
               <>
@@ -289,7 +328,8 @@ export default function Unlock() {
               maxWidth: "100%",
             }}
           >
-            <input aria-label="Email"
+            <input
+              aria-label="Email"
               type="email"
               inputMode="email"
               autoComplete="email"
@@ -304,6 +344,7 @@ export default function Unlock() {
             />
             {wlStatus === "error" && (
               <p
+                role="alert"
                 style={{
                   margin: 0,
                   fontSize: "13px",
@@ -319,7 +360,7 @@ export default function Unlock() {
               disabled={wlStatus === "loading"}
               className="wl-btn"
             >
-              {wlStatus === "loading" ? "Joining\u2026" : "Join the waitlist"}
+              {wlStatus === "loading" ? "Joining…" : "Join the waitlist"}
             </button>
             {/* Managed Turnstile checkbox (verifies the person is human). */}
             <div
@@ -356,7 +397,8 @@ export default function Unlock() {
             <div
               style={{ position: "relative", width: "260px", maxWidth: "100%" }}
             >
-              <input aria-label="Password"
+              <input
+                aria-label="Password"
                 type={showPw ? "text" : "password"}
                 placeholder="Enter password"
                 value={val}
@@ -398,6 +440,7 @@ export default function Unlock() {
             </div>
             {(error || showRetry) && (
               <p
+                role="alert"
                 style={{
                   margin: 0,
                   fontSize: "13px",

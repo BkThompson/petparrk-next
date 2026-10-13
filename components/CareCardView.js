@@ -2733,13 +2733,14 @@ function CareCardStyles() {
         color: var(--color-muted);
       }
       .pcc-unavailable h2 {
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 800;
         margin: 16px 0 8px;
         color: var(--color-navy-dark);
       }
       .pcc-unavailable p {
-        font-size: 15px;
+        font-size: 16px;
+        font-weight: 500;
         line-height: 1.5;
         margin: 0;
       }

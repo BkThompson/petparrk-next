@@ -49,7 +49,6 @@ import { onActivate, smoothScroll } from "../../../lib/a11y";
 const SESSION_KEY = "petparrk_symptom_session";
 const NAVBAR_H = 64;
 
-
 // ── Species helpers (matches profile page logic) ────────────────────────
 const BANNER_LUCIDE = {
   dog: Dog,
@@ -373,6 +372,9 @@ export default function SymptomCheckerChatPage() {
   // Set by the symptom-checker landing page when a guest passes Turnstile,
   // carried through the session object. Null for signed-in users.
   const [guestCaptchaToken, setGuestCaptchaToken] = useState(null);
+  // Set when someone picks a severity before verification has finished, so
+  // the tap gets an explanation instead of being silently ignored.
+  const [captchaPending, setCaptchaPending] = useState(false);
 
   // Turnstile lives here rather than only on the landing page. Five different
   // places write the guest session and only one of them carried a token, so
@@ -669,7 +671,10 @@ export default function SymptomCheckerChatPage() {
       setTriageMounted(true);
       setTimeout(() => {
         if (messagesAreaRef.current)
-          messagesAreaRef.current.scrollTo({ top: 0, behavior: smoothScroll() });
+          messagesAreaRef.current.scrollTo({
+            top: 0,
+            behavior: smoothScroll(),
+          });
       }, 150);
     });
     // Vets are loaded by the location effect below, not here. This used to
@@ -1151,7 +1156,7 @@ export default function SymptomCheckerChatPage() {
       } catch {}
     }
     if (!res.ok) {
-      // A guest who has used their three free checks gets a 401 with
+      // A guest who has used their two free checks gets a 401 with
       // guest_limit_reached. Surfacing that as "Something went wrong" made a
       // deliberate limit look like a crash.
       let payload = null;
@@ -1162,6 +1167,15 @@ export default function SymptomCheckerChatPage() {
         setFreeCheckUsed(true);
         const err = new Error("guest_limit_reached");
         err.code = "guest_limit_reached";
+        throw err;
+      }
+      // Turnstile rejected the request, or no token reached the route at all.
+      // Same reasoning as the limit above: this is a verification problem and
+      // it is recoverable, so it should say so. Showing it as "Something went
+      // wrong" sent us looking for a server crash that was never there.
+      if (res.status === 403 && payload?.error === "captcha_failed") {
+        const err = new Error("captcha_failed");
+        err.code = "captcha_failed";
         throw err;
       }
       throw new Error("Stream failed");
@@ -1180,6 +1194,16 @@ export default function SymptomCheckerChatPage() {
   }
 
   async function selectSeverity(severity) {
+    // Cloudflare hasn't handed back a token yet. This guard used to live as a
+    // `disabled` prop on the severity card's <div> — where it does nothing at
+    // all, because a div is not a form control. So a quick tap sent the first
+    // message with no token and the route answered 403. Guarding here covers
+    // both ways the card can be activated, mouse and keyboard.
+    if (!session && TURNSTILE_SITE_KEY && !guestCaptchaToken) {
+      setCaptchaPending(true);
+      return;
+    }
+    setCaptchaPending(false);
     const answers = { ...guidedAnswers, severity };
     setGuidedAnswers(answers);
     setStepDirection(1);
@@ -1284,7 +1308,9 @@ export default function SymptomCheckerChatPage() {
           content:
             e?.code === "guest_limit_reached"
               ? "You've used both of your free checks. Create a free account to keep checking on your pet — your history is saved, and there's no limit."
-              : "Something went wrong. Please try again.",
+              : e?.code === "captcha_failed"
+                ? "We couldn't verify your browser. That's a security check on our side, not a problem with anything you told us. Refresh the page and try again."
+                : "Something went wrong. Please try again.",
         },
       ]);
     }
@@ -1395,7 +1421,9 @@ export default function SymptomCheckerChatPage() {
           content:
             e?.code === "guest_limit_reached"
               ? "You've used both of your free checks. Create a free account to keep checking on your pet — your history is saved, and there's no limit."
-              : "Something went wrong. Please try again.",
+              : e?.code === "captcha_failed"
+                ? "We couldn't verify your browser. That's a security check on our side, not a problem with anything you told us. Refresh the page and try again."
+                : "Something went wrong. Please try again.",
         },
       ]);
     }
@@ -1442,7 +1470,8 @@ export default function SymptomCheckerChatPage() {
               marginTop: "2px",
             }}
           >
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               width="16"
               height="16"
               viewBox="-1.5 -1 21 25"
@@ -1504,7 +1533,9 @@ export default function SymptomCheckerChatPage() {
             fontWeight: 500,
             lineHeight: "1.65",
             border: isUser ? "none" : `1px solid ${C.border}`,
-            boxShadow: isUser ? "none" : "0 1px 4px rgb(var(--color-navy-dark-rgb) / 0.06)",
+            boxShadow: isUser
+              ? "none"
+              : "0 1px 4px rgb(var(--color-navy-dark-rgb) / 0.06)",
           }}
         >
           {msg.content === "" && isStreamingMsg ? (
@@ -1677,7 +1708,15 @@ export default function SymptomCheckerChatPage() {
       },
     }[triageResult];
     return (
-      <div role={!triageCardExpanded ? "button" : undefined} tabIndex={!triageCardExpanded ? 0 : undefined} aria-expanded={triageCardExpanded} onKeyDown={!triageCardExpanded ? onActivate(() => setTriageCardExpanded(true)) : undefined}
+      <div
+        role={!triageCardExpanded ? "button" : undefined}
+        tabIndex={!triageCardExpanded ? 0 : undefined}
+        aria-expanded={triageCardExpanded}
+        onKeyDown={
+          !triageCardExpanded
+            ? onActivate(() => setTriageCardExpanded(true))
+            : undefined
+        }
         style={{
           marginBottom: "16px",
           background: cfg.bg,
@@ -1828,7 +1867,11 @@ export default function SymptomCheckerChatPage() {
                       <button type="submit">Search</button>
                     </form>
                   </div>
-                  {locError && <p role="alert" className="triage-loc-error">{locError}</p>}
+                  {locError && (
+                    <p role="alert" className="triage-loc-error">
+                      {locError}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -2195,7 +2238,9 @@ export default function SymptomCheckerChatPage() {
                     </button>
                   )}
                   {visitPrepError && (
-                    <p role="alert" className="triage-prep-error">{visitPrepError}</p>
+                    <p role="alert" className="triage-prep-error">
+                      {visitPrepError}
+                    </p>
                   )}
                   {visitPrep && (
                     <div
@@ -2276,13 +2321,17 @@ export default function SymptomCheckerChatPage() {
              via --sev-border, set inline on the tile. */
           .g-sev-tile { border: 1px solid var(--sev-border, transparent); }
           .g-sev{border:1.5px solid ${C.border};border-radius:14px;padding:18px 20px;cursor:pointer;background:var(--color-white);transition:border-color 0.15s,background 0.15s,transform 0.15s;margin-bottom:10px;color:${C.navyDark};}
-          
+
         .back-btn { background:none !important; border:none !important; cursor:pointer; font-size:13px; color:${C.terracotta700} !important; font-weight:700; font-family:var(--font-urbanist,system-ui); display:inline-flex; align-items:center; gap:4px; line-height:1; padding:15px 0; margin-top:-15px; transition:color 0.15s; outline:none !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
         @media (hover: hover) { .back-btn:hover { color:var(--color-navy-dark) !important; outline:none !important; box-shadow:none !important; } }
         .back-btn:active { color:var(--color-navy-dark) !important; outline:none !important; box-shadow:none !important; }
         .back-btn:focus { color:${C.terracotta700} !important; outline:none !important; box-shadow:none !important; background:none !important; border:none !important; }
         .back-btn:focus-visible { color:${C.terracotta700} !important; outline:var(--focus-outline) !important; outline-offset:2px !important; box-shadow:none !important; background:none !important; border:none !important; }
         .back-btn:focus:not(:focus-visible) { color:${C.terracotta700} !important; outline:none !important; box-shadow:none !important; }
+        /* Shown only when a severity was tapped before Cloudflare handed back
+           a token. It clears the moment the token arrives, so in the normal
+           case nobody ever sees it. */
+        .sc-captcha-wait { margin:0 0 16px; font-size:15px; font-weight:600; color:${C.navyDark}; text-align:center; }
         `}</style>
         {/* Full viewport height, no header */}
         <div
@@ -2405,6 +2454,16 @@ export default function SymptomCheckerChatPage() {
                   <div ref={turnstileRef} />
                 </div>
               )}
+              {/* Only while a tap is actually waiting on verification. It
+                  clears itself the moment the token arrives, so in the normal
+                  case this never appears. Without it, tapping a severity too
+                  early did nothing at all and looked broken. */}
+              {captchaPending && !guestCaptchaToken && (
+                <p role="status" className="sc-captcha-wait">
+                  Just finishing a quick security check — try that again in a
+                  moment.
+                </p>
+              )}
               <AnimatePresence mode="wait" custom={stepDirection}>
                 {guidedStep === 1 && (
                   <motion.div
@@ -2444,7 +2503,10 @@ export default function SymptomCheckerChatPage() {
                     {SYMPTOM_AREAS.map((area) => {
                       const Art = area.art;
                       return (
-                        <div role="button" tabIndex={0} onKeyDown={onActivate(() => selectArea(area.id))}
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={onActivate(() => selectArea(area.id))}
                           key={area.id}
                           className="g-card"
                           onClick={() => selectArea(area.id)}
@@ -2455,8 +2517,10 @@ export default function SymptomCheckerChatPage() {
                               width: "68px",
                               height: "68px",
                               borderRadius: "18px",
-                              background: "rgb(var(--color-terracotta-rgb) / 0.14)",
-                              border: "1px solid rgb(var(--color-terracotta-rgb) / 0.28)",
+                              background:
+                                "rgb(var(--color-terracotta-rgb) / 0.14)",
+                              border:
+                                "1px solid rgb(var(--color-terracotta-rgb) / 0.28)",
                               boxSizing: "border-box",
                               display: "inline-flex",
                               alignItems: "center",
@@ -2538,7 +2602,10 @@ export default function SymptomCheckerChatPage() {
                       {DURATIONS.map((d) => {
                         const Icon = d.icon;
                         return (
-                          <div role="button" tabIndex={0} onKeyDown={onActivate(() => selectDuration(d.id))}
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={onActivate(() => selectDuration(d.id))}
                             key={d.id}
                             className="g-card"
                             onClick={() => selectDuration(d.id)}
@@ -2549,8 +2616,10 @@ export default function SymptomCheckerChatPage() {
                                 width: "68px",
                                 height: "68px",
                                 borderRadius: "18px",
-                                background: "rgb(var(--color-terracotta-rgb) / 0.14)",
-                                border: "1px solid rgb(var(--color-terracotta-rgb) / 0.28)",
+                                background:
+                                  "rgb(var(--color-terracotta-rgb) / 0.14)",
+                                border:
+                                  "1px solid rgb(var(--color-terracotta-rgb) / 0.28)",
                                 boxSizing: "border-box",
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -2627,10 +2696,13 @@ export default function SymptomCheckerChatPage() {
                     {SEVERITIES.map((s) => {
                       const Icon = s.icon;
                       return (
-                        <div role="button" tabIndex={0} onKeyDown={onActivate(() => selectSeverity(s.id))}
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={onActivate(() => selectSeverity(s.id))}
                           key={s.id}
                           className="g-sev"
-                          disabled={
+                          aria-disabled={
                             !session &&
                             !!TURNSTILE_SITE_KEY &&
                             !guestCaptchaToken
@@ -2642,7 +2714,8 @@ export default function SymptomCheckerChatPage() {
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.borderColor = C.border;
-                            e.currentTarget.style.background = "var(--color-white)";
+                            e.currentTarget.style.background =
+                              "var(--color-white)";
                           }}
                           onTouchStart={(e) => {
                             e.currentTarget.style.borderColor = s.border;
@@ -2650,7 +2723,8 @@ export default function SymptomCheckerChatPage() {
                           }}
                           onTouchEnd={(e) => {
                             e.currentTarget.style.borderColor = C.border;
-                            e.currentTarget.style.background = "var(--color-white)";
+                            e.currentTarget.style.background =
+                              "var(--color-white)";
                           }}
                         >
                           <div
@@ -3083,11 +3157,11 @@ export default function SymptomCheckerChatPage() {
 
         @keyframes dotBounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-5px);opacity:1} }
         .dot-bounce { width:7px;height:7px;border-radius:50%;background:${C.muted};display:inline-block;animation:dotBounce 1.2s infinite ease-in-out; }
-      
+
         .scc-arrow-btn { background:none; border:none; cursor:pointer; padding:0; display:inline-flex; align-items:center; flex-shrink:0; }
         .scc-arrow { display:inline-block; font-size:16px; color:${C.terracotta700}; font-weight:700; transition:transform 0.2s ease; }
         @media (hover: hover) { .scc-arrow-btn:hover .scc-arrow { transform:translateX(4px); } }
-      
+
         .sv-arrow { font-size: 16px; font-weight: 700; color: ${C.terracotta700}; background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 3px; transition: gap 0.2s ease; }
         @media (hover: hover) { .sv-arrow:hover { gap: 7px; } }
         .sv-arrow .sv-arrow-icon { display: inline-block; transition: transform 0.2s ease; }
@@ -3212,7 +3286,9 @@ export default function SymptomCheckerChatPage() {
                   </button>
                 </div>
                 {savePetError && (
-                  <p role="alert" className="save-pet-error">{savePetError}</p>
+                  <p role="alert" className="save-pet-error">
+                    {savePetError}
+                  </p>
                 )}
                 <button
                   type="button"
@@ -3312,7 +3388,8 @@ export default function SymptomCheckerChatPage() {
               <div
                 className={`chat-input-wrap${recording ? " recording" : ""}`}
               >
-                <textarea aria-label="Describe what's happening"
+                <textarea
+                  aria-label="Describe what's happening"
                   ref={textareaRef}
                   className="chat-textarea"
                   value={input}
@@ -3347,7 +3424,8 @@ export default function SymptomCheckerChatPage() {
                     disabled={loading || streaming || !input.trim()}
                     title="Send"
                   >
-                    <svg aria-hidden="true"
+                    <svg
+                      aria-hidden="true"
                       width="18"
                       height="18"
                       viewBox="0 0 12 13"
