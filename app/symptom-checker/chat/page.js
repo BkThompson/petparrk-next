@@ -297,6 +297,28 @@ export default function SymptomCheckerChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
+  // Screen readers: replies stream in a few words at a time, so a live region
+  // on the bubble would read fragments. Announce each reply once it's complete.
+  const [srReply, setSrReply] = useState("");
+  const wasStreaming = useRef(false);
+  useEffect(() => {
+    if (streaming) {
+      wasStreaming.current = true;
+      return;
+    }
+    if (!wasStreaming.current) return;
+    wasStreaming.current = false;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== "assistant" || !last.content) return;
+    const text = last.content
+      .replace(/\*\*|__/g, "")
+      .replace(/^#+\s*/gm, "")
+      .replace(/^\s*[-*•]\s+/gm, "")
+      .trim();
+    // Clear first so a reply identical to the last one is still announced.
+    setSrReply("");
+    setTimeout(() => setSrReply(text), 100);
+  }, [streaming, messages]);
   const [triageResult, setTriageResult] = useState(null);
   const [differentials, setDifferentials] = useState([]);
   const [recommendation, setRecommendation] = useState(null);
@@ -464,6 +486,16 @@ export default function SymptomCheckerChatPage() {
     severity: null,
   });
   const [stepDirection, setStepDirection] = useState(1);
+  // After a card is chosen (or Back), the old step unmounts and focus would
+  // fall to <body>, sending screen readers to the top of the page. Move it to
+  // the new step's question instead. Only set by user actions, never on load.
+  const focusStepHeading = useRef(false);
+  const stepHeadingRef = useCallback((el) => {
+    if (el && focusStepHeading.current) {
+      focusStepHeading.current = false;
+      el.focus({ preventScroll: true });
+    }
+  }, []);
   const [recording, setRecording] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
 
@@ -1040,11 +1072,13 @@ export default function SymptomCheckerChatPage() {
   }
   function selectArea(area) {
     setGuidedAnswers((a) => ({ ...a, area }));
+    focusStepHeading.current = true;
     setStepDirection(1);
     setGuidedStep(2);
   }
   function selectDuration(duration) {
     setGuidedAnswers((a) => ({ ...a, duration }));
+    focusStepHeading.current = true;
     setStepDirection(1);
     setGuidedStep(3);
   }
@@ -2276,12 +2310,14 @@ export default function SymptomCheckerChatPage() {
                 fontFamily: "var(--font-urbanist,system-ui,sans-serif)",
               }}
             >
+              <h1 className="sr-only">Symptom Checker</h1>
               <div style={{ marginBottom: "30px", paddingTop: "0px" }}>
                 <button
                   onClick={(e) => {
                     e.currentTarget.blur();
                     if (guidedStep === 1) router.push("/symptom-checker");
                     else {
+                      focusStepHeading.current = true;
                       setStepDirection(-1);
                       setGuidedStep((s) => s - 1);
                     }
@@ -2381,7 +2417,10 @@ export default function SymptomCheckerChatPage() {
                     transition={{ duration: 0.25, ease: "easeInOut" }}
                   >
                     <h2
+                      ref={stepHeadingRef}
+                      tabIndex={-1}
                       style={{
+                        outline: "none",
                         margin: "0 0 6px",
                         fontSize: "clamp(20px,3vw,26px)",
                         fontWeight: "800",
@@ -2466,7 +2505,10 @@ export default function SymptomCheckerChatPage() {
                     transition={{ duration: 0.25, ease: "easeInOut" }}
                   >
                     <h2
+                      ref={stepHeadingRef}
+                      tabIndex={-1}
                       style={{
+                        outline: "none",
                         margin: "0 0 6px",
                         fontSize: "clamp(20px,3vw,26px)",
                         fontWeight: "800",
@@ -2559,7 +2601,10 @@ export default function SymptomCheckerChatPage() {
                     transition={{ duration: 0.25, ease: "easeInOut" }}
                   >
                     <h2
+                      ref={stepHeadingRef}
+                      tabIndex={-1}
                       style={{
+                        outline: "none",
                         margin: "0 0 6px",
                         fontSize: "clamp(20px,3vw,26px)",
                         fontWeight: "800",
@@ -3050,6 +3095,10 @@ export default function SymptomCheckerChatPage() {
       `}</style>
 
       <div className="chat-shell">
+        <h1 className="sr-only">Symptom Checker</h1>
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {srReply}
+        </div>
         {/* Scrollable messages area */}
         <div ref={messagesAreaRef} className="chat-messages">
           <div style={{ maxWidth: "768px", margin: "0 auto" }}>
