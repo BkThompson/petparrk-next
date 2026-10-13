@@ -109,7 +109,13 @@ export async function GET(request) {
   const q = (searchParams.get("q") || "").trim();
   const placeId = (searchParams.get("place_id") || "").trim();
 
-  const key = process.env.GOOGLE_PLACES_KEY;
+  // GOOGLE_PLACES_API_KEY is the canonical name and is set in Vercel for all
+  // environments. This route read GOOGLE_PLACES_KEY, which is set nowhere, so
+  // every lookup returned the 503 below and the feature looked unused rather
+  // than broken. The old name is kept as a fallback in case it's in someone's
+  // .env.local, but the canonical one wins.
+  const key =
+    process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_PLACES_KEY;
   if (!key) {
     return NextResponse.json({ error: "Lookup unavailable" }, { status: 503 });
   }

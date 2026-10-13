@@ -67,9 +67,12 @@ export async function POST(req) {
     return Response.json({ error: "address_required" }, { status: 400 });
   }
 
-  const key =
-    process.env.GOOGLE_PLACES_API_KEY ||
-    process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+  // NEXT_PUBLIC_GOOGLE_PLACES_API_KEY dropped as a fallback. This is a
+    // server route, and anything prefixed NEXT_PUBLIC_ is compiled into the
+    // browser bundle, so setting it would have published a Google API key to
+    // every visitor. It was never set, so nothing changes functionally — this
+    // removes the possibility of someone setting it in good faith.
+    const key = process.env.GOOGLE_PLACES_API_KEY;
   if (!key) {
     return Response.json({ neighborhood: null });
   }

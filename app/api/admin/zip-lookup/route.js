@@ -26,7 +26,16 @@ export async function GET(request) {
     return NextResponse.json({ error: "Invalid ZIP" }, { status: 400 });
   }
 
-  const key = process.env.GOOGLE_GEOCODING_KEY;
+  // Same fix as app/api/admin/vet-lookup: this read GOOGLE_GEOCODING_KEY,
+  // which is set nowhere, so ZIP lookup always returned the 503 below and fell
+  // back to manual entry — exactly as the comment underneath describes, except
+  // it happened every single time.
+  //
+  // One Google key serves Places and Geocoding provided both APIs are enabled
+  // on it in the Google Cloud console. If this now returns a Google API error
+  // instead of working, that's what to check. Old name kept as a fallback.
+  const key =
+    process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_GEOCODING_KEY;
   if (!key) {
     // Missing key — return a soft error so the client falls back to manual entry.
     return NextResponse.json({ error: "Lookup unavailable" }, { status: 503 });

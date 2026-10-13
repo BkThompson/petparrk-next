@@ -44,3 +44,5 @@ next-env.d.ts
 price-gate/
 .account-delete-backup/
 account-delete/
+.env-fix-backup/
+env-fix/
