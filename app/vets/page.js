@@ -587,14 +587,39 @@ function VetsContent() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Vets are public — anon can read active vets — so this runs for everyone.
+  // Loading ends in the price effect below, not here, so the grid doesn't
+  // render a screen of "No pricing available" cards and then correct itself.
   useEffect(() => {
-    async function fetchData() {
+    async function fetchVets() {
       const { data: vd } = await supabase
         .from("vets")
         .select("*")
         .eq("status", "active")
         .order("name");
+      setVets(vd || []);
+      if (!vd || vd.length === 0) setLoading(false);
+    }
+    fetchVets();
+  }, []);
 
+  // Prices are account-only, and this waits on the session check.
+  // session === undefined means we don't know who's asking yet. Querying now
+  // races the auth token restore, so a signed-in visitor on a hard refresh
+  // could send it unauthenticated and get an empty set back. That used to be
+  // harmless because anon could read prices; it isn't any more.
+  // A signed-out visitor never sends it at all. RLS returns nothing either
+  // way, but not asking is what makes the gate real — until now every price
+  // was in the DOM under a CSS blur, readable from devtools.
+  useEffect(() => {
+    if (session === undefined) return;
+    if (!session) {
+      setPrices({});
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    async function fetchPrices() {
       // Paginated on purpose. Supabase returns at most 1000 rows per request,
       // and there are far more prices than that — so this used to see only the
       // first thousand and every vet past them looked priceless. That is why
@@ -625,6 +650,7 @@ function VetsContent() {
           from += PAGE;
         }
       }
+      if (cancelled) return;
 
       const pm = {};
       pd.forEach((p) => {
@@ -636,12 +662,14 @@ function VetsContent() {
         if (!pm[p.vet_id]) pm[p.vet_id] = [];
         pm[p.vet_id].push(p);
       });
-      setVets(vd || []);
       setPrices(pm);
       setLoading(false);
     }
-    fetchData();
-  }, []);
+    fetchPrices();
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
 
   useEffect(() => {
     if (!session) return;
@@ -1097,25 +1125,35 @@ function VetsContent() {
                     active={acceptingFilter !== "All"}
                   />
 
-                  {/* Price dropdown */}
-                  <FilterDropdown
-                    prefix="Price:"
-                    value={priceRange}
-                    displayValue={
-                      priceRange === "all"
-                        ? "All"
-                        : (
-                            PRICE_RANGES.find((r) => r.value === priceRange) ||
-                            {}
-                          ).label || "All"
-                    }
-                    options={PRICE_RANGES.map((r) => ({
-                      value: r.value,
-                      label: r.label,
-                    }))}
-                    onChange={(v) => setPriceRange(v)}
-                    active={priceRange !== "all"}
-                  />
+                  {/* Price dropdown — account only. With no prices in
+                      state, a guest picking "Under $75" gets zero vets and
+                      picking "No Pricing Available" gets every vet. Both are
+                      wrong, so the filter isn't offered. The spacer keeps the
+                      four-across filter row from reflowing — same trick the
+                      Type dropdown already uses below. */}
+                  {session ? (
+                    <FilterDropdown
+                      prefix="Price:"
+                      value={priceRange}
+                      displayValue={
+                        priceRange === "all"
+                          ? "All"
+                          : (
+                              PRICE_RANGES.find(
+                                (r) => r.value === priceRange,
+                              ) || {}
+                            ).label || "All"
+                      }
+                      options={PRICE_RANGES.map((r) => ({
+                        value: r.value,
+                        label: r.label,
+                      }))}
+                      onChange={(v) => setPriceRange(v)}
+                      active={priceRange !== "all"}
+                    />
+                  ) : (
+                    <div className="fbar-item" aria-hidden="true" />
+                  )}
 
                   {/* Ownership dropdown */}
                   <FilterDropdown
@@ -1340,7 +1378,12 @@ function VetsContent() {
                             </a>
                           </p>
                         )}
-                        {!exam && !dental && !spay && !neuter ? (
+                        {/* "No pricing available" is a claim about the
+                            clinic, so it can only be made when we have
+                            actually looked. Signed out we never query, so
+                            every card would have said it. Guests fall through
+                            to the gated branch instead. */}
+                        {session && !exam && !dental && !spay && !neuter ? (
                           <p
                             style={{
                               fontSize: "14px",
@@ -1375,6 +1418,28 @@ function VetsContent() {
                                 minHeight: "32px",
                               }}
                             >
+                              {/* Redacted placeholders, not invented prices —
+                                  see the note on the home page. Gives the blur
+                                  something to blur so the card keeps its
+                                  shape. aria-hidden: the sign-up link is the
+                                  real content here. */}
+                              {!session &&
+                                ["Exam", "Dental", "Spay", "Neuter"].map(
+                                  (label) => (
+                                    <span
+                                      key={label}
+                                      className="price-chip"
+                                      aria-hidden="true"
+                                    >
+                                      <span className="price-chip-label">
+                                        {label}
+                                      </span>
+                                      <span className="price-chip-value">
+                                        $•••
+                                      </span>
+                                    </span>
+                                  ),
+                                )}
                               {exam && (
                                 <span className="price-chip">
                                   <span className="price-chip-label">Exam</span>

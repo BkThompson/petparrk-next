@@ -642,33 +642,69 @@ export default function VetPage() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // The clinic record is public — anon can read active vets — so this runs
+  // for everyone. It does not end the loading state; the price effect below
+  // does, on every path. Ending it here would render the Pricing card before
+  // the prices arrive, where it would say "No prices yet for this clinic" and
+  // then correct itself.
   useEffect(() => {
-    async function fetchData() {
+    async function fetchVet() {
       const { data: vetData } = await supabase
         .from("vets")
         .select("*")
         .eq("slug", slug)
         .single();
+      setVet(vetData);
+      if (vetData) {
+        setVetName(vetData.name);
+        setVetId(vetData.id);
+      } else {
+        // No such clinic. Nothing left to wait for — show the not-found card.
+        setLoading(false);
+      }
+    }
+    fetchVet();
+  }, [slug]);
+
+  // Prices are account-only. Two separate reasons this waits:
+  //   1. session === undefined means the session check hasn't returned yet.
+  //      Firing now races the auth token restore, so a signed-in visitor on a
+  //      hard refresh could send it unauthenticated and get an empty set back
+  //      — which reads on screen as "this clinic has no prices". That used to
+  //      be harmless because anon could read prices. It isn't any more.
+  //   2. A signed-out visitor never sends it at all. RLS returns nothing
+  //      either way, but not asking is what makes the gate real: before this,
+  //      every price on the page was in the DOM under a CSS blur.
+  useEffect(() => {
+    if (session === undefined || !vetId) return;
+    if (!session) {
+      setPrices([]);
+      setReviewServices([]);
+      setAllPrices([]);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    async function fetchPrices() {
       const { data: priceData } = await supabase
         .from("vet_prices")
         .select("*, services(id,name,category,sort_order)")
-        .eq("vet_id", vetData?.id);
+        .eq("vet_id", vetId);
       const { data: allPricesData } = await supabase
         .from("vet_prices")
         .select("*, services(id,name,category,sort_order), vets(city)");
-      setVet(vetData);
+      if (cancelled) return;
       const { clean, reviewServiceNames } = derivePrices(priceData || []);
       setPrices(clean);
       setReviewServices(reviewServiceNames);
       setAllPrices(allPricesData || []);
       setLoading(false);
-      if (vetData) {
-        setVetName(vetData.name);
-        setVetId(vetData.id);
-      }
     }
-    fetchData();
-  }, [slug]);
+    fetchPrices();
+    return () => {
+      cancelled = true;
+    };
+  }, [session, vetId]);
 
   // Prices change in Admin while this page is already open — a note gets
   // added, a number gets corrected — and the fetch above only ever runs once
@@ -686,6 +722,10 @@ export default function VetPage() {
   // the loader every time you came back to the tab.
   useEffect(() => {
     if (!slug) return;
+    // Signed out there are no prices on the page to refresh, and the query
+    // would come back empty now that anon can't read vet_prices — so don't
+    // even attach the listener.
+    if (!session) return;
     async function refresh() {
       const { data: vetData } = await supabase
         .from("vets")
@@ -713,7 +753,7 @@ export default function VetPage() {
     }
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [slug]);
+  }, [slug, session]);
 
   useEffect(() => {
     if (!session || !vet) return;
@@ -1879,12 +1919,13 @@ export default function VetPage() {
                       About these prices
                     </button>
                   </div>
-                  <div
-                    className={`price-gate-wrap${
-                      !session && pricedRows.length > 0 ? " gated" : ""
-                    }`}
-                  >
-                    {!session && pricedRows.length > 0 && (
+                  {/* The gate no longer depends on pricedRows. Signed out
+                      we never fetch, so pricedRows is always 0 and the gate
+                      stopped rendering entirely — the page fell through to
+                      "No prices yet for this clinic" with no way to sign up
+                      from it. */}
+                  <div className={`price-gate-wrap${!session ? " gated" : ""}`}>
+                    {!session && (
                       <div className="price-gate-overlay">
                         <Link href="/auth" className="price-gate-btn">
                           <Lock size={14} strokeWidth={2.5} />
@@ -1968,7 +2009,61 @@ export default function VetPage() {
                           />
                         </div>
                       )}
-                      {pricedRows.length === 0 ? (
+                      {!session ? (
+                        // Signed out there is nothing in state to blur, and
+                        // the card used to fall through to "No prices yet for
+                        // this clinic" — a statement about a real business
+                        // that we have no basis for. Redacted rows instead:
+                        // real service names, withheld numbers, no invented
+                        // prices even behind a blur. aria-hidden, because the
+                        // sign-up link above is the actual content.
+                        <div className="vs-pricegroup" aria-hidden="true">
+                          <p className="vs-pricegroup-h">Pricing</p>
+                          {[
+                            "Doctor Exam",
+                            "Dental Cleaning",
+                            "Spay (~40lb dog)",
+                            "Neuter (~40lb dog)",
+                            "Rabies Vaccine",
+                          ].map((name) => (
+                            <div key={name}>
+                              <div className="price-row">
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <span className="vs-service-name">
+                                      {name}
+                                    </span>
+                                  </div>
+                                  <span
+                                    style={{
+                                      fontSize: "16px",
+                                      fontWeight: "800",
+                                      color: C.navyDark,
+                                      whiteSpace: "nowrap",
+                                      marginLeft: "16px",
+                                    }}
+                                  >
+                                    $•••
+                                  </span>
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  height: "1px",
+                                  background: C.border,
+                                  margin: "0",
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : pricedRows.length === 0 ? (
                         // A plus-sign illustration read as "add a price" — an
                         // invitation to do something, on a page where there is
                         // nothing to do. A clock says the same thing the copy

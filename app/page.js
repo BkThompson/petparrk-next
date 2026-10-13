@@ -414,27 +414,59 @@ export default function Home() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Vets are public — anon can read active vets — so this runs for everyone.
+  // It deliberately does NOT end the loading state: prices finish below, and
+  // ending here would show the teaser section before the prices arrive, where
+  // it would read "No vets to show yet" for a second and then fill in.
   useEffect(() => {
-    async function fetchData() {
+    async function fetchVets() {
       const { data: vetData } = await supabase
         .from("vets")
         .select("*")
         .eq("status", "active")
         .order("name");
+      setVets(vetData || []);
+      if (!vetData || vetData.length === 0) setLoading(false);
+    }
+    fetchVets();
+  }, []);
+
+  // Prices are account-only. Two separate reasons this waits on session:
+  //   1. session === undefined means the session check hasn't come back yet.
+  //      Firing the query now races the auth token restore, so a signed-in
+  //      visitor on a hard refresh could send it unauthenticated and get an
+  //      empty set back. That used to be harmless because anon could read
+  //      prices. It isn't any more.
+  //   2. A signed-out visitor never sends it at all. RLS returns nothing
+  //      either way, but not asking is what makes the gate real — until now
+  //      every price was in the DOM under a CSS blur, readable by anyone who
+  //      opened devtools.
+  useEffect(() => {
+    if (session === undefined) return;
+    if (!session) {
+      setPrices({});
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    async function fetchPrices() {
       const { data: priceData } = await supabase
         .from("vet_prices")
         .select("*, services(name)");
+      if (cancelled) return;
       const priceMap = {};
       priceData?.forEach((p) => {
         if (!priceMap[p.vet_id]) priceMap[p.vet_id] = [];
         priceMap[p.vet_id].push(p);
       });
-      setVets(vetData || []);
       setPrices(priceMap);
       setLoading(false);
     }
-    fetchData();
-  }, []);
+    fetchPrices();
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
 
   useEffect(() => {
     if (!session) return;
@@ -476,7 +508,12 @@ export default function Home() {
   }
 
   const teaserVets = [...vets]
-    .filter((v) => prices[v.id]?.some((p) => p.price_low))
+    // Signed in: only clinics we actually hold a price for — the section is
+    // headed "See what people actually paid". Signed out: there are no prices
+    // in state to filter on, so this emptied the entire section and the page
+    // said "No vets to show yet". Show the nearest four and let the gate below
+    // cover the numbers.
+    .filter((v) => (session ? prices[v.id]?.some((p) => p.price_low) : true))
     .sort((a, b) => {
       if (userCoords) {
         const aC = getVetCoords(a),
@@ -1046,6 +1083,27 @@ export default function Home() {
                             flexWrap: "wrap",
                           }}
                         >
+                          {/* Signed out there is no price data in state, so
+                              the blur had nothing to blur and the card
+                              collapsed to an empty strip with a button
+                              floating in it. These are REDACTED placeholders,
+                              not invented prices: a made-up number on a
+                              price-transparency site is the one thing we
+                              can't ship, blurred or not. aria-hidden so a
+                              screen reader gets the sign-up link rather than
+                              a row of bullets. */}
+                          {!session && (
+                            <>
+                              <span className="price-chip" aria-hidden="true">
+                                <span className="price-chip-label">Exam</span>
+                                <span className="price-chip-value">$•••</span>
+                              </span>
+                              <span className="price-chip" aria-hidden="true">
+                                <span className="price-chip-label">Dental</span>
+                                <span className="price-chip-value">$•••</span>
+                              </span>
+                            </>
+                          )}
                           {exam && (
                             <span className="price-chip">
                               <span className="price-chip-label">Exam</span>
