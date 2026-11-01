@@ -808,7 +808,6 @@ function PetPickerView({ pets }) {
       <style>{`
         .pc-hub { 
           background: var(--color-cream); 
-          // min-height: calc(100vh - 64px); 
           padding: 56px 0 60px; 
         }
         @media (min-width: 768px) and (max-width: 1023px) {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 const EFFECTIVE_DATE = "September 2, 2026";
-const CONTACT_EMAIL = "[legal@petparrk.com]";
+const CONTACT_EMAIL = "legal@nehalyn.com";
 const COMPANY_ADDRESS = "[Company Address], Oakland, California";
 
 export default function TermsOfService() {
@@ -42,9 +42,9 @@ export default function TermsOfService() {
             <h2 className="legal-h2">1. Acceptance of Terms</h2>
             <p className="legal-p">
               These Terms of Service ("Terms") constitute a legally binding
-              agreement between you ("User" or "you") and PetParrk, LLC
-              ("PetParrk," "we," "us," or "our") governing your access to and
-              use of the PetParrk platform, including our website, applications,
+              agreement between you ("User" or "you") and Nehalyn, LLC
+              ("Nehalyn," "we," "us," or "our") governing your access to and
+              use of the Nehalyn platform, including our website, applications,
               and all related services (collectively, the "Service").
             </p>
             <p className="legal-caps">
@@ -56,7 +56,7 @@ export default function TermsOfService() {
               These Terms incorporate by reference our Privacy Policy, available
               at{" "}
               <a href="/privacy-policy" className="legal-link">
-                petparrk.com/privacy-policy
+                nehalyn.com/privacy-policy
               </a>
               , which governs our collection and use of your personal
               information.
@@ -69,13 +69,13 @@ export default function TermsOfService() {
           <div className="legal-section">
             <h2 className="legal-h2">2. Description of Service</h2>
             <p className="legal-p">
-              PetParrk is a pet care information and decision-support platform
+              Nehalyn is a pet care information and decision-support platform
               that provides:
             </p>
             <ul className="legal-ul">
               <li>
                 A directory of veterinary clinics in California, including
-                pricing information gathered and verified by PetParrk;
+                pricing information verified by Nehalyn;
               </li>
               <li>
                 An AI-powered symptom triage tool that provides general guidance
@@ -93,13 +93,13 @@ export default function TermsOfService() {
                 you share a link with, and you may stop sharing at any time;
               </li>
               <li>
-                Veterinary pricing information gathered by PetParrk, which may
+                Veterinary pricing information gathered by Nehalyn, which may
                 include prices submitted by registered users. All pricing is
-                reviewed and verified by PetParrk before publication.
+                reviewed and verified by Nehalyn before publication.
               </li>
             </ul>
             <p className="legal-p">
-              PetParrk is not a veterinary clinic, medical practice, or licensed
+              Nehalyn is not a veterinary clinic, medical practice, or licensed
               healthcare provider. The Service is provided for informational and
               organizational purposes only.
             </p>
@@ -138,12 +138,12 @@ export default function TermsOfService() {
             <p className="legal-p">
               You are solely responsible for maintaining the confidentiality of
               your account credentials and for all activity that occurs under
-              your account. You agree to notify PetParrk immediately at{" "}
+              your account. You agree to notify Nehalyn immediately at{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">
                 {CONTACT_EMAIL}
               </a>{" "}
               if you suspect unauthorized access to or use of your account.
-              PetParrk shall not be liable for any loss or damage arising from
+              Nehalyn shall not be liable for any loss or damage arising from
               unauthorized use of your account credentials.
             </p>
           </div>
@@ -157,9 +157,9 @@ export default function TermsOfService() {
               THE SERVICE, INCLUDING THE AI-POWERED SYMPTOM TRIAGE TOOL, IS
               PROVIDED FOR INFORMATIONAL PURPOSES ONLY. THE SERVICE DOES NOT
               CONSTITUTE AND IS NOT A SUBSTITUTE FOR PROFESSIONAL VETERINARY
-              ADVICE, DIAGNOSIS, OR TREATMENT. PETPARRK DOES NOT PROVIDE MEDICAL
+              ADVICE, DIAGNOSIS, OR TREATMENT. NEHALYN DOES NOT PROVIDE MEDICAL
               ADVICE, AND NOTHING IN THE SERVICE CREATES A
-              VETERINARIAN-CLIENT-PATIENT RELATIONSHIP BETWEEN PETPARRK AND ANY
+              VETERINARIAN-CLIENT-PATIENT RELATIONSHIP BETWEEN NEHALYN AND ANY
               USER.
             </p>
             <p className="legal-caps">
@@ -184,8 +184,8 @@ export default function TermsOfService() {
             <h2 className="legal-h2">6. Pricing Data and Accuracy</h2>
             <p className="legal-p">
               Pricing information displayed on the Service is gathered by
-              PetParrk and may include prices submitted by registered users.
-              Every price is reviewed and verified by PetParrk before it is
+              Nehalyn and may include prices submitted by registered users.
+              Every price is reviewed and verified by Nehalyn before it is
               published, and each is dated and tied to a specific service at a
               specific clinic. Verification confirms a price as of the date
               shown; it is not a guarantee that the price remains current.
@@ -193,7 +193,7 @@ export default function TermsOfService() {
             <p className="legal-p">
               Displayed prices are estimates only. Actual prices charged by
               veterinary clinics may differ materially from information shown on
-              the Service. PetParrk makes no warranty or representation
+              the Service. Nehalyn makes no warranty or representation
               regarding the accuracy, completeness, or timeliness of any pricing
               information.
             </p>
@@ -216,12 +216,12 @@ export default function TermsOfService() {
             <h3 className="legal-h3">7.1 License Grant</h3>
             <p className="legal-p">
               By submitting pricing data, reviews, or other content to the
-              Service (&quot;User Content&quot;), you grant PetParrk a
+              Service (&quot;User Content&quot;), you grant Nehalyn a
               non-exclusive, worldwide, royalty-free license to use, display,
               reproduce, and distribute such User Content solely for the purpose
               of operating and improving the Service. Where you choose to
               publish User Content through a shareable link, you additionally
-              authorise PetParrk to display that content to anyone holding the
+              authorise Nehalyn to display that content to anyone holding the
               link, for as long as you keep sharing enabled. You retain
               ownership of your User Content.
             </p>
@@ -238,7 +238,7 @@ export default function TermsOfService() {
             <p className="legal-p">
               We encourage you to also redact your name, address, and other
               personal identifying details before uploading a document. Where
-              such information remains, PetParrk does not extract it, publish
+              such information remains, Nehalyn does not extract it, publish
               it, or associate it with the pricing data displayed to other
               users. Uploaded documents are used only for internal verification
               and are retained for a limited period as described in our{" "}
@@ -265,7 +265,7 @@ export default function TermsOfService() {
             <p className="legal-p">
               You may not submit User Content that is false, misleading,
               defamatory, obscene, unlawful, or that violates the rights of any
-              third party. PetParrk reserves the right to remove any User
+              third party. Nehalyn reserves the right to remove any User
               Content that violates these Terms or that we determine, in our
               sole discretion, is otherwise inappropriate.
             </p>
@@ -278,10 +278,10 @@ export default function TermsOfService() {
             </p>
             <h3 className="legal-h3">7.6 Community Standards</h3>
             <p className="legal-p">
-              All User Content must comply with PetParrk's Code of Conduct,
+              All User Content must comply with Nehalyn's Code of Conduct,
               available at{" "}
               <a href="/code-of-conduct" className="legal-link">
-                petparrk.com/code-of-conduct
+                nehalyn.com/code-of-conduct
               </a>
               , which is incorporated by reference into these Terms. Violations
               of the Code of Conduct constitute violations of these Terms and
@@ -346,12 +346,12 @@ export default function TermsOfService() {
             <p className="legal-p">
               The Service and all content, features, and functionality thereof —
               including but not limited to software, text, graphics, logos, and
-              the selection and arrangement thereof — are owned by PetParrk or
+              the selection and arrangement thereof — are owned by Nehalyn or
               its licensors and are protected by applicable copyright,
               trademark, patent, and other intellectual property laws.
             </p>
             <p className="legal-p">
-              Subject to your compliance with these Terms, PetParrk grants you a
+              Subject to your compliance with these Terms, Nehalyn grants you a
               limited, non-exclusive, non-transferable, revocable license to
               access and use the Service for your personal, non-commercial
               purposes. You may not copy, modify, distribute, sell, or create
@@ -368,15 +368,15 @@ export default function TermsOfService() {
             <p className="legal-caps">
               THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT
               WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. TO THE FULLEST EXTENT
-              PERMITTED BY APPLICABLE LAW, PETPARRK EXPRESSLY DISCLAIMS ALL
+              PERMITTED BY APPLICABLE LAW, NEHALYN EXPRESSLY DISCLAIMS ALL
               WARRANTIES, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF
               MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND
               NON-INFRINGEMENT.
             </p>
             <p className="legal-caps">
-              PETPARRK DOES NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED,
+              NEHALYN DOES NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED,
               ERROR-FREE, SECURE, OR FREE OF VIRUSES OR OTHER HARMFUL
-              COMPONENTS. PETPARRK DOES NOT WARRANT THE ACCURACY, COMPLETENESS,
+              COMPONENTS. NEHALYN DOES NOT WARRANT THE ACCURACY, COMPLETENESS,
               OR RELIABILITY OF ANY CONTENT AVAILABLE THROUGH THE SERVICE,
               INCLUDING COMMUNITY-SUBMITTED PRICING DATA.
             </p>
@@ -389,19 +389,19 @@ export default function TermsOfService() {
             <h2 className="legal-h2">11. Limitation of Liability</h2>
             <p className="legal-caps">
               TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT
-              SHALL PETPARRK, ITS OFFICERS, DIRECTORS, EMPLOYEES, AFFILIATES,
+              SHALL NEHALYN, ITS OFFICERS, DIRECTORS, EMPLOYEES, AFFILIATES,
               AGENTS, OR LICENSORS BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
               SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, INCLUDING
               BUT NOT LIMITED TO LOSS OF PROFITS, DATA, GOODWILL, OR OTHER
               INTANGIBLE LOSSES, ARISING OUT OF OR IN CONNECTION WITH YOUR
-              ACCESS TO OR USE OF THE SERVICE, EVEN IF PETPARRK HAS BEEN ADVISED
+              ACCESS TO OR USE OF THE SERVICE, EVEN IF NEHALYN HAS BEEN ADVISED
               OF THE POSSIBILITY OF SUCH DAMAGES.
             </p>
             <p className="legal-caps">
-              PETPARRK'S TOTAL CUMULATIVE LIABILITY TO YOU FOR ALL CLAIMS
+              NEHALYN'S TOTAL CUMULATIVE LIABILITY TO YOU FOR ALL CLAIMS
               ARISING OUT OF OR RELATING TO THESE TERMS OR THE SERVICE SHALL NOT
               EXCEED THE GREATER OF (A) ONE HUNDRED DOLLARS ($100.00) OR (B) THE
-              TOTAL AMOUNT PAID BY YOU TO PETPARRK IN THE TWELVE (12) MONTHS
+              TOTAL AMOUNT PAID BY YOU TO NEHALYN IN THE TWELVE (12) MONTHS
               PRECEDING THE CLAIM.
             </p>
           </div>
@@ -412,7 +412,7 @@ export default function TermsOfService() {
           <div className="legal-section">
             <h2 className="legal-h2">12. Indemnification</h2>
             <p className="legal-p">
-              You agree to indemnify, defend, and hold harmless PetParrk and its
+              You agree to indemnify, defend, and hold harmless Nehalyn and its
               officers, directors, employees, affiliates, agents, and licensors
               from and against any and all claims, liabilities, damages, losses,
               costs, and expenses (including reasonable attorneys' fees) arising
@@ -429,7 +429,7 @@ export default function TermsOfService() {
           <div className="legal-section">
             <h2 className="legal-h2">13. Termination</h2>
             <p className="legal-p">
-              PetParrk reserves the right to suspend or terminate your access to
+              Nehalyn reserves the right to suspend or terminate your access to
               the Service, with or without notice, for any reason, including but
               not limited to your violation of these Terms. Upon termination,
               your right to use the Service will immediately cease.
@@ -453,7 +453,7 @@ export default function TermsOfService() {
             <h3 className="legal-h3">14.1 Informal Resolution</h3>
             <p className="legal-p">
               Before initiating any formal dispute resolution proceeding, you
-              agree to contact PetParrk at{" "}
+              agree to contact Nehalyn at{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">
                 {CONTACT_EMAIL}
               </a>{" "}
@@ -474,10 +474,10 @@ export default function TermsOfService() {
             </p>
             <h3 className="legal-h3">14.3 Class Action Waiver</h3>
             <p className="legal-caps">
-              YOU AND PETPARRK AGREE THAT EACH MAY BRING CLAIMS AGAINST THE
+              YOU AND NEHALYN AGREE THAT EACH MAY BRING CLAIMS AGAINST THE
               OTHER ONLY IN YOUR OR ITS INDIVIDUAL CAPACITY AND NOT AS A
               PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE
-              PROCEEDING. UNLESS BOTH YOU AND PETPARRK AGREE OTHERWISE, THE
+              PROCEEDING. UNLESS BOTH YOU AND NEHALYN AGREE OTHERWISE, THE
               ARBITRATOR MAY NOT CONSOLIDATE MORE THAN ONE PERSON'S CLAIMS.
             </p>
             <h3 className="legal-h3">14.4 Exceptions</h3>
@@ -513,7 +513,7 @@ export default function TermsOfService() {
             <p className="legal-p">
               These Terms, together with the Privacy Policy and any other
               agreements expressly incorporated by reference herein, constitute
-              the entire agreement between you and PetParrk with respect to the
+              the entire agreement between you and Nehalyn with respect to the
               Service and supersede all prior or contemporaneous agreements,
               representations, and understandings.
             </p>
@@ -525,18 +525,18 @@ export default function TermsOfService() {
             </p>
             <h3 className="legal-h3">16.3 Waiver</h3>
             <p className="legal-p">
-              PetParrk's failure to enforce any right or provision of these
+              Nehalyn's failure to enforce any right or provision of these
               Terms shall not constitute a waiver of such right or provision.
             </p>
             <h3 className="legal-h3">16.4 Assignment</h3>
             <p className="legal-p">
               You may not assign or transfer these Terms or any of your rights
-              or obligations hereunder without PetParrk's prior written consent.
-              PetParrk may assign these Terms without restriction.
+              or obligations hereunder without Nehalyn's prior written consent.
+              Nehalyn may assign these Terms without restriction.
             </p>
             <h3 className="legal-h3">16.5 Modifications</h3>
             <p className="legal-p">
-              PetParrk reserves the right to modify these Terms at any time. We
+              Nehalyn reserves the right to modify these Terms at any time. We
               will provide notice of material changes by updating the effective
               date and, where appropriate, through additional notice via the
               Service or by email. Your continued use of the Service following
@@ -545,7 +545,7 @@ export default function TermsOfService() {
             </p>
             <h3 className="legal-h3">16.6 Force Majeure</h3>
             <p className="legal-p">
-              PetParrk shall not be liable for any failure or delay in
+              Nehalyn shall not be liable for any failure or delay in
               performance resulting from causes beyond its reasonable control,
               including acts of God, natural disasters, pandemic, governmental
               action, war, or failures of third-party infrastructure.
@@ -561,7 +561,7 @@ export default function TermsOfService() {
               Questions regarding these Terms should be directed to:
             </p>
             <p className="legal-p">
-              <strong>PetParrk, LLC</strong>
+              <strong>Nehalyn, LLC</strong>
               <br />
               Email:{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">

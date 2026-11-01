@@ -84,9 +84,23 @@ const callout = defineType({
   description: "A soft highlighted box for a tip or heads-up.",
   fields: [
     defineField({ name: "title", title: "Title", type: "string" }),
-    defineField({ name: "text", title: "Text", type: "text", rows: 3, validation: (r) => r.required() }),
+    defineField({ name: "text", title: "Text", type: "text", rows: 3, description: "Press Enter to start a new line.", validation: (r) => r.required() }),
   ],
   preview: { select: { title: "title", text: "text" }, prepare: ({ title, text }) => ({ title: `Callout: ${title || ""}`, subtitle: text }) },
+});
+
+const photo = defineType({
+  name: "photo",
+  title: "Photo",
+  type: "image",
+  description: "A photo inside the article. Only use photos you're allowed to use (your own, or free ones like Unsplash or Pexels).",
+  options: { hotspot: true },
+  fields: [
+    defineField({ name: "alt", title: "What's in the photo", type: "string", description: "Describe it for people who can't see it, e.g. \"Dry foxtail grass along a trail\".", validation: (r) => r.required() }),
+    defineField({ name: "caption", title: "Caption (optional)", type: "string" }),
+    defineField({ name: "credit", title: "Photo credit (optional)", type: "string", description: 'e.g. "Photo: Jane Doe / Unsplash". Required by some free photo licenses.' }),
+  ],
+  preview: { select: { title: "alt", media: "asset" }, prepare: ({ title, media }) => ({ title: `Photo: ${title || ""}`, media }) },
 });
 
 const faq = defineType({
@@ -124,7 +138,7 @@ const author = defineType({
   type: "document",
   fields: [
     defineField({ name: "name", title: "Name shown on articles", type: "string", validation: (r) => r.required() }),
-    defineField({ name: "role", title: "Title", type: "string", description: 'e.g. "Founder, PetParrk" or "Contributor, PetParrk"' }),
+    defineField({ name: "role", title: "Title", type: "string", description: 'e.g. "Founder, Nehalyn" or "Contributor, Nehalyn"' }),
     defineField({
       name: "bio",
       title: "Short bio (optional)",
@@ -258,6 +272,7 @@ const post = defineType({
         defineArrayMember({ type: "priceRange" }),
         defineArrayMember({ type: "priceTable" }),
         defineArrayMember({ type: "callout" }),
+        defineArrayMember({ type: "photo" }),
         defineArrayMember({ type: "faq" }),
       ],
     }),
@@ -344,4 +359,4 @@ const blogSettings = defineType({
   preview: { prepare: () => ({ title: "Blog settings" }) },
 });
 
-export const schemaTypes = [post, author, category, blogSettings, priceRange, priceTable, callout, faq];
+export const schemaTypes = [post, author, category, blogSettings, priceRange, priceTable, callout, photo, faq];

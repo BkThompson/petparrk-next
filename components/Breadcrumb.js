@@ -113,7 +113,6 @@ export default function Breadcrumb({ items }) {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          // max-width: 40vw;
         }
         .bc-sep {
           color: var(--color-muted);
@@ -123,7 +122,6 @@ export default function Breadcrumb({ items }) {
         @media (max-width: 480px) {
           .bc-list { font-size: 13px; }
           .bc-plain, .bc-current { 
-            // max-width: 32vw; 
           }
         }
       `}</style>

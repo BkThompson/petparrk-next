@@ -502,7 +502,6 @@ export default function HealthHistoryPage() {
         .hh-sub, .hh-empty-msg, 
         .hh-detail-body, 
         .hh-copilot p { 
-          // max-width: 68ch; 
         }
         .hh-topbar { padding: 32px 0 0px; }
         .hh-topbar .bc-nav { margin-bottom: 20px; }
@@ -608,18 +607,24 @@ export default function HealthHistoryPage() {
           gap: 6px;
           padding-top: 6px;
         }
+        /* No fixed height. A condition like "Gastrointestinal upset or mild
+           obstruction" cannot fit one line on a phone, and with height:31px
+           the second line rendered outside the pill. Padding + line-height
+           size the pill instead, so it grows to whatever it holds and short
+           ones still come out 31px tall. */
         .hh-diff {
           display: inline-flex;
           align-items: center;
-          padding: 3px 12px;
-          border-radius: 999px;
+          max-width: 100%;
+          padding: 4px 12px;
+          border-radius: 16px;
           background: ${C.cream};
           border: var(--pill-border-w, 2px) solid ${C.border};
           font-size: 14px;
           font-weight: 600;
           color: ${C.slate};
-          line-height: initial;
-          height: 31px;
+          line-height: 1.35;
+          overflow-wrap: anywhere;
         }
 
         /* Always top-aligned, at every width — it points at the row it opens,

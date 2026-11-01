@@ -172,7 +172,6 @@ export default function SavedVets() {
         .sv-meta-link { 
           display: inline-flex; 
           align-items: center; 
-          // min-height: 44px; 
           font-size: 15px; 
           font-weight: 500; 
           color: ${C.terracotta700}; 

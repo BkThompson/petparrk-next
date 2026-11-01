@@ -102,7 +102,7 @@ const STEPS = [
     title: "Find a Vet",
     href: "/vets",
     description:
-      "Search verified vets in your neighborhood. Filter by price, specialty, or availability. See what people actually paid before you pick up the phone.",
+      "Search verified vets in your neighborhood. Filter by price, specialty, or availability. See what these visits actually cost before you pick up the phone.",
   },
   {
     number: "02",
@@ -124,19 +124,24 @@ const STEPS = [
 
 const FAQS = [
   {
-    q: "Is PetParrk free to use?",
-    a: "Yes — PetParrk is free. You can browse the whole vet directory and try the symptom checker without an account. A free account unlocks submitted prices, unlimited symptom checks, and lets you save vets and build your pet's health history.",
+    q: "Is Nehalyn free to use?",
+    a: "Yes — Nehalyn is free. You can browse the whole vet directory and try the symptom checker without an account. A free account unlocks submitted prices, unlimited symptom checks, and lets you save vets and build your pet's health history.",
   },
   {
     q: "Where does the pricing data come from?",
-    a: "Every price on PetParrk is gathered and verified by our team before it goes live. Each one is checked, dated, and tied to a specific service at a specific clinic. We never show unverified data.",
+    a: "Every price is verified and tied to a named service at a named clinic. If we can't verify it, we don't publish it.",
   },
   {
     q: "Is the symptom checker a replacement for a vet?",
-    a: "No — PetParrk provides triage guidance only. We help you understand urgency and next steps. We never diagnose or replace professional veterinary care.",
+    // "We never diagnose" on its own sat badly next to the "Could be:" panel,
+    // which names candidate conditions. The distinction is real — a list of
+    // possibilities to raise with a vet is not a determination — but nothing
+    // here said so, which left a reader to decide for themselves whether the
+    // claim and the screen agreed. This draws the line explicitly.
+    a: "No. Nehalyn provides triage guidance only — we help you understand how urgent it is and what to do next. We don't diagnose; we tell you what it could be, based on what you've described, so you know what to ask about. Only a licensed veterinarian can examine your pet and say what it actually is.",
   },
   {
-    q: "What areas does PetParrk cover?",
+    q: "What areas does Nehalyn cover?",
     a: "We list verified vets across California.",
   },
 ];
@@ -463,7 +468,7 @@ export default function HowItWorksPage() {
           style={{ position: "relative", zIndex: 1 }}
         >
           {/* Gives the step cards (h3) a parent heading for screen readers. */}
-          <h2 className="sr-only">What you can do with PetParrk</h2>
+          <h2 className="sr-only">What you can do with Nehalyn</h2>
           <div ref={stepsRef} className="sg">
             {STEPS.map((step, i) => (
               <div
@@ -599,7 +604,7 @@ export default function HowItWorksPage() {
                   maxWidth: "90%",
                 }}
               >
-                Everything you need to know about how PetParrk works.
+                Everything you need to know about how Nehalyn works.
               </p>
               <Link
                 href="/contact"

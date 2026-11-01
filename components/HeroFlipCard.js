@@ -10,6 +10,7 @@
 import { toPng } from "html-to-image";
 import { HERO_RARITY_TIERS as RARITY_TIERS } from "../lib/palettes";
 import { HEX, rgbaHex } from "../lib/tokens";
+import { ARROW_VIEWBOX, ARROW_ASPECT, ARROW_PATHS } from "./Logo";
 import { HERO_FLIP_CARD_COLORS } from "../lib/palettes";
 
 // ── shared constants (match the real card) ─────────────────────────────────
@@ -111,43 +112,30 @@ function buildFooter(theme) {
     zIndex: "2",
   });
   const made = el("span", null, "Made on ");
-  made.appendChild(el("b", { color: footerInk }, "PetParrk"));
-  // Paw as an inline SVG so it takes the SAME color as "PetParrk" (an emoji
-  // can't be recolored). This is the EXACT lucide "PawPrint" icon (stroke-based,
-  // 3 toe circles + pad) so it matches the hero card's <PawPrint> component.
+  made.appendChild(el("b", { color: footerInk }, "Nehalyn"));
+  // The brand mark as an inline SVG so it takes the SAME colour as "Nehalyn"
+  // (an emoji can't be recoloured). Built by hand rather than rendered as the
+  // <BrandMark> component because html-to-image rasterizes this subtree, and
+  // it needs real attributes on real nodes. The artwork itself is shared with
+  // components/Logo.js so the two can't drift apart.
   made.appendChild(document.createTextNode(" "));
-  const pawNS = "http://www.w3.org/2000/svg";
-  const paw = document.createElementNS(pawNS, "svg");
-  paw.setAttribute("width", "13");
-  paw.setAttribute("height", "13");
-  paw.setAttribute("viewBox", "0 0 24 24");
-  paw.setAttribute("fill", "none");
-  paw.setAttribute("stroke", footerInk);
-  paw.setAttribute("stroke-width", "2.5");
-  paw.setAttribute("stroke-linecap", "round");
-  paw.setAttribute("stroke-linejoin", "round");
-  paw.style.verticalAlign = "middle";
-  paw.style.display = "inline-block";
-  // 3 toe circles
-  [
-    ["11", "4"],
-    ["18", "8"],
-    ["20", "16"],
-  ].forEach(([cx, cy]) => {
-    const c = document.createElementNS(pawNS, "circle");
-    c.setAttribute("cx", cx);
-    c.setAttribute("cy", cy);
-    c.setAttribute("r", "2");
-    paw.appendChild(c);
+  const MARK_H = 11;
+  const svgNS = "http://www.w3.org/2000/svg";
+  const mark = document.createElementNS(svgNS, "svg");
+  mark.setAttribute("width", String(Math.round(MARK_H * ARROW_ASPECT)));
+  mark.setAttribute("height", String(MARK_H));
+  mark.setAttribute("viewBox", ARROW_VIEWBOX);
+  mark.setAttribute("fill", footerInk);
+  mark.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  mark.style.verticalAlign = "middle";
+  mark.style.display = "inline-block";
+  ARROW_PATHS.forEach((d) => {
+    const p = document.createElementNS(svgNS, "path");
+    p.setAttribute("fill", footerInk);
+    p.setAttribute("d", d);
+    mark.appendChild(p);
   });
-  // pad
-  const pad = document.createElementNS(pawNS, "path");
-  pad.setAttribute(
-    "d",
-    "M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z",
-  );
-  paw.appendChild(pad);
-  made.appendChild(paw);
+  made.appendChild(mark);
   footer.appendChild(made);
   return footer;
 }
@@ -951,7 +939,7 @@ function deriveTheme(data) {
   const bgText = bgIsDark ? HEX.white : HEX.navyDark; // --t-bg-text
   const bgMuted = bgIsDark ? rgbaHex("white", 0.72) : rgbaHex("navyDark", 0.62); // --t-bg-muted
   // Intro / framing color override — mirrors HeroCardView. Colors "Meet X", the
-  // subtitle, and the "Made on PetParrk" brand. Empty/unset = AUTO.
+  // subtitle, and the "Made on Nehalyn" brand. Empty/unset = AUTO.
   const introOverride =
     data.hero_intro_color && String(data.hero_intro_color).trim()
       ? data.hero_intro_color
@@ -965,7 +953,7 @@ function deriveTheme(data) {
   const introSub = introOverride
     ? `rgba(${tcToRgb(introOverride).join(",")},0.75)`
     : bgMuted;
-  // Footer "Made on PetParrk" tint: follows the intro override (contrast-fitted
+  // Footer "Made on Nehalyn" tint: follows the intro override (contrast-fitted
   // to the card), else the default accent-on-card.
   // Footer accent has its own color (hero_footer_color), else intro, else accent.
   const footerOverride =
@@ -1073,7 +1061,7 @@ function deriveTheme(data) {
     introName,
     introSub,
     introFooter,
-    // Adaptive shadow for the "Make your own on PetParrk" brand text on the page
+    // Adaptive shadow for the "Make your own on Nehalyn" brand text on the page
     // background: a DARK shadow when the bg is light (so light text/edges read),
     // a LIGHT shadow when the bg is dark. Gives separation without a scrim/pill.
     brandShadow: bgIsDark

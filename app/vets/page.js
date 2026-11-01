@@ -126,7 +126,7 @@ if (
   document.head.appendChild(l);
 }
 
-// Decorative pins, not vet locations. They sketch the areas PetParrk covers
+// Decorative pins, not vet locations. They sketch the areas Nehalyn covers
 // while the map settles; nothing here comes from the database, and no pin
 // corresponds to a real clinic. Delays run to roughly 11.6s, so a new pin
 // should take an existing slot rather than being appended, or the sequence
@@ -889,7 +889,6 @@ function VetsContent() {
           .filters-row{flex-direction:column!important;align-items:stretch!important;gap:10px!important}
           .filters-row-2{margin-top:0!important}
           .fbar-item{flex:none!important;width:100%!important;max-width:none!important;box-sizing:border-box}
-          .fbar-item[aria-hidden="true"]{display:none!important}
         }
         @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
         .skeleton{background:linear-gradient(90deg,var(--color-border) 25%,var(--color-border-strong) 50%,var(--color-border) 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:18px}
@@ -1128,9 +1127,15 @@ function VetsContent() {
                   {/* Price dropdown — account only. With no prices in
                       state, a guest picking "Under $75" gets zero vets and
                       picking "No Pricing Available" gets every vet. Both are
-                      wrong, so the filter isn't offered. The spacer keeps the
-                      four-across filter row from reflowing — same trick the
-                      Type dropdown already uses below. */}
+                      wrong, so the filter isn't offered.
+
+                      Nothing stands in for it. This slot used to hold an empty
+                      spacer to keep four equal columns, but a signed-out
+                      visitor just saw a hole between Availability and
+                      Ownership and read it as a control that failed to load.
+                      Every item here is flex:1, so dropping the slot lets the
+                      filters that ARE offered share the row evenly. Same for
+                      Type below. */}
                   {session ? (
                     <FilterDropdown
                       prefix="Price:"
@@ -1151,9 +1156,7 @@ function VetsContent() {
                       onChange={(v) => setPriceRange(v)}
                       active={priceRange !== "all"}
                     />
-                  ) : (
-                    <div className="fbar-item" aria-hidden="true" />
-                  )}
+                  ) : null}
 
                   {/* Ownership dropdown */}
                   <FilterDropdown
@@ -1177,9 +1180,7 @@ function VetsContent() {
                       onChange={(v) => setVetTypeFilter(v)}
                       active={vetTypeFilter !== "All"}
                     />
-                  ) : (
-                    <div className="fbar-item" aria-hidden="true" />
-                  )}
+                  ) : null}
                 </div>
                 {activeFilterCount > 0 && (
                   <div

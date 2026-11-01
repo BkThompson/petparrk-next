@@ -95,7 +95,6 @@ import {
 import { C } from "../lib/tokens";
 import { onActivate } from "../lib/a11y";
 
-
 const SESSION_KEY = "petparrk_symptom_session";
 
 // Map a triage result code to an emoji + label (mirrors symptom checker).
@@ -345,7 +344,7 @@ export default function HomeDashboard({ session, savedVets = [] }) {
         .hd-pet-photo-ph { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; }
         .hd-pet-info { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .hd-pet-name { font-size: 20px; font-weight: 700; color: ${C.navyDark}; margin: 0; line-height: 1.15; }
-        .hd-pet-breed { font-size: 16px; font-weight: 500; color: ${C.muted}; margin: 0; line-height: 1.2; }
+        .hd-pet-breed { font-size: 16px; font-weight: 600; color: ${C.muted}; margin: 0; line-height: 1.2; }
         .hd-pet-check { display: flex; flex-direction: column; gap: 2px; margin: 0; }
         .hd-check-label { font-size: 13px; font-weight: 700; color: ${C.muted}; text-transform: uppercase; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin-top: 5px; }
         .hd-check-none { font-size: 16px; color: ${C.muted}; font-weight: 500; }
@@ -541,7 +540,12 @@ export default function HomeDashboard({ session, savedVets = [] }) {
                         {td ? (
                           <div className="hd-pet-check">
                             <span className="hd-check-label">Last check:</span>
-                            <span role="button" tabIndex={0} onKeyDown={onActivate(() => resumeCheck(pet, chk))}
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={onActivate(() =>
+                                resumeCheck(pet, chk),
+                              )}
                               className="hd-pet-check-link"
                               onClick={() => resumeCheck(pet, chk)}
                             >
@@ -608,7 +612,7 @@ export default function HomeDashboard({ session, savedVets = [] }) {
                       className="hd-saved-chev"
                       aria-label={`View ${v.name}`}
                     >
-                      <ChevronRight size={18} strokeWidth={2} />
+                      <ChevronRight size={24} strokeWidth={2} />
                     </Link>
                   </div>
                 );

@@ -169,7 +169,7 @@ export default function ProfileEditForm({
               }}
             >
               <AlertTriangle
-                size={18}
+                size={24}
                 strokeWidth={2.2}
                 style={{ color: C.warningText, flexShrink: 0, marginTop: "1px" }}
               />
@@ -209,7 +209,7 @@ export default function ProfileEditForm({
                 >
                   Your new URL will be:{" "}
                   <span style={{ fontWeight: 700, wordBreak: "break-all" }}>
-                    petparrk.com/profile/{profileForm.username}
+                    nehalyn.com/profile/{profileForm.username}
                   </span>
                   .
                 </p>
@@ -224,7 +224,7 @@ export default function ProfileEditForm({
                 color: C.muted,
               }}
             >
-              Your profile lives at petparrk.com/profile/
+              Your profile lives at nehalyn.com/profile/
               {profileForm.username || "username"}
             </p>
           )}

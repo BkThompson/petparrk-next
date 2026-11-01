@@ -1225,7 +1225,7 @@ export default function SymptomCheckerChatPage() {
     };
     const greetMsg = {
       role: "assistant",
-      content: `Hi! I'm here to help check on ${petName || "your pet"}. 🐾\n\nBefore we start, please know that I provide triage guidance only — I'm not a veterinarian or medical professional, and this is not a substitute for professional veterinary care.\n\nNow, tell me — what's going on with ${petName || "your pet"} today? Describe what you're seeing and I'll ask a few follow-up questions.`,
+      content: `Hi! I'm here to help check on ${petName || "your pet"}. 🐾\n\nBefore we start, please know that I'm an AI assistant, not a veterinarian or medical professional. I provide triage guidance only, it may be incomplete or wrong, and it's not a substitute for professional veterinary care.\n\nNow, tell me — what's going on with ${petName || "your pet"} today? Describe what you're seeing and I'll ask a few follow-up questions.`,
     };
     setMessages([greetMsg, firstMsg, { role: "assistant", content: "" }]);
     setLoading(true);
@@ -2233,7 +2233,7 @@ export default function SymptomCheckerChatPage() {
                         className={`triage-chevron ${visitPrepExpanded ? "open" : ""}`}
                         style={{ marginLeft: "auto" }}
                       >
-                        <ChevronDown size={18} strokeWidth={2.4} />
+                        <ChevronDown size={24} strokeWidth={2.4} />
                       </span>
                     </button>
                   )}
@@ -2812,10 +2812,12 @@ export default function SymptomCheckerChatPage() {
                 >
                   ⚕️
                 </span>
-                PetParrk provides triage guidance only. We are not veterinarians
+                Nehalyn provides triage guidance only. We are not veterinarians
                 or medical professionals.
                 <br />
-                This is not a substitute for professional veterinary care.
+                This is AI-generated and may be incomplete or wrong — check
+                anything important with a vet. It is not a substitute for
+                professional veterinary care.
               </p>
             </div>
           </div>
@@ -3305,7 +3307,7 @@ export default function SymptomCheckerChatPage() {
                 just quietly worked. */}
             {savedPetName && !showSavePet && (
               <p className="save-pet-done">
-                <CircleCheck size={18} strokeWidth={2.4} aria-hidden="true" />
+                <CircleCheck size={24} strokeWidth={2.4} aria-hidden="true" />
                 Saved to {savedPetName}'s health history.
               </p>
             )}
@@ -3472,10 +3474,12 @@ export default function SymptomCheckerChatPage() {
               >
                 ⚕️
               </span> */}
-              ⚕️ PetParrk provides triage guidance only. We are not
+              ⚕️ Nehalyn provides triage guidance only. We are not
               veterinarians or medical professionals.
               <br />
-              This is not a substitute for professional veterinary care.
+              This is AI-generated and may be incomplete or wrong — check
+              anything important with a vet. It is not a substitute for
+              professional veterinary care.
             </p>
           </div>
         </div>

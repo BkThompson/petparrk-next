@@ -5,7 +5,7 @@
 
    Identity-only by design: name, species, breed, sex, birthday, weight.
    Medical, Owner Contact, and Vet fields live in the full Pet Editor
-   (/pet-card/[slug]); this form links out to it rather than duplicating it.
+   (/pet-card/[slug]/care-edit); this form links out rather than duplicating it.
 
    Shared by:
      • app/profile/page.js            (ProfileMain)
@@ -15,7 +15,7 @@
    medical/vet/owner sections and saved them straight to the pets table.
    ════════════════════════════════════════════════════════════════════════ */
 
-import { Camera, Check, PawPrint, X } from "lucide-react";
+import { ArrowRight, Camera, Check, PawPrint, X } from "lucide-react";
 import { convertDisplayUnit, formatAge } from "../lib/petTileHelpers";
 
 export default function PetFormCard({
@@ -278,7 +278,8 @@ export default function PetFormCard({
               *
             </span>
           </label>
-          <input aria-label="Name"
+          <input
+            aria-label="Name"
             className="input"
             value={petForm.name}
             onChange={(e) => setPetForm({ ...petForm, name: e.target.value })}
@@ -297,7 +298,8 @@ export default function PetFormCard({
               *
             </span>
           </label>
-          <select aria-label="Species"
+          <select
+            aria-label="Species"
             className="input"
             value={petForm.species}
             onChange={(e) =>
@@ -318,7 +320,8 @@ export default function PetFormCard({
           </select>
           {petForm.species === "Other" && (
             <div style={{ marginTop: "10px", marginBottom: "4px" }}>
-              <input aria-label="Specify species"
+              <input
+                aria-label="Specify species"
                 className="input"
                 value={petForm.species_other || ""}
                 onChange={(e) =>
@@ -335,7 +338,8 @@ export default function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Breed</label>
-          <input aria-label="Breed"
+          <input
+            aria-label="Breed"
             className="input"
             value={petForm.breed}
             onChange={(e) => setPetForm({ ...petForm, breed: e.target.value })}
@@ -344,7 +348,8 @@ export default function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Sex</label>
-          <select aria-label="Sex"
+          <select
+            aria-label="Sex"
             className="input"
             value={petForm.sex || ""}
             onChange={(e) => setPetForm({ ...petForm, sex: e.target.value })}
@@ -357,7 +362,8 @@ export default function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Birthday</label>
-          <input aria-label="Birthday"
+          <input
+            aria-label="Birthday"
             className="input"
             type="date"
             value={petForm.birthday}
@@ -372,7 +378,8 @@ export default function PetFormCard({
         <div className="field">
           <label className="label">Weight</label>
           <div className="pp-weight-row">
-            <input aria-label="Weight"
+            <input
+              aria-label="Weight"
               className="input pp-weight-input"
               type="number"
               inputMode="decimal"
@@ -441,7 +448,7 @@ export default function PetFormCard({
           background: C.cream,
           borderRadius: "10px",
           fontSize: "14px",
-          fontWeight: "500",
+          fontWeight: "600",
           color: C.muted,
         }}
       >
@@ -459,12 +466,21 @@ export default function PetFormCard({
           </>
         )}
       </p>
+      {/* /pet-card/<slug> is not a route — the card lives at /care and the
+          editor at /care-edit, which is what this link's label means and what
+          the profile page's own pet links already use. */}
       {isEdit && editingPet?.slug && (
-        <a href={`/pet-card/${editingPet.slug}`} className="pp-edit-full-link">
+        <a
+          href={`/pet-card/${editingPet.slug}/care-edit`}
+          className="pp-edit-full-link"
+        >
           Open Pet Editor
-          <span aria-hidden="true" style={{ marginLeft: "6px" }}>
-            →
-          </span>
+          <ArrowRight
+            size={16}
+            strokeWidth={2.5}
+            aria-hidden="true"
+            style={{ marginLeft: "6px" }}
+          />
         </a>
       )}
 

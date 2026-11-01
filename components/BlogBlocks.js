@@ -121,7 +121,8 @@ export const BLOG_CSS = `
     box-shadow: var(--shadow-xl); transition: transform 0.2s ease, box-shadow 0.2s ease; }
   @media (hover: hover) { .bl-feature:hover { transform: translateY(-3px); box-shadow: var(--shadow-xl); } }
   .bl-feature:focus-visible, .bl-card:focus-visible { outline: var(--focus-outline); outline-offset: 4px; }
-  .bl-feature .b-cover { min-height: 340px; padding: 36px; }
+  /* The big card's text is centered, so its price sits centered too (small cards stay bottom-aligned). */
+  .bl-feature .b-cover { min-height: 340px; padding: 36px; justify-content: center; }
   .bl-feature .b-cover-price { font-size: clamp(40px, 5vw, 60px); }
   .bl-feature-body { padding: 40px 40px 36px; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
   .bl-feature-kicker { display: flex; align-items: center; gap: 10px; }
@@ -237,6 +238,9 @@ export const BLOG_CSS = `
   .ba-glance-grid dd { margin: 0; font-size: clamp(24px, 2.8vw, 32px); font-weight: 800; color: var(--color-navy-dark); letter-spacing: -0.03em; line-height: 1.1; }
   .ba-glance-grid div { display: flex; flex-direction: column; }
   .ba-glance-grid div:first-child dd { color: var(--color-terracotta); }
+  .ba-glance-grid dd a { color: inherit; text-decoration: none; transition: color .15s; }
+  @media (hover: hover) { .ba-glance-grid dd a:hover { color: var(--color-terracotta-700); } }
+  .ba-glance-grid dd a:focus-visible { outline: var(--focus-outline); outline-offset: 3px; border-radius: 4px; }
   .ba-glance-note { font-size: 14px; font-weight: 500; color: var(--color-slate); margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--color-border); }
 
   /* Layout: article + "On this page" */
@@ -284,6 +288,17 @@ export const BLOG_CSS = `
   .ba-table td { padding: 14px 20px; border-bottom: 1px solid var(--color-border); font-weight: 500; line-height: 1.5; vertical-align: top; }
   .ba-table td:first-child { font-weight: 700; color: var(--color-navy-dark); }
   .ba-table tr:last-child td { border-bottom: 0; }
+
+  /* A "Sources" heading (h3) at the end of an article: the list under it is quieter. */
+  .ba-h3#sources { font-size: 16px; margin-top: 40px; }
+  .ba-h3#sources + .ba-ul li { font-size: 15px; line-height: 1.5; margin-bottom: 8px; padding-left: 22px; }
+  .ba-h3#sources + .ba-ul li::before { width: 6px; height: 6px; left: 4px; top: 0.6em; background: var(--color-navy-light); }
+  .ba-h3#sources + .ba-ul .ba-link { font-weight: 600; }
+
+  .ba-figure { margin: 32px 0 36px; }
+  .ba-figure img { display: block; width: 100%; height: auto; border-radius: 16px; background: var(--color-border); }
+  .ba-figure figcaption { margin-top: 10px; font-size: 14px; font-weight: 500; line-height: 1.5; color: var(--color-slate); }
+  .ba-figure-credit { color: var(--color-navy-light); }
 
   .ba-callout { margin: 28px 0; padding: 20px 24px; background: var(--color-caution-light); border: 1px solid rgb(var(--color-caution-rgb) / 0.4); border-radius: 16px; }
   .ba-callout-title { font-size: 16px; font-weight: 800; color: var(--color-navy-dark); margin: 0 0 6px; }
@@ -338,7 +353,8 @@ export const BLOG_CSS = `
     .ba-glance-grid { grid-template-columns: 1fr; }
     .ba-glance-grid div { flex-direction: row; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 0; border-left: 0; border-top: 1px solid var(--color-border); }
     .ba-glance-grid div:first-child { border-top: 0; padding-top: 0; }
-    .ba-glance-grid dd { font-size: 24px; }
+    /* nowrap keeps phone numbers like (888) 426-4435 on one line. */
+    .ba-glance-grid dd { font-size: 24px; white-space: nowrap; }
     .ba-glance-grid dt { order: 0; margin: 0; text-align: left; }
     .ba-p, .ba-ul li, .ba-ol li { font-size: 17px; }
     .ba-content > .ba-p:first-child { font-size: 18.5px; }
@@ -378,8 +394,14 @@ export function Inline({ text }) {
     } else {
       const href = m[3];
       const external = /^https?:\/\//.test(href);
+      // Phone numbers (tel:) and emails (mailto:) are plain links, same tab.
+      const direct = /^(tel|mailto):/.test(href);
       parts.push(
-        external ? (
+        direct ? (
+          <a key={k++} href={href} className="ba-link">
+            {m[2]}
+          </a>
+        ) : external ? (
           <a
             key={k++}
             href={href}
@@ -402,6 +424,17 @@ export function Inline({ text }) {
   return <>{parts}</>;
 }
 
+/** Like Inline, but a new line in the text starts a new line on the page. */
+function Lines({ text }) {
+  const lines = String(text || "").split("\n");
+  return lines.map((line, i) => (
+    <span key={i}>
+      {i > 0 && <br />}
+      <Inline text={line} />
+    </span>
+  ));
+}
+
 // Prices are right-skewed (most clinics cluster low, a few go very high), so
 // the bars use a log scale — otherwise the typical band gets crushed to one side.
 function pos(v, lo, hi) {
@@ -415,14 +448,32 @@ function pos(v, lo, hi) {
 export function PriceCover({ post }) {
   const c = post.cover;
   const t = toneFor(post.topic);
-  if (!c)
+  if (!c) {
+    // Articles without prices: show the first "At a glance" item instead.
+    const g = post.glance?.[0];
     return (
       <div
         className="b-cover"
-        style={{ background: t.bg }}
+        style={{ background: t.bg, color: t.fg }}
         aria-hidden="true"
-      />
+      >
+        {g && (
+          <>
+            <p className="b-cover-label" style={{ color: t.sub }}>
+              {g.label}
+            </p>
+            <p className="b-cover-price">{g.value}</p>
+            {/* Invisible stand-ins for the price bar, so the text sits at the
+                same height as the price cards next to it. */}
+            <div className="b-cover-track" style={{ visibility: "hidden" }} />
+            <div className="b-cover-ends" style={{ visibility: "hidden" }}>
+              <span>&nbsp;</span>
+            </div>
+          </>
+        )}
+      </div>
     );
+  }
   const left = pos(c.typicalLow, c.low, c.high);
   const right = pos(c.typicalHigh, c.low, c.high);
   return (
@@ -542,12 +593,12 @@ export function Pagination({ page, totalPages, category = null }) {
               className="bl-step"
               aria-label="Previous page"
             >
-              <ChevronLeft size={18} strokeWidth={2.4} aria-hidden="true" />
+              <ChevronLeft size={24} strokeWidth={2.4} aria-hidden="true" />
               <span className="bl-step-label">Previous</span>
             </Link>
           ) : (
             <span className="bl-step is-disabled" aria-disabled="true">
-              <ChevronLeft size={18} strokeWidth={2.4} aria-hidden="true" />
+              <ChevronLeft size={24} strokeWidth={2.4} aria-hidden="true" />
               <span className="bl-step-label">Previous</span>
             </span>
           )}
@@ -576,7 +627,7 @@ export function Pagination({ page, totalPages, category = null }) {
               aria-label="Next page"
             >
               <span className="bl-step-label">Next</span>
-              <ChevronRight size={18} strokeWidth={2.4} aria-hidden="true" />
+              <ChevronRight size={24} strokeWidth={2.4} aria-hidden="true" />
             </Link>
           ) : (
             <span
@@ -584,7 +635,7 @@ export function Pagination({ page, totalPages, category = null }) {
               aria-disabled="true"
             >
               <span className="bl-step-label">Next</span>
-              <ChevronRight size={18} strokeWidth={2.4} aria-hidden="true" />
+              <ChevronRight size={24} strokeWidth={2.4} aria-hidden="true" />
             </span>
           )}
         </li>
@@ -719,7 +770,7 @@ export function BlogBlocks({ blocks }) {
         );
       case "h3":
         return (
-          <h3 key={i} className="ba-h3">
+          <h3 key={i} id={slugify(b.text)} className="ba-h3">
             {b.text}
           </h3>
         );
@@ -771,7 +822,7 @@ export function BlogBlocks({ blocks }) {
           <div key={i} className="ba-callout" role="note">
             {b.title && <p className="ba-callout-title">{b.title}</p>}
             <p className="ba-p">
-              <Inline text={b.text} />
+              <Lines text={b.text} />
             </p>
           </div>
         );
@@ -787,6 +838,25 @@ export function BlogBlocks({ blocks }) {
               <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
             </Link>
           </div>
+        );
+      case "image":
+        return (
+          <figure key={i} className="ba-figure">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${b.url}?w=1360&fit=max&auto=format`}
+              alt={b.alt}
+              loading="lazy"
+              decoding="async"
+            />
+            {(b.caption || b.credit) && (
+              <figcaption>
+                {b.caption}
+                {b.caption && b.credit ? " · " : ""}
+                {b.credit && <span className="ba-figure-credit">{b.credit}</span>}
+              </figcaption>
+            )}
+          </figure>
         );
       case "faq":
         // Answers are rendered here on the server (bold/links work), then

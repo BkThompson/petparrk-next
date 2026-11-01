@@ -695,7 +695,6 @@ export default function SharePrivacyPage() {
         .pce-list-item {
           display: flex;
           align-items: flex-start;
-          // gap: 4px;
           padding: 20px;
           background: var(--color-white);
           border: 1px solid var(--color-border);
@@ -1197,7 +1196,6 @@ export default function SharePrivacyPage() {
           justify-content: space-between;
           gap: 16px;
           padding: 16px 20px;
-          // background: var(--color-cream);
           border: 1px solid var(--color-border);
           border-radius: 12px;
           margin-bottom: 20px;
@@ -1671,7 +1669,6 @@ export default function SharePrivacyPage() {
           font-size: 15px;
           font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
           color: var(--color-navy-dark);
-          // background: var(--color-cream);
           border: 1px solid var(--color-border-field);
           border-radius: 12px;
           outline: none;

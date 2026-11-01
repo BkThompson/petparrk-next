@@ -1,6 +1,6 @@
 import { BRAND_ART } from "../lib/palettes";
 // =============================================================
-// components/BrandArt.js — PetParrk brand illustrations.
+// components/BrandArt.js — Nehalyn brand illustrations.
 //
 // Style A (flat two-tone), per the Viewport & Imagery System.
 // Palette is locked to the four brand colours. No gradients,

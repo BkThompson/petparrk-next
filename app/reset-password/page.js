@@ -89,7 +89,7 @@ function ResetPasswordForm() {
       }}>
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
           <div style={{ fontSize: "36px", marginBottom: "4px" }}>🐾</div>
-          <h1 style={{ margin: 0, color: GREEN, fontSize: "1.6rem", fontWeight: "700" }}>PetParrk</h1>
+          <h1 style={{ margin: 0, color: GREEN, fontSize: "1.6rem", fontWeight: "700" }}>Nehalyn</h1>
           <p style={{ margin: "6px 0 0", color: "var(--color-muted)", fontSize: "14px" }}>Set your new password</p>
         </div>
 

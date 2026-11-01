@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback, Fragment } from "react";
-import { HERO_PALETTE, HERO_RARITY_TIERS, HERO_DEFAULTS, HERO_BG_SWATCHES as BG_SWATCHES, HERO_CARD_SWATCHES as CARD_SWATCHES, HERO_ACCENT_SWATCHES as ACCENT_SWATCHES } from "../../../../lib/palettes";
+import {
+  HERO_PALETTE,
+  HERO_RARITY_TIERS,
+  HERO_DEFAULTS,
+  HERO_BG_SWATCHES as BG_SWATCHES,
+  HERO_CARD_SWATCHES as CARD_SWATCHES,
+  HERO_ACCENT_SWATCHES as ACCENT_SWATCHES,
+} from "../../../../lib/palettes";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import {
@@ -67,10 +74,30 @@ const DEFAULT_THEME = "caramel";
 // RARITY TIERS — distinct, vivid, collectible (not brand palette)
 // =============================================================
 const RARITY_TIERS = [
-  { key: "common", label: "Beloved", color: HERO_RARITY_TIERS.common.color, desc: "Every good pet" },
-  { key: "uncommon", label: "Special", color: HERO_RARITY_TIERS.uncommon.color, desc: "A cut above" },
-  { key: "rare", label: "Rare", color: HERO_RARITY_TIERS.rare.color, desc: "Hard to find" },
-  { key: "epic", label: "Epic", color: HERO_RARITY_TIERS.epic.color, desc: "Truly special" },
+  {
+    key: "common",
+    label: "Beloved",
+    color: HERO_RARITY_TIERS.common.color,
+    desc: "Every good pet",
+  },
+  {
+    key: "uncommon",
+    label: "Special",
+    color: HERO_RARITY_TIERS.uncommon.color,
+    desc: "A cut above",
+  },
+  {
+    key: "rare",
+    label: "Rare",
+    color: HERO_RARITY_TIERS.rare.color,
+    desc: "Hard to find",
+  },
+  {
+    key: "epic",
+    label: "Epic",
+    color: HERO_RARITY_TIERS.epic.color,
+    desc: "Truly special",
+  },
   {
     key: "legendary",
     label: "Legendary",
@@ -1150,7 +1177,8 @@ function EmojiPicker({ value, onPick }) {
       </button>
       {open && (
         <div className="he-emoji-pop">
-          <input aria-label="Search emoji"
+          <input
+            aria-label="Search emoji"
             className="he-emoji-search"
             type="text"
             value={query}
@@ -1322,7 +1350,7 @@ function LightingPanel({
       >
         <span>Lighting &amp; effects</span>
         <ChevronDown
-          size={18}
+          size={24}
           strokeWidth={2.5}
           className={`he-light-chev${open ? " is-open" : ""}`}
         />
@@ -1431,14 +1459,14 @@ function HeroEditorView({ pet, slug }) {
     pet.hero_label_color || pet.hero_accent_color || DEFAULT_ACCENT,
   );
   // Intro / framing color — controls "Meet X", the subtitle, and the
-  // "Made on PetParrk" footer + paw icon as one coordinated accent. Empty
+  // "Made on Nehalyn" footer + paw icon as one coordinated accent. Empty
   // string = AUTO (smart default derived from the background). The owner can
   // override with a single color for true theming freedom.
   const [introColor, setIntroColor] = useState(pet.hero_intro_color || "");
   // "Meet {name}" heading color — its own control, separate from intro/footer.
   // Empty = AUTO (navy/white from background).
   const [nameColor, setNameColor] = useState(pet.hero_name_color || "");
-  // Footer accent color ("PetParrk" + paw) — its own control, decoupled from
+  // Footer accent color ("Nehalyn" + paw) — its own control, decoupled from
   // intro. Empty = follows intro/accent automatically.
   const [footerColor, setFooterColor] = useState(pet.hero_footer_color || "");
   // Option C: warn (don't block) when the chosen label color is hard to read on
@@ -2150,7 +2178,7 @@ function HeroEditorView({ pet, slug }) {
               className="he-btn he-btn-ghost he-btn-sm"
               onClick={handlePreview}
             >
-              <Eye size={16} /> Preview
+              Preview
             </button>
             <div className="he-pubtoggle-wrap">
               <span className="he-pubtoggle-label">
@@ -2238,7 +2266,8 @@ function HeroEditorView({ pet, slug }) {
           )}
           <Collapse open={openFormId === "hero-title"}>
             <div className="he-field">
-              <input aria-label="Hero title"
+              <input
+                aria-label="Hero title"
                 className="he-input"
                 type="text"
                 value={title}
@@ -2313,7 +2342,8 @@ function HeroEditorView({ pet, slug }) {
           )}
           <Collapse open={openFormId === "hero-description"}>
             <div className="he-field">
-              <textarea aria-label="Description"
+              <textarea
+                aria-label="Description"
                 className="he-input he-textarea"
                 rows={2}
                 value={description}
@@ -2408,7 +2438,9 @@ function HeroEditorView({ pet, slug }) {
                     <span
                       className="he-rarity-dot"
                       style={{
-                        background: active ? t.color : `color-mix(in srgb, ${t.color} 10.2%, transparent)`,
+                        background: active
+                          ? t.color
+                          : `color-mix(in srgb, ${t.color} 10.2%, transparent)`,
                       }}
                     >
                       {active ? (
@@ -2525,7 +2557,8 @@ function HeroEditorView({ pet, slug }) {
                           onPick={(em) => updateStat(i, { emoji: em })}
                         />
                         <div className="he-stat-field">
-                          <input aria-label="Stat name"
+                          <input
+                            aria-label="Stat name"
                             className="he-stat-label"
                             type="text"
                             value={s.label}
@@ -2562,7 +2595,8 @@ function HeroEditorView({ pet, slug }) {
                             </span>
                           </div>
                         </div>
-                        <input aria-label={`${s.label || "Stat"} (0 to 10)`}
+                        <input
+                          aria-label={`${s.label || "Stat"} (0 to 10)`}
                           className="he-stat-slider"
                           type="range"
                           min="0"
@@ -2972,7 +3006,7 @@ function HeroEditorView({ pet, slug }) {
               </p>
             </div>
 
-            {/* Intro / footer color — subtitle + "Made on PetParrk" footer. */}
+            {/* Intro / footer color — subtitle + "Made on Nehalyn" footer. */}
             <div className="he-pick-block">
               <p className="he-pick-label">Intro &amp; footer color</p>
               <div className="he-label-row">
@@ -3011,7 +3045,7 @@ function HeroEditorView({ pet, slug }) {
               </p>
             </div>
 
-            {/* Footer accent color — "PetParrk" + paw in "Made on PetParrk". */}
+            {/* Footer accent color — "Nehalyn" + paw in "Made on Nehalyn". */}
             <div className="he-pick-block">
               <p className="he-pick-label">Footer accent color</p>
               <div className="he-label-row">
@@ -3042,8 +3076,8 @@ function HeroEditorView({ pet, slug }) {
                 )}
               </div>
               <p className="he-photo-hint">
-                Colors <strong>&ldquo;PetParrk&rdquo;</strong> and the paw in
-                the footer.
+                Colors <strong>&ldquo;Nehalyn&rdquo;</strong> and the paw in the
+                footer.
                 <br />
                 <strong>&ldquo;Made on&rdquo; </strong>stays a soft neutral.
                 <br />
@@ -3127,7 +3161,8 @@ function HeroEditorView({ pet, slug }) {
               </p>
               <div className="he-photo-grid">
                 {heroPhotos.map((url, i) => (
-                  <div onKeyDown={onActivate(() => handleHeroPhotoSelect(i))}
+                  <div
+                    onKeyDown={onActivate(() => handleHeroPhotoSelect(i))}
                     key={url}
                     className={`he-photo-thumb${i === heroPhotoIndex ? " is-active" : ""}`}
                     onClick={() => handleHeroPhotoSelect(i)}
@@ -3178,7 +3213,11 @@ function HeroEditorView({ pet, slug }) {
                   </label>
                 )}
               </div>
-              {photoError && <p role="alert" className="he-photo-error">{photoError}</p>}
+              {photoError && (
+                <p role="alert" className="he-photo-error">
+                  {photoError}
+                </p>
+              )}
               <p className="he-photo-hint">
                 Tap a photo to use it on your Hero Card. JPG or PNG, up to 5MB.
               </p>
@@ -3417,7 +3456,8 @@ function TagInput({
           </span>
         ))}
         {!atLimit ? (
-          <input aria-label={ariaLabel || placeholder || "Add an item"}
+          <input
+            aria-label={ariaLabel || placeholder || "Add an item"}
             ref={inputRef}
             type="text"
             className="pce-tag-input-field"
@@ -3676,7 +3716,8 @@ function NicknameCard({
           </button>
           <div className="pce-entry-card">
             <div className="pce-field">
-              <input aria-label="Nickname"
+              <input
+                aria-label="Nickname"
                 type="text"
                 className="pce-input pce-input-hero-edit"
                 value={draft}
@@ -4628,7 +4669,8 @@ function RescueExtensionCard({
           <div className="pce-entry-card">
             <div className="pce-field">
               <label className="pce-label">Their story</label>
-              <textarea aria-label="Their story"
+              <textarea
+                aria-label="Their story"
                 className="pce-textarea"
                 value={draftStory}
                 onChange={(e) => setDraftStory(e.target.value)}
@@ -4640,7 +4682,8 @@ function RescueExtensionCard({
             </div>
             <div className="pce-field">
               <label className="pce-label">Who or where they came from</label>
-              <input aria-label="Who or where they came from"
+              <input
+                aria-label="Who or where they came from"
                 type="text"
                 className="pce-input"
                 value={draftOrg}
@@ -4843,7 +4886,8 @@ function ServiceExtensionCard({
           <div className="pce-entry-card">
             <div className="pce-field">
               <label className="pce-label">Role</label>
-              <input aria-label="Role"
+              <input
+                aria-label="Role"
                 type="text"
                 className="pce-input"
                 value={draftType}
@@ -4855,7 +4899,8 @@ function ServiceExtensionCard({
             </div>
             <div className="pce-field">
               <label className="pce-label">Organization</label>
-              <input aria-label="Organization"
+              <input
+                aria-label="Organization"
                 type="text"
                 className="pce-input"
                 value={draftOrg}
@@ -4866,7 +4911,8 @@ function ServiceExtensionCard({
             </div>
             <div className="pce-field">
               <label className="pce-label">Certification number</label>
-              <input aria-label="Certification number"
+              <input
+                aria-label="Certification number"
                 type="text"
                 className="pce-input"
                 value={draftCert}
@@ -5211,7 +5257,8 @@ function ForeverLovedExtensionCard({
                 Date of birth{" "}
                 <span className="pce-label-optional">(optional)</span>
               </label>
-              <input aria-label="Date of birth (optional)"
+              <input
+                aria-label="Date of birth (optional)"
                 type="date"
                 className="pce-input"
                 value={draftBirth}
@@ -5221,7 +5268,8 @@ function ForeverLovedExtensionCard({
             </div>
             <div className="pce-field">
               <label className="pce-label">Date they passed</label>
-              <input aria-label="Date they passed"
+              <input
+                aria-label="Date they passed"
                 type="date"
                 className="pce-input"
                 value={draftDate}
@@ -5237,7 +5285,8 @@ function ForeverLovedExtensionCard({
             </div>
             <div className="pce-field">
               <label className="pce-label">Memorial message</label>
-              <textarea aria-label="Memorial message"
+              <textarea
+                aria-label="Memorial message"
                 className="pce-textarea"
                 value={draftMsg}
                 onChange={(e) => setDraftMsg(e.target.value)}
@@ -5416,7 +5465,7 @@ function TextareaCard({
                 <div className="pce-list-item-title-row pce-list-item-title-row--prose">
                   {Icon ? (
                     <span className="pce-list-item-icon-inline">
-                      <Icon size={18} strokeWidth={2} />
+                      <Icon size={24} strokeWidth={2} />
                     </span>
                   ) : null}
                   <p className="pce-list-item-prose">{value}</p>
@@ -5453,7 +5502,8 @@ function TextareaCard({
           </button>
           <div className="pce-entry-card">
             <div className="pce-field">
-              <textarea aria-label={title}
+              <textarea
+                aria-label={title}
                 className="pce-textarea"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -5638,7 +5688,6 @@ const heroEditorCss = `
   @media (hover: hover) { .he-edit-btn:hover { background:rgb(var(--color-navy-dark-rgb) / 0.06); color:var(--navy); border-color:rgb(var(--color-navy-dark-rgb) / 0.18); } }
   .he-display {
     position:static;
-    // margin-top:4px;
     background:var(--color-white);
     border:1px solid var(--border);
     border-radius:12px;
@@ -5653,13 +5702,6 @@ const heroEditorCss = `
     transform: none !important;
   }
   /* clear room for the inset pencil so content never crowds it */
-  // .he-display > .he-display-stats,
-  // .he-display > .he-rarity-current,
-  // .he-display > .he-display-design,
-  // .he-display > .he-display-value,
-  // .he-display > .he-display-empty { 
-  //   padding-right:34px;
-  // }
   /* Edit pencil anchored to the SECTION top-right corner (opposite the title) */
   .he-edit-btn--inset {
     position:absolute;
@@ -5676,9 +5718,6 @@ const heroEditorCss = `
     z-index:4;
     margin:0;
   }
-  // .he-display-value, .he-display-empty { 
-  //   padding-right:32px;
-  // }
   .he-display-value { font-size:16px; font-weight:500; color: var(--color-navy-dark); margin:0; }
   .he-display-empty { font-size:15px; font-weight:500; font-style:italic; color:var(--muted); margin:0; }
   .he-display-pill { display:inline-flex; align-items:center; gap:6px; padding:6px 13px; border-radius:999px; color:var(--color-white); font-size:12px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
@@ -5984,7 +6023,7 @@ const heroEditorCss = `
   /* Compact toolbar sizing for ONLY the Preview/Publish buttons in the action
      bar. Higher specificity than .he-btn so it wins regardless of source order;
      scoped to the bar so other .he-btn-sm buttons are unaffected. */
-  .he-actionbar-actions .he-btn { height:40px; min-width:0; padding:0 16px; font-size:13.5px; border-radius:9px; gap:6px; }
+  .he-actionbar-actions .he-btn { height:34px; min-width:0; padding:0 16px; font-size:13px; border-radius:9px; gap:6px; }
   /* Publish button holds a fixed width so it doesn't jump when its label swaps
      between "Publish" / "Publishing…" / "Published" (the checkmark state was
      resizing it). 134px fits the widest label ("Publishing…"). */
@@ -6321,7 +6360,6 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
         .pce-list-item {
           display: flex;
           align-items: flex-start;
-          // gap: 4px;
           padding: 20px;
           background: var(--color-white);
           border: 1px solid var(--color-border);
@@ -6689,7 +6727,6 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
           display: flex;
           flex-direction: column;
           justify-content: center;
-          // min-height: 28px;
         }
 /* =============================================================
            IDENTITY TAGS — pill grid + chip display (Hero Card celebration)
@@ -7087,7 +7124,6 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
           height: 42px;
           min-width: 90px;
           padding: 0 24px;
-          // line-height: 1;
           background: var(--color-terracotta-600);
           color: var(--color-white);
           border: 2px solid var(--color-terracotta-600);
@@ -7109,7 +7145,6 @@ textarea.pce-input { height: auto; padding: 12px 14px; min-height: 80px; }
           height: 42px;
           min-width: 90px;
           padding: 0 24px;
-          // line-height: 1;
           background: var(--color-white);
           color: var(--color-navy-dark);
           border: 1.5px solid rgb(var(--color-navy-dark-rgb) / 0.1);

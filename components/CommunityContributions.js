@@ -90,10 +90,10 @@ export default function CommunityContributions({
             {currentLevelDef ? (
               <>
                 is a <strong style={{ color: blurbAccent }}>{levelName}</strong>{" "}
-                in the PetParrk community
+                in the Nehalyn community
               </>
             ) : (
-              "is a new member of the PetParrk community"
+              "is a new member of the Nehalyn community"
             )}
             {monthsActive >= 1
               ? `, a member for ${monthsActive === 1 ? "1 month" : `${monthsActive} months`}.`
@@ -116,9 +116,9 @@ export default function CommunityContributions({
               {/* Verified checkmark badge — upper right */}
               <div
                 className="pp-cc-verified"
-                title="Each price reviewed by PetParrk admins"
+                title="Each price reviewed by Nehalyn admins"
               >
-                <ShieldCheck size={18} strokeWidth={2.4} color={C.navyDark} />
+                <ShieldCheck size={24} strokeWidth={2.4} color={C.navyDark} />
               </div>
 
               <div
@@ -136,7 +136,7 @@ export default function CommunityContributions({
 
               <div className="pp-cc-verified-line">
                 <ShieldCheck size={14} strokeWidth={2.2} color={C.gold} />
-                <span>Each price reviewed by PetParrk admins</span>
+                <span>Each price reviewed by Nehalyn admins</span>
               </div>
             </div>
           </div>

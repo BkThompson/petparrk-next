@@ -472,7 +472,7 @@ export default function InlineSubmitPriceForm({
     if (unbacked) {
       setFormStatus("error");
       setErrorMsg(
-        "Every price needs a receipt behind it. Add a receipt from this clinic, dated within the past year.",
+        "Every price you submit needs a receipt behind it. Add a receipt from this clinic, dated within the past year.",
       );
       return;
     }
@@ -1340,7 +1340,6 @@ export default function InlineSubmitPriceForm({
           font-size: 15px; 
           font-weight: 700;
           cursor: pointer; 
-          // line-height: 1;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           display: inline-flex; align-items: center; justify-content: center;
           transition: background 0.15s, color 0.15s;
@@ -1356,7 +1355,6 @@ export default function InlineSubmitPriceForm({
           font-size: 15px; 
           font-weight: 600;
           cursor: pointer; 
-          // line-height: 1;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           display: inline-flex; 
           align-items: center; 

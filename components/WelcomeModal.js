@@ -284,16 +284,16 @@ export default function WelcomeModal() {
           aria-label="Close"
           disabled={saving}
         >
-          <X size={18} strokeWidth={2.4} />
+          <X size={24} strokeWidth={2.4} />
         </button>
 
         <div className="wm-head">
-          <p className="wm-eyebrow">Welcome to PetParrk</p>
+          <p className="wm-eyebrow">Welcome to Nehalyn</p>
           <h2 id="wm-title" className="wm-title">
             Level up as you go
           </h2>
           <p id="wm-sub" className="wm-sub">
-            PetParrk rewards real contribution. As you add pets, run symptom
+            Nehalyn rewards real contribution. As you add pets, run symptom
             checks, save vets, and submit verified prices, you climb through
             seven levels — each one a signal of a trusted community member.
           </p>
@@ -307,7 +307,7 @@ export default function WelcomeModal() {
           </span>
         </div>
 
-        <ol className="wm-ladder" aria-label="The seven PetParrk levels">
+        <ol className="wm-ladder" aria-label="The seven Nehalyn levels">
           {LEVELS.map((lvl, i) => {
             const Icon = lvl.icon;
             const isFirst = lvl.n === 1;

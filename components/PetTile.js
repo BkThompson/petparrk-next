@@ -452,7 +452,7 @@ export default function PetTile({
                 title="Change pet photo"
                 aria-label="Change pet photo"
               >
-                <Camera size={18} />
+                <Camera size={24} />
               </button>
               <input
                 ref={(el) => {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "./Logo";
 
 export default function Footer() {
   return (
@@ -14,7 +15,6 @@ export default function Footer() {
              desktop layout but is still touch. */
           display: flex;
           align-items: center;
-          // min-height: 44px;
           font-size: 14px;
           font-weight: 500;
           color: rgb(var(--color-white-rgb) / 0.6);
@@ -47,17 +47,33 @@ export default function Footer() {
         <div className="footer-grid">
           {/* Brand */}
           <div>
-            <div
+            <div style={{ marginBottom: "12px" }}>
+              <Logo height={30} />
+            </div>
+            {/* Tagline above the descriptor. The name carries a story — the
+                goddess consulted before the crossing, and the trail metaphor
+                in the level names — but a first-time visitor knows none of
+                that, so the line under it has to earn its place. "Walk in
+                knowing" covers all of it: the prices, the triage, the
+                co-pilot, the records. Every one exists to remove an unknown
+                before someone walks into a clinic.
+
+                The line under it names the three things the product actually
+                does. The old line ("Real prices. Real vets. No surprises.")
+                described pricing only, and its promise is already made by
+                "Walk in knowing" directly above — so nothing was lost. */}
+            <p
               style={{
-                fontSize: "18px",
-                fontWeight: "800",
+                fontSize: "17px",
+                fontWeight: "700",
                 color: "var(--color-white)",
-                marginBottom: "8px",
+                lineHeight: "1.4",
+                margin: "0 0 6px",
                 fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
               }}
             >
-              PetParrk
-            </div>
+              Walk in knowing.
+            </p>
             <p
               style={{
                 fontSize: "14px",
@@ -67,9 +83,9 @@ export default function Footer() {
                 margin: 0,
               }}
             >
-              Real prices. Real vets.
+              Real prices. Instant guidance.
               <br />
-              No surprises.
+              Your pet&apos;s whole history.
             </p>
           </div>
 
@@ -172,7 +188,7 @@ export default function Footer() {
               margin: 0,
             }}
           >
-            © 2026 PetParrk, LLC.
+            © 2026 Nehalyn, LLC.
           </p>
           {/*
           <p

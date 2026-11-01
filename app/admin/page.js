@@ -8,6 +8,7 @@ import Link from "next/link";
 // product. The rest of this file uses hand-rolled SVG for its nav marks;
 // those stay as they are.
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import Logo from "../../components/Logo";
 import { svgHex } from "../../lib/tokens";
 import { smoothScroll } from "../../lib/a11y";
 
@@ -35,9 +36,10 @@ const TABS = [
 
 // Sidebar nav grouping. Icons are inline lucide-style SVGs.
 const _navIco = (d) => (
-  <svg aria-hidden="true"
-    width="18"
-    height="18"
+  <svg
+    aria-hidden="true"
+    width="24"
+    height="24"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -518,15 +520,16 @@ function subClassify(item) {
 
 // Small inline icons (stroke style, matching lucide) for the Submissions tab.
 const _ico = (paths) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    width="18"
-    height="18"
+    width="24"
+    height="24"
   >
     {paths}
   </svg>
@@ -553,7 +556,8 @@ const SubManualIcon = () =>
     </>,
   );
 const SubCheckIcon = () => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -568,7 +572,8 @@ const SubCheckIcon = () => (
   </svg>
 );
 const SubWarnIcon = () => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -583,7 +588,8 @@ const SubWarnIcon = () => (
   </svg>
 );
 const ChevronRight = ({ size = 15 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -598,7 +604,8 @@ const ChevronRight = ({ size = 15 }) => (
   </svg>
 );
 const SubInboxIcon = () => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -911,7 +918,8 @@ const RichTextEditor = memo(function RichTextEditor({
           }}
           title="Bullet list"
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             width="16"
             height="16"
             viewBox="0 0 24 24"
@@ -945,7 +953,8 @@ const RichTextEditor = memo(function RichTextEditor({
           }}
           title="Add link"
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             width="16"
             height="16"
             viewBox="0 0 24 24"
@@ -1035,7 +1044,8 @@ function HoursPicker({ value, onChange }) {
             >
               <span className="adm-perm-box">
                 {d.open && (
-                  <svg aria-hidden="true"
+                  <svg
+                    aria-hidden="true"
                     width="12"
                     height="12"
                     viewBox="0 0 24 24"
@@ -1078,7 +1088,8 @@ function HoursPicker({ value, onChange }) {
                 <div className="adm-hours-ranges">
                   {d.ranges.map((r, i) => (
                     <div key={i} className="adm-hours-range">
-                      <select aria-label={`${day} opens`}
+                      <select
+                        aria-label={`${day} opens`}
                         className="adm-field-input adm-field-select adm-hours-time"
                         value={r.from}
                         onChange={(e) =>
@@ -1092,7 +1103,8 @@ function HoursPicker({ value, onChange }) {
                         ))}
                       </select>
                       <span className="adm-hours-dash">–</span>
-                      <select aria-label={`${day} closes`}
+                      <select
+                        aria-label={`${day} closes`}
                         className="adm-field-input adm-field-select adm-hours-time"
                         value={r.to}
                         onChange={(e) => setRange(day, i, "to", e.target.value)}
@@ -1110,7 +1122,8 @@ function HoursPicker({ value, onChange }) {
                           onClick={() => removeRange(day, i)}
                           aria-label="Remove range"
                         >
-                          <svg aria-hidden="true"
+                          <svg
+                            aria-hidden="true"
                             width="15"
                             height="15"
                             viewBox="0 0 24 24"
@@ -1277,7 +1290,8 @@ function VetForm({
           hours.
         </p>
         <div className="adm-vet-lookup-row">
-          <input aria-label="Vet name to look up"
+          <input
+            aria-label="Vet name to look up"
             className="adm-field-input"
             value={placeQuery}
             onChange={(e) => setPlaceQuery(e.target.value)}
@@ -1312,7 +1326,8 @@ function VetForm({
       <div className="adm-pv-fieldgrid">
         <div className="adm-field">
           <label className="adm-field-label">Name *</label>
-          <input aria-label="Name"
+          <input
+            aria-label="Name"
             className="adm-field-input"
             value={form.name || ""}
             onChange={(e) => onNameChange(e.target.value)}
@@ -1321,7 +1336,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">Status</label>
-          <select aria-label="Status"
+          <select
+            aria-label="Status"
             className="adm-field-input adm-field-select"
             value={form.status || "active"}
             onChange={(e) => set("status", e.target.value)}
@@ -1335,7 +1351,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">Neighborhood</label>
-          <input aria-label="Neighborhood"
+          <input
+            aria-label="Neighborhood"
             className="adm-field-input"
             value={form.neighborhood || ""}
             onChange={(e) => set("neighborhood", e.target.value)}
@@ -1343,7 +1360,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">City</label>
-          <input aria-label="City"
+          <input
+            aria-label="City"
             className="adm-field-input"
             value={form.city || ""}
             onChange={(e) => set("city", e.target.value)}
@@ -1351,7 +1369,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">State</label>
-          <select aria-label="State"
+          <select
+            aria-label="State"
             className="adm-field-input adm-field-select"
             value={form.state || ""}
             onChange={(e) => set("state", e.target.value)}
@@ -1366,7 +1385,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">Address</label>
-          <input aria-label="Address"
+          <input
+            aria-label="Address"
             className="adm-field-input"
             value={form.address || ""}
             onChange={(e) => set("address", e.target.value)}
@@ -1376,7 +1396,8 @@ function VetForm({
           <label className="adm-field-label">
             ZIP{zipLooking ? " · looking up…" : ""}
           </label>
-          <input aria-label={`ZIP${zipLooking ? " · looking up…" : ""}`}
+          <input
+            aria-label={`ZIP${zipLooking ? " · looking up…" : ""}`}
             className="adm-field-input"
             value={form.zip_code || ""}
             onChange={(e) => onZipChange(e.target.value)}
@@ -1385,7 +1406,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">Phone</label>
-          <input aria-label="Phone"
+          <input
+            aria-label="Phone"
             className="adm-field-input"
             value={form.phone || ""}
             onChange={(e) => set("phone", e.target.value)}
@@ -1393,7 +1415,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">Website</label>
-          <input aria-label="Website"
+          <input
+            aria-label="Website"
             className="adm-field-input"
             value={form.website || ""}
             onChange={(e) => set("website", e.target.value)}
@@ -1402,7 +1425,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">Ownership</label>
-          <select aria-label="Ownership"
+          <select
+            aria-label="Ownership"
             className="adm-field-input adm-field-select"
             value={
               form.ownership?.startsWith("Other:")
@@ -1419,7 +1443,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">Accepting patients</label>
-          <select aria-label="Accepting patients"
+          <select
+            aria-label="Accepting patients"
             className="adm-field-input adm-field-select"
             value={
               form.accepting_new_patients === null ||
@@ -1443,7 +1468,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">CareCredit</label>
-          <select aria-label="CareCredit"
+          <select
+            aria-label="CareCredit"
             className="adm-field-input adm-field-select"
             value={
               form.carecredit === null || form.carecredit === undefined
@@ -1466,7 +1492,8 @@ function VetForm({
         </div>
         <div className="adm-field">
           <label className="adm-field-label">Last verified</label>
-          <input aria-label="Last verified"
+          <input
+            aria-label="Last verified"
             className="adm-field-input"
             type="date"
             value={form.last_verified || ""}
@@ -1495,7 +1522,8 @@ function VetForm({
               >
                 <span className="adm-perm-box">
                   {on && (
-                    <svg aria-hidden="true"
+                    <svg
+                      aria-hidden="true"
                       width="13"
                       height="13"
                       viewBox="0 0 24 24"
@@ -1561,7 +1589,8 @@ function VetForm({
             Edit
           </button>
         ) : (
-          <input aria-label="Page address"
+          <input
+            aria-label="Page address"
             className="adm-field-input adm-vet-pageurl-input"
             value={form.slug || ""}
             onChange={(e) => {
@@ -1632,7 +1661,8 @@ function VetForm({
                 >
                   <span className="adm-perm-box">
                     {on && (
-                      <svg aria-hidden="true"
+                      <svg
+                        aria-hidden="true"
                         width="13"
                         height="13"
                         viewBox="0 0 24 24"
@@ -1744,7 +1774,8 @@ function PriceForm({
       <div className="adm-pf-grid">
         <div className="adm-field adm-pf-full">
           <label className="adm-field-label">Service *</label>
-          <select aria-label="Service"
+          <select
+            aria-label="Service"
             className={`adm-field-input adm-field-select${error && !form.service_id ? " adm-field-error" : ""}`}
             value={form.service_id || ""}
             onChange={(e) => set("service_id", e.target.value)}
@@ -1765,7 +1796,8 @@ function PriceForm({
         {isVaxPkg && (
           <div className="adm-field adm-pf-full">
             <label className="adm-field-label">Vaccines included</label>
-            <input aria-label="Vaccines included"
+            <input
+              aria-label="Vaccines included"
               className="adm-field-input"
               value={form.vaccines_included || ""}
               onChange={(e) => set("vaccines_included", e.target.value)}
@@ -1811,7 +1843,8 @@ function PriceForm({
                 <div className="adm-price-lowhigh">
                   <div className="adm-field">
                     <label className="adm-field-label">Price low *</label>
-                    <input aria-label="Price low"
+                    <input
+                      aria-label="Price low"
                       className={`adm-field-input${error && !form.price_low ? " adm-field-error" : ""}`}
                       type="number"
                       step="0.01"
@@ -1822,7 +1855,8 @@ function PriceForm({
                   </div>
                   <div className="adm-field">
                     <label className="adm-field-label">Price high *</label>
-                    <input aria-label="Price high"
+                    <input
+                      aria-label="Price high"
                       className="adm-field-input"
                       type="number"
                       step="0.01"
@@ -1835,7 +1869,8 @@ function PriceForm({
               ) : (
                 <>
                   <label className="adm-field-label">Price *</label>
-                  <input aria-label="Price"
+                  <input
+                    aria-label="Price"
                     className={`adm-field-input${error && !form.price_low ? " adm-field-error" : ""}`}
                     type="number"
                     step="0.01"
@@ -1851,7 +1886,8 @@ function PriceForm({
 
         <div className="adm-field">
           <label className="adm-field-label">Species *</label>
-          <select aria-label="Species"
+          <select
+            aria-label="Species"
             className={`adm-field-input adm-field-select${error && !form.species ? " adm-field-error" : ""}`}
             value={speciesIsOther ? "other" : form.species || ""}
             onChange={(e) =>
@@ -1874,7 +1910,8 @@ function PriceForm({
         {speciesIsOther && (
           <div className="adm-field">
             <label className="adm-field-label">Specify species</label>
-            <input aria-label="Specify species"
+            <input
+              aria-label="Specify species"
               className="adm-field-input"
               value={form.species_other || ""}
               onChange={(e) =>
@@ -1907,7 +1944,8 @@ function PriceForm({
                 >
                   <span className="adm-perm-box">
                     {on && (
-                      <svg aria-hidden="true"
+                      <svg
+                        aria-hidden="true"
                         width="13"
                         height="13"
                         viewBox="0 0 24 24"
@@ -1984,7 +2022,8 @@ function PendingVetEditForm({ form, setForm, onApprove, onCancel }) {
         ].map(([f, label]) => (
           <div className="adm-field" key={f}>
             <label className="adm-field-label">{label}</label>
-            <input aria-label={label}
+            <input
+              aria-label={label}
               className="adm-field-input"
               value={form[f] || ""}
               onChange={(e) => setForm((p) => ({ ...p, [f]: e.target.value }))}
@@ -1993,7 +2032,8 @@ function PendingVetEditForm({ form, setForm, onApprove, onCancel }) {
         ))}
         <div className="adm-field">
           <label className="adm-field-label">Accepting Patients</label>
-          <select aria-label="Accepting Patients"
+          <select
+            aria-label="Accepting Patients"
             className="adm-field-input adm-field-select"
             value={
               form.accepting_new_patients === null
@@ -2017,7 +2057,8 @@ function PendingVetEditForm({ form, setForm, onApprove, onCancel }) {
         </div>
         <div className="adm-field">
           <label className="adm-field-label">CareCredit</label>
-          <select aria-label="CareCredit"
+          <select
+            aria-label="CareCredit"
             className="adm-field-input adm-field-select"
             value={
               form.carecredit === true
@@ -2166,7 +2207,8 @@ const CallPriceRow = memo(function CallPriceRow({
           >
             Vaccines Included
           </label>
-          <input aria-label="Vaccines Included"
+          <input
+            aria-label="Vaccines Included"
             className="adm-field-input"
             value={p.vaccines_included || ""}
             onChange={(e) =>
@@ -2227,7 +2269,8 @@ const CallPriceRow = memo(function CallPriceRow({
           <div className="adm-price-lowhigh">
             <div className="adm-field">
               <label className="adm-field-label">Price low</label>
-              <input aria-label="Price low"
+              <input
+                aria-label="Price low"
                 className="adm-field-input"
                 type="number"
                 step="0.01"
@@ -2255,7 +2298,8 @@ const CallPriceRow = memo(function CallPriceRow({
             </div>
             <div className="adm-field">
               <label className="adm-field-label">Price high</label>
-              <input aria-label="Price high"
+              <input
+                aria-label="Price high"
                 className="adm-field-input"
                 type="number"
                 step="0.01"
@@ -2279,7 +2323,8 @@ const CallPriceRow = memo(function CallPriceRow({
         ) : (
           <>
             <label className="adm-field-label">Price</label>
-            <input aria-label="Price"
+            <input
+              aria-label="Price"
               className="adm-field-input"
               type="number"
               step="0.01"
@@ -2311,7 +2356,8 @@ const CallPriceRow = memo(function CallPriceRow({
         <div className="adm-price-lowhigh adm-species-grid">
           <div className="adm-field">
             <label className="adm-field-label">Species *</label>
-            <select aria-label="Species"
+            <select
+              aria-label="Species"
               className="adm-field-input adm-field-select"
               value={
                 p.species === "other" ||
@@ -2361,7 +2407,8 @@ const CallPriceRow = memo(function CallPriceRow({
               ))) && (
             <div className="adm-field">
               <label className="adm-field-label">Specify species</label>
-              <input aria-label="Specify species"
+              <input
+                aria-label="Specify species"
                 className="adm-field-input"
                 value={p.speciesOther || ""}
                 onChange={(e) =>
@@ -2419,7 +2466,8 @@ const CallPriceRow = memo(function CallPriceRow({
                 >
                   <span className="adm-perm-box">
                     {on && (
-                      <svg aria-hidden="true"
+                      <svg
+                        aria-hidden="true"
                         width="13"
                         height="13"
                         viewBox="0 0 24 24"
@@ -2564,7 +2612,13 @@ const GlobalNotesPanel = memo(function GlobalNotesPanel({
           top: 0,
         }}
       >
-        <span style={{ fontSize: "15px", fontWeight: "800", color: "var(--color-navy-dark)" }}>
+        <span
+          style={{
+            fontSize: "15px",
+            fontWeight: "700",
+            color: "var(--color-navy-dark)",
+          }}
+        >
           All Call Notes{" "}
           {allCallNotes.length > 0 ? `(${allCallNotes.length})` : ""}
         </span>
@@ -2586,9 +2640,10 @@ const GlobalNotesPanel = memo(function GlobalNotesPanel({
             className="adm-callnotes-close"
             title="Close"
           >
-            <svg aria-hidden="true"
-              width="18"
-              height="18"
+            <svg
+              aria-hidden="true"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -2643,7 +2698,8 @@ const GlobalNotesPanel = memo(function GlobalNotesPanel({
             </div>
           ) : (
             <div style={{ position: "relative", marginBottom: "10px" }}>
-              <input aria-label="Search a vet to attach"
+              <input
+                aria-label="Search a vet to attach"
                 className="adm-field-input"
                 value={newNoteVetSearch}
                 onChange={(e) => setNewNoteVetSearch(e.target.value)}
@@ -2659,7 +2715,8 @@ const GlobalNotesPanel = memo(function GlobalNotesPanel({
                     background: "var(--color-white)",
                     border: "1px solid var(--color-border)",
                     borderRadius: "10px",
-                    boxShadow: "0 6px 20px rgb(var(--color-navy-deeper-rgb) / 0.12)",
+                    boxShadow:
+                      "0 6px 20px rgb(var(--color-navy-deeper-rgb) / 0.12)",
                     maxHeight: "200px",
                     overflowY: "auto",
                     zIndex: 10,
@@ -2800,7 +2857,8 @@ const GlobalNotesPanel = memo(function GlobalNotesPanel({
                   >
                     {n.vet_name}
                   </p>
-                  <textarea aria-label={`Note for ${n.vet_name}`}
+                  <textarea
+                    aria-label={`Note for ${n.vet_name}`}
                     className="adm-input"
                     rows={3}
                     style={{
@@ -2867,7 +2925,8 @@ const GlobalNotesPanel = memo(function GlobalNotesPanel({
                         title="Go to this vet in the call queue"
                       >
                         {n.vet_name}
-                        <svg aria-hidden="true"
+                        <svg
+                          aria-hidden="true"
                           width="13"
                           height="13"
                           viewBox="0 0 24 24"
@@ -2886,7 +2945,7 @@ const GlobalNotesPanel = memo(function GlobalNotesPanel({
                       style={{
                         margin: "0 0 4px",
                         fontSize: "14px",
-                        fontWeight: 800,
+                        fontWeight: 700,
                         color: "var(--color-muted)",
                       }}
                     >
@@ -5906,7 +5965,7 @@ export default function AdminPage() {
         }
         @media (hover: hover) { .adm-nav-btn:hover { background: var(--color-cream); color: var(--color-navy-dark); } }
         .adm-nav-btn.active { background: var(--color-warning-light); color: var(--color-terracotta-700); border-left-color: var(--color-terracotta); font-weight: 700; }
-        .adm-nav-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .adm-nav-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
         .adm-nav-count { margin-left: auto; background: var(--color-terracotta-600); color: var(--color-white); border-radius: 9999px; padding: 2px 8px; font-size: 11px; font-weight: 800; flex-shrink: 0; }
         .adm-nav-label { white-space: nowrap; }
         .adm-main { flex: 1; min-width: 0; background: var(--color-white); border: 1px solid var(--color-border); border-radius: 16px; padding: 20px; }
@@ -6584,7 +6643,21 @@ export default function AdminPage() {
           .adm-species-grid .adm-field { width: 100%; }
           .adm-user-status-select { width: 100%; }
         }
-        .adm-brand-title { margin: 0 0 2px 0; font-size: 20px; color: var(--color-navy-dark); font-weight: 800; white-space: nowrap; }
+        /* flex: none on the logo — the row around it sets min-width: 0 so the
+           title can ellipsize, and without this the SVG gets squeezed too. */
+        .adm-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .adm-brand > svg, .adm-brand > .adm-brand-link { flex: none; }
+        .adm-brand-link { display: flex; align-items: center; border-radius: 6px; transition: opacity 0.15s ease; }
+        @media (hover: hover) { .adm-brand-link:hover { opacity: 0.72; } }
+        .adm-brand-link:focus-visible { outline: 2px solid var(--color-border-focus); outline-offset: 3px; }
+        /* --color-border-strong, not --color-border: the topbar sits on cream
+           on desktop, where #ede8e0 is invisible. Every other vertical rule in
+           this file (.adm-rte-btn, .adm-hours-add) already uses strong. */
+        .adm-brand-sep { width: 1px; height: 22px; background: var(--color-border-strong); flex: none; }
+        /* 22px: Urbanist's cap height at 22px (~16px) matches the ascender of
+           the logo's wordmark at height 28, so the two read as one lockup. */
+        .adm-brand-title { margin: 0; min-width: 0; font-size: 22px; color: var(--color-navy-dark); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        @media (max-width: 520px) { .adm-brand { gap: 9px; } .adm-brand-sep { height: 18px; } }
         .adm-filter-row { display: flex; gap: 8px; margin-bottom: 16px; }
         .adm-filter-pill { padding: 0 24px; height: 38px; border-radius: 12px; border: 2px solid var(--color-border-strong); background: var(--color-white); font-size: 15px; font-weight: 700; cursor: pointer; color: var(--color-slate); white-space: nowrap; font-family: 'Urbanist', sans-serif; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
         @media (hover: hover) { .adm-filter-pill:hover:not(.on) { border-color: var(--color-navy-dark); color: var(--color-navy-dark); } }
@@ -6928,7 +7001,8 @@ export default function AdminPage() {
               aria-label={navOpen ? "Close menu" : "Open menu"}
             >
               {navOpen ? (
-                <svg aria-hidden="true"
+                <svg
+                  aria-hidden="true"
                   width="22"
                   height="22"
                   viewBox="0 0 24 24"
@@ -6941,7 +7015,8 @@ export default function AdminPage() {
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               ) : (
-                <svg aria-hidden="true"
+                <svg
+                  aria-hidden="true"
                   width="22"
                   height="22"
                   viewBox="0 0 24 24"
@@ -6956,8 +7031,21 @@ export default function AdminPage() {
                 </svg>
               )}
             </button>
-            <div style={{ minWidth: 0 }}>
-              <h1 className="adm-brand-title">PetParrk Admin</h1>
+            <div className="adm-brand">
+              {/* The mark is the way back to the public site — Admin has no
+                  other link out. The <h1> stays "Admin" and is not part of the
+                  link, so the link's accessible name is just the site name.
+                  onLight: this header sits on white, so the wordmark and the
+                  two cream blades switch to navy. See components/Logo.js. */}
+              <Link
+                href="/"
+                className="adm-brand-link"
+                aria-label="Nehalyn — back to the site"
+              >
+                <Logo height={28} variant="onLight" title="Nehalyn" />
+              </Link>
+              <span className="adm-brand-sep" aria-hidden="true" />
+              <h1 className="adm-brand-title">Admin</h1>
             </div>
           </div>
         </div>
@@ -7092,9 +7180,10 @@ export default function AdminPage() {
                       onClick={() => switchTab("Submissions")}
                     >
                       <div className="adm-att-ico warn">
-                        <svg aria-hidden="true"
-                          width="18"
-                          height="18"
+                        <svg
+                          aria-hidden="true"
+                          width="24"
+                          height="24"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -7126,9 +7215,10 @@ export default function AdminPage() {
                       onClick={() => switchTab("Pending Vets")}
                     >
                       <div className="adm-att-ico warn">
-                        <svg aria-hidden="true"
-                          width="18"
-                          height="18"
+                        <svg
+                          aria-hidden="true"
+                          width="24"
+                          height="24"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -7181,12 +7271,18 @@ export default function AdminPage() {
                   {
                     label: "Pending Vets",
                     value: stats.pendingVets,
-                    color: stats.pendingVets > 0 ? "var(--color-warning-text)" : "var(--color-ink)",
+                    color:
+                      stats.pendingVets > 0
+                        ? "var(--color-warning-text)"
+                        : "var(--color-ink)",
                   },
                   {
                     label: "Pending Prices",
                     value: stats.pendingSubs,
-                    color: stats.pendingSubs > 0 ? "var(--color-warning-text)" : "var(--color-ink)",
+                    color:
+                      stats.pendingSubs > 0
+                        ? "var(--color-warning-text)"
+                        : "var(--color-ink)",
                   },
                   {
                     label: "Total Prices",
@@ -7242,7 +7338,8 @@ export default function AdminPage() {
                     disabled={subLoading}
                     aria-label="Refresh submissions"
                   >
-                    <svg aria-hidden="true"
+                    <svg
+                      aria-hidden="true"
                       width="15"
                       height="15"
                       viewBox="0 0 24 24"
@@ -7267,7 +7364,8 @@ export default function AdminPage() {
                 </p>
 
                 <div className="adm-searchbar">
-                  <input aria-label="Search submissions"
+                  <input
+                    aria-label="Search submissions"
                     placeholder="Search by vet, service, or submitter"
                     value={subSearch}
                     onChange={(e) => {
@@ -7365,7 +7463,8 @@ export default function AdminPage() {
                               {item.status === "pending" ? (
                                 <div className="adm-line-controls">
                                   {cls === "unmapped" && (
-                                    <select aria-label="Match to a service"
+                                    <select
+                                      aria-label="Match to a service"
                                       className="adm-line-select"
                                       value={subMatchSel[item.id] || ""}
                                       onChange={(e) =>
@@ -7612,7 +7711,8 @@ export default function AdminPage() {
                 </div>
 
                 <div className="adm-searchbar">
-                  <input aria-label="Search by name"
+                  <input
+                    aria-label="Search by name"
                     placeholder="Search by name"
                     value={pendingVetSearch}
                     onChange={(e) => {
@@ -7633,7 +7733,9 @@ export default function AdminPage() {
                 </div>
 
                 {pendingVetsLoading && pendingVets.length === 0 && (
-                  <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>Loading…</p>
+                  <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>
+                    Loading…
+                  </p>
                 )}
 
                 {(() => {
@@ -7775,7 +7877,8 @@ export default function AdminPage() {
                               setPendingVetPage(Math.max(1, pageSafe - 1))
                             }
                           >
-                            <svg aria-hidden="true"
+                            <svg
+                              aria-hidden="true"
                               width="16"
                               height="16"
                               viewBox="0 0 24 24"
@@ -7802,7 +7905,8 @@ export default function AdminPage() {
                             }
                           >
                             Next
-                            <svg aria-hidden="true"
+                            <svg
+                              aria-hidden="true"
                               width="16"
                               height="16"
                               viewBox="0 0 24 24"
@@ -8155,7 +8259,8 @@ export default function AdminPage() {
                 </div>
 
                 <div className="adm-searchbar">
-                  <input aria-label="Search vets by name or neighborhood"
+                  <input
+                    aria-label="Search vets by name or neighborhood"
                     placeholder="Search by name or neighborhood"
                     value={vetSearch}
                     onChange={(e) => {
@@ -8213,7 +8318,9 @@ export default function AdminPage() {
                 )}
 
                 {vetsLoading && vets.length === 0 && (
-                  <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>Loading…</p>
+                  <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>
+                    Loading…
+                  </p>
                 )}
 
                 {(() => {
@@ -8276,7 +8383,8 @@ export default function AdminPage() {
                                   {vet.status !== "active" &&
                                     !vet.last_verified && (
                                       <span className="adm-vet-unverified">
-                                        <svg aria-hidden="true"
+                                        <svg
+                                          aria-hidden="true"
                                           width="12"
                                           height="12"
                                           viewBox="0 0 24 24"
@@ -8358,7 +8466,8 @@ export default function AdminPage() {
                               setVetPage(Math.max(1, pageSafe - 1))
                             }
                           >
-                            <svg aria-hidden="true"
+                            <svg
+                              aria-hidden="true"
                               width="16"
                               height="16"
                               viewBox="0 0 24 24"
@@ -8383,7 +8492,8 @@ export default function AdminPage() {
                             }
                           >
                             Next
-                            <svg aria-hidden="true"
+                            <svg
+                              aria-hidden="true"
                               width="16"
                               height="16"
                               viewBox="0 0 24 24"
@@ -8416,7 +8526,8 @@ export default function AdminPage() {
                   <label className="adm-field-label">Search vet</label>
                   <div className="adm-price-search-wrap">
                     <div style={{ position: "relative" }}>
-                      <input aria-label="Search vet"
+                      <input
+                        aria-label="Search vet"
                         ref={priceSearchRef}
                         className="adm-field-input"
                         value={vetPriceSearch}
@@ -8574,7 +8685,12 @@ export default function AdminPage() {
                     )}
 
                     {pricesLoading && vetPrices.length === 0 && (
-                      <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>
+                      <p
+                        style={{
+                          color: "var(--color-muted)",
+                          fontSize: "14px",
+                        }}
+                      >
                         Loading prices…
                       </p>
                     )}
@@ -9037,7 +9153,8 @@ export default function AdminPage() {
                         {/* Chevron after the label, not before it — it points
                             at what it opens rather than sitting out front. */}
                         How to format the Google Sheet
-                        <svg aria-hidden="true"
+                        <svg
+                          aria-hidden="true"
                           className={`adm-sync-chev${showSyncGuide ? " open" : ""}`}
                           width="16"
                           height="16"
@@ -9772,7 +9889,8 @@ export default function AdminPage() {
                                 position: "relative",
                               }}
                             >
-                              <input aria-label="Search vet by name"
+                              <input
+                                aria-label="Search vet by name"
                                 className="adm-field-input"
                                 value={callSheetSearch}
                                 onChange={(e) =>
@@ -9793,7 +9911,8 @@ export default function AdminPage() {
                                     maxHeight: "200px",
                                     overflowY: "auto",
                                     zIndex: 100,
-                                    boxShadow: "0 4px 16px rgb(var(--color-black-rgb) / 0.1)",
+                                    boxShadow:
+                                      "0 4px 16px rgb(var(--color-black-rgb) / 0.1)",
                                   }}
                                 >
                                   {activeQueue
@@ -9818,7 +9937,8 @@ export default function AdminPage() {
                                             padding: "9px 12px",
                                             cursor: "pointer",
                                             fontSize: "13px",
-                                            borderBottom: "1px solid var(--color-badge-neutral-bg)",
+                                            borderBottom:
+                                              "1px solid var(--color-badge-neutral-bg)",
                                           }}
                                           onMouseDown={() => {
                                             if (callPrices.length > 0) {
@@ -9919,7 +10039,8 @@ export default function AdminPage() {
                                 </span>
                                 {vet._hasPrices && (
                                   <span className="adm-priced-badge">
-                                    <svg aria-hidden="true"
+                                    <svg
+                                      aria-hidden="true"
                                       width="12"
                                       height="12"
                                       viewBox="0 0 24 24"
@@ -9944,7 +10065,8 @@ export default function AdminPage() {
                                       padding: "2px 8px",
                                       borderRadius: "20px",
                                       fontWeight: "600",
-                                      border: "1px solid rgb(var(--color-error-rgb) / 0.4)",
+                                      border:
+                                        "1px solid rgb(var(--color-error-rgb) / 0.4)",
                                     }}
                                   >
                                     Declined
@@ -9967,7 +10089,8 @@ export default function AdminPage() {
                                     }}
                                     title="This vet has saved notes"
                                   >
-                                    <svg aria-hidden="true"
+                                    <svg
+                                      aria-hidden="true"
                                       width="13"
                                       height="13"
                                       viewBox="0 0 24 24"
@@ -10023,7 +10146,8 @@ export default function AdminPage() {
                                       gap: "6px",
                                     }}
                                   >
-                                    <input aria-label="City"
+                                    <input
+                                      aria-label="City"
                                       className="adm-input"
                                       style={{
                                         maxWidth: "180px",
@@ -10082,7 +10206,8 @@ export default function AdminPage() {
                                         className="adm-cq-veturl"
                                       >
                                         {cleanUrl}
-                                        <svg aria-hidden="true"
+                                        <svg
+                                          aria-hidden="true"
                                           width="13"
                                           height="13"
                                           viewBox="0 0 24 24"
@@ -10105,7 +10230,8 @@ export default function AdminPage() {
                                         className="adm-cq-veturl"
                                       >
                                         {vet.website}
-                                        <svg aria-hidden="true"
+                                        <svg
+                                          aria-hidden="true"
                                           width="13"
                                           height="13"
                                           viewBox="0 0 24 24"
@@ -10141,7 +10267,8 @@ export default function AdminPage() {
                                   <label className="adm-field-label">
                                     Accepting New Patients
                                   </label>
-                                  <select aria-label="Accepting New Patients"
+                                  <select
+                                    aria-label="Accepting New Patients"
                                     className="adm-field-input adm-field-select"
                                     value={
                                       vet.accepting_new_patients === true
@@ -10198,7 +10325,8 @@ export default function AdminPage() {
                                   <label className="adm-field-label">
                                     CareCredit
                                   </label>
-                                  <select aria-label="CareCredit"
+                                  <select
+                                    aria-label="CareCredit"
                                     className="adm-field-input adm-field-select"
                                     value={
                                       vet.carecredit === true
@@ -10295,10 +10423,13 @@ export default function AdminPage() {
                                 {callPrices.length > 0 && (
                                   <div style={{ marginTop: "8px" }}>
                                     {callSpeciesError && (
-                                      <div role="alert"
+                                      <div
+                                        role="alert"
                                         style={{
-                                          background: "var(--color-error-light)",
-                                          border: "1px solid rgb(var(--color-error-rgb) / 0.24)",
+                                          background:
+                                            "var(--color-error-light)",
+                                          border:
+                                            "1px solid rgb(var(--color-error-rgb) / 0.24)",
                                           borderRadius: "8px",
                                           padding: "10px 14px",
                                           marginBottom: "10px",
@@ -10418,9 +10549,10 @@ export default function AdminPage() {
                                       }
                                       aria-label="Close notes"
                                     >
-                                      <svg aria-hidden="true"
-                                        width="18"
-                                        height="18"
+                                      <svg
+                                        aria-hidden="true"
+                                        width="24"
+                                        height="24"
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         stroke="currentColor"
@@ -10467,7 +10599,8 @@ export default function AdminPage() {
                                     <div
                                       key={n.id}
                                       style={{
-                                        borderTop: "1px solid var(--color-border)",
+                                        borderTop:
+                                          "1px solid var(--color-border)",
                                         paddingTop: "12px",
                                         marginTop: "12px",
                                       }}
@@ -10514,8 +10647,10 @@ export default function AdminPage() {
                                       ) : deletingNoteId === n.id ? (
                                         <div
                                           style={{
-                                            background: "var(--color-error-light)",
-                                            border: "1px solid rgb(var(--color-error-rgb) / 0.24)",
+                                            background:
+                                              "var(--color-error-light)",
+                                            border:
+                                              "1px solid rgb(var(--color-error-rgb) / 0.24)",
                                             borderRadius: "6px",
                                             padding: "12px",
                                           }}
@@ -10632,7 +10767,8 @@ export default function AdminPage() {
                                         color: "var(--color-success-text)",
                                       }}
                                     >
-                                      <svg aria-hidden="true"
+                                      <svg
+                                        aria-hidden="true"
                                         width="20"
                                         height="20"
                                         viewBox="0 0 24 24"
@@ -10670,7 +10806,8 @@ export default function AdminPage() {
                                     <div
                                       key={row.id || i}
                                       style={{
-                                        borderTop: "1px solid var(--color-badge-neutral-bg)",
+                                        borderTop:
+                                          "1px solid var(--color-badge-neutral-bg)",
                                         paddingTop: "12px",
                                         marginTop: "12px",
                                       }}
@@ -10747,7 +10884,8 @@ export default function AdminPage() {
                                             className="adm-review-actions"
                                             style={{
                                               marginTop: "16px",
-                                              borderTop: "1px solid var(--color-badge-neutral-bg)",
+                                              borderTop:
+                                                "1px solid var(--color-badge-neutral-bg)",
                                             }}
                                           >
                                             <button
@@ -10803,7 +10941,8 @@ export default function AdminPage() {
                                               <label className="adm-field-label">
                                                 Price Type
                                               </label>
-                                              <select aria-label="Price Type"
+                                              <select
+                                                aria-label="Price Type"
                                                 className="adm-field-input adm-field-select"
                                                 value={
                                                   row.price_type || "exact"
@@ -10842,7 +10981,8 @@ export default function AdminPage() {
                                               <label className="adm-field-label">
                                                 Price Low
                                               </label>
-                                              <input aria-label="Price Low"
+                                              <input
+                                                aria-label="Price Low"
                                                 className="adm-field-input"
                                                 type="number"
                                                 step="0.01"
@@ -10873,7 +11013,8 @@ export default function AdminPage() {
                                               <label className="adm-field-label">
                                                 Price High
                                               </label>
-                                              <input aria-label="Price High"
+                                              <input
+                                                aria-label="Price High"
                                                 className="adm-field-input"
                                                 type="number"
                                                 step="0.01"
@@ -10909,7 +11050,8 @@ export default function AdminPage() {
                                               <label className="adm-field-label">
                                                 Species *
                                               </label>
-                                              <select aria-label="Species"
+                                              <select
+                                                aria-label="Species"
                                                 className="adm-field-input adm-field-select"
                                                 value={
                                                   row.species === "other" ||
@@ -10962,7 +11104,8 @@ export default function AdminPage() {
                                                     "other",
                                                     "",
                                                   ].includes(row.species))) && (
-                                                <input aria-label="Specify species"
+                                                <input
+                                                  aria-label="Specify species"
                                                   className="adm-field-input"
                                                   style={{ marginTop: "8px" }}
                                                   value={row.speciesOther || ""}
@@ -11046,7 +11189,8 @@ export default function AdminPage() {
                                             <label className="adm-field-label">
                                               Notes
                                             </label>
-                                            <textarea aria-label="Notes"
+                                            <textarea
+                                              aria-label="Notes"
                                               className="adm-field-input"
                                               rows={3}
                                               style={{
@@ -11099,7 +11243,8 @@ export default function AdminPage() {
                                   style={{
                                     marginTop: "20px",
                                     paddingTop: "16px",
-                                    borderTop: "1px solid var(--color-badge-neutral-bg)",
+                                    borderTop:
+                                      "1px solid var(--color-badge-neutral-bg)",
                                   }}
                                 >
                                   <p
@@ -11137,7 +11282,8 @@ export default function AdminPage() {
                 </p>
 
                 <div className="adm-searchbar">
-                  <input aria-label="Search users by name, email or zip"
+                  <input
+                    aria-label="Search users by name, email or zip"
                     placeholder="Search by name, email, or zip"
                     value={userSearch}
                     onChange={(e) => {
@@ -11184,7 +11330,9 @@ export default function AdminPage() {
                 </div>
 
                 {usersLoading && users.length === 0 && (
-                  <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>Loading…</p>
+                  <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>
+                    Loading…
+                  </p>
                 )}
 
                 {!usersLoading && filteredUsers.length === 0 && (
@@ -11264,7 +11412,8 @@ export default function AdminPage() {
                       </div>
 
                       <div className="adm-user-actions">
-                        <select aria-label={`Status for ${u.email || "user"}`}
+                        <select
+                          aria-label={`Status for ${u.email || "user"}`}
                           className="adm-user-status-select"
                           value={u.status || "active"}
                           onChange={(e) => setUserStatus(u.id, e.target.value)}
@@ -11308,7 +11457,8 @@ export default function AdminPage() {
                 </p>
 
                 <div className="adm-searchbar">
-                  <input aria-label="Search by pet name or owner"
+                  <input
+                    aria-label="Search by pet name or owner"
                     placeholder="Search by pet name or owner"
                     value={petSearch}
                     onChange={(e) => {
@@ -11332,7 +11482,9 @@ export default function AdminPage() {
                 </div>
 
                 {petsLoading && pets.length === 0 && (
-                  <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>Loading…</p>
+                  <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>
+                    Loading…
+                  </p>
                 )}
 
                 {(() => {
@@ -11417,7 +11569,8 @@ export default function AdminPage() {
 
                               <div className="adm-pet-foot">
                                 <span className="adm-pet-attr-l">Sex</span>
-                                <select aria-label="Sex"
+                                <select
+                                  aria-label="Sex"
                                   className="adm-line-select adm-pet-select"
                                   value={pet.sex || ""}
                                   onChange={(e) =>
@@ -11494,7 +11647,8 @@ export default function AdminPage() {
                     <div className="adm-invite-grid">
                       <div className="adm-field">
                         <label className="adm-field-label">Email *</label>
-                        <input aria-label="Email"
+                        <input
+                          aria-label="Email"
                           className="adm-field-input"
                           type="email"
                           value={inviteForm.email}
@@ -11510,7 +11664,8 @@ export default function AdminPage() {
                       </div>
                       <div className="adm-field">
                         <label className="adm-field-label">Full name</label>
-                        <input aria-label="Full name"
+                        <input
+                          aria-label="Full name"
                           className="adm-field-input"
                           value={inviteForm.full_name}
                           onChange={(e) =>
@@ -11548,7 +11703,8 @@ export default function AdminPage() {
                           >
                             <span className="adm-perm-box">
                               {on && (
-                                <svg aria-hidden="true"
+                                <svg
+                                  aria-hidden="true"
                                   width="13"
                                   height="13"
                                   viewBox="0 0 24 24"
@@ -11569,7 +11725,9 @@ export default function AdminPage() {
                     </div>
 
                     {inviteError && (
-                      <p role="alert" className="adm-invite-error">{inviteError}</p>
+                      <p role="alert" className="adm-invite-error">
+                        {inviteError}
+                      </p>
                     )}
 
                     <div className="adm-invite-actions">
@@ -11619,7 +11777,8 @@ export default function AdminPage() {
                           >
                             {teamEditingId === u.id ? (
                               <div className="adm-team-edit">
-                                <input aria-label="Full name"
+                                <input
+                                  aria-label="Full name"
                                   className="adm-field-input"
                                   value={teamEditName}
                                   onChange={(e) =>
@@ -11695,7 +11854,8 @@ export default function AdminPage() {
                                 >
                                   <span className="adm-perm-box">
                                     {on && (
-                                      <svg aria-hidden="true"
+                                      <svg
+                                        aria-hidden="true"
                                         width="13"
                                         height="13"
                                         viewBox="0 0 24 24"
@@ -11838,13 +11998,15 @@ export default function AdminPage() {
                           setLogPage(1);
                         }}
                       >
-                        <svg aria-hidden="true"
+                        <svg
+                          aria-hidden="true"
                           width="12"
                           height="12"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke={
-                            TRIAGE_CONFIG[symptomFilter]?.color || "var(--color-slate)"
+                            TRIAGE_CONFIG[symptomFilter]?.color ||
+                            "var(--color-slate)"
                           }
                           strokeWidth="3"
                           strokeLinecap="round"
@@ -11879,7 +12041,8 @@ export default function AdminPage() {
                       >
                         {active && (
                           <span className="adm-triage-check" aria-hidden="true">
-                            <svg aria-hidden="true"
+                            <svg
+                              aria-hidden="true"
                               width="14"
                               height="14"
                               viewBox="0 0 24 24"
@@ -11895,13 +12058,17 @@ export default function AdminPage() {
                         )}
                         <span
                           className="adm-triage-count"
-                          style={{ color: active ? "var(--color-white)" : cfg.color }}
+                          style={{
+                            color: active ? "var(--color-white)" : cfg.color,
+                          }}
                         >
                           {count}
                         </span>
                         <span
                           className="adm-triage-label"
-                          style={{ color: active ? "var(--color-white)" : cfg.color }}
+                          style={{
+                            color: active ? "var(--color-white)" : cfg.color,
+                          }}
                         >
                           {cfg.label}
                         </span>
@@ -11922,7 +12089,9 @@ export default function AdminPage() {
                 )}
 
                 {symptomLoading && symptomLogs.length === 0 && (
-                  <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>Loading…</p>
+                  <p style={{ color: "var(--color-muted)", fontSize: "14px" }}>
+                    Loading…
+                  </p>
                 )}
 
                 {!symptomLoading && filteredLogs.length === 0 && (
@@ -11979,7 +12148,8 @@ export default function AdminPage() {
                       onClick={() => goToLogPage(Math.max(1, logPageSafe - 1))}
                       aria-label="Previous page"
                     >
-                      <svg aria-hidden="true"
+                      <svg
+                        aria-hidden="true"
                         width="16"
                         height="16"
                         viewBox="0 0 24 24"
@@ -12005,7 +12175,8 @@ export default function AdminPage() {
                       aria-label="Next page"
                     >
                       Next
-                      <svg aria-hidden="true"
+                      <svg
+                        aria-hidden="true"
                         width="16"
                         height="16"
                         viewBox="0 0 24 24"
@@ -12278,7 +12449,8 @@ export default function AdminPage() {
           style={{ fontSize: "18px" }}
           title="Call Notes"
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             width="19"
             height="19"
             viewBox="0 0 24 24"
@@ -12297,7 +12469,8 @@ export default function AdminPage() {
           onClick={() => window.scrollTo({ top: 0, behavior: smoothScroll() })}
           title="Scroll to top"
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             width="20"
             height="20"
             viewBox="0 0 24 24"
@@ -12320,7 +12493,8 @@ export default function AdminPage() {
           }
           title="Scroll to bottom"
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             width="20"
             height="20"
             viewBox="0 0 24 24"

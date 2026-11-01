@@ -351,7 +351,7 @@ function FileRow({ item, vet, canRemove, onRemove }) {
 
   return (
     <div className="rbu-file">
-      <FileText size={18} strokeWidth={2} className="rbu-file-icon" />
+      <FileText size={24} strokeWidth={2} className="rbu-file-icon" />
       <div className="rbu-file-body">
         <p className="rbu-file-name">{file.name}</p>
         <p className="rbu-file-meta">{sizeKb} KB</p>

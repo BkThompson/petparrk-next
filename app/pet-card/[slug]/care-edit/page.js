@@ -701,7 +701,6 @@ function EditorView({ pet, onPetChange }) {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 20px;
-          // min-height: 36px;
         }
         /* Breadcrumb lives inside the topbar flex row; kill its own bottom
            margin so the topbar's margin-bottom is the single source of the
@@ -905,27 +904,36 @@ function EditorView({ pet, onPetChange }) {
           justify-content: flex-end;
           margin-bottom: 12px;
         }
+        /* Matches .adm-filter-pill: 38px tall, 2px --control-border (which is
+           --color-border-strong). --color-border is the card-edge token and is
+           too faint to read as a control — globals.css says as much where
+           --control-border is defined. Hover moves background, border and text
+           together, so border-color has to be in the transition list. */
         .pce-expand-all-btn {
           display: inline-flex;
           align-items: center;
-          min-height: 44px;
-          background: none;
-          border: 2px solid var(--color-border);
-          // border-radius: 9999px;
-          padding: 6px 14px;
+          height: 38px;
+          background: var(--color-white);
+          border: var(--pill-border-w, 2px) solid var(--control-border);
+          border-radius: 12px;
+          padding: 0 14px;
           font-size: 14px;
           font-weight: 700;
           color: var(--color-slate);
           cursor: pointer;
           font-family: var(--font-urbanist, 'Urbanist', sans-serif);
-          transition: background 0.15s, color 0.15s;
-          border-radius: 12px;
+          transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
         }
         @media (hover: hover) {
           .pce-expand-all-btn:hover {
             background: var(--color-cream);
+            border-color: var(--color-navy-dark);
             color: var(--color-navy-dark);
           }
+        }
+        .pce-expand-all-btn:focus-visible {
+          outline: 2px solid var(--color-border-focus);
+          outline-offset: 2px;
         }
         .pce-section-eyebrow {
           font-size: 11px;
@@ -1161,7 +1169,6 @@ function EditorView({ pet, onPetChange }) {
         .pce-list-item {
           display: flex;
           align-items: flex-start;
-          // gap: 4px;
           padding: 20px;
           background: var(--color-white);
           border: 1px solid var(--color-border);
@@ -3512,7 +3519,6 @@ function EditorView({ pet, onPetChange }) {
           height: 42px;
           min-width: 90px;
           padding: 0 24px;
-          // line-height: 1;
           background: var(--color-terracotta-600);
           color: var(--color-white);
           border: 2px solid var(--color-terracotta-600);
@@ -3534,7 +3540,6 @@ function EditorView({ pet, onPetChange }) {
           height: 42px;
           min-width: 90px;
           padding: 0 24px;
-          // line-height: 1;
           background: var(--color-white);
           color: var(--color-navy-dark);
           border: 2px solid rgb(var(--color-navy-dark-rgb) / 0.1);
@@ -3940,12 +3945,12 @@ function PetUrlField({ pet, onSlugChange }) {
         <p className="pce-field-hint pce-field-saved">URL updated.</p>
       ) : hasChanged ? (
         <p className="pce-field-hint pce-field-warn-soft">
-          New URL: petparrk.com/pet-card/{normalized || "your-pet"} · Updating
+          New URL: nehalyn.com/pet-card/{normalized || "your-pet"} · Updating
           will break any links you've shared.
         </p>
       ) : (
         <p className="pce-field-hint">
-          Your pet card lives at petparrk.com/pet-card/
+          Your pet card lives at nehalyn.com/pet-card/
           {normalized || "your-pet"}
         </p>
       )}
@@ -4087,7 +4092,7 @@ function IdentityDisplay({ pet, onEdit }) {
         <div className="pce-list-item-body">
           <div className="pce-list-item-title-row">
             <span className="pce-list-item-icon-inline">
-              <PawPrint size={18} strokeWidth={2} />
+              <PawPrint size={24} strokeWidth={2} />
             </span>
             <p className="pce-list-item-title">{pet.name || "Unnamed pet"}</p>
           </div>
@@ -4725,7 +4730,7 @@ function TextareaCard({
               <div className="pce-list-item-title-row pce-list-item-title-row--prose">
                 {Icon ? (
                   <span className="pce-list-item-icon-inline">
-                    <Icon size={18} strokeWidth={2} />
+                    <Icon size={24} strokeWidth={2} />
                   </span>
                 ) : null}
                 <p className="pce-list-item-prose">{value}</p>
@@ -5310,7 +5315,7 @@ function FeedingItem({ item, onEdit }) {
       <div className="pce-list-item-body">
         <div className="pce-list-item-title-row">
           <span className="pce-list-item-icon-inline">
-            <UtensilsCrossed size={18} strokeWidth={2} />
+            <UtensilsCrossed size={24} strokeWidth={2} />
           </span>
           <p className="pce-list-item-title">
             {item.name || "Untitled feeding"}
@@ -5969,7 +5974,7 @@ function WalkItem({ item, onEdit }) {
       <div className="pce-list-item-body">
         <div className="pce-list-item-title-row">
           <span className="pce-list-item-icon-inline">
-            <PawPrint size={18} strokeWidth={2} />
+            <PawPrint size={24} strokeWidth={2} />
           </span>
           <p className="pce-list-item-title">{item.name || "Untitled walk"}</p>
           {showPaused ? (
@@ -6840,7 +6845,7 @@ function WeightItem({ item, previousItem, weightUnit, onEdit }) {
       <div className="pce-list-item-body">
         <div className="pce-list-item-title-row">
           <span className="pce-list-item-icon-inline">
-            <Scale size={18} strokeWidth={2} />
+            <Scale size={24} strokeWidth={2} />
           </span>
           <p className="pce-list-item-title">{dateStr || "Untitled entry"}</p>
         </div>
@@ -8167,7 +8172,7 @@ function VaccinationItem({ item, onEdit }) {
       <div className="pce-list-item-body">
         <div className="pce-list-item-title-row">
           <span className="pce-list-item-icon-inline">
-            <Syringe size={18} strokeWidth={2} />
+            <Syringe size={24} strokeWidth={2} />
           </span>
           <p className="pce-list-item-title">
             {item.vaccine_type || "Untitled vaccination"}
@@ -8757,7 +8762,7 @@ function MedicationItem({ item, onEdit }) {
       <div className="pce-list-item-body">
         <div className="pce-list-item-title-row">
           <span className="pce-list-item-icon-inline">
-            <Pill size={18} strokeWidth={2} />
+            <Pill size={24} strokeWidth={2} />
           </span>
           <p className="pce-list-item-title">
             {item.medication_name || "Untitled medication"}
@@ -9674,7 +9679,7 @@ function SingleVetItem({ kind, pet, namePrefix, onEdit }) {
       <div className="pce-list-item-body">
         <div className="pce-list-item-title-row">
           <span className="pce-list-item-icon-inline">
-            <Icon size={18} strokeWidth={2} />
+            <Icon size={24} strokeWidth={2} />
           </span>
           <p className="pce-list-item-title">
             {name || (kind === "emergency" ? "Emergency vet" : "Primary vet")}
@@ -10136,7 +10141,7 @@ function SpecialistItem({ item, onEdit }) {
       <div className="pce-list-item-body">
         <div className="pce-list-item-title-row">
           <span className="pce-list-item-icon-inline">
-            <BriefcaseMedical size={18} strokeWidth={2} />
+            <BriefcaseMedical size={24} strokeWidth={2} />
           </span>
           <p className="pce-list-item-title">
             {item.name || "Untitled specialist"}
@@ -10811,7 +10816,7 @@ function EmergencyContactItem({ item, onEdit }) {
       <div className="pce-list-item-body">
         <div className="pce-list-item-title-row">
           <span className="pce-list-item-icon-inline">
-            <UserRound size={18} strokeWidth={2} />
+            <UserRound size={24} strokeWidth={2} />
           </span>
           <p className="pce-list-item-title">
             {item.name || "Untitled contact"}
@@ -11437,7 +11442,7 @@ function VetVisitItem({ item, onEdit }) {
       <div className="pce-list-item-body">
         <div className="pce-list-item-title-row">
           <span className="pce-list-item-icon-inline">
-            <CalendarClock size={18} strokeWidth={2} />
+            <CalendarClock size={24} strokeWidth={2} />
           </span>
           <p className="pce-list-item-title">{dateStr || "Undated visit"}</p>
         </div>
@@ -11935,7 +11940,7 @@ function InsuranceBlock({
             <div className="pce-list-item-body">
               <div className="pce-list-item-title-row">
                 <span className="pce-list-item-icon-inline">
-                  <ShieldCheck size={18} strokeWidth={2} />
+                  <ShieldCheck size={24} strokeWidth={2} />
                 </span>
                 <p className="pce-list-item-title">
                   {pet.insurance_provider ||

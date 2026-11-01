@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { GOOGLE_LOGO } from "../../lib/palettes";
+import { LogoStacked } from "../../components/Logo";
 
 // Known disposable / throwaway email domains. Blocking these at signup stops the
 // low-effort bot & abuse accounts that use temporary inboxes to dodge email
@@ -429,9 +430,9 @@ function AuthPageContent() {
       }}
     >
       {showPassword ? (
-        <EyeOff size={18} strokeWidth={2} />
+        <EyeOff size={24} strokeWidth={2} />
       ) : (
-        <Eye size={18} strokeWidth={2} />
+        <Eye size={24} strokeWidth={2} />
       )}
     </button>
   );
@@ -525,24 +526,22 @@ function AuthPageContent() {
             border: "1px solid var(--color-border)",
           }}
         >
-          {/* Logo */}
+          {/* Logo — the stacked lockup carries the name, so there is no
+              separate <h1> text any more. onLight: this card is white. */}
           <div style={{ textAlign: "center", marginBottom: "28px" }}>
-            <div style={{ fontSize: "32px", marginBottom: "6px" }}>🐾</div>
+            {/* Still the page's <h1> — the mark's aria-label is its text. */}
             <h1
               style={{
-                margin: 0,
-                color: "var(--color-navy-dark)",
-                fontSize: "22px",
-                fontWeight: "800",
-                fontFamily: "var(--font-urbanist, system-ui)",
-                letterSpacing: "-0.025em",
+                margin: "0 0 14px",
+                display: "flex",
+                justifyContent: "center",
               }}
             >
-              PetParrk
+              <LogoStacked height={88} variant="onLight" />
             </h1>
             <p
               style={{
-                margin: "6px 0 0",
+                margin: "0",
                 color: "var(--color-muted)",
                 fontSize: "15px",
                 fontWeight: "500",
@@ -951,7 +950,7 @@ export default function AuthPage() {
 
 function GoogleIcon() {
   return (
-    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 48 48">
+    <svg aria-hidden="true" width="24" height="24" viewBox="0 0 48 48">
       <path
         fill={GOOGLE_LOGO.amber450}
         d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.5 6.8 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z"

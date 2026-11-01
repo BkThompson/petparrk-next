@@ -263,7 +263,7 @@ export default function LevelProgress({
         ))}
         {celebrate && (
           <div className="lvp-celeb-badge">
-            <CelebIcon size={18} strokeWidth={2.4} color="var(--color-gold)" />
+            <CelebIcon size={24} strokeWidth={2.4} color="var(--color-gold)" />
             {tierCrossed
               ? `Welcome to ${celebrate.tierName || "a new tier"}!`
               : `Level ${celebrate.level || ""} reached!`}

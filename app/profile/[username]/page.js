@@ -346,8 +346,8 @@ function ProfileNotFound() {
       </p>
       <Link href="/" className="pp-notfound-btn">
         <svg
-          width="18"
-          height="18"
+          width="24"
+          height="24"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -359,7 +359,7 @@ function ProfileNotFound() {
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>
-        Back to PetParrk
+        Back to Nehalyn
       </Link>
       <style>{`
         .pp-notfound {
@@ -451,7 +451,9 @@ export default function ProfilePage() {
   const [justSavedPet, setJustSavedPet] = useState(null);
   const [editingPetId, setEditingPetId] = useState(null);
   const [showLevelModal, setShowLevelModal] = useState(false);
-  const levelDialogRef = useDialog(showLevelModal, () => setShowLevelModal(false));
+  const levelDialogRef = useDialog(showLevelModal, () =>
+    setShowLevelModal(false),
+  );
   const [expandedTiers, setExpandedTiers] = useState({});
   const [celebrate, setCelebrate] = useState(null);
   // Lock background scroll while the level modal is open (same pattern as
@@ -870,12 +872,28 @@ export default function ProfilePage() {
   }
   function triageLabel(result) {
     if (result === "EMERGENCY")
-      return { dot: "var(--color-error)", text: "var(--color-error-text)", short: "Emergency" };
+      return {
+        dot: "var(--color-error)",
+        text: "var(--color-error-text)",
+        short: "Emergency",
+      };
     if (result === "SEE_VET")
-      return { dot: "var(--color-caution)", text: "var(--color-caution-text)", short: "See vet soon" };
+      return {
+        dot: "var(--color-caution)",
+        text: "var(--color-caution-text)",
+        short: "See vet soon",
+      };
     if (result === "MONITOR")
-      return { dot: "var(--color-success)", text: "var(--color-success-text)", short: "Monitor at home" };
-    return { dot: "var(--color-muted)", text: "var(--color-slate)", short: result || "—" };
+      return {
+        dot: "var(--color-success)",
+        text: "var(--color-success-text)",
+        short: "Monitor at home",
+      };
+    return {
+      dot: "var(--color-muted)",
+      text: "var(--color-slate)",
+      short: result || "—",
+    };
   }
   function relativeTimeShort(iso) {
     if (!iso) return "";
@@ -2507,11 +2525,11 @@ export default function ProfilePage() {
           height: 48px; padding: 0 24px;
           font-size: 15px; border-radius: 12px;
           color: ${C.error}; background: var(--color-white);
-          border: 1px solid rgb(var(--color-error-rgb) / 0.24); cursor: pointer;
+          border: 2px solid rgb(var(--color-error-rgb) / 0.24); cursor: pointer;
           font-family: var(--font-urbanist,'Urbanist',sans-serif);
           font-weight: 700; transition: background 0.15s;
         }
-        @media (hover: hover) { .btn-danger-sm:hover { background: ${C.error}; color: ${C.white}; border: 1px solid ${C.error}; font-weight: 700; line-height: 1; transition: background 0.15s; } }
+        @media (hover: hover) { .btn-danger-sm:hover { background: ${C.error}; color: ${C.white}; border: 2px solid ${C.error}; font-weight: 700; line-height: 1; transition: background 0.15s; } }
         .btn-row {
           display: flex; gap: 10px; align-items: center;
           flex-wrap: wrap; margin-top: 6px;
@@ -3096,15 +3114,56 @@ export default function ProfilePage() {
           }
         }
 
+        /* Kept in step with the same rule in app/profile/page.js. This page
+           renders the same <PetFormCard>, and without these the "Open Pet
+           Editor" link fell back to an unstyled anchor. Left-aligned on
+           purpose: it continues the paragraph above it, and the primary
+           Save/Cancel actions own the right edge of the row below. */
+        .pp-edit-full-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          align-self: flex-start;
+          margin: 15px 0 0;
+          padding: 0 20px;
+          height: 42px;
+          background: transparent;
+          color: var(--color-terracotta-700);
+          border: 1.5px solid var(--color-terracotta);
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 700;
+          text-decoration: none;
+          font-family: var(--font-urbanist,'Urbanist',sans-serif);
+          transition: background 0.15s, color 0.15s;
+        }
+        @media (hover: hover) {
+          .pp-edit-full-link:hover {
+            background: var(--color-terracotta-700);
+            color: var(--color-white);
+          }
+        }
+        .pp-edit-full-link svg { transition: transform 0.15s; }
+        @media (hover: hover) { .pp-edit-full-link:hover svg { transform: translateX(3px); } }
+        @media (max-width: 640px) {
+          .pp-edit-full-link { display: flex; width: 100%; }
+        }
+
         /* PHONE (≤500px) — true mobile, single-column pet grid */
+
         @media (max-width: 500px) {
-          .pp-pet-grid.cols-1 { grid-template-columns: 1fr; }
+          /* All grid variants collapse to a single column on phones. The //
+             lines that used to sit here were never CSS comments — the parser
+             read straight past them, so .cols-2 and .cols-3 were left with a
+             dangling comma and the whole rule was discarded. Same bug that is
+             already fixed, and described, in app/profile/page.js. */
+          .pp-pet-grid.cols-1,
           .pp-pet-grid.cols-2,
           .pp-pet-grid.cols-3,
-          // .pp-pet-grid.cols-4 { 
-          //   grid-template-columns: 1fr; 
-          //   gap: 30px;
-          //   }
+          .pp-pet-grid.cols-4 {
+            grid-template-columns: 1fr;
+            gap: 30px;
+          }
 
           .btn-row { flex-direction: column; align-items: stretch; }
           .btn-row .btn-primary,
@@ -3151,7 +3210,7 @@ export default function ProfilePage() {
                           title="Change profile photo"
                           aria-label="Change profile photo"
                         >
-                          <Camera size={18} />
+                          <Camera size={24} />
                         </button>
                         <input
                           ref={fileInputRef}
@@ -3494,7 +3553,7 @@ export default function ProfilePage() {
                                     title="Change pet photo"
                                     aria-label="Change pet photo"
                                   >
-                                    <Camera size={18} />
+                                    <Camera size={24} />
                                   </button>
                                   <input
                                     ref={(el) => {
@@ -3781,7 +3840,10 @@ export default function ProfilePage() {
                   >
                     <div
                       className="pp-public-hero-inner"
-                      style={{ background: card.hero_bg_color || "var(--color-navy-mid)" }}
+                      style={{
+                        background:
+                          card.hero_bg_color || "var(--color-navy-mid)",
+                      }}
                     >
                       <div className="pp-public-hero-photo">
                         <HeroNameplate
@@ -3792,7 +3854,9 @@ export default function ProfilePage() {
                           photoUrl={card.photo_url}
                           species={card.species}
                           rarity={card.hero_rarity}
-                          cardColor={card.hero_bg_color || "var(--color-navy-mid)"}
+                          cardColor={
+                            card.hero_bg_color || "var(--color-navy-mid)"
+                          }
                         />
                       </div>
                     </div>
@@ -3892,7 +3956,14 @@ export default function ProfilePage() {
             className="pp-modal-backdrop"
             onClick={() => setShowLevelModal(false)}
           >
-            <div className="pp-modal" ref={levelDialogRef} role="dialog" aria-modal="true" aria-labelledby="pp-levels-title" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="pp-modal"
+              ref={levelDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="pp-levels-title"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="pp-modal-head">
                 <h3 id="pp-levels-title">Levels</h3>
                 <button
@@ -4329,7 +4400,8 @@ function ProfileEditForm({
       <div className="form-grid">
         <div className="field">
           <label className="label">Display Name</label>
-          <input aria-label="Display Name"
+          <input
+            aria-label="Display Name"
             className="input"
             value={profileForm.full_name}
             onChange={(e) =>
@@ -4340,7 +4412,8 @@ function ProfileEditForm({
         </div>
         <div className="field">
           <label className="label">Username</label>
-          <input aria-label="Username"
+          <input
+            aria-label="Username"
             className="input"
             value={profileForm.username}
             onChange={(e) => {
@@ -4357,7 +4430,8 @@ function ProfileEditForm({
             style={{ borderColor: usernameError ? C.error : undefined }}
           />
           {usernameError ? (
-            <p role="alert"
+            <p
+              role="alert"
               style={{
                 margin: "4px 0 0",
                 fontSize: "14px",
@@ -4383,9 +4457,13 @@ function ProfileEditForm({
               }}
             >
               <AlertTriangle
-                size={18}
+                size={24}
                 strokeWidth={2.2}
-                style={{ color: C.warningText, flexShrink: 0, marginTop: "1px" }}
+                style={{
+                  color: C.warningText,
+                  flexShrink: 0,
+                  marginTop: "1px",
+                }}
               />
               <div style={{ minWidth: 0 }}>
                 <p
@@ -4423,7 +4501,7 @@ function ProfileEditForm({
                 >
                   Your new URL will be:{" "}
                   <span style={{ fontWeight: 700, wordBreak: "break-all" }}>
-                    petparrk.com/profile/{profileForm.username}
+                    nehalyn.com/profile/{profileForm.username}
                   </span>
                   .
                 </p>
@@ -4438,7 +4516,7 @@ function ProfileEditForm({
                 color: C.muted,
               }}
             >
-              Your profile lives at petparrk.com/profile/
+              Your profile lives at nehalyn.com/profile/
               {profileForm.username || "username"}
             </p>
           )}
@@ -4446,7 +4524,8 @@ function ProfileEditForm({
       </div>
       <div className="field">
         <label className="label">Bio</label>
-        <AutoGrowTextarea aria-label="Bio"
+        <AutoGrowTextarea
+          aria-label="Bio"
           className="input"
           value={profileForm.bio}
           onChange={(e) =>
@@ -4460,7 +4539,8 @@ function ProfileEditForm({
       <div className="form-grid">
         <div className="field">
           <label className="label">Zip Code</label>
-          <input aria-label="Zip Code"
+          <input
+            aria-label="Zip Code"
             className="input"
             value={profileForm.zip_code}
             onChange={(e) =>
@@ -5022,7 +5102,8 @@ function PetFormCard({
               *
             </span>
           </label>
-          <input aria-label="Name"
+          <input
+            aria-label="Name"
             className="input"
             value={petForm.name}
             onChange={(e) => setPetForm({ ...petForm, name: e.target.value })}
@@ -5041,7 +5122,8 @@ function PetFormCard({
               *
             </span>
           </label>
-          <select aria-label="Species"
+          <select
+            aria-label="Species"
             className="input"
             value={petForm.species}
             onChange={(e) =>
@@ -5062,7 +5144,8 @@ function PetFormCard({
           </select>
           {petForm.species === "Other" && (
             <div style={{ marginTop: "10px", marginBottom: "4px" }}>
-              <input aria-label="Specify species"
+              <input
+                aria-label="Specify species"
                 className="input"
                 value={petForm.species_other || ""}
                 onChange={(e) =>
@@ -5079,7 +5162,8 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Breed</label>
-          <input aria-label="Breed"
+          <input
+            aria-label="Breed"
             className="input"
             value={petForm.breed}
             onChange={(e) => setPetForm({ ...petForm, breed: e.target.value })}
@@ -5088,7 +5172,8 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Sex</label>
-          <select aria-label="Sex"
+          <select
+            aria-label="Sex"
             className="input"
             value={petForm.sex || ""}
             onChange={(e) => setPetForm({ ...petForm, sex: e.target.value })}
@@ -5101,7 +5186,8 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Birthday</label>
-          <input aria-label="Birthday"
+          <input
+            aria-label="Birthday"
             className="input"
             type="date"
             value={petForm.birthday}
@@ -5116,7 +5202,8 @@ function PetFormCard({
         <div className="field">
           <label className="label">Weight</label>
           <div className="pp-weight-row">
-            <input aria-label="Weight"
+            <input
+              aria-label="Weight"
               className="input pp-weight-input"
               type="number"
               inputMode="decimal"
@@ -5180,7 +5267,8 @@ function PetFormCard({
       <p className="pp-section-divider">Medical</p>
       <div className="field">
         <label className="label">Microchip #</label>
-        <input aria-label="Microchip #"
+        <input
+          aria-label="Microchip #"
           className="input"
           value={petForm.microchip_number}
           onChange={(e) => {
@@ -5203,7 +5291,8 @@ function PetFormCard({
         />
         <p className="field-hint">9, 10, or 15 digits</p>
         {microchipError && (
-          <p role="alert"
+          <p
+            role="alert"
             style={{
               margin: "4px 0 0",
               fontSize: "13px",
@@ -5217,7 +5306,8 @@ function PetFormCard({
       </div>
       <div className="field">
         <label className="label">Allergies</label>
-        <input aria-label="Allergies"
+        <input
+          aria-label="Allergies"
           className="input"
           value={petForm.allergies}
           onChange={(e) =>
@@ -5229,7 +5319,8 @@ function PetFormCard({
       </div>
       <div className="field">
         <label className="label">Medications</label>
-        <input aria-label="Medications"
+        <input
+          aria-label="Medications"
           className="input"
           value={petForm.medications}
           onChange={(e) =>
@@ -5240,7 +5331,8 @@ function PetFormCard({
       </div>
       <div className="field">
         <label className="label">Notes</label>
-        <AutoGrowTextarea aria-label="Notes"
+        <AutoGrowTextarea
+          aria-label="Notes"
           className="input"
           value={petForm.notes}
           onChange={(e) => setPetForm({ ...petForm, notes: e.target.value })}
@@ -5264,7 +5356,8 @@ function PetFormCard({
       <div className="form-grid">
         <div className="field">
           <label className="label">Owner Name</label>
-          <input aria-label="Owner Name"
+          <input
+            aria-label="Owner Name"
             className="input"
             value={petForm.owner_name}
             onChange={(e) =>
@@ -5275,7 +5368,8 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Owner Phone</label>
-          <input aria-label="Owner Phone"
+          <input
+            aria-label="Owner Phone"
             className="input"
             value={petForm.owner_phone}
             onChange={(e) =>
@@ -5290,7 +5384,8 @@ function PetFormCard({
       </div>
       <div className="field">
         <label className="label">Owner Email</label>
-        <input aria-label="Owner Email"
+        <input
+          aria-label="Owner Email"
           className="input"
           type="email"
           value={petForm.owner_email}
@@ -5306,7 +5401,8 @@ function PetFormCard({
         <div className="field">
           <label className="label">Vet Name</label>
           <div ref={vetPickerRef} style={{ position: "relative" }}>
-            <input aria-label="Vet name"
+            <input
+              aria-label="Vet name"
               className="input"
               value={petForm.vet_name}
               onChange={(e) => {
@@ -5328,14 +5424,18 @@ function PetFormCard({
                   background: C.white,
                   border: `1.5px solid ${C.border}`,
                   borderRadius: "12px",
-                  boxShadow: "0 12px 32px rgb(var(--color-navy-dark-rgb) / 0.16)",
+                  boxShadow:
+                    "0 12px 32px rgb(var(--color-navy-dark-rgb) / 0.16)",
                   overflow: "hidden",
                   maxHeight: "264px",
                   overflowY: "auto",
                 }}
               >
                 {filteredPetVets.map((vet) => (
-                  <div role="button" tabIndex={0} onKeyDown={onActivate(() => pickPetVet(vet))}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={onActivate(() => pickPetVet(vet))}
                     key={vet.id}
                     onClick={() => pickPetVet(vet)}
                     style={{
@@ -5380,7 +5480,8 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">Vet Phone</label>
-          <input aria-label="Vet Phone"
+          <input
+            aria-label="Vet Phone"
             className="input"
             value={petForm.vet_phone}
             onChange={(e) =>
@@ -5395,7 +5496,8 @@ function PetFormCard({
       </div>
       <div className="field">
         <label className="label">Vet Address</label>
-        <input aria-label="Vet Address"
+        <input
+          aria-label="Vet Address"
           className="input"
           value={petForm.vet_address}
           onChange={(e) =>
@@ -5407,7 +5509,8 @@ function PetFormCard({
       <div className="form-grid">
         <div className="field">
           <label className="label">City</label>
-          <input aria-label="City"
+          <input
+            aria-label="City"
             className="input"
             value={petForm.vet_city}
             onChange={(e) =>
@@ -5418,7 +5521,8 @@ function PetFormCard({
         </div>
         <div className="field">
           <label className="label">ZIP</label>
-          <input aria-label="ZIP"
+          <input
+            aria-label="ZIP"
             className="input"
             value={petForm.vet_zip}
             onChange={(e) =>
@@ -5575,10 +5679,10 @@ function CommunityContributions({
             {currentLevelDef ? (
               <>
                 is a <strong style={{ color: blurbAccent }}>{levelName}</strong>{" "}
-                in the PetParrk community
+                in the Nehalyn community
               </>
             ) : (
-              "is a new member of the PetParrk community"
+              "is a new member of the Nehalyn community"
             )}
             {monthsActive >= 1
               ? `, a member for ${monthsActive === 1 ? "1 month" : `${monthsActive} months`}.`
@@ -5601,9 +5705,9 @@ function CommunityContributions({
               {/* Verified checkmark badge — upper right */}
               <div
                 className="pp-cc-verified"
-                title="Each price reviewed by PetParrk admins"
+                title="Each price reviewed by Nehalyn admins"
               >
-                <ShieldCheck size={18} strokeWidth={2.4} color={C.navyDark} />
+                <ShieldCheck size={24} strokeWidth={2.4} color={C.navyDark} />
               </div>
 
               <div
@@ -5621,7 +5725,7 @@ function CommunityContributions({
 
               <div className="pp-cc-verified-line">
                 <ShieldCheck size={14} strokeWidth={2.2} color={C.gold} />
-                <span>Each price reviewed by PetParrk admins</span>
+                <span>Each price reviewed by Nehalyn admins</span>
               </div>
             </div>
           </div>

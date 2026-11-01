@@ -35,21 +35,43 @@ export async function generateMetadata({ params }) {
   const post = await getPost(slug);
   if (!post) return {};
   const url = `${SITE_URL}/blog/${post.slug}`;
+  // Google cuts titles off at about 60 characters. Long article titles go
+  // without the brand-name ending (e.g. " | Nehalyn") so the whole question shows.
+  const branded = `${post.title} | ${BRAND}`;
+  const title = branded.length <= 60 ? branded : post.title;
   return {
-    title: `${post.title} | ${BRAND}`,
+    title,
     description: post.description,
+    keywords: [post.topic, post.crumb, "dogs", "dog health", "vet"].filter(Boolean),
     alternates: { canonical: url },
     robots: post.draft ? { index: false, follow: false } : undefined,
+    // Set in full here: these replace (not add to) the site-wide defaults in
+    // app/layout.js, which describe the home page, not an article.
     openGraph: {
       title: post.title,
       description: post.description,
       url,
+      siteName: BRAND,
+      locale: "en_US",
       type: "article",
       publishedTime: post.published,
       modifiedTime: post.updated || post.published,
       authors: post.authorInfo ? [post.authorInfo.name] : undefined,
+      section: post.topic,
+    },
+    twitter: {
+      card: "summary",
+      title: post.title,
+      description: post.description,
     },
   };
+}
+
+// "(888) 426-4435" → "tel:+18884264435". Anything else → null.
+function telHref(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (!/^\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/.test(String(value || "").trim())) return null;
+  return `tel:+1${digits}`;
 }
 
 export default async function BlogPost({ params }) {
@@ -73,8 +95,10 @@ export default async function BlogPost({ params }) {
       datePublished: post.published,
       dateModified: post.updated || post.published,
       author: author ? { "@type": "Person", name: author.name } : undefined,
-      publisher: { "@type": "Organization", name: BRAND },
+      publisher: { "@type": "Organization", name: BRAND, url: SITE_URL },
       mainEntityOfPage: url,
+      articleSection: post.topic,
+      inLanguage: "en-US",
     },
     {
       "@context": "https://schema.org",
@@ -165,15 +189,25 @@ export default async function BlogPost({ params }) {
                 {post.glance.map((g) => (
                   <div key={g.label}>
                     <dt>{g.label}</dt>
-                    <dd>{g.value}</dd>
+                    <dd>
+                      {/* Phone numbers can be tapped to call. */}
+                      {telHref(g.value) ? (
+                        <a href={telHref(g.value)}>{g.value}</a>
+                      ) : (
+                        g.value
+                      )}
+                    </dd>
                   </div>
                 ))}
               </dl>
-              <p className="ba-glance-note">
-                These numbers are a starting point, not a quote. If your
-                clinic&apos;s price is higher, ask what&apos;s included.
-                Sometimes there&apos;s a good reason.
-              </p>
+              {/* Only price articles (ones with a price cover) get this note. */}
+              {post.cover && (
+                <p className="ba-glance-note">
+                  These numbers are a starting point, not a quote. If your
+                  clinic&apos;s price is higher, ask what&apos;s included.
+                  Sometimes there&apos;s a good reason.
+                </p>
+              )}
             </section>
           )}
 

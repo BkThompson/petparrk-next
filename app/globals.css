@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
-   PetParrk — globals.css
+   Nehalyn — globals.css
    Design System v1.1 — WCAG 2.1 AA colour values
    ───────────────────────────────────────────── */
 
@@ -162,6 +162,14 @@ html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   scrollbar-gutter: stable;
+  /* The canvas — every pixel the document doesn't paint. On an iPhone X and
+     later the browser insets the page above the home indicator and fills the
+     strip below with this colour, so with the cream from <body> the navy
+     footer stopped short of the bottom of the screen. Navy matches both ends:
+     the footer below and the navbar above, where it also replaces the cream
+     rubber-band flash when you overscroll the top. <body> keeps cream; once
+     html carries a background, body's paints only its own box. */
+  background-color: var(--color-navy-dark);
 }
 
 html.sheet-open {

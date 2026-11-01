@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 const EFFECTIVE_DATE = "September 2, 2026";
-const CONTACT_EMAIL = "[legal@petparrk.com]";
+const CONTACT_EMAIL = "legal@nehalyn.com";
 
 export default function DoNotSell() {
   return (
@@ -38,8 +38,8 @@ export default function DoNotSell() {
           </div>
           <div className="legal-notice-box">
             <p>
-              <strong>Current Status:</strong> PetParrk does not sell your
-              personal information to third parties. PetParrk does not share
+              <strong>Current Status:</strong> Nehalyn does not sell your
+              personal information to third parties. Nehalyn does not share
               your personal information for cross-context behavioral
               advertising. No opt-out action is required at this time because we
               do not engage in these practices.
@@ -48,7 +48,7 @@ export default function DoNotSell() {
           <div className="legal-section">
             <h2 className="legal-h2">Our Current Data Practices</h2>
             <p className="legal-p">
-              As of the effective date of this notice, PetParrk does not engage
+              As of the effective date of this notice, Nehalyn does not engage
               in the sale or sharing of personal information as defined under
               the California Consumer Privacy Act (CCPA), as amended by the
               California Privacy Rights Act (CPRA). Specifically:
@@ -68,7 +68,7 @@ export default function DoNotSell() {
                 advertising;
               </li>
               <li>
-                We do not display third-party advertisements inside the PetParrk
+                We do not display third-party advertisements inside the Nehalyn
                 platform.
               </li>
             </ul>
@@ -86,7 +86,7 @@ export default function DoNotSell() {
             <p className="legal-p">
               Under the CCPA these are service provider relationships, not sales
               or shares. Each vendor is contractually restricted to processing
-              the information solely to perform services for PetParrk. None of
+              the information solely to perform services for Nehalyn. None of
               them receives your information for their own purposes, may sell
               it, or may use it to build profiles or to target advertising. We
               receive nothing of value in exchange. We describe these
@@ -101,10 +101,10 @@ export default function DoNotSell() {
           <div className="legal-section">
             <h2 className="legal-h2">Future Practices and Disclosure</h2>
             <p className="legal-p">
-              PetParrk may in the future introduce affiliate partnerships or
+              Nehalyn may in the future introduce affiliate partnerships or
               referral programs that could involve the use of tracking
               technologies. If and when such practices are introduced, they may
-              constitute "sharing" of personal information under CCPA. PetParrk
+              constitute "sharing" of personal information under CCPA. Nehalyn
               commits to:
             </p>
             <ul className="legal-ul">
@@ -134,8 +134,8 @@ export default function DoNotSell() {
             <p className="legal-p">
               If you are a California resident, you have the right under CCPA to
               opt out of the sale or sharing of your personal information.
-              Because PetParrk does not currently sell or share personal
-              information, no action is required. If you believe PetParrk has
+              Because Nehalyn does not currently sell or share personal
+              information, no action is required. If you believe Nehalyn has
               sold or shared your personal information inconsistently with this
               notice, contact us at{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">
@@ -147,7 +147,7 @@ export default function DoNotSell() {
               <strong>Global Privacy Control.</strong> Some browsers and
               extensions send a Global Privacy Control (GPC) signal, which acts
               as an opt-out of the sale or sharing of personal information.
-              PetParrk does not sell or share personal information, so there is
+              Nehalyn does not sell or share personal information, so there is
               nothing for a GPC signal to opt out of. If we ever introduce a
               practice that constitutes a sale or share, we will treat a GPC
               signal as a valid opt-out request for that browser, as required by
@@ -166,7 +166,7 @@ export default function DoNotSell() {
           <div className="legal-section">
             <h2 className="legal-h2">Contact</h2>
             <p className="legal-p">
-              <strong>PetParrk, LLC</strong>
+              <strong>Nehalyn, LLC</strong>
               <br />
               Email:{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">

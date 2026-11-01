@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 const EFFECTIVE_DATE = "September 2, 2026";
-const CONTACT_EMAIL = "[legal@petparrk.com]";
+const CONTACT_EMAIL = "legal@nehalyn.com";
 const COMPANY_ADDRESS = "[Company Address], Oakland, California";
 
 export default function PrivacyPolicy() {
@@ -41,8 +41,8 @@ export default function PrivacyPolicy() {
           <div className="legal-section">
             <h2 className="legal-h2">1. Scope and Who We Are</h2>
             <p className="legal-p">
-              PetParrk, LLC ("PetParrk," "we," "us," or "our") operates the
-              PetParrk platform, including our website and any associated
+              Nehalyn, LLC ("Nehalyn," "we," "us," or "our") operates the
+              Nehalyn platform, including our website and any associated
               applications or services (collectively, the "Service"). This
               Privacy Policy describes how we collect, use, disclose, and
               protect personal information when you access or use the Service.
@@ -53,7 +53,7 @@ export default function PrivacyPolicy() {
               practices, please do not use the Service.
             </p>
             <p className="legal-p">
-              PetParrk is not a veterinary clinic, healthcare provider, or
+              Nehalyn is not a veterinary clinic, healthcare provider, or
               medical practice. Nothing in the Service constitutes veterinary or
               medical advice, diagnosis, or treatment.
             </p>
@@ -195,7 +195,7 @@ export default function PrivacyPolicy() {
               4.1 We Do Not Sell Your Personal Information
             </h3>
             <p className="legal-p">
-              PetParrk does not sell your personal information to third parties.
+              Nehalyn does not sell your personal information to third parties.
               We do not share your individually identifiable information with
               advertisers, data brokers, or marketing platforms.
             </p>
@@ -264,7 +264,7 @@ export default function PrivacyPolicy() {
             </p>
             <h3 className="legal-h3">4.4 Community-Submitted Pricing Data</h3>
             <p className="legal-p">
-              Price submissions you voluntarily contribute to the PetParrk
+              Price submissions you voluntarily contribute to the Nehalyn
               pricing database are displayed publicly to other users as
               aggregated, anonymized pricing information associated with a
               veterinary clinic. We do not display your name or personal account
@@ -276,7 +276,7 @@ export default function PrivacyPolicy() {
               4.5 Affiliate Partnerships and Future Practices
             </h3>
             <p className="legal-p">
-              PetParrk may in the future introduce affiliate referral programs
+              Nehalyn may in the future introduce affiliate referral programs
               or other commercial partnerships. If such arrangements involve the
               use of tracking technologies that could constitute "sharing" of
               personal information under applicable law, we will update this
@@ -298,12 +298,12 @@ export default function PrivacyPolicy() {
               We may disclose your personal information when required by
               applicable law, regulation, legal process, or governmental
               request, or when we reasonably believe disclosure is necessary to
-              protect the rights, property, or safety of PetParrk, our users, or
+              protect the rights, property, or safety of Nehalyn, our users, or
               the public.
             </p>
             <h3 className="legal-h3">4.8 Business Transfers</h3>
             <p className="legal-p">
-              If PetParrk is involved in a merger, acquisition, or sale of all
+              If Nehalyn is involved in a merger, acquisition, or sale of all
               or a portion of its assets, your personal information may be
               transferred as part of that transaction. We will provide notice
               before your personal information is transferred and becomes
@@ -329,7 +329,7 @@ export default function PrivacyPolicy() {
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">
                 {CONTACT_EMAIL}
               </a>
-              . Your pet's health records belong to you. PetParrk does not lock
+              . Your pet's health records belong to you. Nehalyn does not lock
               you into our platform.
             </p>
             <h3 className="legal-h3">5.3 Deletion</h3>
@@ -461,7 +461,7 @@ export default function PrivacyPolicy() {
                 you;
               </li>
               <li>
-                <strong>Right to Opt Out of Sale or Sharing:</strong> PetParrk
+                <strong>Right to Opt Out of Sale or Sharing:</strong> Nehalyn
                 does not sell your personal information and does not share it
                 for cross-context behavioral advertising;
               </li>
@@ -510,7 +510,7 @@ export default function PrivacyPolicy() {
               Privacy Policy or our privacy practices, please contact us:
             </p>
             <p className="legal-p">
-              <strong>PetParrk, LLC</strong>
+              <strong>Nehalyn, LLC</strong>
               <br />
               Email:{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">

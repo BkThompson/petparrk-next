@@ -50,11 +50,29 @@ const HB_CSS = `
     background: var(--color-navy-dark);
     color: var(--color-white);
   }
-  .hb--home     { min-height: 860px; }
+  /* Adjust height for mobile view. */
+  /* The illustration's darkest edge is #0b1721, a shade deeper than
+     --color-navy-dark. Above 1280 the art only covers the right ~1278px, so
+     the two tones meet mid-banner and the eye catches where the flat navy
+     starts to darken. Ramping the section background to meet the art removes
+     the boundary — below 1280 the art covers everything and this is unseen. */
+  .hb--home {
+    min-height: 700px; 
+    background: linear-gradient(
+      to right,
+      var(--color-navy-dark) 0%,
+      #0b1721 55%
+    );
+  }
+
+
   .hb--standard,
   .hb--listing  { min-height: 540px; }
+  
   @media (min-width: 641px) {
-    .hb--home     { min-height: 820px; }
+    .hb--home  { 
+      min-height: 700px; 
+    }
     .hb--standard,
     .hb--listing  { min-height: 600px; }
   }
@@ -74,8 +92,8 @@ const HB_CSS = `
     width: auto;
     max-width: none;
     display: block;
-    -webkit-mask-image: linear-gradient(to right, transparent 0, var(--color-black) 6%);
-            mask-image: linear-gradient(to right, transparent 0, var(--color-black) 6%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0, var(--color-black) 14%);
+            mask-image: linear-gradient(to right, transparent 0, var(--color-black) 14%);
   }
 
   .hb-inner {
@@ -116,16 +134,17 @@ const HB_CSS = `
   .hb--home .hb-h1 { font-size: clamp(38px, 10vw, 56px); line-height: 1.03; }
   @media (min-width: 641px) {
     .hb-h1 { font-size: 52px; }
-    .hb--home .hb-h1 { font-size: 64px; }
-  }
-  /* 1024–1279: a little smaller so Home's second line clears the laptop. */
-  @media (min-width: 1024px) {
-    .hb-h1 { font-size: 52px; }
-    .hb--home .hb-h1 { font-size: 60px; }
+    /* Home grows with the viewport instead of stepping. The steps were there
+       because the old 3.38:1 art always drew 1921px wide, so between 1024 and
+       1279 the second line landed on the man and the laptop and had to be
+       shrunk to clear them. The 2.25:1 art draws 1278px at this height, the
+       line clears the subject at every width, and the size can simply ramp:
+       64px up to 1153, then 5.55vw, settling at 72px from 1297. Measured
+       monotonic, with no jump at the old 1024 and 1280 boundaries. */
+    .hb--home .hb-h1 { font-size: clamp(64px, 5.55vw, 72px); }
   }
   @media (min-width: 1280px) {
     .hb-h1 { font-size: 56px; }
-    .hb--home .hb-h1 { font-size: 72px; }
   }
 
   .hb-lede {
@@ -137,5 +156,9 @@ const HB_CSS = `
     color: rgb(var(--color-white-rgb) / 0.85);
     text-shadow: 0 1px 3px rgb(var(--color-navy-deeper-rgb) / 0.8);
   }
-  @media (min-width: 641px) { .hb-lede { font-size: 20px; } }
+  /* The lede grows with the headline rather than sitting at 20px while the
+     h1 runs to 72px. 20px up to 1163, then 1.72vw, settling at 24px from
+     1395. At 24px it is "large text" under WCAG, so the bar drops from 4.5:1
+     to 3:1 — it measures 9:1 or better at every width either way. */
+  @media (min-width: 641px) { .hb-lede { font-size: clamp(20px, 1.72vw, 24px); } }
 `;

@@ -1,7 +1,7 @@
 "use client";
 
 const EFFECTIVE_DATE = "September 2, 2026";
-const CONTACT_EMAIL = "[legal@petparrk.com]";
+const CONTACT_EMAIL = "legal@nehalyn.com";
 
 export default function CodeOfConduct() {
   return (
@@ -35,7 +35,7 @@ export default function CodeOfConduct() {
           <div className="legal-section">
             <h2 className="legal-h2">Purpose</h2>
             <p className="legal-p">
-              PetParrk is a community-supported platform built on accurate,
+              Nehalyn is a community-supported platform built on accurate,
               honest information. The quality of our veterinary pricing data,
               reviews, and community contributions depends on every user acting
               in good faith. This Code of Conduct applies to content you submit
@@ -91,7 +91,7 @@ export default function CodeOfConduct() {
             */}
             <h3 className="legal-h3">Shareable Cards</h3>
             <p className="legal-p">
-              PetParrk lets you publish a link that makes selected pet
+              Nehalyn lets you publish a link that makes selected pet
               information viewable by anyone who has it. When you do:
             </p>
             <ul className="legal-ul">
@@ -132,7 +132,7 @@ export default function CodeOfConduct() {
                 organization;
               </li>
               <li>
-                Attempting to scrape or collect data from PetParrk by automated
+                Attempting to scrape or collect data from Nehalyn by automated
                 means without authorization;
               </li>
               <li>
@@ -142,7 +142,7 @@ export default function CodeOfConduct() {
                 masking your network address to obtain additional free use;
               </li>
               <li>
-                Using PetParrk to promote unlicensed veterinary services or
+                Using Nehalyn to promote unlicensed veterinary services or
                 products;
               </li>
               <li>
@@ -155,7 +155,7 @@ export default function CodeOfConduct() {
           <div className="legal-section">
             <h2 className="legal-h2">Enforcement</h2>
             <p className="legal-p">
-              PetParrk reviews submitted content before it is published. We
+              Nehalyn reviews submitted content before it is published. We
               reserve the right to reject, remove, or modify any content that
               violates this Code of Conduct without prior notice. Users who
               repeatedly violate this Code of Conduct may have their accounts
@@ -180,7 +180,7 @@ export default function CodeOfConduct() {
           <div className="legal-section">
             <h2 className="legal-h2">Relationship to Terms of Service</h2>
             <p className="legal-p">
-              This Code of Conduct is incorporated by reference into PetParrk's
+              This Code of Conduct is incorporated by reference into Nehalyn's
               Terms of Service. Violations of this Code of Conduct constitute
               violations of the Terms of Service and are subject to all remedies
               available thereunder.

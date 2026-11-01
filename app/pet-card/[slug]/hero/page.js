@@ -117,8 +117,8 @@ export default function HeroCardPage() {
         </p>
         <Link href="/pet-card" className="hc-notfound-btn">
           <svg
-            width="18"
-            height="18"
+            width="24"
+            height="24"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"

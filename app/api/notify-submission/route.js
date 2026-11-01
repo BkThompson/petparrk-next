@@ -31,7 +31,7 @@ export async function POST(request) {
       body;
 
     const { data, error } = await resend.emails.send({
-      from: "PetParrk <onboarding@resend.dev>",
+      from: "Nehalyn <onboarding@resend.dev>",
       to: [process.env.NOTIFY_EMAIL],
       subject: `💰 New price submission: ${vet_name} — ${service_name}`,
       html: `
@@ -72,14 +72,14 @@ export async function POST(request) {
           </table>
 
           <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee;">
-            <a href="https://petparrk.com/admin" 
+            <a href="https://nehalyn.com/admin" 
                style="display: inline-block; padding: 10px 20px; background: #2d6a4f; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600;">
               Review in Admin →
             </a>
           </div>
 
           <p style="margin-top: 16px; font-size: 11px; color: #aaa;">
-            Submitted via PetParrk price submission form
+            Submitted via Nehalyn price submission form
           </p>
         </div>
       `,

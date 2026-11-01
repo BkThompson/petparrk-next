@@ -4,26 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
-import { User, Heart, Settings } from "lucide-react";
-
-function PawMark({ size = 28 }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 28 28"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <ellipse cx="14" cy="17" rx="6.5" ry="5.5" fill="var(--color-terracotta)" />
-      <ellipse cx="7.5" cy="10.5" rx="2.8" ry="3.2" fill="var(--color-terracotta)" />
-      <ellipse cx="20.5" cy="10.5" rx="2.8" ry="3.2" fill="var(--color-terracotta)" />
-      <ellipse cx="10.5" cy="8" rx="2.4" ry="2.8" fill="var(--color-terracotta)" />
-      <ellipse cx="17.5" cy="8" rx="2.4" ry="2.8" fill="var(--color-terracotta)" />
-    </svg>
-  );
-}
+import { User, Activity, Heart, Settings } from "lucide-react";
+import Logo from "./Logo";
 
 const NAV_LINKS = [
   { href: "/vets", label: "Find a Vet" },
@@ -34,6 +16,7 @@ const NAV_LINKS = [
 
 const DROPDOWN_LINKS = [
   { href: "/profile", label: "My Profile", icon: User },
+  { href: "/health-history", label: "Health History", icon: Activity },
   { href: "/saved-vets", label: "Saved Vets", icon: Heart },
   { href: "/account", label: "Account Settings", icon: Settings },
 ];
@@ -230,7 +213,6 @@ export default function NavbarNew() {
         }
         @media (min-width: 900px) { .pp-nav-inner { padding: 0 24px; } }
         .pp-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
-        .pp-logo-text { font-size: 18px; font-weight: 800; color: var(--color-white); letter-spacing: -0.025em; font-family: var(--font,'Urbanist',sans-serif); }
         .pp-nav-links { display: none; align-items: center; gap: 32px; list-style: none; position: relative; }
         @media (min-width: 900px) { .pp-nav-links { display: flex; } }
 
@@ -401,11 +383,12 @@ export default function NavbarNew() {
         @media (hover: hover) { .pp-mobile-link:hover { color: var(--color-white); } }
         .pp-mobile-link.active { color: var(--color-gold); }
         @keyframes mobileLinkFadeIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:translateX(0); } }
-        .pp-mobile-link:nth-child(1) { animation-delay: 0.05s; }
-        .pp-mobile-link:nth-child(2) { animation-delay: 0.10s; }
-        .pp-mobile-link:nth-child(3) { animation-delay: 0.15s; }
-        .pp-mobile-link:nth-child(4) { animation-delay: 0.20s; }
-        .pp-mobile-link:nth-child(5) { animation-delay: 0.25s; }
+        /* The delay is set inline, from each link's position in its section.
+           It used to live here as :nth-child(1..5), which counts EVERY child
+           of .pp-mobile-links — the section labels and the dividers included.
+           Child 1 was the "Product" label, so the first link never got 0.05s,
+           and every link past the fifth child got no delay at all and appeared
+           before the links above it had finished. The stagger ran backwards. */
 
 
 
@@ -414,6 +397,10 @@ export default function NavbarNew() {
 
 
 
+        /* Pushes the sign-in / sign-out block to the foot of the drawer so it
+           is the last ACTION, with Legal below it as reference. Collapses to
+           normal flow when the menu is long enough to scroll. */
+        .pp-mobile-auth { margin-top: auto; padding-top: 24px; }
         .pp-mobile-divider { width: 100%; height: 1px; background: rgb(var(--color-white-rgb) / 0.1); margin: 20px 0 16px; }
         .pp-mobile-signin-btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 52px; padding: 0; text-align: center; background: transparent; border: 2px solid rgb(var(--color-white-rgb) / 0.35); border-radius: 12px; font-size: 16px; font-weight: 700; color: var(--color-white); text-decoration: none; font-family: var(--font-urbanist,'Urbanist',sans-serif); margin-bottom: 8px; transition: background 0.2s, border-color 0.2s; }
         @media (hover: hover) { .pp-mobile-signin-btn:hover { background: rgb(var(--color-white-rgb) / 0.06); border-color: rgb(var(--color-white-rgb) / 0.7); } }
@@ -452,9 +439,8 @@ export default function NavbarNew() {
 
       <nav className={`pp-nav${scrolled ? " scrolled" : ""}`}>
         <div className="pp-nav-inner">
-          <Link href="/" className="pp-logo">
-            <PawMark size={28} />
-            <span className="pp-logo-text">PetParrk</span>
+          <Link href="/" className="pp-logo" aria-label="Nehalyn home">
+            <Logo height={34} />
           </Link>
 
           <ul
@@ -470,7 +456,11 @@ export default function NavbarNew() {
             }}
           >
             {/* An <li>, not a <div>: a list may only contain list items. */}
-            <li className="pp-nav-indicator" ref={indicatorRef} aria-hidden="true" />
+            <li
+              className="pp-nav-indicator"
+              ref={indicatorRef}
+              aria-hidden="true"
+            />
             {NAV_LINKS.map(({ href, label }) => (
               <li key={href}>
                 <Link
@@ -581,10 +571,11 @@ export default function NavbarNew() {
               ["/symptom-checker", "Symptom Checker"],
               ["/pet-card", "Pet Cards"],
               ["/how-it-works", "How It Works"],
-            ].map(([href, label]) => (
+            ].map(([href, label], i) => (
               <Link
                 key={href}
                 href={href}
+                style={{ animationDelay: `${0.05 + i * 0.05}s` }}
                 className={`pp-mobile-link${pathname === href ? " active" : ""}`}
               >
                 {label}
@@ -593,54 +584,65 @@ export default function NavbarNew() {
 
             <div className="pp-mobile-divider" />
 
+            {/* Blog was in the footer and nowhere in the nav. */}
             <p className="pp-mobile-section-label">Explore</p>
             {[
               ["/about", "About"],
+              ["/blog", "Blog"],
               ["/contact", "Contact"],
-            ].map(([href, label]) => (
+            ].map(([href, label], i) => (
               <Link
                 key={href}
                 href={href}
+                style={{ animationDelay: `${0.25 + i * 0.05}s` }}
                 className={`pp-mobile-link${pathname === href ? " active" : ""}`}
               >
                 {label}
               </Link>
             ))}
 
-            <div className="pp-mobile-divider" />
-
             {session ? (
               <>
+                <div className="pp-mobile-divider" />
                 <p className="pp-mobile-section-label">Account</p>
-                <Link href="/profile" className="pp-mobile-link">
-                  My Profile
-                </Link>
-                <Link href="/saved-vets" className="pp-mobile-link">
-                  Saved Vets
-                </Link>
-                <Link href="/account" className="pp-mobile-link">
-                  Account Settings
-                </Link>
-                <div style={{ marginTop: "16px" }}>
+                {/* Health History was reachable only from /profile. */}
+                {[
+                  ["/profile", "My Profile"],
+                  ["/health-history", "Health History"],
+                  ["/saved-vets", "Saved Vets"],
+                  ["/account", "Account Settings"],
+                ].map(([href, label], i) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    style={{ animationDelay: `${0.4 + i * 0.05}s` }}
+                    className={`pp-mobile-link${pathname === href ? " active" : ""}`}
+                  >
+                    {label}
+                  </Link>
+                ))}
+                <div className="pp-mobile-auth">
                   <button className="pp-mobile-signout" onClick={handleSignOut}>
                     Sign Out
                   </button>
                 </div>
               </>
             ) : (
-              <>
+              <div className="pp-mobile-auth">
                 <Link href="/auth" className="pp-mobile-signin-btn">
                   Sign In
                 </Link>
                 <Link href="/auth?tab=signup" className="pp-mobile-signup-btn">
                   Create Account
                 </Link>
-              </>
+              </div>
             )}
 
-            {/* Legal section — 5 links in a compact muted row at the
-                bottom of the drawer. Lets us hide the Footer on auth pages
-                while keeping legal access always one tap away. */}
+            {/* Legal — reference matter, so it sits BELOW the sign-in block,
+                which is the last action. Deliberately smaller and muted: at
+                the size of the links above, five legal pages would read as
+                carrying the same weight as Find a Vet. It lives here at all
+                so legal stays one tap away on pages that hide the Footer. */}
             <div className="pp-mobile-divider" />
             <p className="pp-mobile-section-label">Legal</p>
             <div className="pp-mobile-legal-row">

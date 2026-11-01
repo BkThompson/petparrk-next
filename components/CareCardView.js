@@ -123,7 +123,7 @@ export default function CareCardView({ pet, medical, mode = "public", slug }) {
             <OwnerActionsSection slug={slug} petName={pet.name} />
           ) : null}
           <HelplineSection />
-          <PetParrkFooter />
+          <NehalynFooter />
         </div>
         <ScrollTopButton />
       </div>
@@ -351,7 +351,7 @@ function IdentitySection({ pet }) {
           <div className="pcc-list-item-body">
             <div className="pcc-list-item-title-row">
               <span className="pcc-list-item-icon-inline">
-                <PawPrint size={18} strokeWidth={2} />
+                <PawPrint size={24} strokeWidth={2} />
               </span>
               <p className="pcc-list-item-title">{pet.name || "Unnamed pet"}</p>
             </div>
@@ -439,7 +439,7 @@ function SafetySection({ pet }) {
               <div className="pcc-list-item-body">
                 <div className="pcc-list-item-title-row pcc-list-item-title-row--prose">
                   <span className="pcc-list-item-icon-inline">
-                    <b.icon size={18} strokeWidth={2} />
+                    <b.icon size={24} strokeWidth={2} />
                   </span>
                   <p className="pcc-list-item-prose">{b.text}</p>
                 </div>
@@ -513,7 +513,7 @@ function VaccinationsSection({ items }) {
               <div className="pcc-list-item-body">
                 <div className="pcc-list-item-title-row">
                   <span className="pcc-list-item-icon-inline">
-                    <Syringe size={18} strokeWidth={2} />
+                    <Syringe size={24} strokeWidth={2} />
                   </span>
                   <p className="pcc-list-item-title">
                     {v.vaccine_type || "Vaccination"}
@@ -587,7 +587,7 @@ function MedicationsSection({ items }) {
               <div className="pcc-list-item-body">
                 <div className="pcc-list-item-title-row">
                   <span className="pcc-list-item-icon-inline">
-                    <Pill size={18} strokeWidth={2} />
+                    <Pill size={24} strokeWidth={2} />
                   </span>
                   <p className="pcc-list-item-title">
                     {m.medication_name || "Medication"}
@@ -666,7 +666,7 @@ function CareRoutineSection({ pet }) {
               <div className="pcc-list-item-body">
                 <div className="pcc-list-item-title-row pcc-list-item-title-row--prose">
                   <span className="pcc-list-item-icon-inline">
-                    <b.icon size={18} strokeWidth={2} />
+                    <b.icon size={24} strokeWidth={2} />
                   </span>
                   <p className="pcc-list-item-prose">{b.text}</p>
                 </div>
@@ -780,7 +780,7 @@ function VetCard({ kind, name, phone, address, addressLine2 }) {
       <div className="pcc-list-item-body">
         <div className="pcc-list-item-title-row">
           <span className="pcc-list-item-icon-inline">
-            <Icon size={18} strokeWidth={2} />
+            <Icon size={24} strokeWidth={2} />
           </span>
           <p className="pcc-list-item-title">
             {name || (isEmergency ? "Emergency vet" : "Primary vet")}
@@ -869,7 +869,7 @@ function EmergencyContactsSection({ items }) {
               <div className="pcc-list-item-body">
                 <div className="pcc-list-item-title-row">
                   <span className="pcc-list-item-icon-inline">
-                    <Users size={18} strokeWidth={2} />
+                    <Users size={24} strokeWidth={2} />
                   </span>
                   <p className="pcc-list-item-title">{c.name || "Contact"}</p>
                 </div>
@@ -950,7 +950,7 @@ function SpecialistsSection({ items }) {
               <div className="pcc-list-item-body">
                 <div className="pcc-list-item-title-row">
                   <span className="pcc-list-item-icon-inline">
-                    <Stethoscope size={18} strokeWidth={2} />
+                    <Stethoscope size={24} strokeWidth={2} />
                   </span>
                   <p className="pcc-list-item-title">
                     {s.name || "Specialist"}
@@ -1016,7 +1016,7 @@ function InsuranceSection({ pet }) {
           <div className="pcc-list-item-body">
             <div className="pcc-list-item-title-row">
               <span className="pcc-list-item-icon-inline">
-                <ShieldCheck size={18} strokeWidth={2} />
+                <ShieldCheck size={24} strokeWidth={2} />
               </span>
               <p className="pcc-list-item-title">
                 {pet.insurance_provider || "Pet insurance"}
@@ -1157,7 +1157,7 @@ function VetVisitsSection({ items, isOwner = false, petId, slug }) {
                 <div className="pcc-list-item-body">
                   <div className="pcc-list-item-title-row">
                     <span className="pcc-list-item-icon-inline">
-                      <CalendarClock size={18} strokeWidth={2} />
+                      <CalendarClock size={24} strokeWidth={2} />
                     </span>
                     <p className="pcc-list-item-title">
                       {reason || "Vet visit"}
@@ -1243,8 +1243,8 @@ function VetVisitsSection({ items, isOwner = false, petId, slug }) {
                 aria-label="Close"
               >
                 <svg
-                  width="18"
-                  height="18"
+                  width="24"
+                  height="24"
                   viewBox="0 0 18 18"
                   fill="none"
                   aria-hidden="true"
@@ -1432,10 +1432,10 @@ function HelplineSection() {
 // ============================================================================
 // FOOTER + UNAVAILABLE STATE
 // ============================================================================
-function PetParrkFooter() {
+function NehalynFooter() {
   return (
     <footer className="pcc-page-footer">
-      <p>Powered by PetParrk</p>
+      <p>Powered by Nehalyn</p>
     </footer>
   );
 }
@@ -1987,7 +1987,10 @@ function CareCardStyles() {
       .pcc-list-item-title-row--prose .pcc-list-item-icon-inline {
         margin-top: 2px;
       }
+      /* min-width:0 so a long title shrinks and wraps instead of overflowing
+         the row. Narrow phones get a grid instead — see the 375px block. */
       .pcc-list-item-title {
+        min-width: 0;
         font-size: 18px;
         font-weight: 700;
         color: var(--color-navy-dark);
@@ -1998,7 +2001,10 @@ function CareCardStyles() {
       }
       .pcc-list-item-prose {
         /* Free-text safety notes — allergies, conditions, quirks. Ran to 92ch
-           at 900 and above. This is the element, not .pcc-notes-text. */
+           at 900 and above. This is the element, not .pcc-notes-text.
+           min-width:0 so it shrinks beside the icon instead of forcing the
+           flex row to wrap. */
+        min-width: 0;
         max-width: 68ch;
         font-size: 16px;
         font-weight: 500;
@@ -2028,7 +2034,6 @@ function CareCardStyles() {
         font-size: 13px;
         font-weight: 700;
         letter-spacing: 0.02em;
-        // text-transform: uppercase;
         white-space: nowrap;
         flex-shrink: 0;
         line-height: initial;
@@ -2058,7 +2063,6 @@ function CareCardStyles() {
       .pcc-prep-card {
         border: 1.5px solid var(--color-terracotta);
         border-radius: 16px;
-        // padding: 20px;
         padding: 20px 20px 0;
         margin-top: 20px;
         background: var(--color-white);
@@ -2080,7 +2084,7 @@ function CareCardStyles() {
       }
       .pcc-prep-title {
         font-size: 17px;
-        font-weight: 800;
+        font-weight: 700;
         color: var(--color-navy-dark);
         margin: 0;
         line-height: 1.3;
@@ -2088,7 +2092,7 @@ function CareCardStyles() {
       .pcc-prep-toggle,
       .pcc-recap-toggle {
         /* 24px before. */
-        min-height: 44px;
+        min-height: 33px;
         padding: 10px 0;
         margin: -10px 0;
         display: inline-flex;
@@ -2101,7 +2105,6 @@ function CareCardStyles() {
         font-size: 13px;
         font-weight: 700;
         color: var(--color-terracotta-700);
-        padding: 4px 6px;
         flex-shrink: 0;
         transition: color 0.15s;
       }
@@ -2147,7 +2150,6 @@ function CareCardStyles() {
       }
       .pcc-prep-nudge {
         margin-top: 8px;
-        // padding-top: 14px;
         border-top: 1px solid var(--color-border);
         font-size: 15px;
         font-weight: 500;
@@ -2548,7 +2550,6 @@ function CareCardStyles() {
         /* 20.5px, and it is a phone number someone taps in an emergency. */
         display: inline-flex;
         align-items: center;
-        // min-height: 44px;
         font-size: 17px;
         font-weight: 700;
         color: var(--color-terracotta-700);
@@ -2631,7 +2632,6 @@ function CareCardStyles() {
         height: 42px;
         min-width: 90px;
         padding: 0 24px;
-        // line-height: 1;
         border-radius: 12px;
         font-size: 15px;
         font-weight: 700;
@@ -2797,8 +2797,36 @@ function CareCardStyles() {
         .pcc-pet-photo-wrap {
           margin: 0 auto;
         }
+        /* Two columns: the icon, then a stack beside it. Flex can't do this.
+           Wrapped flex breaks lines from each item's FULL width, so a long
+           clinic name never "fit" next to the icon and was thrown below it
+           whole; and when it did wrap, the status pill landed under the icon
+           rather than under the words. Grid pins the icon to column 1 and
+           puts the title AND the pill in column 2, so the name wraps under
+           itself and the pill sits under the name. */
         .pcc-list-item-title-row {
-          flex-wrap: wrap;
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr);
+          column-gap: 10px;
+          row-gap: 8px;
+          align-items: center;
+        }
+        .pcc-list-item-title-row > .pcc-list-item-icon-inline {
+          grid-column: 1;
+          grid-row: 1;
+        }
+        .pcc-list-item-title-row > .pcc-list-item-title,
+        .pcc-list-item-title-row > .pcc-list-item-prose {
+          grid-column: 2;
+        }
+        /* Explicit, or auto-placement would drop it into column 1 under the
+           icon — which is the alignment this is fixing. */
+        .pcc-list-item-title-row > .pcc-list-item-status {
+          grid-column: 2;
+          justify-self: start;
+        }
+        .pcc-list-item-title-row--prose {
+          align-items: start;
         }
       }
 

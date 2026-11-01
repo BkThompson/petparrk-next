@@ -807,7 +807,7 @@ export default function VetPage() {
     if (navigator.share) {
       await navigator.share({
         title: vet.name,
-        text: `Check out ${vet.name} on PetParrk`,
+        text: `Check out ${vet.name} on Nehalyn`,
         url,
       });
     } else {

@@ -42,7 +42,7 @@ export const LOADER_MESSAGES = {
   blogArticle: "Loading article…", // /blog/[slug] (one article)
 
   // ── Marketing / info pages ──────────────────────────────────────────
-  home: "Loading PetParrk…", // /
+  home: "Loading Nehalyn…", // /
   about: "Loading about…", // /about
   howItWorks: "Loading how it works…", // /how-it-works
   contact: "Loading contact…", // /contact

@@ -16,7 +16,7 @@ async function fetchWebpage(url) {
   try {
     if (!url.startsWith("http")) url = "https://" + url;
     const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; PetParrk/1.0)" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; Nehalyn/1.0)" },
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return null;

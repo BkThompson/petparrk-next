@@ -81,11 +81,20 @@ const PILLARS = [
   },
   {
     art: ArtRecord,
-    title: "Pet Health History",
+    // Goes to /pet-card, not /profile. /profile pushes a signed-out visitor
+    // to /auth, and this pillar is aimed at people who have no account yet.
+    // /pet-card has a marketing view for them and is where the Care Card
+    // described here actually lives.
+    //
+    // "Records", not "History": /health-history is a different page — the
+    // symptom-check log, titled "Your health check history". And there is no
+    // such thing as a "Health Card"; the products are Care Card and Hero
+    // Card, grouped as Pet Cards, which is also the navbar label.
+    title: "Pet Health Records",
     description:
       "One place for every vet visit, vaccine, and health note. Your pet's story, owned by you.",
-    cta: "View Health Card",
-    href: "/profile",
+    cta: "See Pet Cards",
+    href: "/pet-card",
   },
 ];
 
@@ -112,7 +121,8 @@ const STEPS = [
 
 function Bone({ fill }) {
   return (
-    <svg aria-hidden="true"
+    <svg
+      aria-hidden="true"
       viewBox="0 0 120 44"
       xmlns="http://www.w3.org/2000/svg"
       style={{ width: "100%", height: "100%", display: "block" }}
@@ -128,7 +138,8 @@ function Bone({ fill }) {
 
 function Paw({ fill }) {
   return (
-    <svg aria-hidden="true"
+    <svg
+      aria-hidden="true"
       viewBox="0 0 100 100"
       xmlns="http://www.w3.org/2000/svg"
       style={{ width: "100%", height: "100%", display: "block" }}
@@ -509,7 +520,7 @@ export default function Home() {
 
   const teaserVets = [...vets]
     // Signed in: only clinics we actually hold a price for — the section is
-    // headed "See what people actually paid". Signed out: there are no prices
+    // headed "See what these visits actually cost". Signed out: there are no prices
     // in state to filter on, so this emptied the entire section and the page
     // said "No vets to show yet". Show the nearest four and let the gate below
     // cover the numbers.
@@ -523,13 +534,32 @@ export default function Home() {
           getDistance(userCoords.lat, userCoords.lng, bC.lat, bC.lng)
         );
       }
-      const aP =
-        prices[a.id]?.find((p) => p.services?.name === "Doctor Exam")
-          ?.price_low ?? 999;
-      const bP =
-        prices[b.id]?.find((p) => p.services?.name === "Doctor Exam")
-          ?.price_low ?? 999;
-      return aP - bP;
+      // No location to sort by. Signed IN, cheapest exam first — those
+      // prices are in state.
+      //
+      // Signed OUT there are no prices in state at all; the 13 Oct gating
+      // stopped anon reading vet_prices. So both sides fell back to 999, the
+      // comparison returned 0 for every pair, and the list came out in the
+      // query's own order — alphabetical by name. On a map that looks random,
+      // which is exactly what it looked like.
+      //
+      // This also fires in production whenever someone declines the location
+      // prompt, and on any non-HTTPS origin, where the browser blocks
+      // geolocation outright.
+      //
+      // Fall back to the most recently verified clinic. last_verified is on
+      // the vets row, which is public, so it works signed in or out, and
+      // "most recently checked" is a defensible order to show a stranger.
+      const aP = prices[a.id]?.find(
+        (p) => p.services?.name === "Doctor Exam",
+      )?.price_low;
+      const bP = prices[b.id]?.find(
+        (p) => p.services?.name === "Doctor Exam",
+      )?.price_low;
+      if (aP != null && bP != null) return aP - bP;
+      if (aP != null) return -1;
+      if (bP != null) return 1;
+      return new Date(b.last_verified || 0) - new Date(a.last_verified || 0);
     })
     .slice(0, 4);
 
@@ -611,13 +641,13 @@ export default function Home() {
         .reveal-delay-1{transition-delay:0.12s} .reveal-delay-2{transition-delay:0.26s} .reveal-delay-3{transition-delay:0.40s}
 
         .hero-input-wrap { position:relative; }
-        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:14px; border:2px solid rgb(var(--color-white-rgb) / 0.4); font-size:16px; font-weight:500; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgb(var(--color-white-rgb) / 0.06); color:var(--color-white); outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
+        .hero-search { width:100%; padding:18px 148px 18px 22px; border-radius:12px; border:2px solid rgb(var(--color-white-rgb) / 0.4); font-size:16px; font-weight:500; font-family:var(--font-urbanist,'Urbanist',sans-serif); background:rgb(var(--color-white-rgb) / 0.06); color:var(--color-white); outline:none; box-sizing:border-box; transition:border-color 0.2s,background 0.2s,box-shadow 0.2s; }
         .hero-search::placeholder { color:rgb(var(--color-white-rgb) / 0.65); }
         /* Over the illustrated banner: a near-solid field so busy art doesn't show through. */
         .hb .hero-search { background:rgb(var(--color-navy-dark-rgb) / 0.85); border-color:rgb(var(--color-white-rgb) / 0.4); }
         .hb .hero-search:focus { background:rgb(var(--color-navy-dark-rgb) / 0.92); }
         .hero-search:focus { border-color:var(--color-terracotta); background:rgb(var(--color-white-rgb) / 0.09); box-shadow:0 0 0 6px rgb(var(--color-terracotta-rgb) / 0.08),0 0 24px rgb(var(--color-terracotta-rgb) / 0.12),0 8px 32px rgb(var(--color-black-rgb) / 0.2); }
-        .hero-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--color-terracotta-600); color:var(--color-white); border:2px solid var(--color-terracotta-600); border-radius:12px; padding:10px 22px; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,'Urbanist',sans-serif); white-space:nowrap; transition:background 0.2s,color 0.2s; }
+        .hero-btn { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:var(--color-terracotta-600); color:var(--color-white); border:2px solid var(--color-terracotta-600); border-radius:12px; padding:12px 22px; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--font-urbanist,'Urbanist',sans-serif); white-space:nowrap; transition:background 0.2s,color 0.2s; }
         @media (hover: hover) { .hero-btn:hover { background:var(--color-white); color:var(--color-terracotta-700); } }
         @media (max-width:480px) {
           .hero-input-wrap { display:flex; flex-direction:column; gap:10px; }
@@ -796,101 +826,101 @@ export default function Home() {
             </span>
           </h1>
           <p className="hb-lede anim-3">
-            PetParrk gives you real vet prices, instant symptom guidance, and a
+            Nehalyn gives you real vet prices, instant symptom guidance, and a
             health history your pet deserves.
           </p>
           {heroForm("0")}
         </HeroBanner>
       ) : (
-      <section
-        style={{
-          background: "var(--color-navy-dark)",
-          padding: "108px 0 120px",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
+        <section
           style={{
-            position: "absolute",
-            top: "-20%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "1100px",
-            height: "900px",
-            pointerEvents: "none",
-            background:
-              "radial-gradient(ellipse at center, rgb(var(--color-gold-rgb) / 0.06) 0%, rgb(var(--color-gold-rgb) / 0.04) 28%, rgb(var(--color-gold-rgb) / 0.018) 52%, transparent 76%)",
+            background: "var(--color-navy-dark)",
+            padding: "108px 0 120px",
+            position: "relative",
+            overflow: "hidden",
           }}
-        />
-
-        {(isMobile ? HERO_ELEMENTS_MOBILE : HERO_ELEMENTS_DESKTOP).map(
-          (el, i) => (
-            <HeroElement key={i} {...el} />
-          ),
-        )}
-
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: "80px",
-            pointerEvents: "none",
-            background:
-              "linear-gradient(to bottom,transparent,var(--color-navy-dark))",
-          }}
-        />
-
-        <div
-          className="pp-container"
-          style={{ position: "relative", zIndex: 1 }}
         >
           <div
             style={{
-              maxWidth: "850px",
-              margin: "0 auto",
-              textAlign: "center",
+              position: "absolute",
+              top: "-20%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "1100px",
+              height: "900px",
+              pointerEvents: "none",
+              background:
+                "radial-gradient(ellipse at center, rgb(var(--color-gold-rgb) / 0.06) 0%, rgb(var(--color-gold-rgb) / 0.04) 28%, rgb(var(--color-gold-rgb) / 0.018) 52%, transparent 76%)",
             }}
+          />
+
+          {(isMobile ? HERO_ELEMENTS_MOBILE : HERO_ELEMENTS_DESKTOP).map(
+            (el, i) => (
+              <HeroElement key={i} {...el} />
+            ),
+          )}
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "80px",
+              pointerEvents: "none",
+              background:
+                "linear-gradient(to bottom,transparent,var(--color-navy-dark))",
+            }}
+          />
+
+          <div
+            className="pp-container"
+            style={{ position: "relative", zIndex: 1 }}
           >
-            <h1
-              className="anim-2"
+            <div
               style={{
-                fontSize: "clamp(40px,7.5vw,72px)",
-                fontWeight: "800",
-                color: "var(--color-white)",
-                lineHeight: "1.03",
-                marginBottom: "22px",
-                fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
-                letterSpacing: "-0.025em",
+                maxWidth: "850px",
+                margin: "0 auto",
+                textAlign: "center",
               }}
             >
-              Know what you'll pay before{" "}
-              <span style={{ color: "var(--color-gold)" }}>
-                your next vet visit.
-              </span>
-            </h1>
+              <h1
+                className="anim-2"
+                style={{
+                  fontSize: "clamp(40px,7.5vw,72px)",
+                  fontWeight: "800",
+                  color: "var(--color-white)",
+                  lineHeight: "1.03",
+                  marginBottom: "22px",
+                  fontFamily: "var(--font-urbanist,'Urbanist',sans-serif)",
+                  letterSpacing: "-0.025em",
+                }}
+              >
+                Know what you'll pay before{" "}
+                <span style={{ color: "var(--color-gold)" }}>
+                  your next vet visit.
+                </span>
+              </h1>
 
-            <p
-              className="anim-3"
-              style={{
-                fontSize: "18px",
-                fontWeight: 500,
-                color: "rgb(var(--color-white-rgb) / 0.6)",
-                lineHeight: "1.75",
-                maxWidth: "600px",
-                margin: "0 auto 48px",
-              }}
-            >
-              PetParrk gives you real vet prices, instant symptom guidance, and
-              a health history your pet deserves.
-            </p>
+              <p
+                className="anim-3"
+                style={{
+                  fontSize: "18px",
+                  fontWeight: 500,
+                  color: "rgb(var(--color-white-rgb) / 0.6)",
+                  lineHeight: "1.75",
+                  maxWidth: "600px",
+                  margin: "0 auto 48px",
+                }}
+              >
+                Nehalyn gives you real vet prices, instant symptom guidance, and
+                a health history your pet deserves.
+              </p>
 
-            {heroForm("0 auto")}
+              {heroForm("0 auto")}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
       )}
 
       {/* ── LOGGED-IN DASHBOARD STRIP ────────────────────────────────── */}
@@ -899,9 +929,7 @@ export default function Home() {
       ) : null}
 
       {/* ── VET TEASERS ──────────────────────────────────────────────── */}
-      <section
-        style={{ background: "var(--color-cream)", padding: "96px 0" }}
-      >
+      <section style={{ background: "var(--color-cream)", padding: "96px 0" }}>
         <div className="pp-container">
           <div
             ref={vetsRef}
@@ -931,7 +959,7 @@ export default function Home() {
                 letterSpacing: "-0.02em",
               }}
             >
-              See what people actually paid
+              See what these visits actually cost
             </h2>
           </div>
           {loading ? (
@@ -950,20 +978,23 @@ export default function Home() {
                 const dental = vetPrices.find(
                   (p) => p.services?.name === "Dental Cleaning" && p.price_low,
                 );
-                const lu = vetPrices
+                // The badge says "Verified", so it has to show when the
+                // clinic was last VERIFIED — vets.last_verified, which moves
+                // every time Susan re-checks it. It was reading the newest
+                // price's created_at, i.e. when that row was first written, so
+                // a clinic re-verified last week still showed the month its
+                // prices were first entered. Find a Vet already did this
+                // correctly; the homepage didn't. Noon is appended because
+                // last_verified is a date-only column and parsing it as
+                // midnight UTC shifts it back a day in a US timezone.
+                const priceDates = vetPrices
                   .filter((p) => p.created_at)
-                  .sort(
-                    (a, b) => new Date(b.created_at) - new Date(a.created_at),
-                  )[0]?.created_at
-                  ? new Date(
-                      vetPrices
-                        .filter((p) => p.created_at)
-                        .sort(
-                          (a, b) =>
-                            new Date(b.created_at) - new Date(a.created_at),
-                        )[0].created_at,
-                    )
-                  : null;
+                  .map((p) => new Date(p.created_at).getTime());
+                const lu = vet.last_verified
+                  ? new Date(vet.last_verified + "T12:00:00")
+                  : priceDates.length > 0
+                    ? new Date(Math.max(...priceDates))
+                    : null;
                 const isSaved = savedVetIds.has(vet.id),
                   isAnim = animatingId === vet.id;
                 return (
@@ -1401,8 +1432,7 @@ export default function Home() {
                 }}
               >
                 Most pet owners spend hours calling vets, getting vague answers,
-                and still feeling unprepared. PetParrk fixes that in three
-                steps.
+                and still feeling unprepared. Nehalyn fixes that in three steps.
               </p>
               <Link
                 href="/how-it-works"
@@ -1433,7 +1463,11 @@ export default function Home() {
                   key={step.number}
                   className={`step-card reveal-right${stepsVisible ? " visible" : ""} reveal-delay-${i + 1}`}
                 >
-                  <div aria-hidden="true" className="step-number deco-num" data-num={step.number} />
+                  <div
+                    aria-hidden="true"
+                    className="step-number deco-num"
+                    data-num={step.number}
+                  />
                   <div style={{ paddingTop: "6px" }}>
                     <h3
                       style={{

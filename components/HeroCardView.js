@@ -20,12 +20,12 @@ import {
   Check,
   ChevronDown,
   Award,
-  PawPrint,
   Plus,
   Minus,
   ArrowRight,
   ArrowLeft,
 } from "lucide-react";
+import { BrandMark } from "./Logo";
 import dynamic from "next/dynamic";
 const VantaBackground = dynamic(() => import("./VantaBackground"), {
   ssr: false,
@@ -594,7 +594,7 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
     ? rgbaHex("white", 0.66)
     : rgbaHex("navyDark", 0.6);
   // Accent, contrast-corrected so accent-colored text/labels stay readable on
-  // the card surface (e.g. section labels, the quote, "Made on PetParrk").
+  // the card surface (e.g. section labels, the quote, "Made on Nehalyn").
   const accentOnCard = ensureContrast(accentColor, cardColor, 4.5);
   // ---- text colors for content sitting on the PAGE BACKGROUND ----
   // (the right-hand "Meet X" panel sits on --t-bg, not on the card)
@@ -603,7 +603,7 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
   const bgMuted = bgIsDark ? rgbaHex("white", 0.72) : rgbaHex("navyDark", 0.62);
   // Intro / framing color override. When the owner sets hero_intro_color, it
   // colors the intro name, the subtitle (a softened version), and the
-  // "Made on PetParrk" footer + paw — one coordinated accent. Empty/unset =
+  // "Made on Nehalyn" footer + mark — one coordinated accent. Empty/unset =
   // AUTO (the bgText/bgMuted defaults above). The name uses the exact color;
   // the subtitle uses the same hue at reduced opacity so it reads as secondary.
   const introOverride = meaningful(data.hero_intro_color)
@@ -617,8 +617,8 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
   const introName = nameOverride || bgText;
   // Subtitle + footer follow the intro/footer color.
   const introSub = introOverride ? hexToRgba(introOverride, 0.75) : bgMuted;
-  // Footer "Made on PetParrk" sits on the CARD surface. When an intro color is
-  // Footer accent ("PetParrk" + paw) has its OWN color control now
+  // Footer "Made on Nehalyn" sits on the CARD surface. When an intro color is
+  // Footer accent ("Nehalyn" + brand mark) has its OWN color control now
   // (hero_footer_color), decoupled from the intro color. Falls back to the
   // intro color, then the default accent-on-card. Contrast-fitted to the card.
   const footerOverride = meaningful(data.hero_footer_color)
@@ -1046,13 +1046,8 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
 
               <div className="hc-footer">
                 <span className="hc-made">
-                  Made on <b>PetParrk</b>{" "}
-                  <PawPrint
-                    size={13}
-                    strokeWidth={2.5}
-                    className="hc-made-paw"
-                    aria-hidden="true"
-                  />
+                  Made on <b>Nehalyn</b>{" "}
+                  <BrandMark height={11} className="hc-made-paw" />
                 </span>
               </div>
             </div>
@@ -1077,11 +1072,11 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                   >
                     {shareCopied ? (
                       <>
-                        <Check size={18} /> Link copied!
+                        <Check size={24} /> Link copied!
                       </>
                     ) : (
                       <>
-                        <Share2 size={18} />{" "}
+                        <Share2 size={24} />{" "}
                         {canNativeShare
                           ? "Share Hero Card"
                           : actionBusy
@@ -1095,7 +1090,7 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                     onClick={handleDownload}
                     disabled={downloading}
                   >
-                    <Download size={18} />{" "}
+                    <Download size={24} />{" "}
                     {downloading ? "Preparing…" : "Download Hero Card"}
                   </button>
                   {/* Only a separate control when the primary button opens the
@@ -1109,11 +1104,11 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                     >
                       {copied ? (
                         <>
-                          <Check size={18} /> Copied
+                          <Check size={24} /> Copied
                         </>
                       ) : (
                         <>
-                          <Link2 size={18} /> Copy link
+                          <Link2 size={24} /> Copy link
                         </>
                       )}
                     </button>
@@ -1139,11 +1134,11 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
               >
                 {shareCopied ? (
                   <>
-                    <Check size={18} /> Link copied!
+                    <Check size={24} /> Link copied!
                   </>
                 ) : (
                   <>
-                    <Share2 size={18} />{" "}
+                    <Share2 size={24} />{" "}
                     {actionBusy
                       ? "Copying…"
                       : canNativeShare
@@ -1157,7 +1152,7 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                 onClick={handleDownload}
                 disabled={downloading}
               >
-                <Download size={18} />{" "}
+                <Download size={24} />{" "}
                 {downloading ? "Preparing…" : "Download Hero Card"}
               </button>
               {canNativeShare && (
@@ -1168,11 +1163,11 @@ export function HeroCardView({ pet, slug, previewMode, publicMode }) {
                 >
                   {copied ? (
                     <>
-                      <Check size={18} /> Copied
+                      <Check size={24} /> Copied
                     </>
                   ) : (
                     <>
-                      <Link2 size={18} /> Copy link
+                      <Link2 size={24} /> Copy link
                     </>
                   )}
                 </button>
@@ -1738,7 +1733,6 @@ const heroCardCss = `
     /* bottom clearance so the last section in each column never crowds the
        full-width footer divider below */
     .hc-card > .hc-leftcol { 
-      // padding-bottom: 8px; 
       }
     .hc-content .hc-body { padding-bottom: 8px; }
     /* full-width footer: a true footer row spanning BOTH columns, below

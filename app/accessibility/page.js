@@ -1,7 +1,7 @@
 "use client";
 
 const EFFECTIVE_DATE = "October 13, 2026";
-const CONTACT_EMAIL = "[legal@petparrk.com]";
+const CONTACT_EMAIL = "legal@nehalyn.com";
 
 export default function Accessibility() {
   return (
@@ -35,14 +35,14 @@ export default function Accessibility() {
           <div className="legal-section">
             <h2 className="legal-h2">Our Commitment</h2>
             <p className="legal-p">
-              PetParrk, LLC is committed to ensuring that our platform is
+              Nehalyn, LLC is committed to ensuring that our platform is
               accessible to all users, including individuals with disabilities.
-              We believe that every pet owner should be able to use PetParrk
+              We believe that every pet owner should be able to use Nehalyn
               with ease, regardless of ability or the assistive technologies
               they rely on.
             </p>
             <p className="legal-p">
-              PetParrk is partially conformant with the Web Content
+              Nehalyn is partially conformant with the Web Content
               Accessibility Guidelines (WCAG) 2.1 Level AA. Partially conformant
               means that some parts of the content do not fully conform to the
               accessibility standard. The areas we know about are listed under
@@ -54,7 +54,7 @@ export default function Accessibility() {
           <div className="legal-section">
             <h2 className="legal-h2">What We Have Done</h2>
             <p className="legal-p">
-              In October 2026 we completed an accessibility review of PetParrk.
+              In October 2026 we completed an accessibility review of Nehalyn.
               As a result:
             </p>
             <ul className="legal-ul">
@@ -159,7 +159,7 @@ export default function Accessibility() {
           <div className="legal-section">
             <h2 className="legal-h2">Feedback and Contact</h2>
             <p className="legal-p">
-              If you experience difficulty accessing any part of PetParrk, or if
+              If you experience difficulty accessing any part of Nehalyn, or if
               you have suggestions for how we can improve accessibility, please
               contact us:
             </p>
@@ -181,7 +181,7 @@ export default function Accessibility() {
           <div className="legal-section">
             <h2 className="legal-h2">Alternative Formats</h2>
             <p className="legal-p">
-              If you require information from PetParrk in an alternative format,
+              If you require information from Nehalyn in an alternative format,
               please contact us at{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">
                 {CONTACT_EMAIL}

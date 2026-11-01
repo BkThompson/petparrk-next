@@ -3,7 +3,7 @@
 // Track 3 Phase B — Post-visit recap flow.
 // States: idle → input (typed/photo) → extracting → review → done
 //
-// Styling uses the PetParrk design tokens (Urbanist, brand palette, radii)
+// Styling uses the Nehalyn design tokens (Urbanist, brand palette, radii)
 // to match the Care Card and the rest of the app.
 
 "use client";

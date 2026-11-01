@@ -190,7 +190,9 @@ export default function ProfilePage() {
       body.style.paddingRight = prevPadRight;
     };
   }, [showLevelModal]);
-  const levelDialogRef = useDialog(showLevelModal, () => setShowLevelModal(false));
+  const levelDialogRef = useDialog(showLevelModal, () =>
+    setShowLevelModal(false),
+  );
 
   // Is the profile edit form changed vs the saved profile? Drives the
   // unsaved-changes warning before discarding.
@@ -613,7 +615,7 @@ export default function ProfilePage() {
           height: 42px;
           background: transparent;
           color: ${C.terracotta700};
-          border: 1.5px solid ${C.terracotta};
+          border: 2px solid ${C.terracotta700};
           border-radius: 12px;
           font-size: 14px;
           font-weight: 700;
@@ -627,8 +629,8 @@ export default function ProfilePage() {
             color: var(--color-white);
           }
         }
-        .pp-edit-full-link span { transition: transform 0.15s; }
-        @media (hover: hover) { .pp-edit-full-link:hover span { transform: translateX(3px); } }
+        .pp-edit-full-link svg { transition: transform 0.15s; }
+        @media (hover: hover) { .pp-edit-full-link:hover svg { transform: translateX(3px); } }
         @media (max-width: 640px) {
           .pp-edit-full-link { display: flex; width: 100%; }
         }
@@ -863,7 +865,7 @@ export default function ProfilePage() {
                           title="Change profile photo"
                           aria-label="Change profile photo"
                         >
-                          <Camera size={18} />
+                          <Camera size={24} />
                         </button>
                         <input
                           ref={fileInputRef}
@@ -1421,7 +1423,14 @@ export default function ProfilePage() {
             className="pp-modal-backdrop"
             onClick={() => setShowLevelModal(false)}
           >
-            <div className="pp-modal" ref={levelDialogRef} role="dialog" aria-modal="true" aria-labelledby="pp-levels-title" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="pp-modal"
+              ref={levelDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="pp-levels-title"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="pp-modal-head">
                 <h3 id="pp-levels-title">Levels</h3>
                 <button

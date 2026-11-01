@@ -394,7 +394,6 @@ export default function SymptomCheckerHomePage() {
           display:flex; 
           grid-column:1 / span 2; 
           padding-top:5px; 
-          // padding-bottom:10px;
           /* Indent to align with the name/breed text (avatar 52 + gap 16). */
           padding-left:78px;
           }
@@ -1428,7 +1427,7 @@ export default function SymptomCheckerHomePage() {
               >
                 ⚕️
               </span> */}
-              ⚕️ PetParrk provides triage guidance only. We are not
+              ⚕️ Nehalyn provides triage guidance only. We are not
               veterinarians or medical professionals.
               <br />
               This is not a substitute for professional veterinary care.

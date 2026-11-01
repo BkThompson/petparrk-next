@@ -278,16 +278,23 @@ const panelCss = `
     margin: 0;
     line-height: 1.3;
   }
+  /* Matches .pcc-list-item-status on the Care Card exactly — same padding,
+     size, weight, casing, and the site-wide 2px pill border mixed from the
+     pill's own text colour so each severity keeps its outline. */
   .pin-item-pill {
     display: inline-flex;
     align-items: center;
-    padding: 3px 9px;
+    gap: 4px;
+    padding: 3px 12px;
     border-radius: 9999px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     white-space: nowrap;
+    flex-shrink: 0;
+    line-height: initial;
+    border: var(--pill-border-w, 2px) solid transparent;
+    border-color: color-mix(in srgb, currentColor 30%, transparent);
   }
   .pin-item-detail {
     margin: 6px 0 0;

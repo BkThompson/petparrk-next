@@ -176,7 +176,7 @@ export default function AccountSettings() {
       // anything else, so if we land here nothing has been removed.
       setDeleteMsg({
         type: "error",
-        text: "We couldn't delete your account, and nothing has been changed. Please email legal@petparrk.com and we'll do it for you.",
+        text: "We couldn't delete your account, and nothing has been changed. Please email legal@nehalyn.com and we'll do it for you.",
       });
       setDeleting(false);
     }
@@ -522,7 +522,7 @@ export default function AccountSettings() {
               Receive a copy of your pet's health records.
             </p>
             <a
-              href="mailto:[legal@petparrk.com]?subject=Data Export Request"
+              href="mailto:legal@nehalyn.com?subject=Data Export Request"
               className="acc-btn acc-btn-ghost"
               style={{ textDecoration: "none" }}
             >
@@ -554,7 +554,7 @@ export default function AccountSettings() {
           <div className="acc-card">
             <p className="acc-card-title">Sign Out</p>
             <p className="acc-card-sub">
-              Sign out of your PetParrk account on this device.
+              Sign out of your Nehalyn account on this device.
             </p>
             <button
               className="acc-btn acc-btn-ghost"

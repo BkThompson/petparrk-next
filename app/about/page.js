@@ -808,7 +808,7 @@ export default function AboutPage() {
             lineHeight: "1.05",
           }}
         >
-          About PetParrk.
+          About Nehalyn.
         </h1>
         <p
           style={{
@@ -1095,7 +1095,7 @@ export default function AboutPage() {
             lineHeight: "1.05",
           }}
         >
-          About PetParrk.
+          About Nehalyn.
         </h1>
         <p
           style={{
@@ -1179,7 +1179,7 @@ export default function AboutPage() {
                 marginBottom: "20px",
               }}
             >
-              We built PetParrk because pet owners deserve better than that.
+              We built Nehalyn because pet owners deserve better than that.
               Real prices, so you're never shocked at checkout. Instant
               guidance, so you're never left guessing. A place to keep your
               pet's health story, so you're never starting from scratch at a new

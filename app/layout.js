@@ -24,34 +24,60 @@ const urbanist = localFont({
   display: "swap",
 });
 
+// The site's real address, used for share links. NEXT_PUBLIC_SITE_URL wins if
+// it's set; otherwise Vercel's own production address; otherwise localhost.
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000")
+).replace(/\/$/, "");
+
 export const metadata = {
-  title: "PetParrk – Vet Pricing Transparency for the Bay Area",
+  metadataBase: new URL(SITE_URL),
+  title: "Nehalyn — Vet Prices, Symptom Guidance and Pet Health Records",
   description:
-    "Compare real vet prices across the San Francisco Bay Area. Know what you'll pay before you go. No surprises.",
+    "Real vet prices, instant symptom guidance and your pet's full health history. Covering California.",
   keywords:
-    "vet prices, veterinarian cost, Bay Area vet, Oakland vet, Berkeley vet, San Francisco vet, pet care, vet pricing transparency",
-  authors: [{ name: "PetParrk" }],
+    "vet prices, how much does a vet visit cost, dog vet costs, veterinarian prices, vet price comparison, dog symptom checker, pet health records",
+  authors: [{ name: "Nehalyn" }],
   openGraph: {
-    title: "PetParrk – Know What You'll Pay Before You Go",
+    title: "Nehalyn — Walk in knowing",
     description:
-      "Real vet prices for the San Francisco Bay Area. Compare costs, check symptoms, and track your pet's health.",
-    url: "https://petparrk-next.vercel.app",
-    siteName: "PetParrk",
+      "Real vet prices, symptom guidance and your pet's health history, all in one place. Covering California.",
+    url: SITE_URL,
+    siteName: "Nehalyn",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "PetParrk – Vet Pricing Transparency",
-    description: "Real vet prices for the Bay Area. No surprises.",
+    title: "Nehalyn — Vet Prices, Symptom Guidance and Pet Health Records",
+    description: "Real vet prices, symptom guidance and pet health records.",
   },
   robots: {
     index: true,
     follow: true,
   },
+  // Next.js writes the google-site-verification tag from this. It used to be
+  // written a second time by hand in <head>, which wasn't needed.
   verification: {
     google: "7s6yV00GY-q643NY-Vlq7Hh3zC6GCxh91Wiwlz8JebA",
   },
+  // Two marks, used by size. The browser tab gets the TWO-TONE pinwheel,
+  // because at 16px four colours collapse into a smudge and the navy blade
+  // disappears against a dark tab. The home-screen and PWA icons get the
+  // COLOUR pinwheel, where there are enough pixels to carry it.
+  // favicon.ico bundles 16, 32 and 48 in one file.
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({ children }) {
@@ -62,13 +88,8 @@ export default function RootLayout({ children }) {
       style={{ scrollbarGutter: "stable" }}
     >
       <head>
-        <meta
-          name="google-site-verification"
-          content="7s6yV00GY-q643NY-Vlq7Hh3zC6GCxh91Wiwlz8JebA"
-        />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content={HEX.navyDark} />
-        <link rel="icon" href="/favicon.ico" />
       </head>
       <body
         style={{

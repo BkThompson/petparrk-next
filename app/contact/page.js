@@ -38,7 +38,7 @@ const REASONS = [
   {
     icon: MessageCircle,
     label: "General feedback",
-    body: "Tell us what's working, what's not, or what you wish PetParrk could do. Your feedback shapes what we build.",
+    body: "Tell us what's working, what's not, or what you wish Nehalyn could do. Your feedback shapes what we build.",
   },
   {
     icon: Hospital,
@@ -474,21 +474,21 @@ export default function ContactPage() {
                   gap: "10px",
                 }}
               >
-                <a href="mailto:info@petparrk.com" className="eb eb-p">
+                <a href="mailto:info@nehalyn.com" className="eb eb-p">
                   <Mail
                     size={16}
                     strokeWidth={2}
                     style={{ marginRight: "4px", verticalAlign: "middle" }}
                   />{" "}
-                  info@petparrk.com
+                  info@nehalyn.com
                 </a>
-                <a href="mailto:support@petparrk.com" className="eb eb-s">
+                <a href="mailto:support@nehalyn.com" className="eb eb-s">
                   <MessageCircle
                     size={16}
                     strokeWidth={2}
                     style={{ marginRight: "4px", verticalAlign: "middle" }}
                   />{" "}
-                  support@petparrk.com
+                  support@nehalyn.com
                 </a>
               </div>
             </div>

@@ -216,7 +216,7 @@ export default function Unlock() {
           letterSpacing: "-0.01em",
         }}
       >
-        PetParrk
+        Nehalyn
       </h1>
 
       {wlStatus === "done" || wlStatus === "already" ? (
@@ -278,7 +278,7 @@ export default function Unlock() {
               </>
             ) : (
               <>
-                We&apos;ll email you the moment PetParrk goes live.
+                We&apos;ll email you the moment Nehalyn goes live.
                 <br />
                 Thanks for being an early supporter.
               </>
@@ -432,9 +432,9 @@ export default function Unlock() {
                 }}
               >
                 {showPw ? (
-                  <EyeOff size={18} strokeWidth={2} />
+                  <EyeOff size={24} strokeWidth={2} />
                 ) : (
-                  <Eye size={18} strokeWidth={2} />
+                  <Eye size={24} strokeWidth={2} />
                 )}
               </button>
             </div>
