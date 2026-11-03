@@ -42,7 +42,7 @@ export const metadata = {
     "vet prices, how much does a vet visit cost, dog vet costs, veterinarian prices, vet price comparison, dog symptom checker, pet health records",
   authors: [{ name: "Nehalyn" }],
   openGraph: {
-    title: "Nehalyn — Walk in knowing",
+    title: "Nehalyn — Know what's ahead",
     description:
       "Real vet prices, symptom guidance and your pet's health history, all in one place. Covering California.",
     url: SITE_URL,

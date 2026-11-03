@@ -50,29 +50,41 @@ export default function Footer() {
             <div style={{ marginBottom: "12px" }}>
               <Logo height={30} />
             </div>
-            {/* Tagline above the descriptor. The name carries a story — the
-                goddess consulted before the crossing, and the trail metaphor
-                in the level names — but a first-time visitor knows none of
-                that, so the line under it has to earn its place. "Walk in
-                knowing" covers all of it: the prices, the triage, the
-                co-pilot, the records. Every one exists to remove an unknown
-                before someone walks into a clinic.
+            {/* Tagline above the descriptor. The name carries a story, but a
+                first-time visitor knows none of it, so the line under the
+                logo has to earn its place. "Know what's ahead" covers all of
+                it: the prices, the triage, the co-pilot, the records. Every
+                one exists to remove an unknown before someone walks into a
+                clinic, and the Arrow points ahead, so the words and the mark
+                say the same thing.
+
+                Two earlier lines are retired and should not come back.
+                "Know before you cross" read as a pet dying and crossing
+                over. "Walk in knowing" never said knowing what, so it always
+                needed a second line to explain it.
 
                 The line under it names the three things the product actually
-                does. The old line ("Real prices. Real vets. No surprises.")
-                described pricing only, and its promise is already made by
-                "Walk in knowing" directly above — so nothing was lost. */}
+                does. The old descriptor ("Real prices. Real vets. No
+                surprises.") described pricing only, and that promise is
+                already made above — so nothing was lost. */}
             <p
               style={{
                 fontSize: "17px",
                 fontWeight: "700",
-                color: "var(--color-white)",
+                // Cream, not white. It sits directly under the Logo, whose
+                // wordmark and light blades are #F5F0E8 — pure white beside
+                // it read as a brighter, different colour and made the logo
+                // look dull. Cream is the brand value; white is not in the
+                // palette at all. About 14:1 on navy, so nothing is lost on
+                // contrast. If this is ever flipped, change the Logo rather
+                // than this line: the mark is the fixed asset.
+                color: "var(--color-cream)",
                 lineHeight: "1.4",
                 margin: "0 0 6px",
                 fontFamily: "var(--font-urbanist, 'Urbanist', sans-serif)",
               }}
             >
-              Walk in knowing.
+              Know what's ahead.
             </p>
             <p
               style={{

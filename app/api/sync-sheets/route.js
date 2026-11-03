@@ -248,6 +248,17 @@ export async function POST(request) {
   const { searchParams } = new URL(request.url);
   const dryRun = searchParams.get("dry_run") === "true";
 
+  // Decisions carried back from the preview: the keys the admin chose to let
+  // the call sheet win. Anything not listed keeps the existing behaviour, so
+  // a run with no body behaves exactly as it did before this existed.
+  let accept = new Set();
+  try {
+    const body = await request.json();
+    if (Array.isArray(body?.accept)) accept = new Set(body.accept);
+  } catch {
+    // No body, or not JSON. Nothing to accept; carry on.
+  }
+
   if (!PLACES_KEY) {
     return Response.json(
       { error: "Missing GOOGLE_PLACES_API_KEY" },
@@ -347,6 +358,11 @@ export async function POST(request) {
     // and there's nothing to point at.
     pricesLocked: 0,
     lockedList: [],
+    // Where the sheet and Admin hold different values for the same thing.
+    // Reported rather than resolved: Admin still wins by default, but the
+    // disagreement is now visible instead of being silently dropped — which
+    // is what happened to every note change the sheet ever made.
+    differences: [],
     notFound: [],
     errors: [],
     dryRun,
@@ -497,13 +513,48 @@ export async function POST(request) {
         // Call notes from the sheet, but never over the top of notes already
         // written in Admin — same rule as the flags above. Someone typing in
         // Admin is making a deliberate edit; the sheet is a bulk import.
-        if (internalNotes && !existingRecord.internal_notes) {
-          upd.internal_notes = internalNotes;
+        if (
+          internalNotes &&
+          noteKey(internalNotes) !== noteKey(existingRecord.internal_notes)
+        ) {
+          const k = `note:staff:${vetRef.type}:${vetRef.id}`;
+          if (!plain(existingRecord.internal_notes)) {
+            // Nothing there to protect — fill it, as before.
+            upd.internal_notes = internalNotes;
+          } else {
+            results.differences.push({
+              key: k,
+              kind: "Staff note",
+              group: "note",
+              vet: name,
+              label: "Staff note",
+              sheetValue: plain(internalNotes),
+              adminValue: plain(existingRecord.internal_notes),
+            });
+            if (accept.has(k)) upd.internal_notes = internalNotes;
+          }
         }
         // Same rule: fill it, never overwrite. Someone typing in Admin is
         // making a deliberate edit; the sheet is a bulk import.
-        if (publicNotes && !existingRecord.pricing_note) {
-          upd.pricing_note = publicNotes;
+        if (
+          publicNotes &&
+          noteKey(publicNotes) !== noteKey(existingRecord.pricing_note)
+        ) {
+          const k = `note:clinic:${vetRef.type}:${vetRef.id}`;
+          if (!plain(existingRecord.pricing_note)) {
+            upd.pricing_note = publicNotes;
+          } else {
+            results.differences.push({
+              key: k,
+              kind: "Clinic note",
+              group: "note",
+              vet: name,
+              label: "Clinic note",
+              sheetValue: plain(publicNotes),
+              adminValue: plain(existingRecord.pricing_note),
+            });
+            if (accept.has(k)) upd.pricing_note = publicNotes;
+          }
         }
         if (Object.keys(upd).length > 0) {
           vetFlagUpdates.push({
@@ -571,6 +622,58 @@ export async function POST(request) {
     return entry.call_for_quote
       ? "declined"
       : `${numKey(entry.price_low)}|${numKey(entry.price_high)}|${entry.price_type ?? ""}`;
+  }
+  // Which sources mean "a person decided this".
+  //
+  // This used to be an exact test for `source === "admin"`, the value
+  // savePrice writes. But 417 rows carry `manual` and 4 carry `call_sheet` —
+  // prices typed into Admin before the source-aware sync existed. The sync
+  // didn't recognise them as overrides, so instead of locking the group it
+  // fell through to the conflict branch below, flagged every price for that
+  // vet+service in_conflict, and the public vet page hid all of them behind
+  // "being updated shortly". 179 prices across 38 live clinics were hidden
+  // that way, on every run, with nothing in the admin reporting it.
+  //
+  // Anything that is not the sheet and not an unreviewed scraper find is
+  // somebody's decision, and it owns its vet+service.
+  const SCRAPER_SOURCES = new Set(["scraper", "ai_scraper"]);
+  function isOwned(row) {
+    return row.source !== "sheet" && !SCRAPER_SOURCES.has(row.source);
+  }
+  // Rich-text notes arrive as HTML from the admin editor and as plain text
+  // from the sheet, so compare and display them stripped.
+  function plain(v) {
+    return String(v || "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  // Comparison key for a note. A trailing full stop, a capital letter or a
+  // double space is not a decision anyone should have to make, and several of
+  // the first 84 differences were exactly that — the same sentence twice,
+  // once with a period. Display still uses plain(); only the comparison is
+  // normalised.
+  function noteKey(v) {
+    return plain(v)
+      .toLowerCase()
+      .replace(/[.,;:!?'"\u2018\u2019\u201c\u201d()\-\u2013\u2014]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  // The same shape sheetValueText produces, but read off database rows, so
+  // the two sides of a difference are directly comparable by eye.
+  function rowValueText(rows) {
+    if (!rows || rows.length === 0) return null;
+    return rows
+      .map((r) => {
+        if (r.call_for_quote) return "Call for quote";
+        if (r.price_type === "starting") return `${money(r.price_low)}+`;
+        if (r.price_type === "range" && r.price_high != null)
+          return `${money(r.price_low)}–${money(r.price_high)}`;
+        return money(r.price_low);
+      })
+      .join(" / ");
   }
   function rowSig(row) {
     return row.call_for_quote
@@ -705,13 +808,26 @@ export async function POST(request) {
       // Admin has taken this one over — leave it alone and say so. Reported
       // here as well as in the live run, so the preview tells you what the
       // sync is going to decline to touch before you commit to it.
-      if (existing.some((r) => r.source === "admin")) {
+      if (existing.some(isOwned)) {
         results.pricesLocked++;
+        const sheetText = sheetValueText(g.entries);
+        const ownedText = rowValueText(existing.filter(isOwned));
         results.lockedList.push(
           `${g.vetName} — ${g.svcName}: sheet says ${
-            sheetValueText(g.entries) || "nothing"
+            sheetText || "nothing"
           }, Admin's value stands`,
         );
+        if (sheetText && ownedText && sheetText !== ownedText) {
+          results.differences.push({
+            key: `price:${g.vsKey}`,
+            kind: "Price",
+            group: "price",
+            vet: g.vetName,
+            label: g.svcName,
+            sheetValue: sheetText,
+            adminValue: ownedText,
+          });
+        }
         continue;
       }
 
@@ -817,8 +933,25 @@ export async function POST(request) {
     // The group's own sheet rows (a second price from a "45/55" cell, say)
     // are frozen too. That's the honest reading of "Admin owns this service
     // for this clinic", rather than half the service syncing and half not.
-    const adminRows = existing.filter((r) => r.source === "admin");
-    if (adminRows.length > 0) {
+    const ownedRows = existing.filter(isOwned);
+    // The admin saw this disagreement in the preview and chose the sheet.
+    // Dropping the overriding rows hands the group back, and the ordinary
+    // reconciliation below then writes the sheet's value — the same path a
+    // never-overridden price takes, rather than a second way of writing one.
+    const letSheetWin =
+      ownedRows.length > 0 && accept.has(`price:${g.vsKey}`);
+    if (letSheetWin) {
+      for (const r of ownedRows) {
+        idsToDelete.push(r.id);
+        results.pricesRemoved++;
+        results.removedList.push(
+          `${g.vetName} — ${g.svcName}: Admin's ${
+            rowValueText([r]) || "value"
+          } replaced by the call sheet, as chosen`,
+        );
+      }
+    }
+    if (ownedRows.length > 0 && !letSheetWin) {
       results.pricesLocked++;
       const text = sheetValueText(g.entries);
       results.lockedList.push(
@@ -828,7 +961,7 @@ export async function POST(request) {
       );
       // Refresh what the sheet says on the overriding rows, so the Prices tab
       // can show it and keep showing the truth as the sheet changes.
-      const stale = adminRows.filter((r) => (r.sheet_value || null) !== text);
+      const stale = ownedRows.filter((r) => (r.sheet_value || null) !== text);
       if (stale.length > 0) {
         sheetValueUpdates.push({ ids: stale.map((r) => r.id), text });
       }
@@ -897,11 +1030,17 @@ export async function POST(request) {
     // call sheet flagged it as a dispute and hid both from the vet's page.
     // Of 527 flagged, 433 were identical. Two sources agreeing is
     // confirmation, not a conflict.
-    const nonSheetSigs = new Set(existingNonSheet.map(rowSig));
+    // Rows this run is about to delete because the admin chose the sheet
+    // are not a disagreement any more — counting them would flag the group
+    // and hide the very price the decision was meant to publish.
+    const nonSheetLive = letSheetWin
+      ? existingNonSheet.filter((r) => !isOwned(r))
+      : existingNonSheet;
+    const nonSheetSigs = new Set(nonSheetLive.map(rowSig));
     const valuesDiffer =
-      existingNonSheet.some((r) => !newSigs.has(rowSig(r))) ||
+      nonSheetLive.some((r) => !newSigs.has(rowSig(r))) ||
       g.entries.some((e) => !nonSheetSigs.has(entrySig(e)));
-    if (existingNonSheet.length > 0 && g.entries.length > 0 && valuesDiffer) {
+    if (nonSheetLive.length > 0 && g.entries.length > 0 && valuesDiffer) {
       conflictKeysToFlag.push({
         vetId: g.vetId,
         isPending: g.isPending,

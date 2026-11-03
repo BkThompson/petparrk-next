@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef, memo, useCallback } from "react";
+import {
+  useEffect,
+  useState,
+  useRef,
+  memo,
+  useCallback,
+  useDeferredValue,
+} from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
@@ -793,6 +800,16 @@ function sanitizeRichText(html) {
 // fighting two vendor pseudo-elements, and has no way to animate its height.
 // Same button + grid-template-rows pattern as the sheet-format guide, so the
 // two disclosures in this tab behave identically.
+// A price the call sheet does not own. `admin` is what savePrice writes
+// today; `manual` and `call_sheet` are the same thing from before the
+// source-aware sync existed, and the sync now treats all three the same way.
+// Scraper finds are unreviewed and are not somebody's decision, so they are
+// not an override.
+const SCRAPER_PRICE_SOURCES = new Set(["scraper", "ai_scraper"]);
+function isAdminOwnedPrice(p) {
+  return p.source !== "sheet" && !SCRAPER_PRICE_SOURCES.has(p.source);
+}
+
 function SyncDetail({ label, tone, defaultOpen = false, children }) {
   const [open, setOpen] = useState(!!defaultOpen);
   return (
@@ -1552,7 +1569,9 @@ function VetForm({
         />
       </div>
       <div className="adm-field" style={{ marginBottom: "16px" }}>
-        <label className="adm-field-label">Public pricing note</label>
+        <label className="adm-field-label">
+          Clinic note <span className="adm-note-tag">Public</span>
+        </label>
         <p className="adm-vet-lookup-hint" style={{ margin: "0 0 8px" }}>
           Shown to visitors under this clinic's prices (e.g. "All prices are
           estimates — call to confirm").
@@ -1564,14 +1583,16 @@ function VetForm({
         />
       </div>
       <div className="adm-field" style={{ marginBottom: "16px" }}>
-        <label className="adm-field-label">Internal notes</label>
+        <label className="adm-field-label">
+          Staff note <span className="adm-note-tag priv">Private</span>
+        </label>
         <p className="adm-vet-lookup-hint" style={{ margin: "0 0 8px" }}>
           Admin-only — never shown publicly.
         </p>
         <RichTextEditor
           value={form.internal_notes || ""}
           onChange={(v) => set("internal_notes", v)}
-          placeholder="Admin-only notes"
+          placeholder="Staff-only — never shown publicly"
         />
       </div>
 
@@ -1967,7 +1988,9 @@ function PriceForm({
         </div>
 
         <div className="adm-field adm-pf-full">
-          <label className="adm-field-label">Public note</label>
+          <label className="adm-field-label">
+            Price note <span className="adm-note-tag">Public</span>
+          </label>
           <p className="adm-vet-lookup-hint" style={{ margin: "0 0 8px" }}>
             Shown to visitors beneath this price (e.g. "Exam fee waived on first
             visit").
@@ -2089,11 +2112,13 @@ function PendingVetEditForm({ form, setForm, onApprove, onCancel }) {
         />
       </div>
       <div className="adm-field" style={{ marginTop: "16px" }}>
-        <label className="adm-field-label">Notes</label>
+        <label className="adm-field-label">
+          Staff note <span className="adm-note-tag priv">Private</span>
+        </label>
         <RichTextEditor
           value={form.notes || form.internal_notes || ""}
           onChange={(v) => setForm((p) => ({ ...p, notes: v }))}
-          placeholder="Internal notes about this vet"
+          placeholder="Staff-only notes about this vet"
         />
       </div>
       <div className="adm-pv-editform-actions">
@@ -2501,7 +2526,7 @@ const CallPriceRow = memo(function CallPriceRow({
             marginBottom: "8px",
           }}
         >
-          Public note
+          Price note <span className="adm-note-tag">Public</span>
         </label>
         <p className="adm-vet-lookup-hint" style={{ margin: "0 0 8px" }}>
           Shown to visitors beneath this price (e.g. "Exam fee waived on first
@@ -3309,6 +3334,7 @@ export default function AdminPage() {
   const [pendingVetSearch, setPendingVetSearch] = useState("");
   const [pendingVetPage, setPendingVetPage] = useState(1);
   const [callSheetSearch, setCallSheetSearch] = useState("");
+  const deferredCallSearch = useDeferredValue(callSheetSearch);
   const [showCallbackNotes, setShowCallbackNotes] = useState(false);
   const [callbackNoteText, setCallbackNoteText] = useState("");
   const [callNotes, setCallNotes] = useState([]);
@@ -3398,12 +3424,23 @@ export default function AdminPage() {
   const [unverifiedPrices, setUnverifiedPrices] = useState([]);
   const [conflictGroups, setConflictGroups] = useState([]);
   const [conflictLoading, setConflictLoading] = useState(true);
+  const [conflictSearch, setConflictSearch] = useState("");
   const [conflictResolving, setConflictResolving] = useState(null);
   const [unverifiedLoading, setUnverifiedLoading] = useState(true);
 
   // Google Sheets sync
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
+  // Keys from the preview's Differences list that the admin chose to let the
+  // call sheet win. Sent with the live run; empty means today's behaviour.
+  const [syncAccept, setSyncAccept] = useState([]);
+  const [syncDiffFilter, setSyncDiffFilter] = useState("all");
+  // Sync now writes. One tap should not be enough, and on a phone the
+  // result panel reflowing under a thumb made that a real risk.
+  const [syncConfirm, setSyncConfirm] = useState(false);
+  // Which run is in flight — "dry" or "live". Without this both buttons
+  // show a busy label whenever either is pressed.
+  const [syncRunning, setSyncRunning] = useState(null);
 
   // Verification checklist (shown when activating a vet)
   const [vetVerifyChecks, setVetVerifyChecks] = useState({
@@ -3890,6 +3927,7 @@ export default function AdminPage() {
   const [reports, setReports] = useState([]);
   const [reportsLoading, setReportsLoading] = useState(false);
   const [reportsFilter, setReportsFilter] = useState("pending");
+  const [reportSearch, setReportSearch] = useState("");
 
   async function fetchReports() {
     setReportsLoading(true);
@@ -4011,6 +4049,7 @@ export default function AdminPage() {
 
   async function syncFromSheets(dryRun = false) {
     setSyncLoading(true);
+    setSyncRunning(dryRun ? "dry" : "live");
     setSyncResult(null);
     try {
       const {
@@ -4024,6 +4063,9 @@ export default function AdminPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.access_token || ""}`,
           },
+          // Preview stays a pure read: it reports differences, it never
+          // acts on them. Only the live run carries the decisions.
+          body: JSON.stringify({ accept: dryRun ? [] : syncAccept }),
         },
       );
       let data;
@@ -4039,6 +4081,7 @@ export default function AdminPage() {
       }
       setSyncResult(data);
       if (!dryRun && res.ok && !data.error) {
+        setSyncAccept([]);
         fetchCallQueue();
         fetchUnverifiedPrices();
         fetchStats();
@@ -4048,6 +4091,7 @@ export default function AdminPage() {
       setSyncResult({ error: err.message });
     }
     setSyncLoading(false);
+    setSyncRunning(null);
   }
 
   async function fetchCallQueue() {
@@ -5284,9 +5328,13 @@ export default function AdminPage() {
   // an instant revert.
   async function handBackToSheet(id) {
     setHandBackSaving(id);
+    // sheet_value is deliberately kept. It is the only record of what the
+    // call sheet holds, and the card needs it to say what this price is
+    // about to revert to. The next sync replaces the row outright, which
+    // clears it; until then it is the pending state.
     const { data, error } = await supabase
       .from("vet_prices")
-      .update({ source: "sheet", sheet_value: null })
+      .update({ source: "sheet" })
       .eq("id", id)
       .select();
     if (error) {
@@ -5297,9 +5345,7 @@ export default function AdminPage() {
       );
     } else {
       setVetPrices((prev) =>
-        prev.map((p) =>
-          p.id === id ? { ...p, source: "sheet", sheet_value: null } : p,
-        ),
+        prev.map((p) => (p.id === id ? { ...p, source: "sheet" } : p)),
       );
       setHandBackConfirm(null);
     }
@@ -5681,6 +5727,25 @@ export default function AdminPage() {
       vetStatusFilter === "all" || v.status === vetStatusFilter;
     return matchesSearch && matchesStatus;
   });
+  // Conflicts and reports both run to dozens of rows — 38 clinics are
+  // affected today — so they get the same search as every other list.
+  // Same shape as filteredVets above: synchronous, no debounce.
+  const visibleConflicts = conflictGroups.filter((g) => {
+    if (!conflictSearch) return true;
+    const q = conflictSearch.toLowerCase();
+    return (
+      g.vetName?.toLowerCase().includes(q) ||
+      g.serviceName?.toLowerCase().includes(q)
+    );
+  });
+  const visibleReports = reports.filter((r) => {
+    if (!reportSearch) return true;
+    const q = reportSearch.toLowerCase();
+    return (
+      r.vets?.name?.toLowerCase().includes(q) ||
+      r.services?.name?.toLowerCase().includes(q)
+    );
+  });
   const filteredUsers = users.filter((u) => {
     const q = userSearch.toLowerCase();
     const matchesSearch =
@@ -6009,6 +6074,92 @@ export default function AdminPage() {
         .adm-att-s { font-size: 15px; font-weight: 500; padding-top: 5px; color: var(--color-slate); }
         .adm-att-go { font-size: 14px; color: var(--color-terracotta-700); font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
 
+        /* One disagreement per row: who it is about, then the two values
+           side by side. The chosen side is the solid one — a tick alone, at
+           the far left of a long row, is not enough to tell which number you
+           just voted for. */
+        /* Kills the 300ms tap delay, and with it the synthesised click that
+           arrives after the layout has moved. */
+        .adm-b, .adm-pill, .adm-search-clear, .adm-reports-filter { touch-action: manipulation; }
+        .adm-diff-filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 2px; }
+        .adm-diff-list { list-style: none; }
+        .adm-diff-row {
+          display: flex; flex-wrap: wrap; align-items: center;
+          justify-content: space-between; gap: 8px 12px;
+          padding: 11px 0; border-top: 1px solid var(--color-border);
+        }
+        /* A note is a sentence, not a token: the two versions go under the
+           name at full width rather than beside it. */
+        .adm-diff-row.note { flex-direction: column; align-items: stretch; }
+        .adm-diff-pick { display: flex; align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
+        .adm-diff-pick input { width: 17px; height: 17px; accent-color: var(--color-terracotta-700); cursor: pointer; flex-shrink: 0; }
+        .adm-diff-who { font-size: 16px; font-weight: 700; color: var(--color-navy-dark); }
+        .adm-diff-vals { display: flex; flex-wrap: wrap; gap: 8px; }
+        /* Both sides carry a real border, so neither reads as the absence of
+           a decision. The chosen one is filled and coloured as well. */
+        .adm-diff-v {
+          font-size: 14px; font-weight: 700; padding: 4px 12px;
+          border-radius: 9999px; line-height: initial;
+          background: var(--color-badge-neutral-bg); color: var(--color-muted);
+          border: var(--pill-border-w, 2px) solid rgb(var(--color-muted-rgb) / 0.26);
+        }
+        .adm-diff-v.win {
+          background: var(--color-badge-navy-bg); color: var(--color-navy-mid);
+          border-color: color-mix(in srgb, currentColor 30%, transparent);
+        }
+        .adm-diff-v.take {
+          background: var(--color-warning-light); color: var(--color-terracotta-700);
+          border-color: color-mix(in srgb, currentColor 30%, transparent);
+        }
+        .adm-diff-notes { display: flex; flex-direction: column; gap: 10px; padding-left: 27px; }
+        .adm-diff-note {
+          border-left: 3px solid var(--color-border); padding-left: 12px;
+          font-size: 15px; font-weight: 500; line-height: 1.5; color: var(--color-slate);
+        }
+        .adm-diff-note.win { border-left-color: var(--color-navy-mid); color: var(--color-navy-dark); }
+        .adm-diff-note.take { border-left-color: var(--color-terracotta-700); color: var(--color-navy-dark); }
+        .adm-diff-note-l {
+          display: block; font-size: 11px; font-weight: 800; letter-spacing: 0.06em;
+          text-transform: uppercase; color: var(--color-muted); margin-bottom: 3px;
+        }
+        .adm-diff-note.win .adm-diff-note-l { color: var(--color-navy-mid); }
+        .adm-diff-note.take .adm-diff-note-l { color: var(--color-terracotta-700); }
+        /* Said inside the dropdown, above the results: the answer to "where
+           are the other 400" is more letters, not more scrolling. */
+        .adm-cs-more {
+          padding: 8px 12px; font-size: 13px; font-weight: 600;
+          color: var(--color-muted); background: var(--color-cream);
+          border-bottom: 1px solid var(--color-border);
+        }
+        /* iOS Safari zooms the page whenever a focused input is under 16px.
+           max() keeps any larger declared size as it is. */
+        .adm-searchbar input, .adm-field-input {
+          font-size: max(16px, 1em) !important; font-weight: 500;
+        }
+        @media (max-width: 620px) {
+          .adm-diff-row { flex-direction: column; align-items: stretch; }
+          .adm-diff-vals { flex-direction: column; width: 100%; padding-left: 27px; }
+          .adm-diff-v { text-align: center; padding: 6px 12px; }
+          .adm-diff-notes { padding-left: 0; }
+        }
+
+        /* Public/private tag beside a note label. Three note fields exist
+           and which ones are visible to visitors is the thing people get
+           wrong, so each label states it rather than implying it. */
+        .adm-note-tag {
+          display: inline-flex; align-items: center; vertical-align: middle;
+          margin-left: 8px; font-size: 12px; font-weight: 700;
+          padding: 3px 10px; border-radius: 9999px;
+          font-family: 'Urbanist', sans-serif; text-transform: capitalize;
+          letter-spacing: 0; white-space: nowrap; line-height: initial;
+          background: var(--color-badge-navy-bg); color: var(--color-navy-mid);
+          border: var(--pill-border-w, 2px) solid transparent;
+          border-color: color-mix(in srgb, currentColor 30%, transparent);
+        }
+        .adm-note-tag.priv {
+          background: var(--color-badge-neutral-bg); color: var(--color-slate);
+        }
+
         /* Submissions */
         .adm-searchbar { position: relative; margin-bottom: 16px; }
         /* Clear button, matching Find a Vet and Saved Vets. Clearing a search
@@ -6134,7 +6285,7 @@ export default function AdminPage() {
         .adm-price-count { margin: 0; font-size: 16px; font-weight: 600; color: var(--color-slate); }
         .adm-price-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 18px; }
         .adm-price-addform { margin-bottom: 20px; }
-        .adm-price-value { font-size: 16px; font-weight: 800; color: var(--color-success-text); }
+        .adm-price-value { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; color: var(--color-success-text); }
         .adm-price-type { font-size: 14px; font-weight: 500; color: var(--color-muted); }
         .adm-price-species { font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 9999px; background: var(--color-badge-navy-bg); color: var(--color-navy-mid); text-transform: capitalize;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
         /* Top border only. The line under it is the actions row's own top
@@ -6397,7 +6548,7 @@ export default function AdminPage() {
         .adm-sync-detail-wrap { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s ease-in-out; }
         .adm-sync-detail-wrap.open { grid-template-rows: 1fr; }
         .adm-sync-detail-wrap > .adm-sync-detail-inner { overflow: hidden; min-height: 0; }
-        .adm-sync-detail ul { margin: 6px 0 0; padding-left: 20px; }
+        .adm-sync-detail ul { margin: 15px 0 0; padding-left: 0; }
         .adm-sync-detail li { font-size: 14px; font-weight: 500; color: var(--color-muted); margin-bottom: 2px; line-height: 1.5; }
         .adm-pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
         .adm-pf-full { grid-column: 1 / -1; }
@@ -6450,9 +6601,17 @@ export default function AdminPage() {
         .adm-invite-title { margin: 0 0 16px; font-size: 17px; font-weight: 800; color: var(--color-navy-dark); }
         .adm-invite-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
         .adm-field { display: flex; flex-direction: column; gap: 6px; }
-        .adm-field-label { font-size: 13px; font-weight: 800; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.10em; }
+        .adm-field-label { font-size: 13px; font-weight: 800; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.04em; }
         .adm-field-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--color-border-field); border-radius: 12px; font-size: 15px; font-weight: 500; font-family: 'Urbanist', sans-serif; color: var(--color-navy-dark); background-color: var(--color-white); }
         textarea.adm-field-input { height: auto; min-height: 80px; padding: 12px 14px; resize: vertical; }
+        /* A date input carries an intrinsic width in WebKit that scales
+           with its font size and wins over width:100%, so raising every
+           input to 16px pushed Last verified past the card edge on a
+           phone. Dropping the native appearance removes that width. */
+        input[type="date"].adm-field-input {
+          -webkit-appearance: none; appearance: none;
+          min-width: 0; max-width: 100%; display: block;
+        }
         .adm-field-input:focus { outline: none; border-color: var(--color-terracotta); }
         .adm-perms-label { display: block; font-size: 13px; font-weight: 800; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px; }
         .adm-perms-hint { margin: 0 0 12px; font-size: 13px; font-weight: 500; color: var(--color-muted); }
@@ -6681,7 +6840,7 @@ export default function AdminPage() {
            pills in this card match. */
         .adm-sheet-owned {
           display: inline-flex; align-items: center; justify-content: center;
-          margin-left: 8px; vertical-align: middle;
+          vertical-align: middle;
           font-size: 13px; font-weight: 700; padding: 3px 11px;
           border-radius: 9999px;
           background: var(--color-cream); color: var(--color-muted);
@@ -6703,6 +6862,10 @@ export default function AdminPage() {
           display: block; margin-top: 2px;
           font-size: 14px; font-weight: 500; color: var(--color-muted);
         }
+        /* A pending revert is a change already agreed to that hasn't
+           happened yet. Grey reads as background information; this is the
+           one line on the card describing the future. */
+        .adm-reverting { color: var(--color-terracotta-700); font-weight: 700; }
         /* Said above the price form, before the save. Warning colour, not an
            error colour — nothing is wrong, something is about to change hands. */
         .adm-takeover-note {
@@ -7949,6 +8112,32 @@ export default function AdminPage() {
                     ))}
                   </div>
                 </div>
+                {!reportsLoading && reports.length > 0 && (
+                  <div className="adm-searchbar">
+                    <input
+                      aria-label="Search reports by clinic or service"
+                      placeholder="Search by clinic or service"
+                      value={reportSearch}
+                      onChange={(e) => setReportSearch(e.target.value)}
+                    />
+                    {reportSearch && (
+                      <button
+                        type="button"
+                        className="adm-search-clear"
+                        aria-label="Clear search"
+                        onClick={() => setReportSearch("")}
+                      >
+                        <X size={15} strokeWidth={2.6} />
+                      </button>
+                    )}
+                  </div>
+                )}
+                {!reportsLoading && reports.length > 0 &&
+                  visibleReports.length === 0 && (
+                    <p className="adm-conflict-svc">
+                      No report matches that search.
+                    </p>
+                  )}
                 {!reportsLoading && reports.length === 0 && (
                   <p className="adm-conflict-svc">
                     Nothing here. Reports appear when someone tells us a price
@@ -7956,7 +8145,7 @@ export default function AdminPage() {
                   </p>
                 )}
                 <div className="adm-conflict-list">
-                  {reports.map((r) => {
+                  {visibleReports.map((r) => {
                     const cur = r.vet_prices;
                     const fmt = (lo, hi, type, cfq) =>
                       cfq
@@ -8123,6 +8312,27 @@ export default function AdminPage() {
                   both valid.
                 </p>
 
+                {!conflictLoading && conflictGroups.length > 0 && (
+                  <div className="adm-searchbar">
+                    <input
+                      aria-label="Search conflicts by clinic or service"
+                      placeholder="Search by clinic or service"
+                      value={conflictSearch}
+                      onChange={(e) => setConflictSearch(e.target.value)}
+                    />
+                    {conflictSearch && (
+                      <button
+                        type="button"
+                        className="adm-search-clear"
+                        aria-label="Clear search"
+                        onClick={() => setConflictSearch("")}
+                      >
+                        <X size={15} strokeWidth={2.6} />
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {conflictLoading && (
                   <p className="adm-price-count">Loading conflicts…</p>
                 )}
@@ -8137,11 +8347,19 @@ export default function AdminPage() {
                 {!conflictLoading && conflictGroups.length > 0 && (
                   <>
                     <p className="adm-price-count" style={{ marginBottom: 14 }}>
-                      {conflictGroups.length} conflict
-                      {conflictGroups.length !== 1 ? "s" : ""} to review
+                      {visibleConflicts.length} conflict
+                      {visibleConflicts.length !== 1 ? "s" : ""}
+                      {conflictSearch
+                        ? ` matching “${conflictSearch}”`
+                        : " to review"}
                     </p>
+                    {visibleConflicts.length === 0 && (
+                      <p className="adm-conflict-svc">
+                        No conflict matches that search.
+                      </p>
+                    )}
                     <div className="adm-conflict-list">
-                      {conflictGroups.map((group) => (
+                      {visibleConflicts.map((group) => (
                         <div key={group.key} className="adm-conflict-card">
                           <div className="adm-conflict-head">
                             <p className="adm-conflict-vet">{group.vetName}</p>
@@ -8604,8 +8822,7 @@ export default function AdminPage() {
                         the explanation beside fifteen prices made it noise;
                         here it's read once, and only by someone looking at a
                         vet that actually has sheet prices. */}
-                    {!pricesLoading &&
-                      vetPrices.some((p) => p.source === "sheet") && (
+                    {!pricesLoading && vetPrices.length > 0 && (
                         <p className="adm-price-sheet-note">
                           {/* Three sentences, one per button, each saying what
                               the button does to the price. The previous version
@@ -8623,9 +8840,10 @@ export default function AdminPage() {
                             only. The call sheet keeps updating the price.
                           </span>
                           <span>
-                            <strong>Hand back to call sheet</strong> &mdash;
-                            undoes an Edit. The sheet&rsquo;s price comes back
-                            on the next sync.
+                            <strong>Use the call sheet&rsquo;s price</strong>
+                            {" "} &mdash; undoes an Edit. It only appears on a
+                            price marked <strong>Set in Admin</strong>, and the
+                            number doesn&rsquo;t change until the next sync.
                           </span>
                         </p>
                       )}
@@ -8726,7 +8944,6 @@ export default function AdminPage() {
                                       : "No price set"}
                                   {!p.call_for_quote && p.price_low && (
                                     <span className="adm-price-type">
-                                      {" "}
                                       ({p.price_type})
                                     </span>
                                   )}
@@ -8753,7 +8970,7 @@ export default function AdminPage() {
                                       neutral grey — it's the one state on this
                                       card where the number came from a person
                                       deciding rather than from an import. */}
-                                  {p.source === "admin" && (
+                                  {isAdminOwnedPrice(p) && (
                                     <span className="adm-sheet-owned adm-price-overridden">
                                       Set in Admin
                                     </span>
@@ -8766,11 +8983,44 @@ export default function AdminPage() {
                                     override you can't audit is worse than no
                                     override at all. Hidden when the sheet
                                     agrees, since there's nothing to compare. */}
-                                {p.source === "admin" && p.sheet_value && (
+                                {isAdminOwnedPrice(p) && p.sheet_value && (
                                   <span className="adm-sheet-says">
-                                    The call sheet says {p.sheet_value}
+                                    The call sheet says {p.sheet_value} &mdash;
+                                    this price is overriding it
                                   </span>
                                 )}
+                                {/* A handed-back price keeps its number until
+                                    the next sync, so without this the action
+                                    appears to have done nothing at all. */}
+                                {p.source === "sheet" &&
+                                  p.sheet_value &&
+                                  p.sheet_value !==
+                                    formatPrice(
+                                      p.price_low,
+                                      p.price_high,
+                                      p.price_type,
+                                    ) && (
+                                    <span className="adm-sheet-says adm-reverting">
+                                      Reverting to {p.sheet_value} on the
+                                      next sync
+                                    </span>
+                                  )}
+                                {/* Once the two agree there is nothing
+                                    pending, so the card goes back to the
+                                    ordinary sheet-owned wording. */}
+                                {p.source === "sheet" &&
+                                  (!p.sheet_value ||
+                                    p.sheet_value ===
+                                      formatPrice(
+                                        p.price_low,
+                                        p.price_high,
+                                        p.price_type,
+                                      )) && (
+                                    <span className="adm-sheet-says">
+                                      The call sheet controls this price.
+                                      Edit it here to take it over.
+                                    </span>
+                                  )}
                               </div>
                               <div className="adm-user-badges">
                                 {p.species && (
@@ -8920,13 +9170,13 @@ export default function AdminPage() {
                                   inside a flex row of 42px buttons stretched
                                   the row and left the question nowhere near the
                                   button it belonged to. */}
-                              {p.source === "admin" &&
+                              {isAdminOwnedPrice(p) &&
                                 (handBackConfirm === p.id ? null : (
                                   <button
                                     className="adm-b adm-b-outline"
                                     onClick={() => setHandBackConfirm(p.id)}
                                   >
-                                    Hand back to call sheet
+                                    Use the call sheet&rsquo;s price
                                   </button>
                                 ))}
                               {isDeleting ? (
@@ -8967,16 +9217,18 @@ export default function AdminPage() {
                                 Below rather than above on mobile too: it reads
                                 as the consequence of the button you just
                                 pressed, which was directly above it. */}
-                            {p.source === "admin" &&
+                            {isAdminOwnedPrice(p) &&
                               handBackConfirm === p.id && (
                                 <div className="adm-handback">
                                   <p className="adm-handback-q">
-                                    Hand this price back to the call sheet?
+                                    Give this price back to the call sheet?
                                   </p>
                                   <p className="adm-handback-body">
-                                    Your price stays until the next sync, then
-                                    the call sheet&rsquo;s value replaces it.
-                                    Any note you&rsquo;ve written is kept.
+                                    Your price stays on the site until the next
+                                    sync, then the call sheet&rsquo;s value
+                                    {p.sheet_value ? ` (${p.sheet_value})` : ""}
+                                    {" "} replaces it. Any note you&rsquo;ve written is
+                                    kept.
                                   </p>
                                   <div className="adm-handback-actions">
                                     <button
@@ -8992,7 +9244,7 @@ export default function AdminPage() {
                                     >
                                       {handBackSaving === p.id
                                         ? "Saving…"
-                                        : "Hand back"}
+                                        : "Give it back"}
                                     </button>
                                   </div>
                                 </div>
@@ -9008,15 +9260,16 @@ export default function AdminPage() {
                                 about where it comes from. */}
                             {editing && p.source === "sheet" && (
                               <p className="adm-takeover-note">
-                                Saving this takes the price over from the call
-                                sheet. The sheet will stop updating{" "}
+                                Save this and you take the price over. The call
+                                sheet will stop changing{" "}
                                 {p.services?.name || "this service"} for this
-                                clinic until you hand it back. A note on its own
-                                doesn&rsquo;t do that &mdash; use{" "}
+                                clinic until you give it back. If you only
+                                wanted to add a note, cancel and use{" "}
                                 <strong>
                                   {hasText(p.notes) ? "Edit note" : "Add note"}
                                 </strong>{" "}
-                                for that.
+                                instead &mdash; that leaves the call sheet in
+                                charge of the number.
                               </p>
                             )}
 
@@ -9036,13 +9289,16 @@ export default function AdminPage() {
                             {/* One field, so it gets one field's worth of
                                 chrome rather than the whole price form with
                                 everything in it disabled. Same editor and the
-                                same wording as the Public note field inside
+                                same wording as the Price note field inside
                                 PriceForm, so a note written here and a note
                                 written there are plainly the same thing. */}
                             {noteEditing && (
                               <div className="adm-notepanel">
                                 <label className="adm-field-label">
-                                  Public note
+                                  Price note{" "}
+                                  <span className="adm-note-tag">
+                                    Public
+                                  </span>
                                 </label>
                                 <p className="adm-notepanel-hint">
                                   Shown to visitors beneath this price (e.g.
@@ -9089,6 +9345,16 @@ export default function AdminPage() {
             {tab === "Call Sheet" &&
               (() => {
                 const activeQueue = showAllVets ? fullCallQueue : callQueue;
+                // Deferred, so typing stays instant: the input updates on
+                // every keystroke while this filter — and the re-render of
+                // the whole Call Sheet tab behind it — happens when React
+                // has a moment, rather than between letters.
+                const csTerm = deferredCallSearch.trim().toLowerCase();
+                const csMatches = csTerm
+                  ? activeQueue.filter((v) =>
+                      v.name.toLowerCase().includes(csTerm),
+                    )
+                  : [];
                 return (
                   <div>
                     {/* ── Google Sheets Sync ── */}
@@ -9112,15 +9378,36 @@ export default function AdminPage() {
                         </div>
                         <div className="adm-sync-actions">
                           <button
+                            type="button"
                             className="adm-b adm-b-outline"
-                            onClick={() => syncFromSheets(true)}
+                            onClick={() => {
+                              setSyncConfirm(false);
+                              syncFromSheets(true);
+                            }}
                             disabled={syncLoading}
                           >
-                            {syncLoading ? "Working…" : "Preview"}
+                            {syncRunning === "dry" ? "Working…" : "Preview"}
                           </button>
+                          {syncConfirm && !syncLoading && (
+                            <button
+                              type="button"
+                              className="adm-b adm-b-outline"
+                              onClick={() => setSyncConfirm(false)}
+                            >
+                              Cancel
+                            </button>
+                          )}
                           <button
+                            type="button"
                             className="adm-b adm-b-primary"
-                            onClick={() => syncFromSheets(false)}
+                            onClick={() => {
+                              if (syncConfirm) {
+                                setSyncConfirm(false);
+                                syncFromSheets(false);
+                              } else {
+                                setSyncConfirm(true);
+                              }
+                            }}
                             disabled={syncLoading || SYNC_WRITE_DISABLED}
                             title={
                               SYNC_WRITE_DISABLED
@@ -9128,7 +9415,11 @@ export default function AdminPage() {
                                 : undefined
                             }
                           >
-                            {syncLoading ? "Syncing…" : "Sync now"}
+                            {syncRunning === "live"
+                              ? "Syncing…"
+                              : syncConfirm
+                                ? "Yes — write to the database"
+                                : "Sync now"}
                           </button>
                         </div>
                       </div>
@@ -9225,10 +9516,10 @@ export default function AdminPage() {
                                   ["AC", "Dental Cleaning (No Anesthesia)"],
                                   ["AG", "Emergency Visit"],
                                   ["AH", "Urgent Care Visit"],
-                                  ["AJ", "Internal Admin Notes — private"],
+                                  ["AJ", "Staff note — private"],
                                   ["AK", "Verified by Susan — retired, unread"],
-                                  ["AL", "Price Notes — retired, unread"],
-                                  ["AM", "Public Notes — public"],
+                                  ["AL", "Retired — not read, leave in place"],
+                                  ["AM", "Clinic note — public"],
                                 ].map(([col, what]) => (
                                   <div className="adm-colmap-row" key={col}>
                                     <code className="adm-colmap-col">
@@ -9242,10 +9533,10 @@ export default function AdminPage() {
                               </div>
                               <p className="adm-sync-guide-note">
                                 <strong>Verified by Susan</strong> (
-                                <code>AK</code>) and{" "}
-                                <strong>Price Notes</strong> (<code>AL</code>)
-                                are retired and no longer read &mdash; see
-                                below. Leave them where they are.
+                                <code>AK</code>) and the old price-notes
+                                column (<code>AL</code>) are retired and no
+                                longer read &mdash; see below. Leave them
+                                where they are.
                               </p>
                             </div>
                             <div className="adm-sync-guide-list">
@@ -9336,8 +9627,7 @@ export default function AdminPage() {
                                 <ul>
                                   <li>
                                     <strong>Not in the sheet any more.</strong>{" "}
-                                    <strong>Price Notes</strong> (
-                                    <code>AL</code>) is no longer read
+                                    Column <code>AL</code> is no longer read
                                   </li>
                                   <li>
                                     Write it here in Admin instead:{" "}
@@ -9347,9 +9637,8 @@ export default function AdminPage() {
                                     under that one price
                                   </li>
                                   <li>
-                                    <strong>Why it moved.</strong>{" "}
-                                    <strong>Price Notes</strong> (
-                                    <code>AL</code>) held one value for a whole
+                                    <strong>Why it moved.</strong> Column{" "}
+                                    <code>AL</code> held one value for a whole
                                     row, but a row holds up to 17 prices. The
                                     sync had no way to tell which price the note
                                     was for, so it put it on all of them &mdash;
@@ -9364,14 +9653,14 @@ export default function AdminPage() {
                                   </li>
                                   <li>
                                     <strong>
-                                      Leave Price Notes (<code>AL</code>) where
-                                      it is.
+                                      Leave <code>AL</code> where it is.
                                     </strong>{" "}
                                     Susan can use it as scratch space &mdash;
                                     nothing reads it &mdash; but deleting the
-                                    column shifts <strong>Public Notes</strong>{" "}
-                                    (<code>AM</code>) left and the sync starts
-                                    reading the wrong field
+                                    column shifts the{" "}
+                                    <strong>Clinic note</strong> (<code>AM</code>)
+                                    left and the sync starts reading the wrong
+                                    field
                                   </li>
                                 </ul>
                               </div>
@@ -9381,7 +9670,7 @@ export default function AdminPage() {
                                 </p>
                                 <ul>
                                   <li>
-                                    <strong>Public Notes</strong> (
+                                    <strong>Clinic note</strong> (
                                     <code>AM</code>) &mdash; for anything that
                                     explains the clinic&rsquo;s pricing as a
                                     whole: &ldquo;dental needs an exam
@@ -9397,18 +9686,17 @@ export default function AdminPage() {
                                     price is missing or why a range is wide
                                   </li>
                                   <li>
-                                    This is the same field as{" "}
-                                    <strong>Public pricing note</strong> on the
+                                    This is the same field as the{" "}
+                                    <strong>Clinic note</strong> on the
                                     vet&rsquo;s record here in Admin. The sync
                                     fills it only when that&rsquo;s empty, so
                                     anything written here is never overwritten
                                   </li>
                                   <li>
                                     <strong>
-                                      Public Notes (<code>AM</code>) is for the
-                                      clinic as a whole. Price Notes (
-                                      <code>AL</code>) is dead. One
-                                      price&rsquo;s note lives in Admin.
+                                      The Clinic note (<code>AM</code>) is for
+                                      the clinic as a whole. <code>AL</code> is
+                                      dead. A Price note lives in Admin.
                                     </strong>{" "}
                                     If a note only makes sense next to one
                                     number, it belongs in Admin, not here
@@ -9421,7 +9709,7 @@ export default function AdminPage() {
                                 </p>
                                 <ul>
                                   <li>
-                                    <strong>Internal Admin Notes</strong> (
+                                    <strong>Staff note</strong> (
                                     <code>AJ</code>) &mdash; what was said on
                                     the call, who to ask for, when to try again
                                   </li>
@@ -9525,10 +9813,9 @@ export default function AdminPage() {
                                   <li>
                                     <strong>Verified by Susan</strong> (
                                     <code>AK</code>) and{" "}
-                                    <strong>Price Notes</strong> (
-                                    <code>AL</code>) are unread on purpose. They
-                                    stay as spacers so{" "}
-                                    <strong>Public Notes</strong> (
+                                    <code>AL</code> are unread on purpose. They
+                                    stay as spacers so the{" "}
+                                    <strong>Clinic note</strong> (
                                     <code>AM</code>) doesn&rsquo;t move
                                   </li>
                                   <li>
@@ -9536,7 +9823,7 @@ export default function AdminPage() {
                                     inserting or deleting is not. To add a
                                     service, put the new column{" "}
                                     <strong>at the far right</strong>, after{" "}
-                                    <strong>Public Notes</strong> (
+                                    <strong>Clinic note</strong> (
                                     <code>AM</code>), and tell me &mdash; the
                                     sync needs a one-line change to read it
                                   </li>
@@ -9588,6 +9875,13 @@ export default function AdminPage() {
                                   : "Prices removed",
                                 syncResult.pricesRemoved,
                               ],
+                              // The route has always returned this and
+                              // nothing displayed it. A conflicted price is
+                              // HIDDEN on the public vet page — it shows
+                              // "being updated shortly" instead of a number —
+                              // so a silent conflict is a price taken off the
+                              // site with nobody told.
+                              ["Conflicts", syncResult.conflictsFound],
                             ].map(([label, val]) => (
                               <div key={label} className="adm-sync-stat">
                                 <span className="adm-sync-stat-n">
@@ -9598,6 +9892,140 @@ export default function AdminPage() {
                             ))}
                           </div>
 
+                          {/* The disagreements. Until now the sync resolved
+                              these in silence — Admin won, nothing said so,
+                              and a note change from the sheet was dropped
+                              without appearing anywhere at all. */}
+                          {syncResult.differences?.length > 0 &&
+                            (() => {
+                              const all = syncResult.differences;
+                              const nPrice = all.filter(
+                                (d) => d.group === "price",
+                              ).length;
+                              const shown =
+                                syncDiffFilter === "all"
+                                  ? all
+                                  : all.filter(
+                                      (d) => d.group === syncDiffFilter,
+                                    );
+                              const toggle = (k, on) =>
+                                setSyncAccept((prev) =>
+                                  on
+                                    ? [...prev, k]
+                                    : prev.filter((x) => x !== k),
+                                );
+                              return (
+                                <SyncDetail
+                                  tone="warn"
+                                  defaultOpen
+                                  label={`${all.length} differences${
+                                    syncAccept.length > 0
+                                      ? ` — ${syncAccept.length} will use the call sheet`
+                                      : ""
+                                  }`}
+                                >
+                                  <p className="adm-sync-guide-note">
+                                    <strong>Admin wins by default.</strong>{" "}
+                                    Select a row to let the call sheet&rsquo;s
+                                    value win instead, then press{" "}
+                                    <strong>Sync now</strong>. Selecting
+                                    nothing changes nothing.
+                                  </p>
+                                  <div className="adm-diff-filters">
+                                    {[
+                                      ["all", `All ${all.length}`],
+                                      ["price", `Prices ${nPrice}`],
+                                      ["note", `Notes ${all.length - nPrice}`],
+                                    ].map(([k, lbl]) => (
+                                      <button
+                                        key={k}
+                                        type="button"
+                                        className={`adm-pill${
+                                          syncDiffFilter === k ? " active" : ""
+                                        }`}
+                                        onClick={() => setSyncDiffFilter(k)}
+                                      >
+                                        {lbl}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <ul className="adm-diff-list">
+                                    {shown.slice(0, 60).map((d) => {
+                                      const on = syncAccept.includes(d.key);
+                                      const isNote = d.group === "note";
+                                      return (
+                                        <li
+                                          key={d.key}
+                                          className={`adm-diff-row${isNote ? " note" : ""}`}
+                                        >
+                                          <label className="adm-diff-pick">
+                                            <input
+                                              type="checkbox"
+                                              checked={on}
+                                              onChange={(e) =>
+                                                toggle(d.key, e.target.checked)
+                                              }
+                                            />
+                                            <span className="adm-diff-who">
+                                              {d.vet} &mdash; {d.label}
+                                            </span>
+                                          </label>
+                                          {isNote ? (
+                                            <div className="adm-diff-notes">
+                                              <div
+                                                className={`adm-diff-note${on ? " take" : ""}`}
+                                              >
+                                                <span className="adm-diff-note-l">
+                                                  {on
+                                                    ? "Call sheet — taking this"
+                                                    : "Call sheet"}
+                                                </span>
+                                                {d.sheetValue}
+                                              </div>
+                                              <div
+                                                className={`adm-diff-note${on ? "" : " win"}`}
+                                              >
+                                                <span className="adm-diff-note-l">
+                                                  {on
+                                                    ? "Admin"
+                                                    : "Admin — keeping this"}
+                                                </span>
+                                                {d.adminValue}
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <span className="adm-diff-vals">
+                                              <span
+                                                className={`adm-diff-v${on ? " take" : ""}`}
+                                              >
+                                                Call sheet: {d.sheetValue}
+                                              </span>
+                                              <span
+                                                className={`adm-diff-v${on ? "" : " win"}`}
+                                              >
+                                                Admin: {d.adminValue}
+                                              </span>
+                                            </span>
+                                          )}
+                                        </li>
+                                      );
+                                    })}
+                                    {shown.length > 60 && (
+                                      <li className="adm-diff-row">
+                                        &hellip;and {shown.length - 60} more.
+                                        Resolve these first, then run the
+                                        preview again.
+                                      </li>
+                                    )}
+                                    {shown.length === 0 && (
+                                      <li className="adm-diff-row">
+                                        Nothing in this group.
+                                      </li>
+                                    )}
+                                  </ul>
+                                </SyncDetail>
+                              );
+                            })()}
                           {/* Which prices would disappear. A count alone
                               doesn't tell you whether it's a clinic that
                               genuinely changed its prices or a cell someone
@@ -9646,6 +10074,31 @@ export default function AdminPage() {
                                   </li>
                                 )}
                               </ul>
+                            </SyncDetail>
+                          )}
+                          {syncResult.conflictList?.length > 0 && (
+                            <SyncDetail
+                              tone="warn"
+                              label={`${syncResult.conflictList.length} prices flagged as a conflict — hidden on the vet page until resolved`}
+                            >
+                              <ul>
+                                {syncResult.conflictList
+                                  .slice(0, 30)
+                                  .map((n, i) => (
+                                    <li key={i}>{n}</li>
+                                  ))}
+                                {syncResult.conflictList.length > 30 && (
+                                  <li>
+                                    …and {syncResult.conflictList.length - 30}{" "}
+                                    more
+                                  </li>
+                                )}
+                              </ul>
+                              <p className="adm-sync-guide-note">
+                                These prices are not on the site. Open{" "}
+                                <strong>Price Conflicts</strong> and pick the
+                                right value for each.
+                              </p>
                             </SyncDetail>
                           )}
                           {syncResult.autoCreatedList?.length > 0 && (
@@ -9883,21 +10336,25 @@ export default function AdminPage() {
                             </div>
 
                             {/* Call sheet search */}
-                            <div
-                              style={{
-                                marginBottom: "14px",
-                                position: "relative",
-                              }}
-                            >
+                            <div className="adm-searchbar">
                               <input
                                 aria-label="Search vet by name"
-                                className="adm-field-input"
                                 value={callSheetSearch}
                                 onChange={(e) =>
                                   setCallSheetSearch(e.target.value)
                                 }
                                 placeholder="Search vet by name to jump to them…"
                               />
+                              {callSheetSearch && (
+                                <button
+                                  type="button"
+                                  className="adm-search-clear"
+                                  aria-label="Clear search"
+                                  onClick={() => setCallSheetSearch("")}
+                                >
+                                  <X size={15} strokeWidth={2.6} />
+                                </button>
+                              )}
                               {callSheetSearch.trim() && (
                                 <div
                                   style={{
@@ -9915,16 +10372,18 @@ export default function AdminPage() {
                                       "0 4px 16px rgb(var(--color-black-rgb) / 0.1)",
                                   }}
                                 >
-                                  {activeQueue
-                                    .filter((v) =>
-                                      v.name
-                                        .toLowerCase()
-                                        .includes(
-                                          callSheetSearch.toLowerCase(),
-                                        ),
-                                    )
-                                    .slice(0, 8)
-                                    .map((v) => {
+                                  {csMatches.length > 20 && (
+                                    <div className="adm-cs-more">
+                                      Showing 20 of {csMatches.length} matches
+                                      &mdash; keep typing to narrow
+                                    </div>
+                                  )}
+                                  {csMatches.length === 0 && (
+                                    <div className="adm-cs-more">
+                                      No vet matches that search
+                                    </div>
+                                  )}
+                                  {csMatches.slice(0, 20).map((v) => {
                                       const realIdx = activeQueue.findIndex(
                                         (q) =>
                                           q.id === v.id &&
@@ -9934,9 +10393,11 @@ export default function AdminPage() {
                                         <div
                                           key={v.id + v._source}
                                           style={{
-                                            padding: "9px 12px",
+                                            padding: "11px 12px",
                                             cursor: "pointer",
-                                            fontSize: "13px",
+                                            fontSize: "max(16px, 1em)",
+                                            fontWeight: 500,
+                                            color: "var(--color-navy-dark)",
                                             borderBottom:
                                               "1px solid var(--color-badge-neutral-bg)",
                                           }}
@@ -9965,7 +10426,8 @@ export default function AdminPage() {
                                           {v.name}
                                           <span
                                             style={{
-                                              fontSize: "11px",
+                                              fontSize: "13px",
+                                              fontWeight: 500,
                                               color: "var(--color-muted)",
                                               marginLeft: "8px",
                                             }}
@@ -9975,21 +10437,6 @@ export default function AdminPage() {
                                         </div>
                                       );
                                     })}
-                                  {activeQueue.filter((v) =>
-                                    v.name
-                                      .toLowerCase()
-                                      .includes(callSheetSearch.toLowerCase()),
-                                  ).length === 0 && (
-                                    <div
-                                      style={{
-                                        padding: "9px 12px",
-                                        fontSize: "13px",
-                                        color: "var(--color-muted)",
-                                      }}
-                                    >
-                                      No vets found
-                                    </div>
-                                  )}
                                 </div>
                               )}
                             </div>
@@ -11187,10 +11634,13 @@ export default function AdminPage() {
                                           </div>
                                           <div style={{ marginBottom: "14px" }}>
                                             <label className="adm-field-label">
-                                              Notes
+                                              Price note{" "}
+                                              <span className="adm-note-tag">
+                                                Public
+                                              </span>
                                             </label>
                                             <textarea
-                                              aria-label="Notes"
+                                              aria-label="Price note"
                                               className="adm-field-input"
                                               rows={3}
                                               style={{

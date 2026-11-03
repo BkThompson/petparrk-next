@@ -588,7 +588,9 @@ export default function VetPage() {
   const [allPrices, setAllPrices] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
   const [showPricingModal, setShowPricingModal] = useState(false);
-  const pricingDialogRef = useDialog(showPricingModal, () => setShowPricingModal(false));
+  const pricingDialogRef = useDialog(showPricingModal, () =>
+    setShowPricingModal(false),
+  );
 
   // Background scroll-lock while the pricing modal is open. Same pattern as
   // ReportPriceModal and the Profile modals. Safe here because .modal-box is
@@ -894,13 +896,24 @@ export default function VetPage() {
           >
             <Frown size={32} strokeWidth={2} />
           </div>
-          <h1 style={{ color: C.muted, fontSize: "15px", fontWeight: 500, margin: "0 0 1em" }}>
+          <h1
+            style={{
+              color: C.muted,
+              fontSize: "15px",
+              fontWeight: 500,
+              margin: "0 0 1em",
+            }}
+          >
             Vet not found.
           </h1>
           <Link
             href="/vets"
             className="nav-link-dark"
-            style={{ color: C.terracotta700, fontSize: "14px", fontWeight: "700" }}
+            style={{
+              color: C.terracotta700,
+              fontSize: "14px",
+              fontWeight: "700",
+            }}
           >
             <ArrowLeft
               size={14}
@@ -1001,7 +1014,7 @@ export default function VetPage() {
            and label treatment — so it belongs to the page rather than sitting
            on it. Separated by a rule and more space above, because it's about
            the whole list rather than the price it happens to follow. */
-        .vs-clinicnote{margin:0 0 18px;padding:20px;background:var(--color-white);border-radius:10px;}
+        .vs-clinicnote{margin:0 0 18px;padding:0 0 20px;background:var(--color-white);border-radius:10px;}
         .vs-clinicnote-h{margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:${C.muted};}
         .vs-clinicnote-body{margin:0;font-size:15px;font-weight:500;color:${C.navyDark};line-height:1.6;max-width:70ch;}
         /* The note is rich text from Admin, so its paragraphs are real <p>
@@ -1113,7 +1126,14 @@ export default function VetPage() {
           className="modal-overlay"
           onClick={() => setShowPricingModal(false)}
         >
-          <div className="modal-box" ref={pricingDialogRef} role="dialog" aria-modal="true" aria-label="How pricing works" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-box"
+            ref={pricingDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="How pricing works"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               className="modal-close"
               onClick={() => setShowPricingModal(false)}
@@ -1506,7 +1526,9 @@ export default function VetPage() {
                     <span
                       className="vs-detail-pill"
                       style={{
-                        background: vet.carecredit ? "var(--color-success-light)" : "var(--color-error-light)",
+                        background: vet.carecredit
+                          ? "var(--color-success-light)"
+                          : "var(--color-error-light)",
                         color: vet.carecredit ? C.successText : C.errorText,
                         // Border in the pill's own colour, so yes and no stay
                         // visually distinct rather than sharing a grey outline.
@@ -2191,7 +2213,7 @@ export default function VetPage() {
                                           style={{
                                             background: "var(--color-white)",
                                             borderRadius: "10px",
-                                            padding: "20px",
+                                            // padding: "20px",
                                             // marginBottom: "8px",
                                           }}
                                         >
