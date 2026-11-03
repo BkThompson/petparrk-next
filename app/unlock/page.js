@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { Eye, EyeOff, CheckCircle, Info } from "lucide-react";
+import { LogoStacked } from "../../components/Logo";
 
 export default function Unlock() {
   // Waitlist state
@@ -206,17 +207,19 @@ export default function Unlock() {
         boxSizing: "border-box",
       }}
     >
-      <div style={{ fontSize: "44px", marginBottom: "2px" }}>🐾</div>
-      <h1
-        style={{
-          margin: 0,
-          fontSize: "28px",
-          fontWeight: 800,
-          color: "var(--color-cream)",
-          letterSpacing: "-0.01em",
-        }}
-      >
-        Nehalyn
+      {/* The arrow above the wordmark, from the same component the rest of
+          the site uses. What was here was an emoji paw — the old brand — and
+          an <h1> spelling out a name the mark already contains, so the two
+          sat on top of each other.
+
+          Still an <h1>, with the logo inside it: this is the page's only
+          heading, and LogoStacked carries role="img" with aria-label
+          "Nehalyn", so it reads the same to a screen reader as the text did.
+
+          onDark because this page is on navy — that gives the cream
+          wordmark, matching the footer rather than punching out in white. */}
+      <h1 style={{ margin: "0 0 4px", lineHeight: 0 }}>
+        <LogoStacked height={88} variant="onDark" />
       </h1>
 
       {wlStatus === "done" || wlStatus === "already" ? (
