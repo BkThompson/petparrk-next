@@ -839,7 +839,7 @@ function VetsContent() {
           .price-gate-overlay{padding:0 12px}
           .price-gate-btn{width:100%}
         }
-        .more-filters{overflow:hidden;max-height:0;opacity:0;transition:max-height 0.5s ease-in-out,opacity 0.5s ease-in-out}
+        .more-filters{overflow:hidden;max-height:0;opacity:0;transition:max-height 0.3s ease,opacity 0.24s ease}
         .more-filters.open{max-height:600px;opacity:1;overflow:visible}
         /* Two-row evenly-spaced filter bar. Every item is flex:1 so they share
            width equally and shrink together (no wrapping) from desktop to tablet. */
@@ -854,7 +854,17 @@ function VetsContent() {
         /* fbar-item and fbar-search now sit on .dir-search-wrap, so this
            targets the wrapper rather than the input it used to. */
         .dir-search-wrap.fbar-item{max-width:none}
-        .filters-btn{height:44px;padding:0 16px;border-radius:12px;border: 1px solid var(--color-border-field);background:var(--color-white);color:var(--color-navy-dark);cursor:pointer;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;transition:all 0.15s}
+        .filters-btn{height:44px;padding:0 16px;border-radius:12px;border: 1px solid var(--color-border-field);background:var(--color-white);color:var(--color-navy-dark);cursor:pointer;font-size:15px;font-weight:700;font-family:var(--font,'Urbanist',sans-serif);white-space:nowrap;display:inline-flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;transition:all 0.15s}
+        /* Label hard left, chevron hard right, at every width - matching the
+           selects beside it. The label and its count badge are wrapped so they
+           travel together; without the wrapper, space-between would push the
+           badge into the middle of the button on its own. */
+        .filters-btn-label{display:inline-flex;align-items:center;gap:8px}
+        /* Muted when closed, white when open - the same two states the
+           selects beside it use. It was inheriting the button's navy, which
+           read as a heavier chevron than its neighbours. */
+        .filters-chev{display:inline-flex;align-items:center;flex-shrink:0;color:var(--color-muted);transition:transform 0.26s ease,color 0.15s ease}
+        .filters-btn.open .filters-chev{color:var(--color-white)}
         @media (hover: hover) { .filters-btn:hover {border-color:var(--color-navy-dark)} }
         .filters-btn.open{background:var(--color-navy-dark);color:var(--color-white);border-color:var(--color-navy-dark)}
         .filters-badge{background:var(--color-terracotta-600);color:var(--color-white);font-size:12px;font-weight:700;border-radius:9999px;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
@@ -1080,18 +1090,18 @@ function VetsContent() {
                 className={`filters-btn fbar-item fbar-filters${showMoreFilters ? " open" : ""}`}
                 onClick={() => setShowMoreFilters(!showMoreFilters)}
               >
-                Filters
-                {activeFilterCount > 0 && (
-                  <span className="filters-badge">{activeFilterCount}</span>
-                )}
+                <span className="filters-btn-label">
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="filters-badge">{activeFilterCount}</span>
+                  )}
+                </span>
                 <span
+                  className="filters-chev"
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
                     transform: showMoreFilters
                       ? "rotate(180deg)"
                       : "rotate(0deg)",
-                    transition: "transform 0.4s ease-in-out",
                   }}
                 >
                   <ChevronDown size={14} strokeWidth={2.4} />

@@ -142,6 +142,64 @@ export default function PrivacyPolicy() {
               from that service consistent with your privacy settings on that
               platform.
             </p>
+            <h3 className="legal-h3">2.4 Cookies and Similar Technologies</h3>
+            <p className="legal-p">
+              <strong>
+                We do not use advertising cookies, and we do not track you
+                across other websites.
+              </strong>{" "}
+              The Service sets a small number of cookies and similar browser
+              storage, and every one of them is strictly necessary for the site
+              to work. We do not use cookies to build a profile of you or to
+              serve you advertising, here or anywhere else.
+            </p>
+            <p className="legal-p">What we set, and why:</p>
+            <ul className="legal-ul">
+              <li className="legal-li">
+                <strong>Signing you in.</strong> When you create an account or
+                log in, our authentication provider stores a session cookie so
+                the Service knows it is still you as you move between pages.
+                Without it you would be signed out on every click. Signing out
+                clears it.
+              </li>
+              <li className="legal-li">
+                <strong>Keeping you signed in on this device.</strong> Your
+                browser stores the information needed to restore your session
+                when you return, so you are not asked to log in each visit.
+              </li>
+              <li className="legal-li">
+                <strong>Blocking automated abuse.</strong> Cloudflare Turnstile
+                may set a cookie as part of distinguishing people from bots when
+                you create an account or use the symptom checker without one.
+                This is described in Section 4.2. It is not used for advertising
+                and does not follow you to other sites.
+              </li>
+              <li className="legal-li">
+                <strong>Small conveniences.</strong> Some pages remember a
+                preference in your browser — a filter you chose, a panel you
+                collapsed — so the page looks the same when you come back. This
+                information stays on your device and is never sent to us.
+              </li>
+            </ul>
+            <p className="legal-p">
+              <strong>Analytics.</strong> We measure how the Service is used so
+              we can improve it, and we have configured our analytics so that it
+              does not set a cookie or assign you a persistent identifier.
+              Measurement is not linked to you across visits.
+            </p>
+            <p className="legal-p">
+              Because everything above is strictly necessary to deliver the
+              Service you asked for, we do not show a cookie consent banner. If
+              we ever introduce cookies that are not strictly necessary — for
+              advertising, for example, or for tracking across sites — we will
+              update this Policy and provide the choices required by law before
+              those cookies are set. See Section 4.5.
+            </p>
+            <p className="legal-p">
+              Most browsers let you block or delete cookies in their settings.
+              Blocking the ones described above will stop you being able to sign
+              in and may prevent parts of the Service from working.
+            </p>
           </div>
 
           <div className="legal-divider" />
@@ -276,8 +334,8 @@ export default function PrivacyPolicy() {
               4.5 Affiliate Partnerships and Future Practices
             </h3>
             <p className="legal-p">
-              Nehalyn may in the future introduce affiliate referral programs
-              or other commercial partnerships. If such arrangements involve the
+              Nehalyn may in the future introduce affiliate referral programs or
+              other commercial partnerships. If such arrangements involve the
               use of tracking technologies that could constitute "sharing" of
               personal information under applicable law, we will update this
               Privacy Policy, provide notice to users before such practices take
@@ -303,8 +361,8 @@ export default function PrivacyPolicy() {
             </p>
             <h3 className="legal-h3">4.8 Business Transfers</h3>
             <p className="legal-p">
-              If Nehalyn is involved in a merger, acquisition, or sale of all
-              or a portion of its assets, your personal information may be
+              If Nehalyn is involved in a merger, acquisition, or sale of all or
+              a portion of its assets, your personal information may be
               transferred as part of that transaction. We will provide notice
               before your personal information is transferred and becomes
               subject to a different privacy policy.

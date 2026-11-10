@@ -196,7 +196,8 @@ export default function ContactPage() {
         />
 
         {isMobile && (
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             style={{
               position: "absolute",
               inset: 0,
@@ -216,13 +217,41 @@ export default function ContactPage() {
                 x2="100%"
                 y2="0%"
               >
-                <stop offset="0%" stopColor="var(--color-terracotta)" stopOpacity="0.5" />
-                <stop offset="18%" stopColor="var(--color-gold)" stopOpacity="0.85" />
-                <stop offset="38%" stopColor={CONTACT_ART.cream50} stopOpacity="1" />
-                <stop offset="52%" stopColor="var(--color-gold)" stopOpacity="1" />
-                <stop offset="68%" stopColor={CONTACT_ART.cream50} stopOpacity="0.95" />
-                <stop offset="84%" stopColor="var(--color-gold)" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="var(--color-terracotta)" stopOpacity="0.45" />
+                <stop
+                  offset="0%"
+                  stopColor="var(--color-terracotta)"
+                  stopOpacity="0.5"
+                />
+                <stop
+                  offset="18%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="0.85"
+                />
+                <stop
+                  offset="38%"
+                  stopColor={CONTACT_ART.cream50}
+                  stopOpacity="1"
+                />
+                <stop
+                  offset="52%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="1"
+                />
+                <stop
+                  offset="68%"
+                  stopColor={CONTACT_ART.cream50}
+                  stopOpacity="0.95"
+                />
+                <stop
+                  offset="84%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="0.8"
+                />
+                <stop
+                  offset="100%"
+                  stopColor="var(--color-terracotta)"
+                  stopOpacity="0.45"
+                />
               </linearGradient>
               <linearGradient
                 id="silverChromeMobile"
@@ -231,11 +260,29 @@ export default function ContactPage() {
                 x2="100%"
                 y2="0%"
               >
-                <stop offset="0%" stopColor="var(--color-gold)" stopOpacity="0.3" />
-                <stop offset="25%" stopColor="rgb(var(--color-white-rgb) / 0.8)" />
-                <stop offset="50%" stopColor={CONTACT_ART.cream50} stopOpacity="1" />
-                <stop offset="75%" stopColor="rgb(var(--color-white-rgb) / 0.8)" />
-                <stop offset="100%" stopColor="var(--color-gold)" stopOpacity="0.3" />
+                <stop
+                  offset="0%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="0.3"
+                />
+                <stop
+                  offset="25%"
+                  stopColor="rgb(var(--color-white-rgb) / 0.8)"
+                />
+                <stop
+                  offset="50%"
+                  stopColor={CONTACT_ART.cream50}
+                  stopOpacity="1"
+                />
+                <stop
+                  offset="75%"
+                  stopColor="rgb(var(--color-white-rgb) / 0.8)"
+                />
+                <stop
+                  offset="100%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="0.3"
+                />
               </linearGradient>
             </defs>
             {ARC_RADII.map((r, i) => {
@@ -264,7 +311,8 @@ export default function ContactPage() {
         )}
 
         {!isMobile && (
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             style={{
               position: "absolute",
               bottom: 0,
@@ -281,18 +329,58 @@ export default function ContactPage() {
           >
             <defs>
               <linearGradient id="goldChrome" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="var(--color-terracotta)" stopOpacity="0.5" />
-                <stop offset="18%" stopColor="var(--color-gold)" stopOpacity="0.85" />
-                <stop offset="38%" stopColor={CONTACT_ART.cream50} stopOpacity="1" />
-                <stop offset="52%" stopColor="var(--color-gold)" stopOpacity="1" />
-                <stop offset="68%" stopColor={CONTACT_ART.cream50} stopOpacity="0.95" />
-                <stop offset="84%" stopColor="var(--color-gold)" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="var(--color-terracotta)" stopOpacity="0.45" />
+                <stop
+                  offset="0%"
+                  stopColor="var(--color-terracotta)"
+                  stopOpacity="0.5"
+                />
+                <stop
+                  offset="18%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="0.85"
+                />
+                <stop
+                  offset="38%"
+                  stopColor={CONTACT_ART.cream50}
+                  stopOpacity="1"
+                />
+                <stop
+                  offset="52%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="1"
+                />
+                <stop
+                  offset="68%"
+                  stopColor={CONTACT_ART.cream50}
+                  stopOpacity="0.95"
+                />
+                <stop
+                  offset="84%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="0.8"
+                />
+                <stop
+                  offset="100%"
+                  stopColor="var(--color-terracotta)"
+                  stopOpacity="0.45"
+                />
               </linearGradient>
               <radialGradient id="dotGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="var(--color-gold)" stopOpacity="0.7" />
-                <stop offset="60%" stopColor="var(--color-terracotta)" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="var(--color-terracotta)" stopOpacity="0.1" />
+                <stop
+                  offset="0%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="0.7"
+                />
+                <stop
+                  offset="60%"
+                  stopColor="var(--color-terracotta)"
+                  stopOpacity="0.4"
+                />
+                <stop
+                  offset="100%"
+                  stopColor="var(--color-terracotta)"
+                  stopOpacity="0.1"
+                />
               </radialGradient>
               <linearGradient
                 id="silverChrome"
@@ -301,11 +389,29 @@ export default function ContactPage() {
                 x2="100%"
                 y2="0%"
               >
-                <stop offset="0%" stopColor="var(--color-gold)" stopOpacity="0.3" />
-                <stop offset="25%" stopColor="rgb(var(--color-white-rgb) / 0.8)" />
-                <stop offset="50%" stopColor={CONTACT_ART.cream50} stopOpacity="1" />
-                <stop offset="75%" stopColor="rgb(var(--color-white-rgb) / 0.8)" />
-                <stop offset="100%" stopColor="var(--color-gold)" stopOpacity="0.3" />
+                <stop
+                  offset="0%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="0.3"
+                />
+                <stop
+                  offset="25%"
+                  stopColor="rgb(var(--color-white-rgb) / 0.8)"
+                />
+                <stop
+                  offset="50%"
+                  stopColor={CONTACT_ART.cream50}
+                  stopOpacity="1"
+                />
+                <stop
+                  offset="75%"
+                  stopColor="rgb(var(--color-white-rgb) / 0.8)"
+                />
+                <stop
+                  offset="100%"
+                  stopColor="var(--color-gold)"
+                  stopOpacity="0.3"
+                />
               </linearGradient>
             </defs>
             <circle
@@ -352,7 +458,9 @@ export default function ContactPage() {
                   d={`M ${sx},1 A ${r},${r} 0 0,1 ${ex},1`}
                   fill="none"
                   stroke={
-                    isGold ? "rgb(var(--color-gold-rgb) / 1)" : "rgb(var(--color-white-rgb) / 1)"
+                    isGold
+                      ? "rgb(var(--color-gold-rgb) / 1)"
+                      : "rgb(var(--color-white-rgb) / 1)"
                   }
                   strokeWidth={isPulsing ? 2.2 : sw}
                   strokeLinecap="round"
@@ -418,16 +526,14 @@ export default function ContactPage() {
       </div>
 
       {/* MAIN CONTENT */}
-      <section
-        style={{ background: "var(--color-cream)", padding: "88px 0" }}
-      >
+      <section style={{ background: "var(--color-cream)", padding: "88px 0" }}>
         <div className="pp-container">
           <div className="cg">
             <div
               ref={contentRef}
               className={`rl${contentVisible ? " on" : ""}`}
             >
-              <div style={{ marginBottom: "40px" }}>
+              <div style={{ marginBottom: "0" }}>
                 {REASONS.map((item) => (
                   <div key={item.label} className="cr">
                     <div className="ri">
@@ -474,16 +580,8 @@ export default function ContactPage() {
                   gap: "10px",
                 }}
               >
-                <a href="mailto:info@nehalyn.com" className="eb eb-p">
+                <a href="mailto:support@nehalyn.com" className="eb eb-p">
                   <Mail
-                    size={16}
-                    strokeWidth={2}
-                    style={{ marginRight: "4px", verticalAlign: "middle" }}
-                  />{" "}
-                  info@nehalyn.com
-                </a>
-                <a href="mailto:support@nehalyn.com" className="eb eb-s">
-                  <MessageCircle
                     size={16}
                     strokeWidth={2}
                     style={{ marginRight: "4px", verticalAlign: "middle" }}
