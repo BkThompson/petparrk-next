@@ -221,7 +221,7 @@ const VET_TYPES = [
   "Low-Cost / Non-Profit",
   "Vaccine Clinic",
   "Animal Shelter",
-  "Mobile / House Call",
+  "Mobile Vet / House Call",
 ];
 const OWNERSHIP_TYPES = ["Independent", "Corporate", "Other"];
 const STATUS_TYPES = ["active", "inactive", "pending"];

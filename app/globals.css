@@ -15,28 +15,28 @@
 
   /* Brand */
   --color-navy-dark: #172531;
-  --color-navy-deeper: #060e16;   /* vignettes and deep shadows */
+  --color-navy-deeper: #060e16; /* vignettes and deep shadows */
   --color-navy-mid: #2c4657;
   --color-navy-light: #4d6473;
-  --color-terracotta: #cf5c36;     /* 500 brand: logo, art, large text, icons, focus */
+  --color-terracotta: #cf5c36; /* 500 brand: logo, art, large text, icons, focus */
   --color-terracotta-600: #c4542f; /* button and badge fills: white text 4.51 */
   --color-terracotta-700: #b64e2b; /* small text, hover, pressed: 4.50 on cream */
-  --color-gold: #efc88b;           /* on navy only, never text on light */
-  --color-slate-blue: #5a85a9;     /* logo, icons, graphics, large text only */
+  --color-gold: #efc88b; /* on navy only, never text on light */
+  --color-slate-blue: #5a85a9; /* logo, icons, graphics, large text only */
   --color-cream: #f5f0e8;
   --color-white: #ffffff;
-  --color-black: #000000;          /* photo overlays and image shadows only */
+  --color-black: #000000; /* photo overlays and image shadows only */
 
   /* Text */
   --color-ink: #1a1a1a;
   --color-slate: #4b5563;
-  --color-muted: #656d78;          /* 4.61 on cream, 5.23 on white */
-  --color-ghost: #d1d5db;          /* borders and disabled only, never text */
+  --color-muted: #656d78; /* 4.61 on cream, 5.23 on white */
+  --color-ghost: #d1d5db; /* borders and disabled only, never text */
 
   /* Borders */
   --color-border: #ede8e0;
   --color-border-strong: #d1c9bd;
-  --color-border-field: #969089;     /* text field outlines, 1px: 3.16:1 on white (WCAG 1.4.11) */
+  --color-border-field: #969089; /* text field outlines, 1px: 3.16:1 on white (WCAG 1.4.11) */
   --color-border-focus: var(--color-terracotta);
 
   /* Status */
@@ -49,9 +49,9 @@
   --color-warning: #af5109;
   --color-warning-light: #fef3eb;
   --color-warning-text: #8b3a1e;
-  --color-caution: #d9a21b;        /* "see a vet soon": dots and accents, always beside a text label */
+  --color-caution: #d9a21b; /* "see a vet soon": dots and accents, always beside a text label */
   --color-caution-light: #fef8ec;
-  --color-caution-text: #8b6914;   /* 4.81 on caution-light */
+  --color-caution-text: #8b6914; /* 4.81 on caution-light */
   --color-info: #1d4ed8;
   --color-info-light: #eff6ff;
   --color-info-text: #1e3a8a;
@@ -471,7 +471,7 @@ select {
      here makes those overrides redundant rather than necessary. */
   border-radius: 999px;
   border: var(--pill-border-w) solid transparent;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -1010,7 +1010,9 @@ body > div {
   outline-offset: 2px;
 }
 /* The skip target takes focus programmatically; no ring around the page. */
-#main-content:focus { outline: none; }
+#main-content:focus {
+  outline: none;
+}
 
 /* ── Focus safety net (WCAG 2.4.7) ─────────────────────────────────────── */
 /* Whatever a component's own CSS does, a control reached by keyboard always
@@ -1066,12 +1068,19 @@ input[type="range"]:focus-visible {
 /* Decorative numbers ("01", "02"…) are drawn from data-num so they aren't
    page text: screen readers skip them (they're also aria-hidden) and contrast
    checkers don't measure them. They're watermarks, not content. */
-.deco-num::before { content: attr(data-num); }
+.deco-num::before {
+  content: attr(data-num);
+}
 
 /* Text fields have a 1px outline; on focus this adds a second pixel of
    orange so the selected field is as clear as before. :where() keeps it
    weak, so fields with their own focus glow keep theirs. */
-:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="file"]), select, textarea):focus {
+:where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+      [type="hidden"]
+    ):not([type="submit"]):not([type="button"]):not([type="file"]),
+  select,
+  textarea
+):focus {
   box-shadow: 0 0 0 1px var(--color-terracotta);
 }
-

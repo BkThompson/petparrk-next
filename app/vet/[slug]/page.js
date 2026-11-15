@@ -959,7 +959,7 @@ export default function VetPage() {
         /* Pills in the Details section. Shape, size and border thickness live
            here so they can be targeted in one place; only the state colours
            stay inline, since they depend on the vet's data. */
-        .vs-detail-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:14px;font-weight:700;border:var(--pill-border-w,2px) solid transparent;width:fit-content;}
+        .vs-detail-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:700;border:var(--pill-border-w,2px) solid transparent;width:fit-content;}
         .report-price-btn{background:none;border:none;color:${C.muted};font-size:13px;font-weight:600;cursor:pointer;padding:14px 0px 14px 10px;text-decoration:underline;font-family:inherit;transition:color 0.15s;}
         @media (hover: hover) { .report-price-btn:hover {color:${C.terracotta700};} }
         .price-row{padding:16px 0 0;}
@@ -1323,7 +1323,7 @@ export default function VetPage() {
                     color: "rgb(var(--color-white-rgb) / 0.5)",
                     padding: "4px 11px",
                     borderRadius: "20px",
-                    border: "1px solid rgb(var(--color-white-rgb) / 0.12)",
+                    border: "2px solid rgb(var(--color-white-rgb) / 0.12)",
                   }}
                 >
                   {vet.ownership?.startsWith("Other:")
@@ -1422,28 +1422,63 @@ export default function VetPage() {
                 {/* Address */}
                 <div style={{ padding: "20px 20px 0", position: "relative" }}>
                   <div className="v-div" />
-                  <InfoLabel>Location</InfoLabel>
-                  {vet.address && (
-                    <a
-                      href={`https://maps.google.com/?q=${encodeURIComponent(vet.address + " " + (vet.city || "") + " CA " + (vet.zip_code || ""))}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        fontSize: "15px",
-                        color: C.terracotta700,
-                        textDecoration: "none",
-                        fontWeight: "600",
-                        display: "block",
-                        lineHeight: "1.6",
-                        overflowWrap: "break-word",
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {vet.address}
-                      <br />
-                      {vet.city}, CA {vet.zip_code} ↗
-                    </a>
-                  )}
+                  {/* A mobile vet travels to the client, so the address is
+                      where they are based, not somewhere to drive to. Linking
+                      it to Google Maps invites exactly the wrong trip. */}
+                  <InfoLabel>
+                    {(Array.isArray(vet.vet_type)
+                      ? vet.vet_type
+                      : [vet.vet_type]
+                    ).includes("Mobile Vet / House Call")
+                      ? "Based in"
+                      : "Location"}
+                  </InfoLabel>
+                  {vet.address &&
+                    ((Array.isArray(vet.vet_type)
+                      ? vet.vet_type
+                      : [vet.vet_type]
+                    ).includes("Mobile Vet / House Call") ? (
+                      <div
+                        style={{
+                          fontSize: "15px",
+                          color: C.ink,
+                          fontWeight: "600",
+                          lineHeight: "1.6",
+                        }}
+                      >
+                        {vet.city}, CA {vet.zip_code}
+                        <div
+                          style={{
+                            fontSize: "14px",
+                            color: C.muted,
+                            fontWeight: "500",
+                            marginTop: "4px",
+                          }}
+                        >
+                          Mobile vet &mdash; travels to you
+                        </div>
+                      </div>
+                    ) : (
+                      <a
+                        href={`https://maps.google.com/?q=${encodeURIComponent(vet.address + " " + (vet.city || "") + " CA " + (vet.zip_code || ""))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: "15px",
+                          color: C.terracotta700,
+                          textDecoration: "none",
+                          fontWeight: "600",
+                          display: "block",
+                          lineHeight: "1.6",
+                          overflowWrap: "break-word",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {vet.address}
+                        <br />
+                        {vet.city}, CA {vet.zip_code} ↗
+                      </a>
+                    ))}
                   {vet.website && (
                     <a
                       href={`https://${vet.website}`}
