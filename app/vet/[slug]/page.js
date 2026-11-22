@@ -333,6 +333,37 @@ function parseHours(s) {
 // "<p></p>" or "<p><br></p>" when a field is cleared, and both are non-empty
 // strings — so a plain truthiness check leaves an empty panel, its heading and
 // its margin sitting in the pricing section with nothing in them.
+// The weight band a price covers, as a reader-facing label. Prefers the
+// free-text override (for tiers that aren't about weight at all — dental
+// disease stages, say) and otherwise builds one from the numbers, so the
+// label can never drift from what the matching actually uses.
+// Returns null when the price isn't tiered, which is every price today.
+function tierLabel(p) {
+  if (p?.applies_to && String(p.applies_to).trim())
+    return String(p.applies_to).trim();
+  const min = p?.applies_min_lbs;
+  const max = p?.applies_max_lbs;
+  if (min == null && max == null) return null;
+  if (min != null && max != null) return `${+min}–${+max} lbs`;
+  if (min != null) return `Over ${+min} lbs`;
+  return `Under ${+max} lbs`;
+}
+
+// Collapse rows to one per key, keeping the cheapest. A clinic quoting a spay
+// in five weight bands holds five rows for one service; without this it would
+// appear five times on the comparison chart and count five times towards its
+// own regional average. Untiered services have one row and are unaffected.
+function lowestBy(rows, keyFn) {
+  const best = new Map();
+  for (const r of rows) {
+    const k = keyFn(r);
+    const cur = best.get(k);
+    if (!cur || (r.price_low ?? Infinity) < (cur.price_low ?? Infinity))
+      best.set(k, r);
+  }
+  return [...best.values()];
+}
+
 function hasText(html) {
   if (!html) return false;
   return (
@@ -831,7 +862,13 @@ export default function VetPage() {
       : null;
   const returnUrl =
     typeof window !== "undefined" ? window.location.pathname : `/vet/${slug}`;
-  const visibleChartPrices = prices.filter((price) => {
+  // The chart compares one number per service against the regional average,
+  // so a tiered service contributes its cheapest band and nothing else.
+  const chartSourcePrices = lowestBy(
+    prices,
+    (p) => p.services?.name || `svc:${p.service_id}`,
+  );
+  const visibleChartPrices = chartSourcePrices.filter((price) => {
     if (price.price_type === "starting") return false;
     const vp = price.price_low || price.price_paid;
     const vetRegion = getRegion(vet?.city);
@@ -1021,6 +1058,10 @@ export default function VetPage() {
            elements — they need the size set explicitly to be targetable. */
         .vs-clinicnote-body p{margin:0 0 8px;font-size:15px;line-height:1.6;}
         .vs-clinicnote-body p:last-child{margin:0;}
+        /* The weight band beside a tiered service name. Muted and smaller, so
+           a repeated "Spay" reads as one service in bands rather than five
+           unrelated rows. Inline, so it wraps under a long name on a phone. */
+        .vs-tier-band{display:inline-block;margin-left:8px;font-size:14px;font-weight:700;color:${C.muted};white-space:nowrap;}
         .vs-fewprice{margin:16px 0 0;padding:12px 14px;background:${C.cream};border-radius:10px;font-size:14px;font-weight:500;color:${C.muted};line-height:1.6;}
         .vs-check-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;height:42px;border-radius:12px;border:2px solid ${C.terracotta};background:var(--color-white);color:${C.terracotta700};font-size:15px;font-weight:700;text-decoration:none;font-family:var(--font-urbanist,'Urbanist',sans-serif);transition:background 0.2s,color 0.2s;}
         @media (hover: hover) { .vs-check-link:hover {background:${C.terracotta700};color:var(--color-white);} }
@@ -1651,7 +1692,7 @@ export default function VetPage() {
                         from services.sort_order, then by name. Two lists of
                         the same services in different orders is hard to read
                         against each other. */}
-                    {[...prices]
+                    {[...chartSourcePrices]
                       .sort(
                         (a, b) =>
                           (a.services?.sort_order ?? 900) -
@@ -1665,13 +1706,20 @@ export default function VetPage() {
                         const serviceName = price.services?.name;
                         const vetPrice = price.price_low || price.price_paid;
                         const vetRegion = getRegion(vet?.city);
-                        const allForSvc = allPrices.filter(
-                          (p) =>
-                            p.services?.name === serviceName &&
-                            p.price_low &&
-                            p.services?.id !== 8 &&
-                            p.price_type !== "starting" &&
-                            getRegion(p.vets?.city) === vetRegion,
+                        // One row per clinic before averaging. A clinic with
+                        // five weight bands would otherwise be counted five
+                        // times and drag the regional average towards
+                        // whichever clinics happen to quote by size.
+                        const allForSvc = lowestBy(
+                          allPrices.filter(
+                            (p) =>
+                              p.services?.name === serviceName &&
+                              p.price_low &&
+                              p.services?.id !== 8 &&
+                              p.price_type !== "starting" &&
+                              getRegion(p.vets?.city) === vetRegion,
+                          ),
+                          (p) => p.vet_id ?? p.pending_vet_id ?? p.id,
                         );
                         const avg =
                           allForSvc.length > 0
@@ -2196,6 +2244,13 @@ export default function VetPage() {
                                         <span className="vs-service-name">
                                           {p.services?.name}
                                         </span>
+                                        {/* Only present on tiered prices, so
+                                            an ordinary row is unchanged. */}
+                                        {tierLabel(p) && (
+                                          <span className="vs-tier-band">
+                                            {tierLabel(p)}
+                                          </span>
+                                        )}
                                         {hasText(p.notes) && (
                                           <div
                                             className="vs-pricenote"

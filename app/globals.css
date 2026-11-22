@@ -471,7 +471,7 @@ select {
      here makes those overrides redundant rather than necessary. */
   border-radius: 999px;
   border: var(--pill-border-w) solid transparent;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;

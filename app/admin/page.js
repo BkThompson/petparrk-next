@@ -7,6 +7,7 @@ import {
   memo,
   useCallback,
   useDeferredValue,
+  Fragment,
 } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
@@ -806,6 +807,20 @@ function sanitizeRichText(html) {
 // source-aware sync existed, and the sync now treats all three the same way.
 // Scraper finds are unreviewed and are not somebody's decision, so they are
 // not an override.
+// The weight band a price covers, as a label. Same rule as the vet page:
+// free-text override first, otherwise built from the numbers. Null when the
+// price isn't tiered, which is every price unless someone filled the band in.
+function tierLabel(p) {
+  if (p?.applies_to && String(p.applies_to).trim())
+    return String(p.applies_to).trim();
+  const min = p?.applies_min_lbs;
+  const max = p?.applies_max_lbs;
+  if (min == null && max == null) return null;
+  if (min != null && max != null) return `${+min}–${+max} lbs`;
+  if (min != null) return `Over ${+min} lbs`;
+  return `Under ${+max} lbs`;
+}
+
 const SCRAPER_PRICE_SOURCES = new Set(["scraper", "ai_scraper"]);
 function isAdminOwnedPrice(p) {
   return p.source !== "sheet" && !SCRAPER_PRICE_SOURCES.has(p.source);
@@ -1892,7 +1907,7 @@ function PriceForm({
 
             <div className="adm-field adm-pf-full">
               {isRange ? (
-                <div className="adm-price-lowhigh">
+                <div className="adm-price-lowhigh adm-price-range">
                   <div className="adm-field">
                     <label className="adm-field-label">Price low *</label>
                     <input
@@ -1977,6 +1992,48 @@ function PriceForm({
             />
           </div>
         )}
+
+        {/* Weight band — only for clinics that quote a procedure by size,
+            which is most of them for spay, neuter and dental. Leave both
+            blank and the price behaves exactly as every price does today:
+            one row, no band label, counted once in the regional average.
+            Fill them in and this row becomes one tier of several. */}
+        <div className="adm-field adm-pf-full">
+          <label className="adm-field-label">Weight band (optional)</label>
+          <p className="adm-vet-lookup-hint" style={{ margin: "0 0 8px" }}>
+            For prices quoted by size, e.g. 0–25 lbs. Leave both blank for a
+            single price that covers every pet. Fill only Min for an open-ended
+            top band ("Over 90 lbs").
+          </p>
+          <div className="adm-price-lowhigh adm-weight-band">
+            <div className="adm-field">
+              <label className="adm-field-label">Min lbs</label>
+              <input
+                aria-label="Minimum weight in pounds"
+                className="adm-field-input"
+                type="number"
+                step="0.1"
+                min="0"
+                value={form.applies_min_lbs ?? ""}
+                onChange={(e) => set("applies_min_lbs", e.target.value)}
+                placeholder="e.g. 0"
+              />
+            </div>
+            <div className="adm-field">
+              <label className="adm-field-label">Max lbs</label>
+              <input
+                aria-label="Maximum weight in pounds"
+                className="adm-field-input"
+                type="number"
+                step="0.1"
+                min="0"
+                value={form.applies_max_lbs ?? ""}
+                onChange={(e) => set("applies_max_lbs", e.target.value)}
+                placeholder="e.g. 25"
+              />
+            </div>
+          </div>
+        </div>
 
         <div className="adm-field adm-pf-full">
           <label className="adm-field-label">Includes</label>
@@ -3265,6 +3322,23 @@ export default function AdminPage() {
   const [vetPrices, setVetPrices] = useState([]);
   const [services, setServices] = useState([]);
   const [pricesLoading, setPricesLoading] = useState(false);
+  // Same order as the public vet page: category by services.sort_order, then
+  // service name, then weight band low-to-high so a tiered service reads as a
+  // ladder. Untiered rows sort before tiered ones within a service. The query
+  // returns insertion order, which scattered the bands of one service across
+  // the whole list.
+  const sortedVetPrices = [...vetPrices].sort((a, b) => {
+    const ao = a.services?.sort_order ?? 900;
+    const bo = b.services?.sort_order ?? 900;
+    if (ao !== bo) return ao - bo;
+    const an = a.services?.name || "";
+    const bn = b.services?.name || "";
+    if (an !== bn) return an.localeCompare(bn);
+    const amin = a.applies_min_lbs ?? -1;
+    const bmin = b.applies_min_lbs ?? -1;
+    if (amin !== bmin) return amin - bmin;
+    return new Date(a.created_at) - new Date(b.created_at);
+  });
   const [editingPrice, setEditingPrice] = useState(null);
   const [priceForm, setPriceForm] = useState({});
   const [priceSaving, setPriceSaving] = useState(false);
@@ -4472,10 +4546,25 @@ export default function AdminPage() {
     const toBool = (v) => v === true || v === "true" || v === 1 || v === "1";
     const { data } = await supabase
       .from("vet_prices")
-      .select("*, services(name)")
+      .select("*, services(name, category, sort_order)")
       .eq("vet_id", vetId)
       .order("created_at");
-    const clean = (data || []).map((p) => ({
+    // Sorted here rather than at render: the edit handlers address rows by
+    // their position in this array, so the order has to be settled before it
+    // reaches state. Same ordering as the Prices tab and the vet page.
+    const ordered = [...(data || [])].sort((a, b) => {
+      const ao = a.services?.sort_order ?? 900;
+      const bo = b.services?.sort_order ?? 900;
+      if (ao !== bo) return ao - bo;
+      const an = a.services?.name || "";
+      const bn = b.services?.name || "";
+      if (an !== bn) return an.localeCompare(bn);
+      const amin = a.applies_min_lbs ?? -1;
+      const bmin = b.applies_min_lbs ?? -1;
+      if (amin !== bmin) return amin - bmin;
+      return new Date(a.created_at) - new Date(b.created_at);
+    });
+    const clean = ordered.map((p) => ({
       ...p,
       includes_bloodwork: toBool(p.includes_bloodwork),
       includes_xrays: toBool(p.includes_xrays),
@@ -4914,7 +5003,7 @@ export default function AdminPage() {
     setVetPrices([]);
     const { data, error } = await supabase
       .from("vet_prices")
-      .select(`*, services(name), _ts:created_at`)
+      .select(`*, services(name, category, sort_order), _ts:created_at`)
       .eq("vet_id", vetId)
       .order("created_at")
       .limit(200);
@@ -5259,6 +5348,10 @@ export default function AdminPage() {
       ...price,
       price_low: price.price_low != null ? String(price.price_low) : "",
       price_high: price.price_high != null ? String(price.price_high) : "",
+      applies_min_lbs:
+        price.applies_min_lbs != null ? String(price.applies_min_lbs) : "",
+      applies_max_lbs:
+        price.applies_max_lbs != null ? String(price.applies_max_lbs) : "",
     };
     setPriceForm(initialPriceForm);
     snapshotEditor(initialPriceForm);
@@ -5291,6 +5384,15 @@ export default function AdminPage() {
       // otherwise stay set as far as the database is concerned.
       notes: hasText(f.notes) ? f.notes : null,
       vaccines_included: f.vaccines_included || null,
+      // Blank stays NULL, which is what keeps an untiered price untiered.
+      applies_min_lbs:
+        f.applies_min_lbs !== "" && f.applies_min_lbs != null
+          ? parseFloat(f.applies_min_lbs)
+          : null,
+      applies_max_lbs:
+        f.applies_max_lbs !== "" && f.applies_max_lbs != null
+          ? parseFloat(f.applies_max_lbs)
+          : null,
       is_verified: true,
     };
 
@@ -5341,7 +5443,18 @@ export default function AdminPage() {
       setVetPrices((prev) =>
         prev.map((p) =>
           p.id === editingPrice
-            ? { ...p, ...payload, services: p.services }
+            ? {
+                ...p,
+                ...payload,
+                // Look the new service up rather than keeping the old joined
+                // row — changing the service used to leave the card showing
+                // the previous name while the database and the vet page had
+                // already moved on.
+                services:
+                  services.find(
+                    (s) => String(s.id) === String(payload.service_id),
+                  ) || p.services,
+              }
             : p,
         ),
       );
@@ -5459,6 +5572,16 @@ export default function AdminPage() {
         call_for_quote: addPriceForm.call_for_quote,
         notes: hasText(addPriceForm.notes) ? addPriceForm.notes : null,
         vaccines_included: addPriceForm.vaccines_included || null,
+        applies_min_lbs:
+          addPriceForm.applies_min_lbs !== "" &&
+          addPriceForm.applies_min_lbs != null
+            ? parseFloat(addPriceForm.applies_min_lbs)
+            : null,
+        applies_max_lbs:
+          addPriceForm.applies_max_lbs !== "" &&
+          addPriceForm.applies_max_lbs != null
+            ? parseFloat(addPriceForm.applies_max_lbs)
+            : null,
       })
       .select("*, services(name)")
       .single();
@@ -5478,6 +5601,8 @@ export default function AdminPage() {
         call_for_quote: false,
         notes: "",
         vaccines_included: "",
+        applies_min_lbs: "",
+        applies_max_lbs: "",
       });
       setAddPriceError(false);
       fetchStats();
@@ -6587,7 +6712,7 @@ export default function AdminPage() {
         .adm-sync-detail-wrap > .adm-sync-detail-inner { overflow: hidden; min-height: 0; }
         .adm-sync-detail ul { margin: 15px 0 0; padding-left: 0; }
         .adm-sync-detail li { font-size: 14px; font-weight: 500; color: var(--color-muted); margin-bottom: 2px; line-height: 1.5; }
-        .adm-pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+        .adm-pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 16px; }
         .adm-pf-full { grid-column: 1 / -1; }
         .adm-priceform .adm-pf-grid .adm-field { margin: 0; }
         .adm-seg-group { display: flex; gap: 8px; }
@@ -6779,6 +6904,11 @@ export default function AdminPage() {
         .adm-user-main { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
         .adm-user-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
         .adm-user-name { font-size: 18px; font-weight: 700; color: var(--color-navy-dark); }
+        /* Category heading in the price list, mirroring the vet page's
+           grouping so the two read the same way. */
+        .adm-price-group-h { margin: 22px 0 10px; font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-muted); }
+        .adm-user-list > .adm-price-group-h:first-child { margin-top: 0; }
+        .adm-price-band { margin-left: 0; font-size: 15px; font-weight: 700; color: var(--color-muted); white-space: nowrap; }
         .adm-user-email { font-size: 15px; color: var(--color-muted); font-weight: 500; word-break: break-word; }
         .adm-user-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .adm-ustatus { font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 9999px;  border: var(--pill-border-w, 2px) solid transparent; border-color: color-mix(in srgb, currentColor 30%, transparent);}
@@ -6835,6 +6965,10 @@ export default function AdminPage() {
           .adm-conflict-keepboth { min-width: 0; width: 100%; }
           .adm-pv-actions .adm-b { width: 100%; }
           .adm-price-lowhigh { flex-direction: row; }
+          /* Two short numbers sit fine side by side; the weight band
+             carries longer labels and hints, so it stacks instead. */
+          .adm-weight-band, .adm-price-range { flex-direction: column; }
+          .adm-weight-band .adm-field, .adm-price-range .adm-field { width: 100%; }
           .adm-species-grid { flex-direction: column; }
           .adm-species-grid .adm-field { width: 100%; }
           .adm-user-status-select { width: 100%; }
@@ -8910,6 +9044,8 @@ export default function AdminPage() {
                               call_for_quote: false,
                               notes: "",
                               vaccines_included: "",
+                              applies_min_lbs: "",
+                              applies_max_lbs: "",
                             };
                             setAddPriceForm(initialAddPrice);
                             snapshotEditor(initialAddPrice);
@@ -8958,17 +9094,31 @@ export default function AdminPage() {
                     )}
 
                     <div className="adm-user-list">
-                      {vetPrices.map((p) => {
+                      {sortedVetPrices.map((p, i, arr) => {
                         const editing = editingPrice === p.id;
                         const noteEditing = editingNote === p.id;
                         const isDeleting = deletePriceConfirm === p.id;
+                        const cat = p.services?.category || "Other services";
+                        const prevCat =
+                          i > 0
+                            ? arr[i - 1].services?.category || "Other services"
+                            : null;
                         return (
-                          <div key={p.id} className="adm-user-card">
+                          <Fragment key={p.id}>
+                            {cat !== prevCat && (
+                              <p className="adm-price-group-h">{cat}</p>
+                            )}
+                          <div className="adm-user-card">
                             <div className="adm-user-main">
                               <div className="adm-user-id">
                                 <span className="adm-user-name">
                                   {p.services?.name || "—"}
                                 </span>
+                                {tierLabel(p) && (
+                                  <span className="adm-price-band">
+                                    {tierLabel(p)}
+                                  </span>
+                                )}
                                 <span className="adm-price-value">
                                   {p.call_for_quote
                                     ? "Call for quote"
@@ -9159,6 +9309,14 @@ export default function AdminPage() {
                                       notes: p.notes || "",
                                       vaccines_included:
                                         p.vaccines_included || "",
+                                      applies_min_lbs:
+                                        p.applies_min_lbs != null
+                                          ? String(p.applies_min_lbs)
+                                          : "",
+                                      applies_max_lbs:
+                                        p.applies_max_lbs != null
+                                          ? String(p.applies_max_lbs)
+                                          : "",
                                     });
                                     setEditPriceError(false);
                                   }
@@ -9370,6 +9528,7 @@ export default function AdminPage() {
                               </div>
                             )}
                           </div>
+                          </Fragment>
                         );
                       })}
                     </div>

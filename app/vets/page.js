@@ -32,6 +32,18 @@ function formatPrice(low, high, type) {
   if (!high || low === high) return `$${Number(low).toLocaleString()}`;
   return `$${Number(low).toLocaleString()}–$${Number(high).toLocaleString()}`;
 }
+// The row to show for a service, when a clinic may hold several. Clinics that
+// quote a procedure by weight have one row per band, so a plain .find() would
+// return whichever happened to come back first — a 90 lb dog's price on a card
+// read by someone with a terrier. Takes the cheapest and marks it, so the card
+// can say "from $530" rather than stating one band's number as the price.
+// A clinic with a single row gets that row back untouched and unmarked.
+function pickLowest(rows, matchFn) {
+  const hits = (rows || []).filter((p) => matchFn(p) && p.price_low);
+  if (hits.length === 0) return null;
+  const row = hits.reduce((a, b) => (b.price_low < a.price_low ? b : a));
+  return hits.length > 1 ? { ...row, _tiered: true } : row;
+}
 function formatPhone(phone) {
   if (!phone) return null;
   const d = phone.replace(/\D/g, "");
@@ -78,7 +90,8 @@ function StarField() {
     return arr;
   }, []);
   return (
-    <svg aria-hidden="true"
+    <svg
+      aria-hidden="true"
       style={{
         position: "absolute",
         inset: 0,
@@ -440,7 +453,11 @@ function FilterDropdown({
   };
 
   const renderOpt = (opt) => (
-    <div role="option" aria-selected={opt.value === value} tabIndex={0} onKeyDown={onActivate(() => pick(opt.value))}
+    <div
+      role="option"
+      aria-selected={opt.value === value}
+      tabIndex={0}
+      onKeyDown={onActivate(() => pick(opt.value))}
       key={opt.value}
       className={`fdd-opt${opt.value === value ? " sel" : ""}`}
       onClick={() => pick(opt.value)}
@@ -750,8 +767,10 @@ function VetsContent() {
     })
     .filter((v) => {
       if (priceRange === "all") return true;
+      // Cheapest exam row, so a clinic quoting by weight is filtered on the
+      // same basis as its card shows.
       const ep =
-        prices[v.id]?.find((p) => p.services?.name === "Doctor Exam")
+        pickLowest(prices[v.id], (p) => p.services?.name === "Doctor Exam")
           ?.price_low ?? null;
       if (priceRange === "noprice")
         return !prices[v.id] || prices[v.id].every((p) => !p.price_low);
@@ -768,10 +787,10 @@ function VetsContent() {
     .sort((a, b) => {
       if (sortBy === "az") return a.name.localeCompare(b.name);
       const ae =
-        prices[a.id]?.find((p) => p.services?.name === "Doctor Exam")
+        pickLowest(prices[a.id], (p) => p.services?.name === "Doctor Exam")
           ?.price_low ?? null;
       const be =
-        prices[b.id]?.find((p) => p.services?.name === "Doctor Exam")
+        pickLowest(prices[b.id], (p) => p.services?.name === "Doctor Exam")
           ?.price_low ?? null;
       if (ae === null && be === null) return 0;
       if (ae === null) return 1;
@@ -904,7 +923,12 @@ function VetsContent() {
         .skeleton{background:linear-gradient(90deg,var(--color-border) 25%,var(--color-border-strong) 50%,var(--color-border) 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:18px}
       `}</style>
 
-      <div style={{ background: "var(--color-cream)", minHeight: "calc(100vh - 64px)" }}>
+      <div
+        style={{
+          background: "var(--color-cream)",
+          minHeight: "calc(100vh - 64px)",
+        }}
+      >
         <div
           className="vets-header"
           style={{
@@ -1018,7 +1042,8 @@ function VetsContent() {
                   Clearing a search that returned nothing used to mean
                   backspacing through the whole term. */}
               <div className="dir-search-wrap fbar-item fbar-search">
-                <input aria-label="Search by vet name or neighborhood"
+                <input
+                  aria-label="Search by vet name or neighborhood"
                   type="text"
                   className="dir-search"
                   placeholder="Search by vet name or neighborhood..."
@@ -1248,19 +1273,19 @@ function VetsContent() {
                 ))
               : filtered.slice(0, visibleCount).map((vet) => {
                   const vp = prices[vet.id] || [];
-                  const exam = vp.find(
-                    (p) => p.services?.name === "Doctor Exam" && p.price_low,
+                  const exam = pickLowest(
+                    vp,
+                    (p) => p.services?.name === "Doctor Exam",
                   );
-                  const dental = vp.find(
-                    (p) =>
-                      p.services?.name === "Dental Cleaning" && p.price_low,
+                  const dental = pickLowest(
+                    vp,
+                    (p) => p.services?.name === "Dental Cleaning",
                   );
-                  const spay = vp.find(
-                    (p) => SPAY_NAMES.includes(p.services?.name) && p.price_low,
+                  const spay = pickLowest(vp, (p) =>
+                    SPAY_NAMES.includes(p.services?.name),
                   );
-                  const neuter = vp.find(
-                    (p) =>
-                      NEUTER_NAMES.includes(p.services?.name) && p.price_low,
+                  const neuter = pickLowest(vp, (p) =>
+                    NEUTER_NAMES.includes(p.services?.name),
                   );
                   const lu = vet.last_verified
                     ? new Date(vet.last_verified + "T12:00:00")
@@ -1312,7 +1337,14 @@ function VetsContent() {
                                 .join(" · ")}
                             </p>
                           </div>
-                          <button type="button" aria-pressed={isSaved} aria-label={isSaved ? `Remove ${vet.name} from saved vets` : `Save ${vet.name}`}
+                          <button
+                            type="button"
+                            aria-pressed={isSaved}
+                            aria-label={
+                              isSaved
+                                ? `Remove ${vet.name} from saved vets`
+                                : `Save ${vet.name}`
+                            }
                             onClick={(e) => toggleSave(e, vet.id)}
                             className={`heart-btn${animatingId === vet.id ? " heart-animating" : ""}`}
                           >
@@ -1320,7 +1352,9 @@ function VetsContent() {
                               size={22}
                               strokeWidth={2}
                               color="var(--color-terracotta)"
-                              fill={isSaved ? "var(--color-terracotta)" : "none"}
+                              fill={
+                                isSaved ? "var(--color-terracotta)" : "none"
+                              }
                             />
                           </button>
                         </div>
@@ -1455,6 +1489,7 @@ function VetsContent() {
                                 <span className="price-chip">
                                   <span className="price-chip-label">Exam</span>
                                   <span className="price-chip-value">
+                                    {exam._tiered ? "from " : ""}
                                     {formatPrice(
                                       exam.price_low,
                                       exam.price_high,
@@ -1469,6 +1504,7 @@ function VetsContent() {
                                     Dental
                                   </span>
                                   <span className="price-chip-value">
+                                    {dental._tiered ? "from " : ""}
                                     {formatPrice(
                                       dental.price_low,
                                       dental.price_high,
@@ -1481,6 +1517,7 @@ function VetsContent() {
                                 <span className="price-chip">
                                   <span className="price-chip-label">Spay</span>
                                   <span className="price-chip-value">
+                                    {spay._tiered ? "from " : ""}
                                     {formatPrice(
                                       spay.price_low,
                                       spay.price_high,
@@ -1495,6 +1532,7 @@ function VetsContent() {
                                     Neuter
                                   </span>
                                   <span className="price-chip-value">
+                                    {neuter._tiered ? "from " : ""}
                                     {formatPrice(
                                       neuter.price_low,
                                       neuter.price_high,
