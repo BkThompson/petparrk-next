@@ -2066,6 +2066,35 @@ export default function VetPage() {
                           />
                         </div>
                       )}
+                      {/* When money is owed. Sits with the prices because it
+                          is the same question someone budgeting a $900
+                          surgery is already asking — the estimate above is
+                          only half of what they need to plan for. */}
+                      {hasText(vet.deposit_policy) && (
+                        <div className="vs-clinicnote">
+                          <p className="vs-clinicnote-h">Payment &amp; deposits</p>
+                          <div
+                            className="vs-clinicnote-body"
+                            dangerouslySetInnerHTML={{
+                              __html: vet.deposit_policy,
+                            }}
+                          />
+                        </div>
+                      )}
+                      {/* Drop-off, pickup and fasting, in the clinic's own
+                          words. Anyone reading a spay or dental price here is
+                          exactly the person who needs these. */}
+                      {hasText(vet.surgery_instructions) && (
+                        <div className="vs-clinicnote">
+                          <p className="vs-clinicnote-h">Surgery day</p>
+                          <div
+                            className="vs-clinicnote-body"
+                            dangerouslySetInnerHTML={{
+                              __html: vet.surgery_instructions,
+                            }}
+                          />
+                        </div>
+                      )}
                       {!session ? (
                         // Signed out there is nothing in state to blur, and
                         // the card used to fall through to "No prices yet for

@@ -222,6 +222,7 @@ const VET_TYPES = [
   "Vaccine Clinic",
   "Animal Shelter",
   "Mobile Vet / House Call",
+  "Spay / Neuter Clinic",
 ];
 const OWNERSHIP_TYPES = ["Independent", "Corporate", "Other"];
 const STATUS_TYPES = ["active", "inactive", "pending"];
@@ -1579,6 +1580,36 @@ function VetForm({
         <RichTextEditor
           value={form.pricing_note || ""}
           onChange={(v) => set("pricing_note", v)}
+          placeholder="Leave blank if none"
+        />
+      </div>
+      <div className="adm-field" style={{ marginBottom: "16px" }}>
+        <label className="adm-field-label">
+          Payment &amp; deposits <span className="adm-note-tag">Public</span>
+        </label>
+        <p className="adm-vet-lookup-hint" style={{ margin: "0 0 8px" }}>
+          When money is owed, e.g. "Deposit may be required at check-in.
+          Payment due in full at time of service." Leave blank if the clinic
+          hasn't said.
+        </p>
+        <RichTextEditor
+          value={form.deposit_policy || ""}
+          onChange={(v) => set("deposit_policy", v)}
+          placeholder="Leave blank if none"
+        />
+      </div>
+      <div className="adm-field" style={{ marginBottom: "16px" }}>
+        <label className="adm-field-label">
+          Surgery day <span className="adm-note-tag">Public</span>
+        </label>
+        <p className="adm-vet-lookup-hint" style={{ margin: "0 0 8px" }}>
+          Drop-off and pickup windows, fasting instructions — usually straight
+          off the clinic's own estimate sheet. Only for clinics that do
+          procedures.
+        </p>
+        <RichTextEditor
+          value={form.surgery_instructions || ""}
+          onChange={(v) => set("surgery_instructions", v)}
           placeholder="Leave blank if none"
         />
       </div>
@@ -3223,6 +3254,8 @@ export default function AdminPage() {
     status: "active",
     internal_notes: "",
     pricing_note: "",
+    deposit_policy: "",
+    surgery_instructions: "",
   });
 
   // Prices
@@ -5136,6 +5169,8 @@ export default function AdminPage() {
         status: vetForm.status,
         internal_notes: vetForm.internal_notes,
         pricing_note: vetForm.pricing_note || null,
+        deposit_policy: vetForm.deposit_policy || null,
+        surgery_instructions: vetForm.surgery_instructions || null,
         last_verified: vetForm.last_verified,
       })
       .eq("id", editingVet);
@@ -5197,6 +5232,8 @@ export default function AdminPage() {
         status: "active",
         internal_notes: "",
         pricing_note: "",
+        deposit_policy: "",
+        surgery_instructions: "",
       });
       fetchStats();
     } else {
