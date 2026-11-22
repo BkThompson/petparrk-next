@@ -1,5 +1,7 @@
 "use client";
 
+import SaveIndicator from "../../../../components/SaveIndicator";
+
 // ============================================================================
 // SHARE & PRIVACY PAGE  —  /pet-card/[slug]/share
 // ============================================================================
@@ -339,34 +341,6 @@ export default function SharePrivacyPage() {
         .pce-save-status.saved { color: var(--color-success-text); }
         .pce-save-status.error { color: var(--color-error); }
 
-        /* Save indicator — bottom-right floating toast */
-        .pce-save-toast {
-          position: fixed;
-          right: 24px;
-          bottom: 24px;
-          z-index: 50;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 16px;
-          background: var(--color-white);
-          border-radius: 9999px;
-          box-shadow: 0 8px 24px rgb(var(--color-navy-dark-rgb) / 0.18), 0 0 0 1px rgb(var(--color-navy-dark-rgb) / 0.06);
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--color-muted);
-          font-family: var(--font-urbanist,'Urbanist',sans-serif);
-          animation: pce-toast-in 0.18s ease-out;
-        }
-        .pce-save-toast.saved { color: var(--color-success-text); }
-        .pce-save-toast.error { color: var(--color-error); }
-        @keyframes pce-toast-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @media (max-width: 640px) {
-          .pce-save-toast { right: 16px; bottom: 16px; }
-        }
         .pce-spin { animation: pce-spin 0.9s linear infinite; }
         @keyframes pce-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -4077,30 +4051,3 @@ function ShareLinkCard({
 // Used by: Allergies, Medical conditions, Quirks & warnings.
 // Coordinates with the parent section's openFormId so only one is open at a time.
 // =============================================================
-function SaveIndicator({ status }) {
-  if (status === "idle") return null;
-  if (status === "saving") {
-    return (
-      <div className="pce-save-toast saving" role="status">
-        <Loader2 size={14} strokeWidth={2.2} className="pce-spin" />
-        Saving…
-      </div>
-    );
-  }
-  if (status === "saved") {
-    return (
-      <div className="pce-save-toast saved" role="status">
-        <Check size={14} strokeWidth={2.4} />
-        Saved
-      </div>
-    );
-  }
-  if (status === "error") {
-    return (
-      <div className="pce-save-toast error" role="alert">
-        Couldn&apos;t save — please retry
-      </div>
-    );
-  }
-  return null;
-}

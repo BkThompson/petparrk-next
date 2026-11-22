@@ -349,6 +349,56 @@ function tierLabel(p) {
   return `Under ${+max} lbs`;
 }
 
+// Does this price's species cover this pet? Both sides are loose strings —
+// vet_prices.species is a short admin value ("dog"), pets.species is whatever
+// the owner typed ("Dog", "Dogs"). A price with no species set covers
+// anything, which is how most rows are stored.
+function speciesMatches(priceSpecies, petSpecies) {
+  if (!priceSpecies) return true;
+  const a = String(priceSpecies).toLowerCase().trim().replace(/s$/, "");
+  const b = String(petSpecies || "")
+    .toLowerCase()
+    .trim()
+    .replace(/s$/, "");
+  if (!a || !b) return false;
+  return a === b || a.startsWith(b) || b.startsWith(a);
+}
+
+// Is this weight inside the band? An open top band has no max. Pet weights are
+// stored canonically in lbs and bands are entered in lbs, so no conversion.
+function weightInBand(row, lbs) {
+  if (lbs == null) return false;
+  const min = row.applies_min_lbs;
+  const max = row.applies_max_lbs;
+  if (min == null && max == null) return false;
+  if (min != null && lbs < min) return false;
+  if (max != null && lbs > max) return false;
+  return true;
+}
+
+// A pet that has already been spayed or neutered will never need that
+// surgery again, so marking its price as "theirs" is wrong. The row itself
+// stays — someone researching for another animal still wants to see it — but
+// it carries no name. altered_status is "Spayed" | "Neutered" | "Intact" |
+// "Unknown"; only the first two suppress, so an unknown history still matches.
+function isAlreadyAltered(pet) {
+  const st = pet?.altered_status;
+  return st === "Spayed" || st === "Neutered";
+}
+function isAlterationService(row) {
+  return /\b(spay|neuter)\b/i.test(row?.services?.name || "");
+}
+
+// The single test for "does this band belong to this pet", used both for
+// deciding who appears in the picker and for which row gets marked. One
+// function, so the two can never disagree.
+function rowMatchesPet(row, pet) {
+  if (!speciesMatches(row.species, pet.species)) return false;
+  if (!weightInBand(row, pet.weight_value)) return false;
+  if (isAlterationService(row) && isAlreadyAltered(pet)) return false;
+  return true;
+}
+
 // Collapse rows to one per key, keeping the cheapest. A clinic quoting a spay
 // in five weight bands holds five rows for one service; without this it would
 // appear five times on the comparison chart and count five times towards its
@@ -610,6 +660,11 @@ export default function VetPage() {
   const { slug } = useParams();
   const router = useRouter();
   const [session, setSession] = useState(undefined);
+  // The owner's pets, for matching a weight band to the pet in front of them.
+  // Empty for signed-out visitors, and empty on any failure, which falls back
+  // to showing every band unmarked.
+  const [pets, setPets] = useState([]);
+  const [matchPetId, setMatchPetId] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const [saveAnimating, setSaveAnimating] = useState(false);
   const [vet, setVet] = useState(null);
@@ -664,6 +719,39 @@ export default function VetPage() {
       window.scrollTo({ top, behavior: smoothScroll() });
     }, 50);
   }
+
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (!uid) {
+      setPets([]);
+      setMatchPetId(null);
+      return;
+    }
+    let cancelled = false;
+    const load = () => {
+      supabase
+        .from("pets")
+        .select("id, name, species, weight_value, altered_status")
+        .eq("owner_id", uid)
+        .then(({ data }) => {
+          if (!cancelled && data) setPets(data);
+        });
+    };
+    load();
+    // A weight changed on the profile and then navigated back to here would
+    // otherwise sit stale until a hard reload, because this page's copy of the
+    // pets was fetched once. Reloading on return keeps it honest.
+    const onFocus = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [session?.user?.id]);
 
   useEffect(() => {
     sbWidthRef.current =
@@ -905,11 +993,50 @@ export default function VetPage() {
       .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
       .map((g) => ({
         ...g,
-        rows: g.rows.sort((a, b) =>
-          (a.services?.name || "").localeCompare(b.services?.name || ""),
+        rows: g.rows.sort(
+          (a, b) =>
+            (a.services?.name || "").localeCompare(b.services?.name || "") ||
+            (a.applies_min_lbs ?? -1) - (b.applies_min_lbs ?? -1),
         ),
       }));
   })();
+
+  // ── Matching a weight band to the owner's pet ────────────────────────
+  // Only tiered rows can be matched, and only against a pet whose weight is
+  // on file. Everything here resolves to an empty set for signed-out
+  // visitors, for pets with no weight, and for clinics with no tiers — in
+  // which case the page renders exactly as it does without any of this.
+  const tieredRows = pricedRows.filter(
+    (p) => p.applies_min_lbs != null || p.applies_max_lbs != null,
+  );
+  const matchablePets = pets.filter(
+    (pet) =>
+      pet.weight_value != null &&
+      tieredRows.some((row) => rowMatchesPet(row, pet)),
+  );
+  // One qualifying pet is unambiguous, so it's used without asking. More than
+  // one has no right answer — a cat and a Great Dane want different rows — so
+  // nothing is marked until the owner picks, rather than guessing silently.
+  const activePet =
+    matchablePets.length === 1
+      ? matchablePets[0]
+      : matchablePets.find((p) => p.id === matchPetId) || null;
+
+  const matchedIds = new Set();
+  if (activePet) {
+    const byService = new Map();
+    for (const row of tieredRows) {
+      if (!rowMatchesPet(row, activePet)) continue;
+      const key = row.services?.name || `svc:${row.service_id}`;
+      const cur = byService.get(key);
+      // Clinic bands usually share their edges — 0–25 then 25–45 — so a 25 lb
+      // dog sits in two. Take the higher band: quoting above the real price is
+      // a smaller failure than quoting below it.
+      if (!cur || (row.applies_min_lbs ?? -1) > (cur.applies_min_lbs ?? -1))
+        byService.set(key, row);
+    }
+    for (const r of byService.values()) matchedIds.add(r.id);
+  }
 
   if (loading) return <PageLoader message="Loading vet profile…" />;
   if (!vet)
@@ -1062,6 +1189,20 @@ export default function VetPage() {
            a repeated "Spay" reads as one service in bands rather than five
            unrelated rows. Inline, so it wraps under a long name on a phone. */
         .vs-tier-band{display:inline-block;margin-left:8px;font-size:14px;font-weight:700;color:${C.muted};white-space:nowrap;}
+        /* Pet picker above the price list. Only rendered when the owner has
+           more than one pet that could match a band here. */
+        .vs-petmatch{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 20px;}
+        .vs-petmatch-label{font-size:14px;font-weight:600;color:${C.muted};}
+        .vs-petmatch-single{margin:0 0 20px;font-size:14px;font-weight:600;color:${C.muted};}
+        .vs-petmatch-single strong{font-weight:700;color:${C.navyDark};}
+        .vs-petmatch-opts{display:flex;flex-wrap:wrap;gap:8px;}
+        .vs-petmatch-btn{display:inline-flex;align-items:center;padding:7px 14px;border-radius:999px;border:var(--pill-border-w,2px) solid var(--color-border-strong);background:var(--color-white);font-size:14px;font-weight:700;color:${C.navyDark};cursor:pointer;font-family:inherit;line-height:initial;transition:background 0.18s,color 0.18s,border-color 0.18s;}
+        @media (hover: hover) { .vs-petmatch-btn:hover{border-color:${C.navyDark};} }
+        .vs-petmatch-btn.is-on{background:${C.navyDark};color:var(--color-white);border-color:${C.navyDark};}
+        /* The pet's name on the band that fits them. A chip rather than a row
+           tint: the rows have no horizontal padding of their own, so a
+           background would need negative margins and would fight the dividers. */
+        .vs-petmatch-tag{display:inline-flex;align-items:center;margin:8px 0 0;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:700;line-height:initial;background:#fef8ec;color:#8b6914;border:var(--pill-border-w,2px) solid rgba(139,105,20,0.22);white-space:nowrap;}
         .vs-fewprice{margin:16px 0 0;padding:12px 14px;background:${C.cream};border-radius:10px;font-size:14px;font-weight:500;color:${C.muted};line-height:1.6;}
         .vs-check-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;height:42px;border-radius:12px;border:2px solid ${C.terracotta};background:var(--color-white);color:${C.terracotta700};font-size:15px;font-weight:700;text-decoration:none;font-family:var(--font-urbanist,'Urbanist',sans-serif);transition:background 0.2s,color 0.2s;}
         @media (hover: hover) { .vs-check-link:hover {background:${C.terracotta700};color:var(--color-white);} }
@@ -2051,6 +2192,45 @@ export default function VetPage() {
                           Last verified {formatVerifiedDate(lastVerified)}
                         </p>
                       )}
+                      {/* Shown only when two or more of the owner's pets could
+                          match a band on this page. With one, the match is
+                          unambiguous and happens without asking; with none,
+                          there is nothing to pick between. */}
+                      {/* One qualifying pet needs no choice, but the gold tag
+                          below still has to say where it came from. Without
+                          this line a name appears on a price with nothing on
+                          the page accounting for it. */}
+                      {matchablePets.length === 1 && activePet && (
+                        <p className="vs-petmatch-single">
+                          Showing prices for{" "}
+                          <strong>{activePet.name}</strong>
+                        </p>
+                      )}
+                      {matchablePets.length > 1 && (
+                        <div className="vs-petmatch">
+                          <span className="vs-petmatch-label">
+                            Show prices for
+                          </span>
+                          <div className="vs-petmatch-opts">
+                            {matchablePets.map((pet) => (
+                              <button
+                                key={pet.id}
+                                type="button"
+                                className={`vs-petmatch-btn${
+                                  activePet?.id === pet.id ? " is-on" : ""
+                                }`}
+                                onClick={() =>
+                                  setMatchPetId(
+                                    activePet?.id === pet.id ? null : pet.id,
+                                  )
+                                }
+                              >
+                                {pet.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       {/* The "being updated" notice is pricing state, so it
                          sits inside the gate with everything else. */}
                       {reviewServices.length > 0 && (
@@ -2250,6 +2430,13 @@ export default function VetPage() {
                                           <span className="vs-tier-band">
                                             {tierLabel(p)}
                                           </span>
+                                        )}
+                                        {matchedIds.has(p.id) && activePet && (
+                                          <div>
+                                            <span className="vs-petmatch-tag">
+                                              {activePet.name}
+                                            </span>
+                                          </div>
                                         )}
                                         {hasText(p.notes) && (
                                           <div

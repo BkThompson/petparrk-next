@@ -1,5 +1,7 @@
 "use client";
 
+import SaveIndicator from "../../../../components/SaveIndicator";
+
 import { useEffect, useState, useRef, useCallback, Fragment } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -725,47 +727,7 @@ function EditorView({ pet, onPetChange }) {
           }
         }
 
-        /* Persistent save status in top bar */
-        .pce-save-status {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--color-muted);
-          font-family: var(--font-urbanist,'Urbanist',sans-serif);
-        }
-        .pce-save-status.saved { color: var(--color-success-text); }
-        .pce-save-status.error { color: var(--color-error); }
 
-        /* Save indicator — bottom-right floating toast */
-        .pce-save-toast {
-          position: fixed;
-          right: 24px;
-          bottom: 24px;
-          z-index: 50;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 16px;
-          background: var(--color-white);
-          border-radius: 9999px;
-          box-shadow: 0 8px 24px rgb(var(--color-navy-dark-rgb) / 0.18), 0 0 0 1px rgb(var(--color-navy-dark-rgb) / 0.06);
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--color-muted);
-          font-family: var(--font-urbanist,'Urbanist',sans-serif);
-          animation: pce-toast-in 0.18s ease-out;
-        }
-        .pce-save-toast.saved { color: var(--color-success-text); }
-        .pce-save-toast.error { color: var(--color-error); }
-        @keyframes pce-toast-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @media (max-width: 640px) {
-          .pce-save-toast { right: 16px; bottom: 16px; }
-        }
         .pce-spin { animation: pce-spin 0.9s linear infinite; }
         @keyframes pce-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -3654,8 +3616,11 @@ function EditorView({ pet, onPetChange }) {
             transformed/positioned ancestor deeper in the layout. */}
         {unsavedModal}
         <div className="pp-container-text">
-          {/* Breadcrumb (left) + save indicator (right) share one row, so the
-              spacing below the breadcrumb matches the other pages exactly. */}
+          {/* The breadcrumb's row. It used to share this line with a save
+              status on the right; that duplicated the floating pill, which is
+              now the one save confirmation everywhere. The wrapper stays
+              because it sets the spacing below the breadcrumb to match the
+              other pages exactly. */}
           <div className="pce-topbar">
             <Breadcrumb
               items={[
@@ -3665,7 +3630,6 @@ function EditorView({ pet, onPetChange }) {
                 { label: "Edit" },
               ]}
             />
-            <SaveStatus status={saveStatus} />
           </div>
 
           {/* Pet header — compact identity strip */}
@@ -3805,70 +3769,6 @@ function EditorView({ pet, onPetChange }) {
       <SaveIndicator status={saveStatus} />
     </>
   );
-}
-
-// =============================================================
-// SAVE INDICATOR — subtle status pill in top-right
-// =============================================================
-
-function SaveStatus({ status }) {
-  if (status === "saving") {
-    return (
-      <span className="pce-save-status saving" role="status">
-        <Loader2 size={14} strokeWidth={2.2} className="pce-spin" />
-        Saving…
-      </span>
-    );
-  }
-  if (status === "error") {
-    return (
-      <span className="pce-save-status error" role="alert">
-        Couldn&apos;t save
-      </span>
-    );
-  }
-  if (status === "saved") {
-    return (
-      <span className="pce-save-status saved" role="status">
-        <Check size={14} strokeWidth={2.4} />
-        All changes saved
-      </span>
-    );
-  }
-  // idle — render nothing. The indicator only appears when a save is in
-  // progress or just completed. After "saved" transitions back to idle via
-  // the 2-second setTimeout in the parent, this returns null and the pill
-  // disappears — distinct from a persistent "All changes saved" that was
-  // showing on page load even when nothing had been saved yet.
-  return null;
-}
-
-function SaveIndicator({ status }) {
-  if (status === "idle") return null;
-  if (status === "saving") {
-    return (
-      <div className="pce-save-toast saving" role="status">
-        <Loader2 size={14} strokeWidth={2.2} className="pce-spin" />
-        Saving…
-      </div>
-    );
-  }
-  if (status === "saved") {
-    return (
-      <div className="pce-save-toast saved" role="status">
-        <Check size={14} strokeWidth={2.4} />
-        Saved
-      </div>
-    );
-  }
-  if (status === "error") {
-    return (
-      <div className="pce-save-toast error" role="alert">
-        Couldn&apos;t save — please retry
-      </div>
-    );
-  }
-  return null;
 }
 
 // =============================================================

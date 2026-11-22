@@ -1,5 +1,7 @@
 "use client";
 
+import SaveIndicator from "../../../../components/SaveIndicator";
+
 import { useEffect, useState, useRef, useCallback, Fragment } from "react";
 import {
   HERO_PALETTE,
@@ -5551,33 +5553,6 @@ function TextareaCard({
   );
 }
 
-function SaveIndicator({ status }) {
-  if (status === "idle") return null;
-  if (status === "saving") {
-    return (
-      <div className="he-save-toast saving" role="status">
-        <Loader2 size={14} strokeWidth={2.2} className="he-spin" />
-        Saving…
-      </div>
-    );
-  }
-  if (status === "saved") {
-    return (
-      <div className="he-save-toast saved" role="status">
-        <Check size={14} strokeWidth={2.4} />
-        Saved
-      </div>
-    );
-  }
-  if (status === "error") {
-    return (
-      <div className="he-save-toast error" role="alert">
-        Couldn&apos;t save — please retry
-      </div>
-    );
-  }
-  return null;
-}
 
 const heroEditorCss = `
   /* Reserve scrollbar space so opening a modal (which locks scroll) doesn't
@@ -5652,10 +5627,6 @@ const heroEditorCss = `
   }
   @media (hover: hover) { .he-scrolltop:hover { background:var(--color-navy-dark); transform:translateY(-2px); } }
   .he-preview { flex-shrink:0; white-space:nowrap; }
-  .he-save-toast { position:fixed; right:24px; bottom:24px; z-index:50; display:inline-flex; align-items:center; gap:8px; padding:10px 16px; background:var(--color-white); border-radius:9999px; box-shadow:0 8px 24px rgb(var(--color-navy-dark-rgb) / 0.18), 0 0 0 1px rgb(var(--color-navy-dark-rgb) / 0.06); font-size:14px; font-weight:600; color:var(--muted); animation:he-toast-in 0.18s ease-out; }
-  .he-save-toast.saved { color:var(--color-success-text); }
-  .he-save-toast.error { color:var(--color-error); }
-  @keyframes he-toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
   .he-spin { animation:he-spin 0.9s linear infinite; }
   @keyframes he-spin { to { transform:rotate(360deg); } }
 
@@ -6215,7 +6186,6 @@ const heroEditorCss = `
     .he-head-row { flex-direction:column; }
     .he-rarity-grid { grid-template-columns:repeat(2,1fr); }
     .he-design-grid { grid-template-columns:repeat(3,1fr); }
-    .he-save-toast { right:16px; bottom:16px; }
     /* action bar: stack on mobile, Publish (primary) on top */
     /* Mobile: slim action bar pinned to the BOTTOM (thumb-reachable) so it
        never eats the content viewport. Single compact row. */
