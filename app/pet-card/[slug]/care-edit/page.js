@@ -185,10 +185,42 @@ function SectionShell({ id, eyebrow, title, sub, open, onToggle, children }) {
 }
 
 function Collapse({ open, children, className }) {
+  const ref = useRef(null);
+
+  // Closing a section used to hide it with aria-hidden while the Save button
+  // inside it still held focus. Chrome refuses that — "Blocked aria-hidden on
+  // an element because its descendant retained focus" — and focus fell to
+  // <body>, so a keyboard user's next Tab restarted from the top of the page
+  // on every save.
+  //
+  // Two changes. Focus moves to the control that opens this section (the
+  // toggle button immediately before it) before anything is hidden, so the
+  // user keeps their place; preventScroll stops that move from shifting the
+  // viewport. Then the subtree is made inert rather than aria-hidden, which
+  // is what the warning itself recommends: inert takes the content out of the
+  // tab order and the accessibility tree together, instead of hiding it from
+  // assistive technology while leaving it reachable by keyboard.
+  //
+  // inert is set as a DOM property rather than a JSX attribute so this doesn't
+  // depend on which React version is rendering it.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!open && el.contains(document.activeElement)) {
+      const toggle = el.previousElementSibling;
+      if (toggle && typeof toggle.focus === "function") {
+        toggle.focus({ preventScroll: true });
+      } else if (typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+      }
+    }
+    el.inert = !open;
+  }, [open]);
+
   return (
     <div
+      ref={ref}
       className={`pce-collapse${open ? " is-open" : ""}${className ? " " + className : ""}`}
-      aria-hidden={open ? undefined : true}
     >
       <div className="pce-collapse-inner">{children}</div>
     </div>

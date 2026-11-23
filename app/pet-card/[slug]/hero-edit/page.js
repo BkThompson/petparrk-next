@@ -667,10 +667,42 @@ function HeroSectionShell({ id, icon: Icon, title, sub, editing, children }) {
 }
 
 function Collapse({ open, children, className }) {
+  const ref = useRef(null);
+
+  // Closing a section used to hide it with aria-hidden while the Save button
+  // inside it still held focus. Chrome refuses that — "Blocked aria-hidden on
+  // an element because its descendant retained focus" — and focus fell to
+  // <body>, so a keyboard user's next Tab restarted from the top of the page
+  // on every save.
+  //
+  // Two changes. Focus moves to the control that opens this section (the
+  // toggle button immediately before it) before anything is hidden, so the
+  // user keeps their place; preventScroll stops that move from shifting the
+  // viewport. Then the subtree is made inert rather than aria-hidden, which
+  // is what the warning itself recommends: inert takes the content out of the
+  // tab order and the accessibility tree together, instead of hiding it from
+  // assistive technology while leaving it reachable by keyboard.
+  //
+  // inert is set as a DOM property rather than a JSX attribute so this doesn't
+  // depend on which React version is rendering it.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!open && el.contains(document.activeElement)) {
+      const toggle = el.previousElementSibling;
+      if (toggle && typeof toggle.focus === "function") {
+        toggle.focus({ preventScroll: true });
+      } else if (typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+      }
+    }
+    el.inert = !open;
+  }, [open]);
+
   return (
     <div
+      ref={ref}
       className={`he-collapse${open ? " is-open" : ""}${className ? " " + className : ""}`}
-      aria-hidden={open ? undefined : true}
     >
       <div className="he-collapse-inner">{children}</div>
     </div>
@@ -4465,7 +4497,25 @@ function IdentityTagsCard({
                       {infoMounted ? (
                         <div
                           className={`pce-info-collapse${infoOpen ? " is-open" : ""}`}
-                          aria-hidden={infoOpen ? undefined : true}
+                          // Same fix as Collapse: inert rather than
+                          // aria-hidden, with focus handed back to the "i"
+                          // button that opens this, so closing the popover
+                          // from its own close button doesn't drop focus to
+                          // <body>. A callback ref rather than an effect,
+                          // because this sits inside a map and has no
+                          // component of its own to hang one on.
+                          ref={(el) => {
+                            if (!el) return;
+                            if (!infoOpen && el.contains(document.activeElement)) {
+                              const opener =
+                                el.previousElementSibling?.querySelector(
+                                  ".pce-identity-tag-info",
+                                );
+                              if (opener) opener.focus({ preventScroll: true });
+                              else document.activeElement.blur?.();
+                            }
+                            el.inert = !infoOpen;
+                          }}
                         >
                           <div className="pce-info-collapse-inner">
                             <div className="pce-identity-tag-info-popover">
